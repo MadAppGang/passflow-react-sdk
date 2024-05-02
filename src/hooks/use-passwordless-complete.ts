@@ -1,6 +1,6 @@
-import { useCallback, useState } from 'react';
-import { AoothPasswordlessSignInCompletePayload } from '@aooth/aooth-sdk-js';
-import { useAooth } from './use-aooth';
+import { useCallback, useState } from "react";
+import { AoothPasswordlessSignInCompletePayload } from "@aooth/aooth-js-sdk";
+import { useAooth } from "./use-aooth";
 
 export type TusePasswordlessComplete = () => {
   fetch: (payload: AoothPasswordlessSignInCompletePayload) => Promise<boolean>;
@@ -13,45 +13,60 @@ export type TusePasswordlessComplete = () => {
 
 export const usePasswordlessComplete: TusePasswordlessComplete = () => {
   const aooth = useAooth();
-  const [errorMessage, setErrorMessage] = useState('');
+  const [errorMessage, setErrorMessage] = useState("");
   const [isError, setIsError] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
-  const fetch = useCallback(async (payload: AoothPasswordlessSignInCompletePayload): Promise<boolean> => {
-    try {
-      setIsLoading(true);
-      await aooth.passwordlessSignInComplete(payload);
-      setIsLoading(false);
-      return true;
-    } catch (e) {
-      setIsError(true);
-      const error = e as Error;
-      setErrorMessage(error.message);
-      return false;
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  const fetch = useCallback(
+    async (
+      payload: AoothPasswordlessSignInCompletePayload
+    ): Promise<boolean> => {
+      try {
+        setIsLoading(true);
+        await aooth.passwordlessSignInComplete(payload);
+        setIsLoading(false);
+        return true;
+      } catch (e) {
+        setIsError(true);
+        const error = e as Error;
+        setErrorMessage(error.message);
+        return false;
+      }
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    },
+    []
+  );
 
-  const fetchPasskey = useCallback(async (otp: string, challengeId: string): Promise<boolean> => {
-    try {
-      setIsLoading(true);
-      await aooth.passkeyValidate(otp, challengeId);
-      setIsLoading(false);
-      return true;
-    } catch (e) {
-      setIsError(true);
-      const error = e as Error;
-      setErrorMessage(error.message);
-      return false;
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  const fetchPasskey = useCallback(
+    async (otp: string, challengeId: string): Promise<boolean> => {
+      try {
+        setIsLoading(true);
+        await aooth.passkeyValidate(otp, challengeId);
+        setIsLoading(false);
+        return true;
+      } catch (e) {
+        setIsError(true);
+        const error = e as Error;
+        setErrorMessage(error.message);
+        return false;
+      }
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    },
+    []
+  );
 
   const reset = () => {
     setIsError(false);
-    setErrorMessage('');
+    setErrorMessage("");
     setIsLoading(false);
   };
 
-  return { fetch, fetchPasskey, isLoading, isError, error: errorMessage, reset } as const;
+  return {
+    fetch,
+    fetchPasskey,
+    isLoading,
+    isError,
+    error: errorMessage,
+    reset,
+  } as const;
 };

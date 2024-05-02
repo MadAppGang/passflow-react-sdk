@@ -1,37 +1,44 @@
 /* eslint-disable no-nested-ternary */
 /* eslint-disable complexity */
 /* eslint-disable jsx-a11y/label-has-associated-control */
-import { ChangeEvent, FC, useEffect, useState } from 'react';
-import { AoothPasskeyRegisterStartPayload, AoothPasskeySettings } from '@aooth/aooth-sdk-js';
-import { useNavigate } from 'react-router-dom';
-import { eq, get, size } from 'lodash';
-import { Form, Formik, FormikHandlers } from 'formik';
-import { Button, FieldPhone, FieldText, Icon } from '@/components/ui';
-import { useSignUp } from '@/hooks';
-import { cn, emailRegex, getUrlWithTokens, isValidUrl, phoneNumberRegex, validationSingUpSchemas } from '@/utils';
-import { concatScopes, defaultScopes } from '@/constants';
-import { SuccessAuthRedirect } from '@/types';
-import { routes } from '@/context';
+import { ChangeEvent, FC, useEffect, useState } from "react";
+import {
+  AoothPasskeyRegisterStartPayload,
+  AoothPasskeySettings,
+} from "@aooth/aooth-js-sdk";
+import { useNavigate } from "react-router-dom";
+import { eq, get, size } from "lodash";
+import { Form, Formik, FormikHandlers } from "formik";
+import { Button, FieldPhone, FieldText, Icon } from "@/components/ui";
+import { useAooth, useSignUp } from "@/hooks";
+import {
+  cn,
+  emailRegex,
+  getUrlWithTokens,
+  isValidUrl,
+  phoneNumberRegex,
+  validationSingUpSchemas,
+} from "@/utils";
+import { SuccessAuthRedirect } from "@/types";
+import { routes } from "@/context";
 
 type TPasskeyForm = {
   passkeySettings: AoothPasskeySettings | null;
   successAuthRedirect: SuccessAuthRedirect;
   relyingPartyId?: string;
-  scopes?: string[];
   createTenant?: boolean;
   verifyOTPPath?: string;
   verifyMagicLinkPath?: string;
 };
 
 const initialValues = {
-  identity: '',
-  phone: '',
+  identity: "",
+  phone: "",
 };
 
 export const PasskeyForm: FC<TPasskeyForm> = ({
   successAuthRedirect,
   passkeySettings,
-  scopes = defaultScopes,
   relyingPartyId = window.location.hostname,
   createTenant,
   verifyOTPPath,
@@ -39,29 +46,33 @@ export const PasskeyForm: FC<TPasskeyForm> = ({
 }) => {
   const navigate = useNavigate();
   const { fetch, isError, error, reset, isLoading } = useSignUp();
-
-  const [validationSchema, setValidationSchema] = useState<ReturnType<typeof validationSingUpSchemas> | null>(null);
+  const aooth = useAooth();
+  const [validationSchema, setValidationSchema] = useState<ReturnType<
+    typeof validationSingUpSchemas
+  > | null>(null);
 
   useEffect(() => {
     if (passkeySettings) {
       const { id_field: idField } = passkeySettings;
       const schema = validationSingUpSchemas(
         {
-          identity: idField === 'phone' ? 'phone' : 'identity',
-          challenge: 'none',
+          identity: idField === "phone" ? "phone" : "identity",
+          challenge: "none",
         },
-        null,
+        null
       );
       setValidationSchema(schema);
     }
   }, [passkeySettings]);
 
-  const onCustomChangeHandler = (handleChange: FormikHandlers['handleChange']) => (e: ChangeEvent<HTMLInputElement>) => {
-    handleChange(e);
-    if (isError) {
-      reset();
-    }
-  };
+  const onCustomChangeHandler =
+    (handleChange: FormikHandlers["handleChange"]) =>
+    (e: ChangeEvent<HTMLInputElement>) => {
+      handleChange(e);
+      if (isError) {
+        reset();
+      }
+    };
 
   const onSubmitPasskeyHandler = async (values: typeof initialValues) => {
     const { identity, phone } = values;
@@ -71,47 +82,55 @@ export const PasskeyForm: FC<TPasskeyForm> = ({
       ...(isEmail && { email: identity }),
       ...(!isEmail && size(identity) > 0 && { username: identity }),
       ...(isPhone && { phone }),
-      scopes: concatScopes(scopes),
       relying_party_id: relyingPartyId,
       create_tenant: createTenant,
     };
 
-    const status = await fetch(payload as AoothPasskeyRegisterStartPayload, 'passkey');
-    if (status && passkeySettings?.validation === 'none') {
+    const status = await fetch(
+      payload as AoothPasskeyRegisterStartPayload,
+      "passkey"
+    );
+    if (status && passkeySettings?.validation === "none") {
       if (!isValidUrl(successAuthRedirect)) navigate(successAuthRedirect);
-      else window.location.href = getUrlWithTokens(successAuthRedirect);
+      else window.location.href = getUrlWithTokens(aooth, successAuthRedirect);
     }
 
     const searchParams = new URLSearchParams(window.location.search);
-    searchParams.append('chId', status as string);
+    searchParams.append("chId", status as string);
 
-    if (get(passkeySettings, 'validation', false) === 'otp' && status)
+    if (get(passkeySettings, "validation", false) === "otp" && status)
       navigate(
-        { pathname: verifyOTPPath ?? routes.verify_otp.path, search: searchParams.toString() },
+        {
+          pathname: verifyOTPPath ?? routes.verify_otp.path,
+          search: searchParams.toString(),
+        },
         {
           state: {
-            identity: isEmail ? 'email' : isPhone ? 'phone' : 'username',
+            identity: isEmail ? "email" : isPhone ? "phone" : "username",
             identityValue: identity ?? phone,
             passwordlessPayload: payload,
-            type: 'passkey',
+            type: "passkey",
           },
-        },
+        }
       );
-    if (get(passkeySettings, 'validation', false) === 'magic_link' && status)
+    if (get(passkeySettings, "validation", false) === "magic_link" && status)
       navigate(
-        { pathname: verifyMagicLinkPath ?? routes.verify_magic_link.path, search: searchParams.toString() },
+        {
+          pathname: verifyMagicLinkPath ?? routes.verify_magic_link.path,
+          search: searchParams.toString(),
+        },
         {
           state: {
-            identity: isEmail ? 'email' : isPhone ? 'phone' : 'username',
+            identity: isEmail ? "email" : isPhone ? "phone" : "username",
             identityValue: identity ?? phone,
             passwordlessPayload: payload,
           },
-        },
+        }
       );
   };
 
-  const labelStyle = cn('aooth-text-caption-1-medium aooth-text-Grey-One', {
-    'aooth-text-Warning': isError,
+  const labelStyle = cn("aooth-text-caption-1-medium aooth-text-Grey-One", {
+    "aooth-text-Warning": isError,
   });
 
   if (passkeySettings) {
@@ -123,8 +142,15 @@ export const PasskeyForm: FC<TPasskeyForm> = ({
         enableReinitialize
         validateOnChange
       >
-        {({ isValid, dirty, handleChange, handleBlur, values, setFieldValue }) => (
-          <Form className='aooth-flex aooth-flex-col aooth-gap-[32px] aooth-mt-[32px]'>
+        {({
+          isValid,
+          dirty,
+          handleChange,
+          handleBlur,
+          values,
+          setFieldValue,
+        }) => (
+          <Form className="aooth-flex aooth-flex-col aooth-gap-[32px] aooth-mt-[32px]">
             <div
               className={`aooth-flex aooth-flex-col aooth-gap-[24px] aooth-w-full aooth-p-[24px] 
                         aooth-rounded-[6px] aooth-shadow-[0_4px_15px_0_rgba(0,0,0,0.09)]`}
@@ -133,14 +159,14 @@ export const PasskeyForm: FC<TPasskeyForm> = ({
                 className={`group aooth-relative aooth-flex aooth-flex-col aooth-items-start 
                 aooth-justify-center aooth-gap-[6px]`}
               >
-                {eq(get(passkeySettings, 'id_field'), 'phone') && (
+                {eq(get(passkeySettings, "id_field"), "phone") && (
                   <>
-                    <label htmlFor='phone' className={labelStyle}>
+                    <label htmlFor="phone" className={labelStyle}>
                       Phone
                     </label>
                     <FieldPhone
-                      id='phone'
-                      name='phone'
+                      id="phone"
+                      name="phone"
                       isError={isError}
                       value={values.phone}
                       setValue={setFieldValue}
@@ -149,38 +175,50 @@ export const PasskeyForm: FC<TPasskeyForm> = ({
                     />
                   </>
                 )}
-                {eq(get(passkeySettings, 'id_field'), 'email') && (
+                {eq(get(passkeySettings, "id_field"), "email") && (
                   <>
-                    <label htmlFor='email' className={labelStyle}>
+                    <label htmlFor="email" className={labelStyle}>
                       Email
                     </label>
                     <FieldText
                       isError={isError}
-                      id='identity'
-                      type='text'
-                      name='identity'
+                      id="identity"
+                      type="text"
+                      name="identity"
                       onChange={onCustomChangeHandler(handleChange)}
                     />
                   </>
                 )}
                 {isError && (
-                  <div className='aooth-flex aooth-items-center aooth-justify-center aooth-gap-[4px]'>
-                    <Icon size='small' id='warning' type='general' className='icon-warning' />
-                    <span className='aooth-text-caption-1-medium aooth-text-Warning'>{error}</span>
+                  <div className="aooth-flex aooth-items-center aooth-justify-center aooth-gap-[4px]">
+                    <Icon
+                      size="small"
+                      id="warning"
+                      type="general"
+                      className="icon-warning"
+                    />
+                    <span className="aooth-text-caption-1-medium aooth-text-Warning">
+                      {error}
+                    </span>
                   </div>
                 )}
               </div>
             </div>
-            <div className='aooth-flex aooth-flex-col'>
+            <div className="aooth-flex aooth-flex-col">
               <Button
-                size='big'
-                variant='dark'
-                type='submit'
-                className='aooth-m-auto'
+                size="big"
+                variant="dark"
+                type="submit"
+                className="aooth-m-auto"
                 withIcon
                 disabled={!isValid || !dirty || isLoading}
               >
-                <Icon id='key' size='small' type='general' className='icon-white' />
+                <Icon
+                  id="key"
+                  size="small"
+                  type="general"
+                  className="icon-white"
+                />
                 Sign Up with a Passkey
               </Button>
             </div>
@@ -194,7 +232,6 @@ export const PasskeyForm: FC<TPasskeyForm> = ({
 };
 
 PasskeyForm.defaultProps = {
-  scopes: defaultScopes,
   createTenant: false,
   relyingPartyId: window.location.hostname,
   verifyOTPPath: routes.verify_otp.path,

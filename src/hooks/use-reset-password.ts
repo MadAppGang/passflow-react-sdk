@@ -2,7 +2,7 @@ import { useCallback, useState } from 'react';
 import { useAooth } from './use-aooth';
 
 export type TuseResetPassword = () => {
-  fetch: (newPassword: string, scopes: string[]) => Promise<boolean>;
+  fetch: (newPassword: string) => Promise<boolean>;
   isLoading: boolean;
   isError: boolean;
   error: string;
@@ -15,10 +15,10 @@ export const useResetPassword: TuseResetPassword = () => {
   const [errorMessage, setErrorMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
-  const fetch = useCallback(async (newPassword: string, scopes: string[]): Promise<boolean> => {
+  const fetch = useCallback(async (newPassword: string): Promise<boolean> => {
     try {
       setIsLoading(true);
-      await aooth.resetPassword(newPassword, scopes);
+      await aooth.resetPassword(newPassword);
       setIsLoading(false);
       return true;
     } catch (e) {

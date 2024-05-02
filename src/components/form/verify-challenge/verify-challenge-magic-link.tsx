@@ -1,35 +1,40 @@
-import { AoothPasswordlessSignInPayload } from '@aooth/aooth-sdk-js';
-import { Navigate, useLocation } from 'react-router-dom';
-import { Button } from '@/components/ui';
-import { useSignIn } from '@/hooks';
-import { Wrapper } from '../wrapper';
-import '@/styles/index.css';
+import { AoothPasswordlessSignInPayload } from "@aooth/aooth-js-sdk";
+import { Navigate, useLocation } from "react-router-dom";
+import { Button } from "@/components/ui";
+import { useSignIn } from "@/hooks";
+import { Wrapper } from "../wrapper";
+import "@/styles/index.css";
 
 export const VerifyChallengeMagicLink = () => {
   const { fetch: refetch } = useSignIn();
   const location = useLocation();
   const { identityValue, passwordlessPayload } = location.state as {
-    identity: 'email' | 'phone';
+    identity: "email" | "phone";
     identityValue: string;
     passwordlessPayload: AoothPasswordlessSignInPayload;
   };
 
   // eslint-disable-next-line no-void
-  const onClickResendHandler = () => void refetch(passwordlessPayload, 'passwordless');
+  const onClickResendHandler = () =>
+    void refetch(passwordlessPayload, "passwordless");
 
   if (identityValue && passwordlessPayload) {
     return (
-      <Wrapper title='Check your email' className='aooth-flex aooth-flex-col aooth-max-w-[336px]'>
-        <div className='aooth-w-full aooth-flex aooth-flex-col aooth-gap-[32px]'>
-          <p className='aooth-text-body-2-medium aooth-text-Grey-One aooth-text-center aooth-mt-[8px]'>
-            We sent a link to email address <strong className='aooth-text-body-2-bold'>{identityValue}</strong>. Click on the
-            link to confirm your registration.
+      <Wrapper
+        title="Check your email"
+        className="aooth-flex aooth-flex-col aooth-max-w-[336px]"
+      >
+        <div className="aooth-w-full aooth-flex aooth-flex-col aooth-gap-[32px]">
+          <p className="aooth-text-body-2-medium aooth-text-Grey-One aooth-text-center aooth-mt-[8px]">
+            We sent a link to email address{" "}
+            <strong className="aooth-text-body-2-bold">{identityValue}</strong>.
+            Click on the link to confirm your registration.
           </p>
           <Button
-            size='big'
-            variant='secondary'
-            type='button'
-            className='aooth-text-body-2-medium aooth-m-auto aooth-max-w-[196px]'
+            size="big"
+            variant="secondary"
+            type="button"
+            className="aooth-text-body-2-medium aooth-m-auto aooth-max-w-[196px]"
             onClick={onClickResendHandler}
           >
             Resend email
@@ -39,5 +44,7 @@ export const VerifyChallengeMagicLink = () => {
     );
   }
 
-  return <Navigate to={{ pathname: '*', search: window.location.search }} replace />;
+  return (
+    <Navigate to={{ pathname: "*", search: window.location.search }} replace />
+  );
 };

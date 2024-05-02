@@ -1,18 +1,17 @@
-import { Providers } from '@aooth/aooth-sdk-js';
-import { useAooth } from './use-aooth';
+import { Providers } from "@aooth/aooth-js-sdk";
+import { useAooth } from "./use-aooth";
 
-export type TuseProvider = (
-  redirectUrl: string,
-  scopes: string[],
-) => {
+export type TuseProvider = (redirectUrl: string) => {
   federatedWithPopup: (provider: Providers) => void;
   federatedWithRedirect: (provider: Providers) => void;
 };
 
-export const useProvider: TuseProvider = (redirectUrl, scopes) => {
+export const useProvider: TuseProvider = (redirectUrl) => {
   const aooth = useAooth();
-  const federatedWithPopup = (provider: Providers) => aooth.federatedAuthWithPopup(provider, redirectUrl, scopes);
-  const federatedWithRedirect = (provider: Providers) => aooth.federatedAuthWithRedirect(provider, redirectUrl, scopes);
+  const federatedWithPopup = (provider: Providers) =>
+    aooth.federatedAuthWithPopup(provider, redirectUrl);
+  const federatedWithRedirect = (provider: Providers) =>
+    aooth.federatedAuthWithRedirect(provider, redirectUrl);
 
   return {
     federatedWithPopup,

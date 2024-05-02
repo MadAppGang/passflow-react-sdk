@@ -12,7 +12,6 @@ import { routes } from '@/context';
 import '@/styles/index.css';
 import { Navigate, Route, Routes } from 'react-router-dom';
 import { SuccessAuthRedirect } from '@/types';
-import { concatScopes, defaultScopes } from '@/constants';
 import { withError } from '@/hocs';
 import { Error as ErrorComponent } from '@/components/error';
 
@@ -21,7 +20,6 @@ export type TAoothFlow = {
   successAuthRedirect: SuccessAuthRedirect;
   error?: string;
   relyingPartyId?: string;
-  scopes?: string[];
   federatedCallbackUrl?: string;
   pathPrefix?: string;
 };
@@ -47,7 +45,6 @@ const AoothFlowWrapper: FC<TAoothFlow> = ({
   successAuthRedirect,
   error,
   relyingPartyId = window.location.hostname,
-  scopes = defaultScopes,
   federatedCallbackUrl = window.location.origin,
   pathPrefix,
 }) => {
@@ -61,7 +58,6 @@ const AoothFlowWrapper: FC<TAoothFlow> = ({
         element={
           <SignIn
             federatedCallbackUrl={federatedCallbackUrl}
-            scopes={concatScopes(scopes)}
             successAuthRedirect={successAuthRedirect}
             relyingPartyId={relyingPartyId}
             federatedDisplayMode={federatedDisplayMode}
@@ -77,7 +73,6 @@ const AoothFlowWrapper: FC<TAoothFlow> = ({
         element={
           <SignUp
             federatedCallbackUrl={federatedCallbackUrl}
-            scopes={concatScopes(scopes)}
             successAuthRedirect={successAuthRedirect}
             relyingPartyId={relyingPartyId}
             federatedDisplayMode={federatedDisplayMode}
@@ -94,7 +89,6 @@ const AoothFlowWrapper: FC<TAoothFlow> = ({
             successAuthRedirect={successAuthRedirect}
             numInputs={6}
             shouldAutoFocus
-            scopes={concatScopes(scopes)}
             signUpPath={routesWithPrefix.signup}
           />
         }
@@ -110,10 +104,7 @@ const AoothFlowWrapper: FC<TAoothFlow> = ({
         }
       />
       <Route path={routesWithPrefix.forgot_password_success} element={<ForgotPasswordSuccess />} />
-      <Route
-        path={routesWithPrefix.reset_password}
-        element={<ResetPassword scopes={concatScopes(scopes)} successAuthRedirect={successAuthRedirect} />}
-      />
+      <Route path={routesWithPrefix.reset_password} element={<ResetPassword successAuthRedirect={successAuthRedirect} />} />
       <Route path='*' element={<Navigate to={{ pathname: routesWithPrefix.signin, search: window.location.search }} />} />
     </Routes>
   );
@@ -123,7 +114,6 @@ AoothFlowWrapper.defaultProps = {
   error: undefined,
   federatedCallbackUrl: window.location.origin,
   pathPrefix: '',
-  scopes: defaultScopes,
   relyingPartyId: window.location.hostname,
 };
 

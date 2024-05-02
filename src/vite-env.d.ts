@@ -1,11 +1,11 @@
 /// <reference types="vite/client" />
 declare module '*.svg';
 
-interface ImportMetaEnv {
-  readonly AOOTH_APP_ID: string;
-  readonly AOOTH_URL: string;
-}
+// interface ImportMetaEnv {
+//   readonly VITE_AOOTH_APP_ID: string | undefined;
+//   readonly VITE_AOOTH_URL: string | undefined;
+// }
 
-interface ImportMeta {
-  readonly env: ImportMetaEnv;
-}
+// interface ImportMeta {
+//   readonly env: ImportMetaEnv;
+// }

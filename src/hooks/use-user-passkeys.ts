@@ -1,6 +1,6 @@
-import { useLayoutEffect, useState } from 'react';
-import { useAooth } from './use-aooth';
-import { AoothUserPasskey } from '@aooth/aooth-sdk-js';
+import { useLayoutEffect, useState } from "react";
+import { useAooth } from "./use-aooth";
+import { AoothUserPasskey } from "@aooth/aooth-js-sdk";
 
 export type TuseUserPasskeys = () => {
   data: AoothUserPasskey[];
@@ -16,7 +16,7 @@ export const useUserPasskeys: TuseUserPasskeys = () => {
   const aooth = useAooth();
   const [data, setData] = useState<AoothUserPasskey[]>([]);
   const [isError, setIsError] = useState<boolean>(false);
-  const [errorMessage, setErrorMessage] = useState<string>('');
+  const [errorMessage, setErrorMessage] = useState<string>("");
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
   useLayoutEffect(() => {
@@ -40,7 +40,9 @@ export const useUserPasskeys: TuseUserPasskeys = () => {
   const createUserPasskey = async (relaingPartyId: string): Promise<void> => {
     setIsLoading(true);
     try {
-      const createUserPasskeyStatus = await aooth.createUserPasskey(relaingPartyId);
+      const createUserPasskeyStatus = await aooth.createUserPasskey(
+        relaingPartyId
+      );
       if (createUserPasskeyStatus) {
         const userPasskeys = await aooth.getUserPasskeys();
         setData(userPasskeys as unknown as AoothUserPasskey[]);
@@ -54,10 +56,16 @@ export const useUserPasskeys: TuseUserPasskeys = () => {
     }
   };
 
-  const editUserPasskey = async (newName: string, passkeyId: string): Promise<void> => {
+  const editUserPasskey = async (
+    newName: string,
+    passkeyId: string
+  ): Promise<void> => {
     setIsLoading(true);
     try {
-      const editUserPasskeyStatus = await aooth.renameUserPasskey(newName, passkeyId);
+      const editUserPasskeyStatus = await aooth.renameUserPasskey(
+        newName,
+        passkeyId
+      );
       if (editUserPasskeyStatus) {
         const userPasskeys = await aooth.getUserPasskeys();
         setData(userPasskeys as unknown as AoothUserPasskey[]);

@@ -4,11 +4,10 @@ import { Form, Formik, FormikHandlers } from 'formik';
 import { useNavigate } from 'react-router-dom';
 import { Button, FieldPassword, Icon } from '@/components/ui';
 import { Wrapper } from '../wrapper';
-import { useAppSettings, useResetPassword } from '@/hooks';
+import { useAooth, useAppSettings, useResetPassword } from '@/hooks';
 import { cn, getUrlWithTokens, isValidUrl, validationResetPasswordSchema } from '@/utils';
 import '@/styles/index.css';
 import { SuccessAuthRedirect } from '@/types';
-import { concatScopes, defaultScopes } from '@/constants';
 
 const initialValues = {
   password: '',
@@ -16,18 +15,18 @@ const initialValues = {
 
 type TResetPassword = {
   successAuthRedirect: SuccessAuthRedirect;
-  scopes?: string[];
 };
 
-export const ResetPassword: FC<TResetPassword> = ({ successAuthRedirect, scopes = defaultScopes }) => {
+export const ResetPassword: FC<TResetPassword> = ({ successAuthRedirect }) => {
+  const aooth = useAooth();
   const { fetch, error, isError, isLoading, reset } = useResetPassword();
   const navigate = useNavigate();
   const { passwordPolicy } = useAppSettings();
   const onSubmitHanlder = async (values: typeof initialValues) => {
-    const status = await fetch(values.password, concatScopes(scopes));
+    const status = await fetch(values.password);
     if (status) {
       if (!isValidUrl(successAuthRedirect)) navigate(successAuthRedirect);
-      else window.location.href = getUrlWithTokens(successAuthRedirect);
+      else window.location.href = getUrlWithTokens(aooth, successAuthRedirect);
     }
   };
 
@@ -101,4 +100,4 @@ export const ResetPassword: FC<TResetPassword> = ({ successAuthRedirect, scopes 
   );
 };
 
-ResetPassword.defaultProps = { scopes: defaultScopes };
+ResetPassword.defaultProps = {};

@@ -1,8 +1,11 @@
 /* eslint-disable complexity */
-import { PreferIdentity } from '@/types';
-import { AoothPasswordPolicySettings, ChallengeType } from '@aooth/aooth-sdk-js';
-import { size } from 'lodash';
-import * as Yup from 'yup';
+import { PreferIdentity } from "@/types";
+import {
+  AoothPasswordPolicySettings,
+  ChallengeType,
+} from "@aooth/aooth-js-sdk";
+import { size } from "lodash";
+import * as Yup from "yup";
 
 type AuthStrategy = {
   identity: PreferIdentity;
@@ -15,7 +18,9 @@ export const emailRegex =
 export const phoneNumberRegex =
   /^(\+{0,})(\d{0,})([(]{1}\d{1,3}[)]{0,}){0,}(\s?\d+|\+\d{2,3}\s{1}\d+|\d+){1}[\s|-]?\d+([\s|-]?\d+){1,2}(\s){0,}$/gm;
 
-const passwordValidation = (passwordPolicy: AoothPasswordPolicySettings | null) =>
+const passwordValidation = (
+  passwordPolicy: AoothPasswordPolicySettings | null
+) =>
   Yup.string()
     .required()
     .test({
@@ -31,55 +36,65 @@ const passwordValidation = (passwordPolicy: AoothPasswordPolicySettings | null) 
             require_uppercase: requireUpperCase,
           } = passwordPolicy;
 
-          if (size(value) < minPasswordLength) errors.push('length');
-          if (requireUpperCase && !/[A-Z]/.test(value)) errors.push('uppercase');
-          if (requireLowerCase && !/[a-z]/.test(value)) errors.push('lowercase');
-          if (requireNumber && !/\d/.test(value)) errors.push('number');
-          if (requireSymbol && !/[!@#$%^&*()_+{}[\]:;<>,.?~\\-]/.test(value)) errors.push('symbol');
+          if (size(value) < minPasswordLength) errors.push("length");
+          if (requireUpperCase && !/[A-Z]/.test(value))
+            errors.push("uppercase");
+          if (requireLowerCase && !/[a-z]/.test(value))
+            errors.push("lowercase");
+          if (requireNumber && !/\d/.test(value)) errors.push("number");
+          if (requireSymbol && !/[!@#$%^&*()_+{}[\]:;<>,.?~\\-]/.test(value))
+            errors.push("symbol");
         }
 
         if (errors.length > 0) {
           const validationError = {
             errors,
             inner: true,
-            path: 'password',
-            field: 'password',
+            path: "password",
+            field: "password",
             message: errors,
             value,
-            name: 'ValidationError',
-          } as Yup.ValidationError & { inner: boolean; field: string; message: string[] };
+            name: "ValidationError",
+          } as Yup.ValidationError & {
+            inner: boolean;
+            field: string;
+            message: string[];
+          };
 
-          throw new Yup.ValidationError(validationError, value, 'password');
+          throw new Yup.ValidationError(validationError, value, "password");
         }
 
         return true;
       },
     });
 
-export const validationSingUpSchemas = (fields: AuthStrategy, passwordPolicy: AoothPasswordPolicySettings | null) => {
+export const validationSingUpSchemas = (
+  fields: AuthStrategy,
+  passwordPolicy: AoothPasswordPolicySettings | null
+) => {
   const { identity, challenge } = fields;
 
-  if (identity === 'identity' && challenge === 'password') {
+  if (identity === "identity" && challenge === "password") {
     return Yup.object().shape({
       identity: Yup.string().min(1).required(),
       password: passwordValidation(passwordPolicy),
     });
   }
 
-  if (identity === 'phone' && challenge === 'password') {
+  if (identity === "phone" && challenge === "password") {
     return Yup.object().shape({
       phone: Yup.string().min(2).matches(phoneNumberRegex).required(),
       password: passwordValidation(passwordPolicy),
     });
   }
 
-  if (identity === 'identity' && challenge === 'none') {
+  if (identity === "identity" && challenge === "none") {
     return Yup.object().shape({
       identity: Yup.string().min(1).required(),
     });
   }
 
-  if (identity === 'phone' && challenge === 'none') {
+  if (identity === "phone" && challenge === "none") {
     return Yup.object().shape({
       phone: Yup.string().min(6).matches(phoneNumberRegex).required(),
     });
@@ -98,27 +113,27 @@ export const validationSingInSchemas = (fields: AuthStrategy) => {
     },
   });
 
-  if (identity === 'identity' && challenge === 'password') {
+  if (identity === "identity" && challenge === "password") {
     return Yup.object().shape({
       identity: Yup.string().min(1).required(),
       password: passwordValidationRequired,
     });
   }
 
-  if (identity === 'phone' && challenge === 'password') {
+  if (identity === "phone" && challenge === "password") {
     return Yup.object().shape({
       phone: Yup.string().min(2).matches(phoneNumberRegex).required(),
       password: passwordValidationRequired,
     });
   }
 
-  if (identity === 'identity' && challenge === 'none') {
+  if (identity === "identity" && challenge === "none") {
     return Yup.object().shape({
       identity: Yup.string().min(1).required(),
     });
   }
 
-  if (identity === 'phone' && challenge === 'none') {
+  if (identity === "phone" && challenge === "none") {
     return Yup.object().shape({
       phone: Yup.string().min(6).matches(phoneNumberRegex).required(),
     });
@@ -127,19 +142,21 @@ export const validationSingInSchemas = (fields: AuthStrategy) => {
   return Yup.object().shape({});
 };
 
-export const validationResetPasswordSchema = (passwordPolicy: AoothPasswordPolicySettings | null) =>
+export const validationResetPasswordSchema = (
+  passwordPolicy: AoothPasswordPolicySettings | null
+) =>
   Yup.object().shape({
     password: passwordValidation(passwordPolicy),
   });
 
 export const validationForgotPasswordSchema = (identity: PreferIdentity) => {
-  if (identity === 'identity') {
+  if (identity === "identity") {
     return Yup.object().shape({
       identity: Yup.string().min(1).required(),
     });
   }
 
-  if (identity === 'phone') {
+  if (identity === "phone") {
     return Yup.object().shape({
       phone: Yup.string().min(6).matches(phoneNumberRegex).required(),
     });
