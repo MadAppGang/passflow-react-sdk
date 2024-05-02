@@ -1,5 +1,5 @@
 /* eslint-disable jsx-a11y/label-has-associated-control */
-import { FC, useState } from 'react';
+import { ChangeEvent, FC, useState } from 'react';
 import { Button, Dialog, DialogClose, DialogContent, DialogHeader, DialogTitle, FieldText } from '../ui';
 
 type TPasskeyDialog = {
@@ -12,7 +12,7 @@ type TPasskeyDialog = {
 export const PasskeyDialog: FC<TPasskeyDialog> = ({ isOpen, onChangeOpen, passkeyId, editUserPasskey }) => {
   const [value, setValue] = useState<string>('');
 
-  const onChangeValue = (e: React.ChangeEvent<HTMLInputElement>) => setValue(e.target.value);
+  const onChangeValue = (e: ChangeEvent<HTMLInputElement>) => setValue(e.target.value);
 
   const onEditUserPasskeyHandler = () => {
     void editUserPasskey(value, passkeyId);

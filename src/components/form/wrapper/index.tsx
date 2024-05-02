@@ -11,7 +11,14 @@ type TWrapper = PropsWithChildren & {
   className?: string;
 };
 
-export const Wrapper: FC<TWrapper> = ({ iconId = 'logo', labelIconId = 'label', title, subtitle, className, children }) => {
+export const Wrapper: FC<TWrapper> = ({
+  iconId = 'logo',
+  labelIconId = 'label',
+  title = '',
+  subtitle = '',
+  className = '',
+  children,
+}) => {
   const wrapperStyle = 'aooth-absolute aooth-top-1/2 aooth-left-1/2 -aooth-translate-x-1/2 -aooth-translate-y-1/2 aooth-z-10';
   const labelStyle =
     // eslint-disable-next-line max-len
@@ -36,5 +43,3 @@ export const Wrapper: FC<TWrapper> = ({ iconId = 'logo', labelIconId = 'label', 
     </div>
   );
 };
-
-Wrapper.defaultProps = { iconId: 'logo', labelIconId: 'label', title: '', subtitle: '', className: '' };

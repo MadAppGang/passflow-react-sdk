@@ -10,7 +10,7 @@ type TFieldText = InputHTMLAttributes<HTMLInputElement> & {
   disabled?: boolean;
 };
 
-export const FieldText: FC<TFieldText> = ({ id, isError, className, disabled, ...rest }) => {
+export const FieldText: FC<TFieldText> = ({ id, isError = false, className = '', disabled = false, ...rest }) => {
   const styles = {
     'aooth-field--warning': isError,
   };
@@ -25,5 +25,3 @@ export const FieldText: FC<TFieldText> = ({ id, isError, className, disabled, ..
     />
   );
 };
-
-FieldText.defaultProps = { isError: false, className: '', disabled: false };

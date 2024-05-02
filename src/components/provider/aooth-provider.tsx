@@ -1,7 +1,7 @@
-import { FC, ReactNode, useReducer } from "react";
-import { AoothContext, aoothReducer, initialState } from "@/context";
-import { Aooth } from "@aooth/aooth-js-sdk";
-import "@/styles/index.css";
+import { FC, ReactNode, useReducer } from 'react';
+import { AoothContext, aoothReducer, initialState } from '@/context';
+import { Aooth } from '@aooth/aooth-js-sdk';
+import '@/styles/index.css';
 
 type TAoothProvider = {
   appId: string | undefined;
@@ -9,15 +9,11 @@ type TAoothProvider = {
   children: ReactNode;
 };
 
-export const AoothProvider: FC<TAoothProvider> = ({
-  appId,
-  aoothUrl,
-  children,
-}) => {
+export const AoothProvider: FC<TAoothProvider> = ({ appId, aoothUrl, children }) => {
   const [state, dispatch] = useReducer(aoothReducer, {
     ...initialState,
-    appId: appId ?? "",
-    aoothUrl: aoothUrl ?? "",
+    appId: appId ?? '',
+    aoothUrl: aoothUrl ?? '',
   });
 
   const aooth = new Aooth({ appId: state.appId, url: state.aoothUrl });
@@ -25,7 +21,5 @@ export const AoothProvider: FC<TAoothProvider> = ({
   // eslint-disable-next-line react/jsx-no-constructed-context-values
   const value = { state, dispatch, aooth };
 
-  return (
-    <AoothContext.Provider value={value}>{children}</AoothContext.Provider>
-  );
+  return <AoothContext.Provider value={value}>{children}</AoothContext.Provider>;
 };
