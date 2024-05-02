@@ -26,3 +26,15 @@ and then feel free to run the tests:
 ```
 yarn run test:ui
 ```
+
+### Writing your own ui tests.
+
+You can find a tests in the `./tests` frolder.
+
+Please create the new files using the current tests as a reference.
+
+To run the playwright in the design mode with ui, run the follwoing command:
+
+```
+yarn playwright test --ui
+```
