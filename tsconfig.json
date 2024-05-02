@@ -1,26 +1,16 @@
 {
-  "extends": "./tsconfig.base.json",
   "compilerOptions": {
     "target": "ESNext",
     "useDefineForClassFields": true,
-    "lib": [
-      "ESNext",
-      "DOM",
-      "DOM.Iterable"
-    ],
+    "lib": ["ESNext", "DOM", "DOM.Iterable"],
     "allowJs": false,
     "allowSyntheticDefaultImports": true,
     "module": "es2015",
     "skipLibCheck": false,
-    "types": [
-      "vite/client",
-      "node"
-    ],
+    "types": ["vite/client", "node"],
     "baseUrl": "./",
     "paths": {
-      "@/*": [
-        "src/*"
-      ]
+      "@/*": ["src/*"]
     },
     /* Bundler mode */
     "moduleResolution": "Bundler",
@@ -43,18 +33,8 @@
     "noFallthroughCasesInSwitch": true,
     "noUncheckedIndexedAccess": true
   },
-  "include": [
-    "src",
-    "vite.config.ts",
-    ".eslintrc.cjs",
-    "tailwind.config.js",
-    "postcss.config.js"
-  ],
-  "exclude": [
-    "node_modules",
-    "dist",
-    "scripts"
-  ],
+  "include": ["src", "vite.config.ts", ".eslintrc.cjs", "tailwind.config.js", "postcss.config.js"],
+  "exclude": ["node_modules", "dist", "scripts"],
   "references": [
     {
       "path": "./tsconfig.node.json"

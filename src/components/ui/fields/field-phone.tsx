@@ -19,7 +19,7 @@ type TFieldPhone = InputHTMLAttributes<HTMLInputElement> & {
   disabled?: boolean;
 };
 
-export const FieldPhone: FC<TFieldPhone> = ({ id, value, setValue, isError, className, disabled }) => {
+export const FieldPhone: FC<TFieldPhone> = ({ id, value, setValue, isError = false, className = '', disabled = false }) => {
   const { prefCountryWithPhoneCode, allCountriesWithPhoneCode } = useCountries();
   const [isOpen, setIsOpen] = useState(false);
   const [selectedCountry, setSelectedCountry] = useState(prefCountryWithPhoneCode ?? allCountriesWithPhoneCode[0]);
@@ -174,5 +174,3 @@ export const FieldPhone: FC<TFieldPhone> = ({ id, value, setValue, isError, clas
     </div>
   );
 };
-
-FieldPhone.defaultProps = { isError: false, className: '', disabled: false };

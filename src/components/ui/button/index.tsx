@@ -14,7 +14,16 @@ type TButton = PropsWithChildren &
     className?: string;
   };
 
-export const Button: FC<TButton> = ({ size, variant, type, withIcon, asIcon, className, children, ...rest }) => {
+export const Button: FC<TButton> = ({
+  size,
+  variant,
+  type,
+  withIcon = false,
+  asIcon = false,
+  className = '',
+  children,
+  ...rest
+}) => {
   const styles = {
     'aooth-button aooth-button--big': size === 'big',
     'aooth-button aooth-button--medium': size === 'medium',
@@ -35,10 +44,4 @@ export const Button: FC<TButton> = ({ size, variant, type, withIcon, asIcon, cla
       {children}
     </button>
   );
-};
-
-Button.defaultProps = {
-  withIcon: false,
-  asIcon: false,
-  className: '',
 };

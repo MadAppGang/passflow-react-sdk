@@ -10,7 +10,7 @@ type TTimerButton = PropsWithChildren & {
   className?: string;
 };
 
-export const TimerButton: FC<TTimerButton> = ({ totalSecond, onClick, className, ...props }) => {
+export const TimerButton: FC<TTimerButton> = ({ totalSecond, onClick, className = '', ...props }) => {
   const [seconds, setSeconds] = useState(totalSecond);
 
   useEffect(() => {
@@ -46,5 +46,3 @@ export const TimerButton: FC<TTimerButton> = ({ totalSecond, onClick, className,
     </Button>
   );
 };
-
-TimerButton.defaultProps = { className: '' };

@@ -9,7 +9,9 @@ export type TError = {
   error?: string;
 };
 
-export const Error: FC<TError> = ({ error, goBackRedirectTo }) => {
+const defaultErrorMessage = 'Something went wrong';
+
+export const Error: FC<TError> = ({ error = defaultErrorMessage, goBackRedirectTo }) => {
   const navigate = useNavigate();
 
   const onGoBackHandler = () => {
@@ -19,17 +21,15 @@ export const Error: FC<TError> = ({ error, goBackRedirectTo }) => {
 
   return (
     <Wrapper iconId='logo-red'>
-      <div className='flex flex-col items-center justify-start gap-[32px]'>
-        <div className='flex flex-col items-center justify-start gap-[8px]'>
-          {error && <p className='text-title-2-bold text-Warning text-center'>{error}</p>}
-          <p className='text-body-2-medium text-Grey-One'>Please go back or try again later</p>
+      <div className='aooth-flex aooth-flex-col aooth-items-center aooth-justify-start aooth-gap-[32px]'>
+        <div className='aooth-flex aooth-flex-col aooth-items-center aooth-justify-start aooth-gap-[8px]'>
+          {error && <p className='aooth-text-title-2-bold aooth-text-Warning aooth-text-center'>{error}</p>}
+          <p className='aooth-text-body-2-medium aooth-text-Grey-One'>Please go back or try again later</p>
         </div>
-        <Button size='big' type='button' variant='primary' onClick={onGoBackHandler} className='max-w-[196px]'>
+        <Button size='big' type='button' variant='primary' onClick={onGoBackHandler} className='aooth-max-w-[196px]'>
           Go back
         </Button>
       </div>
     </Wrapper>
   );
 };
-
-Error.defaultProps = { error: 'Something went wrong' };

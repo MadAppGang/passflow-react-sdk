@@ -46,11 +46,11 @@ import trash from '@/assets/icons/general/trash.svg';
 type TIcon = {
   type: 'general' | 'providers' | 'flags';
   id: string;
-  className?: string;
   size: 'small' | 'medium' | 'big' | 'large';
+  className?: string;
 };
 
-export const Icon = ({ type, id, size, className }: TIcon) => {
+export const Icon = ({ type, id, size, className = '' }: TIcon) => {
   const styles = {
     'aooth-w-[16px] aooth-h-[16px]': size === 'small',
     'aooth-w-[20px] aooth-h-[20px]': size === 'medium',
@@ -113,5 +113,3 @@ export const Icon = ({ type, id, size, className }: TIcon) => {
     </div>
   );
 };
-
-Icon.defaultProps = { className: '' };

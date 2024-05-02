@@ -1,11 +1,5 @@
-import {
-  Aooth,
-  AoothPasskeySettings,
-  AoothPasswordPolicySettings,
-  AppSettings,
-  Providers,
-} from "@aooth/aooth-js-sdk";
-import { Dispatch, createContext } from "react";
+import { Aooth, AoothPasskeySettings, AoothPasswordPolicySettings, AppSettings, Providers } from '@aooth/aooth-js-sdk';
+import { Dispatch, createContext } from 'react';
 
 export type AoothState = {
   appId: string;
@@ -23,7 +17,7 @@ export type AoothState = {
   passkeyProvider: AoothPasskeySettings | null;
 };
 
-export type AoothAction = { type: "SET_AOOTH_STATE"; payload: AoothState };
+export type AoothAction = { type: 'SET_AOOTH_STATE'; payload: AoothState };
 
 export type AoothContextType = {
   state: AoothState;
@@ -32,23 +26,18 @@ export type AoothContextType = {
 };
 
 export const initialState: AoothState = {
-  appId: "",
-  aoothUrl: "",
+  appId: '',
+  aoothUrl: '',
   appSettings: null,
   passwordPolicy: null,
   passkeyProvider: null,
 };
 
-export const AoothContext = createContext<AoothContextType | undefined>(
-  undefined
-);
+export const AoothContext = createContext<AoothContextType | undefined>(undefined);
 
-export const aoothReducer = (
-  state: AoothState,
-  action: AoothAction
-): AoothState => {
+export const aoothReducer = (state: AoothState, action: AoothAction): AoothState => {
   switch (action.type) {
-    case "SET_AOOTH_STATE":
+    case 'SET_AOOTH_STATE':
       return { ...state, ...action.payload };
     default:
       return state;

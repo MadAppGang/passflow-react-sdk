@@ -1,8 +1,7 @@
-/* eslint-disable complexity */
-import { useEffect, useState } from "react";
-import { useAooth } from "./use-aooth";
-import { ParsedTokens, Token, isTokenExpired } from "@aooth/aooth-js-sdk";
-import { isEqual } from "lodash";
+import { useEffect, useState } from 'react';
+import { useAooth } from './use-aooth';
+import { ParsedTokens, Token, isTokenExpired } from '@aooth/aooth-js-sdk';
+import { isEqual } from 'lodash';
 
 type useAuthReturn = {
   isAuthenticated: boolean;
@@ -20,9 +19,7 @@ export const useAuth = (doRefresh: boolean): useAuthReturn => {
   // or do we need to do it when we do api call?
   const [needToRefreshToken, setNeedToRefreshToken] = useState(false);
   const [doRefreshState] = useState(doRefresh);
-  const [tokens, setTokens] = useState<ParsedTokens | undefined>(
-    aooth.getParsedTokenCache()
-  );
+  const [tokens, setTokens] = useState<ParsedTokens | undefined>(aooth.getParsedTokenCache());
   const [error, setError] = useState<string | undefined>(undefined);
 
   const tokensCache = aooth.getParsedTokenCache();

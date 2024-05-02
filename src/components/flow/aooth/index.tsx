@@ -43,10 +43,10 @@ const combineRoutesWithPrefix = (prefix?: string) =>
 const AoothFlowWrapper: FC<TAoothFlow> = ({
   federatedDisplayMode,
   successAuthRedirect,
-  error,
+  error = undefined,
   relyingPartyId = window.location.hostname,
   federatedCallbackUrl = window.location.origin,
-  pathPrefix,
+  pathPrefix = '',
 }) => {
   const routesWithPrefix = useMemo(() => combineRoutesWithPrefix(pathPrefix), [pathPrefix]);
 
@@ -108,13 +108,6 @@ const AoothFlowWrapper: FC<TAoothFlow> = ({
       <Route path='*' element={<Navigate to={{ pathname: routesWithPrefix.signin, search: window.location.search }} />} />
     </Routes>
   );
-};
-
-AoothFlowWrapper.defaultProps = {
-  error: undefined,
-  federatedCallbackUrl: window.location.origin,
-  pathPrefix: '',
-  relyingPartyId: window.location.hostname,
 };
 
 export const AoothFlow = withError(AoothFlowWrapper, ErrorComponent);

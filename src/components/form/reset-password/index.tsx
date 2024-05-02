@@ -99,5 +99,3 @@ export const ResetPassword: FC<TResetPassword> = ({ successAuthRedirect }) => {
     </Wrapper>
   );
 };
-
-ResetPassword.defaultProps = {};

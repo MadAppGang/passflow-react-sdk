@@ -1,4 +1,4 @@
-import { useContext, useLayoutEffect, useState } from "react";
+import { useContext, useLayoutEffect, useState } from 'react';
 import {
   AoothPasskeySettings,
   AoothPasswordPolicySettings,
@@ -6,28 +6,26 @@ import {
   FirstFactorFim,
   FirstFactorInternal,
   Providers,
-} from "@aooth/aooth-js-sdk";
-import { useAooth } from "./use-aooth";
-import { AoothContext } from "@/context";
-import { includes } from "lodash";
+} from '@aooth/aooth-js-sdk';
+import { useAooth } from './use-aooth';
+import { AoothContext } from '@/context';
+import { includes } from 'lodash';
 
 const appSettings = (data: AppSettings) =>
   data.auth_strategies.reduce(
     (acc, item) => {
-      if (item.type === "first_factor_internal") {
+      if (item.type === 'first_factor_internal') {
         const strategy = item.strategy as FirstFactorInternal;
         const { identity, challenge, transport } = strategy;
         if (acc.INTERNAL[identity]) {
-          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-          acc.INTERNAL[identity]!.push({ challenge, transport });
+          acc.INTERNAL[identity]?.push({ challenge, transport });
         } else {
           acc.INTERNAL[identity] = [{ challenge, transport }];
           acc.IDENTITY_FIELDS.push(identity);
         }
-        if (!includes(acc.CHALLENGES, challenge))
-          acc.CHALLENGES.push(challenge);
-        if (challenge === "passkey") acc.IDENTITY_FIELDS_PASSKEY.push(identity);
-      } else if (item.type === "first_factor_fim") {
+        if (!includes(acc.CHALLENGES, challenge)) acc.CHALLENGES.push(challenge);
+        if (challenge === 'passkey') acc.IDENTITY_FIELDS_PASSKEY.push(identity);
+      } else if (item.type === 'first_factor_fim') {
         const strategy = item.strategy as FirstFactorFim;
         const { fim_type: fimType } = strategy;
         acc.PROVIDERS.push(fimType);
@@ -46,7 +44,7 @@ const appSettings = (data: AppSettings) =>
       IDENTITY_FIELDS: string[];
       IDENTITY_FIELDS_PASSKEY: string[];
       CHALLENGES: string[];
-    }
+    },
   );
 
 export type TuseAppSettings = () => {
@@ -63,11 +61,11 @@ export const useAppSettings: TuseAppSettings = () => {
   const aooth = useAooth();
   const context = useContext(AoothContext);
   const [isError, setIsError] = useState(false);
-  const [errorMessage, setErrorMessage] = useState("");
+  const [errorMessage, setErrorMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
   if (!context) {
-    throw new Error("useAppSetting must be used within an AoothProvider");
+    throw new Error('useAppSetting must be used within an AoothProvider');
   }
 
   const { state, dispatch } = context;
@@ -80,7 +78,7 @@ export const useAppSettings: TuseAppSettings = () => {
         const aoothSettingAll = await aooth.getSettingsAll();
         const appSettingsCombined = appSettings(aoothAppSettings);
         dispatch({
-          type: "SET_AOOTH_STATE",
+          type: 'SET_AOOTH_STATE',
           payload: {
             ...state,
             appSettings: { ...aoothAppSettings, ...appSettingsCombined },
@@ -102,7 +100,7 @@ export const useAppSettings: TuseAppSettings = () => {
 
   const reset = () => {
     setIsError(false);
-    setErrorMessage("");
+    setErrorMessage('');
     setIsLoading(false);
   };
 
