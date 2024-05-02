@@ -1,0 +1,23 @@
+@import 'tailwindcss/base';
+@import '@/styles/font.css';
+
+@import 'tailwindcss/components';
+@import '@/styles/button.css';
+@import '@/styles/field.css';
+
+@import 'tailwindcss/utilities';
+
+@layer components {
+  * {
+    box-sizing: border-box;
+  }
+
+  #aooth-wrapper {
+    font-family: 'Inter', sans-serif;
+    box-sizing: border-box;
+
+    @apply aooth-outline-offset-0 aooth-outline-1;
+
+    overflow-x: hidden;
+  }
+}

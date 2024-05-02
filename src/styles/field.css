@@ -1,0 +1,21 @@
+@layer components {
+  .aooth-field {
+    @apply aooth-w-full aooth-px-[12px] aooth-py-[11px] aooth-rounded-[4px] aooth-flex aooth-items-center aooth-justify-start aooth-bg-Background aooth-text-body-2-medium aooth-text-Dark placeholder:aooth-text-Grey-One;
+  }
+
+  .aooth-field--focused {
+    @apply focus-visible:aooth-border-Primary focus-visible:aooth-outline-none;
+  }
+
+  .aooth-field--warning {
+    @apply aooth-border-Warning aooth-border-[1px] aooth-border-solid focus-visible:aooth-border-Warning;
+  }
+
+  .aooth-field:disabled {
+    @apply aooth-border-Grey-Four aooth-text-Grey-One aooth-bg-Background aooth-cursor-not-allowed;
+  }
+
+  .aooth-field-otp {
+    @apply aooth-w-[48px] aooth-h-[48px] aooth-rounded-[4px] aooth-bg-Background aooth-border-solid aooth-text-Dark aooth-text-body-2-medium aooth-text-center;
+  }
+}
