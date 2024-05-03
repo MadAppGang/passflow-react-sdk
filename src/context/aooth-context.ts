@@ -2,8 +2,6 @@ import { Aooth, AoothPasskeySettings, AoothPasswordPolicySettings, AppSettings, 
 import { Dispatch, createContext } from 'react';
 
 export type AoothState = {
-  appId: string;
-  aoothUrl: string;
   appSettings:
     | (AppSettings & {
         PROVIDERS: Providers[];
@@ -15,6 +13,10 @@ export type AoothState = {
     | null;
   passwordPolicy: AoothPasswordPolicySettings | null;
   passkeyProvider: AoothPasskeySettings | null;
+  url?: string;
+  appId?: string;
+  scopes?: string[];
+  createTenantForNewUser?: boolean;
 };
 
 export type AoothAction = { type: 'SET_AOOTH_STATE'; payload: AoothState };
@@ -26,11 +28,13 @@ export type AoothContextType = {
 };
 
 export const initialState: AoothState = {
-  appId: '',
-  aoothUrl: '',
   appSettings: null,
   passwordPolicy: null,
   passkeyProvider: null,
+  url: undefined,
+  appId: undefined,
+  scopes: undefined,
+  createTenantForNewUser: false,
 };
 
 export const AoothContext = createContext<AoothContextType | undefined>(undefined);

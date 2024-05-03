@@ -5,6 +5,7 @@ import EnvironmentPlugin from 'vite-plugin-environment';
 import path from 'path';
 import { dependencies, peerDependencies } from './package.json';
 import tailwindcss from 'tailwindcss';
+import cssnano from 'cssnano';
 
 // https://vitejs.dev/config/
 export default defineConfig({
@@ -25,7 +26,12 @@ export default defineConfig({
   },
   css: {
     postcss: {
-      plugins: [tailwindcss('./tailwind.config.js')],
+      plugins: [
+        tailwindcss('./tailwind.config.js'),
+        cssnano({
+          preset: 'default',
+        }),
+      ],
     },
   },
   assetsInclude: ['**/*.svg'],

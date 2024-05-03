@@ -19,8 +19,8 @@ export const withError =
     const context = useContext(AoothContext);
     const { successAuthRedirect } = props;
 
-    if (!context?.state.appId || !context.state.aoothUrl) {
-      const errorMessage = 'Missing appId or aoothUrl';
+    if (!context?.state.appId || !context.state.url) {
+      const errorMessage = 'Missing appId or url';
       return <ErrorComponent goBackRedirectTo={successAuthRedirect} error={errorMessage} />;
     }
 
