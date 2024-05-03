@@ -49,3 +49,5 @@ vite.config.ts.*
 !.yarn/sdks
 !.yarn/versions
 
+
+*storybook.log
