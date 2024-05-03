@@ -2,7 +2,7 @@
   "name": "@aooth/aooth-react-sdk",
   "description": "Aooth React UI Kit",
   "packageManager": "yarn@4.1.1",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "type": "module",
   "files": [
     "dist"
@@ -117,15 +117,19 @@
     {
       "name": "Ivan Holiak",
       "url": "https://github.com/IvanHoliak"
+    },
+    {
+      "name": "Jack Rudenko",
+      "url": "https://madappgang.com"
     }
   ],
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/MadAppGang/aooth-js/issues"
+    "url": "https://github.com/MadAppGang/aooth-react-sdk/issues"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/MadAppGang/aooth-js.git",
+    "url": "git+https://github.com/MadAppGang/aooth-react-sdk.git",
     "directory": "packages/react"
   },
   "publishConfig": {
