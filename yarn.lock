@@ -66,7 +66,6 @@ __metadata:
     "@storybook/builder-vite": "npm:^8.0.9"
     "@storybook/react": "npm:^8.0.9"
     "@storybook/react-vite": "npm:^8.0.9"
-    "@storybook/test": "npm:^8.0.9"
     "@types/babel__core": "npm:^7"
     "@types/babel__preset-env": "npm:^7"
     "@types/jest": "npm:^29.5.12"
@@ -3591,7 +3590,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@storybook/test@npm:8.0.9, @storybook/test@npm:^8.0.9":
+"@storybook/test@npm:8.0.9":
   version: 8.0.9
   resolution: "@storybook/test@npm:8.0.9"
   dependencies:

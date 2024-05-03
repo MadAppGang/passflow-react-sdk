@@ -45,7 +45,6 @@ const RAW_RUNTIME_STATE =
           ["@storybook/builder-vite", "virtual:0e09f225152713bf80394067a05a12376b27c348c48e29ec26743e3d42d1ffb053cddc16788684badc247258700138106b5f345f82346139de5d77ebd34dbd8e#npm:8.0.9"],\
           ["@storybook/react", "virtual:0e09f225152713bf80394067a05a12376b27c348c48e29ec26743e3d42d1ffb053cddc16788684badc247258700138106b5f345f82346139de5d77ebd34dbd8e#npm:8.0.9"],\
           ["@storybook/react-vite", "virtual:0e09f225152713bf80394067a05a12376b27c348c48e29ec26743e3d42d1ffb053cddc16788684badc247258700138106b5f345f82346139de5d77ebd34dbd8e#npm:8.0.9"],\
-          ["@storybook/test", "npm:8.0.9"],\
           ["@types/babel__core", "npm:7.20.5"],\
           ["@types/babel__preset-env", "npm:7.9.6"],\
           ["@types/jest", "npm:29.5.12"],\
@@ -170,7 +169,6 @@ const RAW_RUNTIME_STATE =
           ["@storybook/builder-vite", "virtual:0e09f225152713bf80394067a05a12376b27c348c48e29ec26743e3d42d1ffb053cddc16788684badc247258700138106b5f345f82346139de5d77ebd34dbd8e#npm:8.0.9"],\
           ["@storybook/react", "virtual:0e09f225152713bf80394067a05a12376b27c348c48e29ec26743e3d42d1ffb053cddc16788684badc247258700138106b5f345f82346139de5d77ebd34dbd8e#npm:8.0.9"],\
           ["@storybook/react-vite", "virtual:0e09f225152713bf80394067a05a12376b27c348c48e29ec26743e3d42d1ffb053cddc16788684badc247258700138106b5f345f82346139de5d77ebd34dbd8e#npm:8.0.9"],\
-          ["@storybook/test", "npm:8.0.9"],\
           ["@types/babel__core", "npm:7.20.5"],\
           ["@types/babel__preset-env", "npm:7.9.6"],\
           ["@types/jest", "npm:29.5.12"],\
