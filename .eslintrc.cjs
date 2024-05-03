@@ -29,17 +29,7 @@ module.exports = {
       },
     },
   },
-  extends: [
-    'eslint:recommended',
-    'plugin:@typescript-eslint/recommended',
-    'plugin:@typescript-eslint/recommended-requiring-type-checking',
-    'plugin:react-hooks/recommended',
-    'plugin:import/typescript',
-    'plugin:react/recommended',
-    'airbnb',
-    'airbnb/hooks',
-    'prettier',
-  ],
+  extends: ['eslint:recommended', 'plugin:@typescript-eslint/recommended', 'plugin:@typescript-eslint/recommended-requiring-type-checking', 'plugin:react-hooks/recommended', 'plugin:import/typescript', 'plugin:react/recommended', 'airbnb', 'airbnb/hooks', 'prettier', 'plugin:storybook/recommended'],
   parser: '@typescript-eslint/parser',
   plugins: ['react-refresh', 'react', '@typescript-eslint', 'react-hooks', 'prettier', 'import'],
   rules: {
