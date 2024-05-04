@@ -74,7 +74,7 @@ export const PasskeyForm: FC<TPasskeyForm> = ({
     const status = await fetch(payload as AoothPasskeyRegisterStartPayload, 'passkey');
     if (status && passkeySettings?.validation === 'none') {
       if (!isValidUrl(successAuthRedirect)) navigate(successAuthRedirect);
-      else window.location.href = getUrlWithTokens(aooth, successAuthRedirect);
+      else window.location.href = await getUrlWithTokens(aooth, successAuthRedirect);
     }
 
     const searchParams = new URLSearchParams(window.location.search);

@@ -77,7 +77,7 @@ export const VerifyChallengeOTP: FC<TVerifyChallengeOTP> = ({
         const status = state.type === 'passwordless' ? await fetch(payload) : await fetchPasskey(valueOTP, challengeId ?? '');
         if (status) {
           if (!isValidUrl(successAuthRedirect)) navigate(successAuthRedirect);
-          else window.location.href = getUrlWithTokens(aooth, successAuthRedirect);
+          else window.location.href = await getUrlWithTokens(aooth, successAuthRedirect);
         }
       })();
     }

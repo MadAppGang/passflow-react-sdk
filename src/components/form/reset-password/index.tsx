@@ -26,7 +26,7 @@ export const ResetPassword: FC<TResetPassword> = ({ successAuthRedirect }) => {
     const status = await fetch(values.password);
     if (status) {
       if (!isValidUrl(successAuthRedirect)) navigate(successAuthRedirect);
-      else window.location.href = getUrlWithTokens(aooth, successAuthRedirect);
+      else window.location.href = await getUrlWithTokens(aooth, successAuthRedirect);
     }
   };
 

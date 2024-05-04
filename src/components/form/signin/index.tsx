@@ -54,7 +54,7 @@ export const SignInForm: FC<TSignIn> = ({
 }) => {
   const aooth = useAooth();
   const { fetch, isError, error, reset, isLoading } = useSignIn();
-  const { appSettings, passwordPolicy } = useAppSettings();
+  const { appSettings, passwordPolicy, isError: isErrorApp, error: errorApp } = useAppSettings();
   const { federatedWithRedirect, federatedWithPopup } = useProvider(federatedCallbackUrl);
   const navigate = useNavigate();
 
@@ -105,7 +105,7 @@ export const SignInForm: FC<TSignIn> = ({
     const status = await fetch(payload, 'password');
     if (status) {
       if (!isValidUrl(successAuthRedirect)) navigate(successAuthRedirect);
-      else window.location.href = getUrlWithTokens(aooth, successAuthRedirect);
+      else window.location.href = await getUrlWithTokens(aooth, successAuthRedirect);
     }
   };
 
@@ -158,7 +158,7 @@ export const SignInForm: FC<TSignIn> = ({
     const status = await fetch(payload, 'passkey');
     if (status) {
       if (!isValidUrl(successAuthRedirect)) navigate(successAuthRedirect);
-      else window.location.href = getUrlWithTokens(aooth, successAuthRedirect);
+      else window.location.href = await getUrlWithTokens(aooth, successAuthRedirect);
     }
   };
 
@@ -265,6 +265,8 @@ export const SignInForm: FC<TSignIn> = ({
   });
 
   if (isError && error && passwordlessExperience) throw new Error(error);
+
+  if (isErrorApp && errorApp) throw new Error('Could not connect to server, please check your network and try again later.');
 
   if (appSettings) {
     return (
