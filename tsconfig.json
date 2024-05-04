@@ -33,7 +33,15 @@
     "noFallthroughCasesInSwitch": true,
     "noUncheckedIndexedAccess": true
   },
-  "include": ["src", "vite.config.ts", ".eslintrc.cjs", "tailwind.config.js", "postcss.config.js"],
+  "include": [
+    "src",
+    "tests",
+    "vite.config.ts",
+    ".eslintrc.cjs",
+    "tailwind.config.js",
+    "postcss.config.js",
+    "playwright.config.ts"
+  ],
   "exclude": ["node_modules", "dist", "scripts"],
   "references": [
     {

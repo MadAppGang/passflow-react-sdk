@@ -18,7 +18,12 @@ export const App = () => (
     scopes={aoothConfig.scopes}
   >
     <BrowserRouter>
-      <AoothFlow federatedDisplayMode='redirect' successAuthRedirect='/' pathPrefix='/web' />
+      <AoothFlow
+        federatedDisplayMode='redirect'
+        successAuthRedirect='https://jwt.io'
+        federatedCallbackUrl='https://jwt.io'
+        pathPrefix='/web'
+      />
     </BrowserRouter>
   </AoothProvider>
 );
