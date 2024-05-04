@@ -5,6 +5,12 @@ __metadata:
   version: 8
   cacheKey: 10c0
 
+"@aooth/aooth-react-sdk@link:..::locator=playwright%40workspace%3A.":
+  version: 0.0.0-use.local
+  resolution: "@aooth/aooth-react-sdk@link:..::locator=playwright%40workspace%3A."
+  languageName: node
+  linkType: soft
+
 "@isaacs/cliui@npm:^8.0.2":
   version: 8.0.2
   resolution: "@isaacs/cliui@npm:8.0.2"
@@ -678,8 +684,12 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "playwright@workspace:."
   dependencies:
+    "@aooth/aooth-react-sdk": "link:.."
     "@playwright/test": "npm:^1.43.1"
     "@types/node": "npm:^20.12.8"
+  dependenciesMeta:
+    "@playwright/test@1.43.1":
+      unplugged: true
   languageName: unknown
   linkType: soft
 

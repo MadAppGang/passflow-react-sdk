@@ -1,9 +1,16 @@
 {
   "name": "playwright",
   "packageManager": "yarn@4.1.1",
+  "dependencies": {
+    "@aooth/aooth-react-sdk": "link:.."
+  },
   "devDependencies": {
     "@playwright/test": "^1.43.1",
     "@types/node": "^20.12.8"
   },
-  "scripts": {}
+  "dependenciesMeta": {
+    "@playwright/test@1.43.1": {
+      "unplugged": true
+    }
+  }
 }
