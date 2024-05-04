@@ -1,9 +1,5 @@
 import { test, expect, type Page } from '@playwright/test';
 
-interface Test1 {
-  page: Page;
-}
-
 test.beforeEach(async ({ page }) => {
   await page.goto('https://demo.playwright.dev/todomvc');
 });
