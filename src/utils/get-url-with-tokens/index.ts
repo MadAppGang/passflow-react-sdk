@@ -1,7 +1,8 @@
-import { Aooth, Tokens } from '@aooth/aooth-js-sdk';
+import { Aooth } from '@aooth/aooth-js-sdk';
 
-export const getUrlWithTokens = (aooth: Aooth, url: string): string => {
-  const tokens: Tokens | undefined = aooth.getTokensCache();
+export const getUrlWithTokens = async (aooth: Aooth, url: string): Promise<string> => {
+  const tokens = await aooth.getTokens(false);
+
   if (tokens) {
     tokens.scopes = undefined;
     const tokenParams = Object.entries(tokens)

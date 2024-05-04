@@ -61,7 +61,7 @@ export const SignUpForm: FC<TSignUp> = ({
   const aooth = useAooth();
   const { fetch, isError, error, reset, isLoading } = useSignUp();
   const { federatedWithRedirect, federatedWithPopup } = useProvider(federatedCallbackUrl);
-  const { appSettings, passwordPolicy, passkeyProvider } = useAppSettings();
+  const { appSettings, passwordPolicy, passkeyProvider, isError: isErrorApp, error: errorApp } = useAppSettings();
   const location = useLocation();
   const navigate = useNavigate();
   const identityState = location.state as {
@@ -123,7 +123,7 @@ export const SignUpForm: FC<TSignUp> = ({
     const status = await fetch(payload, 'password');
     if (status) {
       if (!isValidUrl(successAuthRedirect)) navigate(successAuthRedirect);
-      else window.location.href = getUrlWithTokens(aooth, successAuthRedirect);
+      else window.location.href = await getUrlWithTokens(aooth, successAuthRedirect);
     }
   };
 
@@ -144,7 +144,7 @@ export const SignUpForm: FC<TSignUp> = ({
     const status = await fetch(payload, 'passkey');
     if (status && passkeyProvider?.validation === 'none') {
       if (!isValidUrl(successAuthRedirect)) navigate(successAuthRedirect);
-      else window.location.href = getUrlWithTokens(aooth, successAuthRedirect);
+      else window.location.href = await getUrlWithTokens(aooth, successAuthRedirect);
     }
 
     const searchParams = new URLSearchParams(window.location.search);
@@ -331,6 +331,8 @@ export const SignUpForm: FC<TSignUp> = ({
   });
 
   if (isError && error && passwordlessExperience) throw new Error(error);
+
+  if (isErrorApp && errorApp) throw new Error('Could not connect to server, please check your network and try again later.');
 
   if (appSettings) {
     return (
