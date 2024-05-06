@@ -13,6 +13,12 @@
   "auth_strategies": [
     {
       "strategy": {
+        "fim_type": "google"
+      },
+      "type": "first_factor_fim"
+    },
+    {
+      "strategy": {
         "identity": "email",
         "challenge": "password",
         "transport": "none"

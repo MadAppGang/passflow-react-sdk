@@ -18,38 +18,6 @@
         "transport": "none"
       },
       "type": "first_factor_internal"
-    },
-    {
-      "strategy": {
-        "identity": "email",
-        "challenge": "passkey",
-        "transport": "none"
-      },
-      "type": "first_factor_internal"
-    },
-    {
-      "strategy": {
-        "identity": "phone",
-        "challenge": "password",
-        "transport": "none"
-      },
-      "type": "first_factor_internal"
-    },
-    {
-      "strategy": {
-        "identity": "phone",
-        "challenge": "otp",
-        "transport": "sms"
-      },
-      "type": "first_factor_internal"
-    },
-    {
-      "strategy": {
-        "identity": "email",
-        "challenge": "magic_link",
-        "transport": "email"
-      },
-      "type": "first_factor_internal"
     }
   ],
   "pkce_enabled": false,

@@ -21,14 +21,6 @@
     },
     {
       "strategy": {
-        "identity": "email",
-        "challenge": "passkey",
-        "transport": "none"
-      },
-      "type": "first_factor_internal"
-    },
-    {
-      "strategy": {
         "identity": "phone",
         "challenge": "password",
         "transport": "none"
