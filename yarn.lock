@@ -29,9 +29,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@aooth/aooth-js-sdk@npm:^0.1.1":
-  version: 0.1.1
-  resolution: "@aooth/aooth-js-sdk@npm:0.1.1"
+"@aooth/aooth-js-sdk@npm:^0.1.9":
+  version: 0.1.9
+  resolution: "@aooth/aooth-js-sdk@npm:0.1.9"
   dependencies:
     "@simplewebauthn/browser": "npm:^10.0.0"
     "@simplewebauthn/types": "npm:^10.0.0"
@@ -39,7 +39,7 @@ __metadata:
     axios-retry: "npm:^4.1.0"
     dayjs: "npm:^1.11.11"
     uuid: "npm:^9.0.1"
-  checksum: 10c0/9a588f0d1dd7c7880fd07c32a623ee79ae78a6282dcb5aab1004b4b76e3bb817a4ddfbcd8ebebc0f61a7a4148d80f29c2530566c70fc02dcbba7d63fab857eb5
+  checksum: 10c0/2e61602e3703de9c0f648c280201624ebf51cb88c06eed220be8f41df9503909539a95227eae2773ba275d3fe086fb1821a4e2b4aa970e8fef99715af948f1b2
   languageName: node
   linkType: hard
 
@@ -47,7 +47,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@aooth/aooth-react-sdk@workspace:."
   dependencies:
-    "@aooth/aooth-js-sdk": "npm:^0.1.1"
+    "@aooth/aooth-js-sdk": "npm:^0.1.9"
     "@babel/core": "npm:^7.24.5"
     "@babel/preset-env": "npm:^7.24.5"
     "@babel/preset-react": "npm:^7.24.1"

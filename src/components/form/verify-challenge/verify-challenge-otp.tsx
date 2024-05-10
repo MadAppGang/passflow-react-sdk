@@ -1,5 +1,6 @@
+/* eslint-disable complexity */
 import { FC, useEffect, useState } from 'react';
-import { Navigate, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
+import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import {
   AoothPasswordlessSignInCompletePayload,
   AoothPasswordlessSignInPayload,
@@ -27,7 +28,6 @@ export const VerifyChallengeOTP: FC<TVerifyChallengeOTP> = ({
   numInputs,
   shouldAutoFocus,
   signUpPath,
-  createTenant = false,
 }) => {
   const aooth = useAooth();
   const { fetch: refetch } = useSignIn();
@@ -37,18 +37,17 @@ export const VerifyChallengeOTP: FC<TVerifyChallengeOTP> = ({
   const [searchParams] = useSearchParams({
     otp: '',
     appId: '',
-    chId: '',
-    email: '',
+    challenge_id: '',
   });
   const otp = searchParams.get('otp');
-  const challengeId = searchParams.get('chId');
-  const email = searchParams.get('email');
+  const challengeId = searchParams.get('challenge_id');
 
   const [valueOTP, setValueOTP] = useState(otp ?? '');
   const { state } = location as {
     state: {
       identity: 'email' | 'phone';
       identityValue: string;
+      challengeId: string;
       passwordlessPayload: AoothPasswordlessSignInPayload;
       type: 'passwordless' | 'passkey';
     };
@@ -59,22 +58,22 @@ export const VerifyChallengeOTP: FC<TVerifyChallengeOTP> = ({
       let payload: AoothPasswordlessSignInCompletePayload | AoothValidatePayload;
       if (state) {
         payload = {
-          create_tenant: createTenant,
+          challenge_id: state.challengeId,
           challenge_type: 'otp',
           otp: valueOTP,
-          ...(state.identity === 'email' ? { email: state.identityValue } : { phone: state.identityValue }),
         };
       } else {
         payload = {
-          create_tenant: createTenant,
+          challenge_id: challengeId ?? '',
           challenge_type: 'magic_link',
           otp: valueOTP,
-          ...(email ? { email } : { phone: '' }),
         };
       }
 
+      const chId = challengeId && challengeId?.length > 1 ? challengeId : state.challengeId;
+
       void (async () => {
-        const status = state.type === 'passwordless' ? await fetch(payload) : await fetchPasskey(valueOTP, challengeId ?? '');
+        const status = state && state?.type === 'passwordless' ? await fetch(payload) : await fetchPasskey(valueOTP, chId);
         if (status) {
           if (!isValidUrl(successAuthRedirect)) navigate(successAuthRedirect);
           else window.location.href = await getUrlWithTokens(aooth, successAuthRedirect);
@@ -105,6 +104,8 @@ export const VerifyChallengeOTP: FC<TVerifyChallengeOTP> = ({
 
   // eslint-disable-next-line no-void
   const onClickResendHandler = () => void refetch(state.passwordlessPayload, 'passwordless');
+
+  if (!state && isError && error) throw new Error(error);
 
   if (state) {
     const { identity, identityValue } = state;
@@ -166,8 +167,5 @@ export const VerifyChallengeOTP: FC<TVerifyChallengeOTP> = ({
     );
   }
 
-  const localSearchParam = new URLSearchParams(window.location.search);
-  localSearchParam.delete('chId');
-
-  return <Navigate to={{ pathname: signUpPath, search: localSearchParam.toString() }} replace />;
+  return null;
 };
