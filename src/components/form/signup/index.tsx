@@ -3,7 +3,7 @@
 import { ChangeEvent, FC, useLayoutEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Form, Formik, FormikErrors, FormikHandlers, FormikState } from 'formik';
-import { AoothPasswordlessSignInPayload, ChallengeType, Providers } from '@aooth/aooth-js-sdk';
+import { AoothPasswordlessResponse, AoothPasswordlessSignInPayload, ChallengeType, Providers } from '@aooth/aooth-js-sdk';
 import { find, get, includes, size, some } from 'lodash';
 import { Button, FieldPassword, FieldPhone, FieldText, Icon, Link, ProvidersBox, Switch } from '@/components/ui';
 import { Wrapper } from '../wrapper';
@@ -141,42 +141,40 @@ export const SignUpForm: FC<TSignUp> = ({
     };
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
-    const status = await fetch(payload, 'passkey');
-    if (status && passkeyProvider?.validation === 'none') {
+    const response = await fetch(payload, 'passkey');
+
+    if (response && passkeyProvider?.validation === 'none') {
       if (!isValidUrl(successAuthRedirect)) navigate(successAuthRedirect);
       else window.location.href = await getUrlWithTokens(aooth, successAuthRedirect);
     }
 
-    const searchParams = new URLSearchParams(window.location.search);
-    searchParams.append('chId', status as string);
-
-    if (get(passkeyProvider, 'validation', false) === 'otp' && status)
+    if (get(passkeyProvider, 'validation', false) === 'otp' && response)
       navigate(
         {
           pathname: verifyOTPPath ?? routes.verify_otp.path,
-          search: searchParams.toString(),
         },
         {
           state: {
             // eslint-disable-next-line no-nested-ternary
             identity: isEmail ? 'email' : isPhone ? 'phone' : 'username',
             identityValue: identity ?? phone,
+            challengeId: response,
             passwordlessPayload: payload,
             type: 'passkey',
           },
         },
       );
-    if (get(passkeyProvider, 'validation', false) === 'magic_link' && status)
+    if (get(passkeyProvider, 'validation', false) === 'magic_link' && response)
       navigate(
         {
           pathname: verifyMagicLinkPath ?? routes.verify_magic_link.path,
-          search: searchParams.toString(),
         },
         {
           state: {
             // eslint-disable-next-line no-nested-ternary
             identity: isEmail ? 'email' : isPhone ? 'phone' : 'username',
             identityValue: identity ?? phone,
+            challengeId: response,
             passwordlessPayload: payload,
           },
         },
@@ -191,9 +189,9 @@ export const SignUpForm: FC<TSignUp> = ({
         ...(field === 'email' ? { email: value } : { phone: value }),
       };
 
-      const status = await fetch(payload, 'passwordless');
+      const response = (await fetch(payload, 'passwordless')) as AoothPasswordlessResponse;
 
-      if (type === 'otp' && status)
+      if (type === 'otp' && (response satisfies AoothPasswordlessResponse))
         navigate(
           {
             pathname: verifyOTPPath ?? routes.verify_otp.path,
@@ -203,12 +201,13 @@ export const SignUpForm: FC<TSignUp> = ({
             state: {
               identity: field,
               identityValue: value,
+              challengeId: response.challenge_id,
               passwordlessPayload: payload,
               type: 'passwordless',
             },
           },
         );
-      if (type === 'magic_link' && status)
+      if (type === 'magic_link' && (response satisfies AoothPasswordlessResponse))
         navigate(
           {
             pathname: verifyMagicLinkPath ?? routes.verify_magic_link.path,
@@ -218,6 +217,7 @@ export const SignUpForm: FC<TSignUp> = ({
             state: {
               identity: field,
               identityValue: value,
+              challengeId: response.challenge_id,
               passwordlessPayload: payload,
               type: 'passwordless',
             },

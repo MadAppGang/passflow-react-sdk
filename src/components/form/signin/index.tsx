@@ -3,7 +3,7 @@
 import { ChangeEvent, FC, useLayoutEffect, useState } from 'react';
 import { Button, FieldPassword, FieldPhone, FieldText, Icon, Link, ProvidersBox, Switch } from '@/components/ui';
 import { Form, Formik, FormikErrors, FormikHandlers, FormikState } from 'formik';
-import { AoothPasswordlessSignInPayload, ChallengeType, Providers } from '@aooth/aooth-js-sdk';
+import { AoothPasswordlessResponse, AoothPasswordlessSignInPayload, ChallengeType, Providers } from '@aooth/aooth-js-sdk';
 import { find, includes, size, some } from 'lodash';
 import { Wrapper } from '../wrapper';
 import { useAooth, useAppSettings, useProvider, useSignIn } from '@/hooks';
@@ -117,9 +117,9 @@ export const SignInForm: FC<TSignIn> = ({
         ...(field === 'email' ? { email: value } : { phone: value }),
       };
 
-      const status = await fetch(payload, 'passwordless');
+      const response = (await fetch(payload, 'passwordless')) as AoothPasswordlessResponse;
 
-      if (type === 'otp' && status)
+      if (type === 'otp' && (response satisfies AoothPasswordlessResponse))
         navigate(
           {
             pathname: verifyOTPPath ?? routes.verify_otp.path,
@@ -129,12 +129,13 @@ export const SignInForm: FC<TSignIn> = ({
             state: {
               identity: field,
               identityValue: value,
+              challengeId: response.challenge_id,
               passwordlessPayload: payload,
               type: 'passwordless',
             },
           },
         );
-      if (type === 'magic_link' && status)
+      if (type === 'magic_link' && (response satisfies AoothPasswordlessResponse))
         navigate(
           {
             pathname: verifyMagicLinkPath ?? routes.verify_magic_link.path,
@@ -144,6 +145,7 @@ export const SignInForm: FC<TSignIn> = ({
             state: {
               identity: field,
               identityValue: value,
+              challengeId: response.challenge_id,
               passwordlessPayload: payload,
               type: 'passwordless',
             },

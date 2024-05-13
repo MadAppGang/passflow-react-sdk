@@ -71,42 +71,39 @@ export const PasskeyForm: FC<TPasskeyForm> = ({
       create_tenant: createTenant,
     };
 
-    const status = await fetch(payload as AoothPasskeyRegisterStartPayload, 'passkey');
-    if (status && passkeySettings?.validation === 'none') {
+    const response = await fetch(payload as AoothPasskeyRegisterStartPayload, 'passkey');
+    if (response && passkeySettings?.validation === 'none') {
       if (!isValidUrl(successAuthRedirect)) navigate(successAuthRedirect);
       else window.location.href = await getUrlWithTokens(aooth, successAuthRedirect);
     }
 
-    const searchParams = new URLSearchParams(window.location.search);
-    searchParams.append('chId', status as string);
-
-    if (get(passkeySettings, 'validation', false) === 'otp' && status)
+    if (get(passkeySettings, 'validation', false) === 'otp' && response)
       navigate(
         {
           pathname: verifyOTPPath ?? routes.verify_otp.path,
-          search: searchParams.toString(),
         },
         {
           state: {
             // eslint-disable-next-line no-nested-ternary
             identity: isEmail ? 'email' : isPhone ? 'phone' : 'username',
             identityValue: identity ?? phone,
+            challengeId: response,
             passwordlessPayload: payload,
             type: 'passkey',
           },
         },
       );
-    if (get(passkeySettings, 'validation', false) === 'magic_link' && status)
+    if (get(passkeySettings, 'validation', false) === 'magic_link' && response)
       navigate(
         {
           pathname: verifyMagicLinkPath ?? routes.verify_magic_link.path,
-          search: searchParams.toString(),
         },
         {
           state: {
             // eslint-disable-next-line no-nested-ternary
             identity: isEmail ? 'email' : isPhone ? 'phone' : 'username',
             identityValue: identity ?? phone,
+            challengeId: response,
             passwordlessPayload: payload,
           },
         },
