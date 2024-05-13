@@ -1,16 +1,9 @@
-import { Aooth, AoothPasskeySettings, AoothPasswordPolicySettings, AppSettings, Providers } from '@aooth/aooth-js-sdk';
+import { CombinedAppSettigns } from '@/types';
+import { Aooth, AoothPasskeySettings, AoothPasswordPolicySettings } from '@aooth/aooth-js-sdk';
 import { Dispatch, createContext } from 'react';
 
 export type AoothState = {
-  appSettings:
-    | (AppSettings & {
-        PROVIDERS: Providers[];
-        INTERNAL: { [key: string]: { challenge: string; transport: string }[] };
-        IDENTITY_FIELDS: string[];
-        IDENTITY_FIELDS_PASSKEY: string[];
-        CHALLENGES: string[];
-      })
-    | null;
+  appSettings: CombinedAppSettigns | null;
   passwordPolicy: AoothPasswordPolicySettings | null;
   passkeyProvider: AoothPasskeySettings | null;
   url?: string;

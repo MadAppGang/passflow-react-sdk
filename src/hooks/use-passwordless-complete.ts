@@ -4,7 +4,7 @@ import { useAooth } from './use-aooth';
 
 export type TusePasswordlessComplete = () => {
   fetch: (payload: AoothPasswordlessSignInCompletePayload) => Promise<boolean>;
-  fetchPasskey: (otp: string, challengeId: string) => Promise<boolean>;
+  fetchPasskey: (otp: string, challengeId: string, appId?: string) => Promise<boolean>;
   isLoading: boolean;
   isError: boolean;
   error: string;
@@ -32,10 +32,10 @@ export const usePasswordlessComplete: TusePasswordlessComplete = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const fetchPasskey = useCallback(async (otp: string, challengeId: string): Promise<boolean> => {
+  const fetchPasskey = useCallback(async (otp: string, challengeId: string, appId?: string): Promise<boolean> => {
     try {
       setIsLoading(true);
-      await aooth.passkeyValidate(otp, challengeId);
+      await aooth.passkeyValidate(otp, challengeId, appId);
       setIsLoading(false);
       return true;
     } catch (e) {

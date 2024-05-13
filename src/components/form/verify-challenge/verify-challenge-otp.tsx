@@ -36,9 +36,11 @@ export const VerifyChallengeOTP: FC<TVerifyChallengeOTP> = ({
   const navigate = useNavigate();
   const [searchParams] = useSearchParams({
     otp: '',
-    appId: '',
+    app_id: '',
     challenge_id: '',
   });
+
+  const appId = searchParams.get('app_id');
   const otp = searchParams.get('otp');
   const challengeId = searchParams.get('challenge_id');
 
@@ -73,7 +75,10 @@ export const VerifyChallengeOTP: FC<TVerifyChallengeOTP> = ({
       const chId = challengeId && challengeId?.length > 1 ? challengeId : state.challengeId;
 
       void (async () => {
-        const status = state && state?.type === 'passwordless' ? await fetch(payload) : await fetchPasskey(valueOTP, chId);
+        const status =
+          state && state?.type === 'passwordless'
+            ? await fetch(payload)
+            : await fetchPasskey(valueOTP, chId, appId ?? undefined);
         if (status) {
           if (!isValidUrl(successAuthRedirect)) navigate(successAuthRedirect);
           else window.location.href = await getUrlWithTokens(aooth, successAuthRedirect);

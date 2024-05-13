@@ -10,6 +10,7 @@ import {
 import { useAooth } from './use-aooth';
 import { AoothContext } from '@/context';
 import { includes } from 'lodash';
+import { CombinedAppSettigns } from '@/types';
 
 const appSettings = (data: AppSettings) =>
   data.auth_strategies.reduce(
@@ -71,30 +72,36 @@ export const useAppSettings: TuseAppSettings = () => {
   const { state, dispatch } = context;
 
   useLayoutEffect(() => {
-    const fetch = async (): Promise<void> => {
-      setIsLoading(true);
-      try {
-        const aoothAppSettings = await aooth.getAppSettings();
-        const aoothSettingAll = await aooth.getSettingsAll();
-        const appSettingsCombined = appSettings(aoothAppSettings);
-        dispatch({
-          type: 'SET_AOOTH_STATE',
-          payload: {
-            ...state,
-            appSettings: { ...aoothAppSettings, ...appSettingsCombined },
-            passkeyProvider: aoothSettingAll.passkey_provider,
-            passwordPolicy: aoothSettingAll.password_policy,
-          },
-        });
-      } catch (e) {
-        setIsError(true);
-        const error = e as Error;
-        setErrorMessage(error.message);
-      }
-      setIsLoading(false);
-    };
+    if (!state.appSettings) {
+      const fetchAllSettings = async (): Promise<void> => {
+        setIsLoading(true);
+        try {
+          const aoothSettingAll = await aooth.getSettingsAll();
+          let appSettingsCombined = {} as CombinedAppSettigns;
+          if (aooth.appId) {
+            const aoothAppSettings = await aooth.getAppSettings();
+            appSettingsCombined = appSettings(aoothAppSettings) as CombinedAppSettigns;
+          }
 
-    if (!state.appSettings) void fetch();
+          dispatch({
+            type: 'SET_AOOTH_STATE',
+            payload: {
+              ...state,
+              appSettings: { ...appSettingsCombined },
+              passkeyProvider: aoothSettingAll.passkey_provider,
+              passwordPolicy: aoothSettingAll.password_policy,
+            },
+          });
+        } catch (e) {
+          setIsError(true);
+          const error = e as Error;
+          setErrorMessage(error.message);
+        } finally {
+          setIsLoading(false);
+        }
+      };
+      void fetchAllSettings();
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
