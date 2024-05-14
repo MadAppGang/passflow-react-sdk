@@ -1,12 +1,17 @@
 import { useCallback, useState } from 'react';
-import { AoothPasskeyAuthenticateStartPayload, AoothPasswordlessSignInPayload, AoothSignInPayload } from '@aooth/aooth-js-sdk';
+import {
+  AoothPasskeyAuthenticateStartPayload,
+  AoothPasswordlessResponse,
+  AoothPasswordlessSignInPayload,
+  AoothSignInPayload,
+} from '@aooth/aooth-js-sdk';
 import { useAooth } from './use-aooth';
 
 export type TuseSignIn = () => {
   fetch: (
     payload: AoothPasskeyAuthenticateStartPayload | AoothSignInPayload | AoothPasswordlessSignInPayload,
     type: 'passkey' | 'password' | 'passwordless',
-  ) => Promise<boolean>;
+  ) => Promise<boolean | AoothPasswordlessResponse>;
   isLoading: boolean;
   isError: boolean;
   error: string;
@@ -23,12 +28,15 @@ export const useSignIn: TuseSignIn = () => {
     async (
       payload: AoothPasskeyAuthenticateStartPayload | AoothSignInPayload | AoothPasswordlessSignInPayload,
       type: 'passkey' | 'password' | 'passwordless',
-    ): Promise<boolean> => {
+    ): Promise<boolean | AoothPasswordlessResponse> => {
       try {
         setIsLoading(true);
         if (type === 'password') await aooth.signIn(payload as AoothSignInPayload);
         else if (type === 'passkey') await aooth.passkeyAuthenticate(payload as AoothPasskeyAuthenticateStartPayload);
-        else await aooth.passwordlessSignIn(payload as AoothPasswordlessSignInPayload);
+        else {
+          const passwordlessResponse = await aooth.passwordlessSignIn(payload as AoothPasswordlessSignInPayload);
+          return passwordlessResponse;
+        }
         setIsLoading(false);
         return true;
       } catch (e) {
