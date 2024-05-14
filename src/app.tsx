@@ -4,8 +4,8 @@ import { AoothConfig } from '@aooth/aooth-js-sdk';
 import { AoothProvider } from './components/provider';
 
 const aoothConfig: AoothConfig = {
-  url: process.env.AOOTH_URL ?? 'http://localhost:5432',
-  appId: process.env.AOOTH_APP_ID ?? 'test_app_id',
+  url: (import.meta.env.VITE_AOOTH_URL as string) ?? 'http://localhost:8765',
+  appId: (import.meta.env.VITE_AOOTH_APP_ID as string) ?? 'test_app_id',
   createTenantForNewUser: true,
   scopes: ['openid', 'email', 'profile', 'offline'],
 };
