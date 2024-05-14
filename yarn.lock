@@ -12,9 +12,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@aooth/aooth-js-sdk@npm:^0.1.10":
-  version: 0.1.10
-  resolution: "@aooth/aooth-js-sdk@npm:0.1.10"
+"@aooth/aooth-js-sdk@npm:^0.1.12":
+  version: 0.1.12
+  resolution: "@aooth/aooth-js-sdk@npm:0.1.12"
   dependencies:
     "@simplewebauthn/browser": "npm:^10.0.0"
     "@simplewebauthn/types": "npm:^10.0.0"
@@ -22,7 +22,7 @@ __metadata:
     axios-retry: "npm:^4.1.0"
     dayjs: "npm:^1.11.11"
     uuid: "npm:^9.0.1"
-  checksum: 10c0/ae855582558bc1d2abd8859bbc5f653688fb1d9a142c4926f912310e370985083ce543fef4ffd768232bb9a5df68eedbdfa41cc1229d3ebb8b0a43047f82a252
+  checksum: 10c0/dba0413d88bb852c3ca2e02a0e950efc5bd0cecd2b4df1a54daf191fa80eefaaeb43be5864890e3ad3b7ebda033fb44fcc89fb83cedd3f15990d4d2e673a1d39
   languageName: node
   linkType: hard
 
@@ -30,7 +30,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@aooth/aooth-react-sdk@workspace:."
   dependencies:
-    "@aooth/aooth-js-sdk": "npm:^0.1.10"
+    "@aooth/aooth-js-sdk": "npm:^0.1.12"
     "@eslint/js": "npm:^9.1.1"
     "@playwright/test": "npm:^1.43.1"
     "@radix-ui/react-dialog": "npm:^1.0.5"

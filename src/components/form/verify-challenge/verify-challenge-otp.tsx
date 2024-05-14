@@ -1,11 +1,7 @@
 /* eslint-disable complexity */
 import { FC, useEffect, useState } from 'react';
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
-import {
-  AoothPasswordlessSignInCompletePayload,
-  AoothPasswordlessSignInPayload,
-  AoothValidatePayload,
-} from '@aooth/aooth-js-sdk';
+import { AoothPasswordlessSignInCompletePayload, AoothPasswordlessSignInPayload } from '@aooth/aooth-js-sdk';
 import OtpInput from 'react-otp-input';
 import { Button, Icon } from '@/components/ui';
 import { useAooth, usePasswordlessComplete, useSignIn } from '@/hooks';
@@ -14,6 +10,7 @@ import { TimerButton } from './timer-button';
 import '@/styles/index.css';
 import { SuccessAuthRedirect } from '@/types';
 import { cn, getUrlWithTokens, isValidUrl } from '@/utils';
+import { size } from 'lodash';
 
 type TVerifyChallengeOTP = {
   successAuthRedirect: SuccessAuthRedirect;
@@ -31,7 +28,7 @@ export const VerifyChallengeOTP: FC<TVerifyChallengeOTP> = ({
 }) => {
   const aooth = useAooth();
   const { fetch: refetch } = useSignIn();
-  const { fetch, fetchPasskey, isError, error, reset } = usePasswordlessComplete();
+  const { fetch, fetchPasskey, isError, error } = usePasswordlessComplete();
   const location = useLocation();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams({
@@ -44,7 +41,8 @@ export const VerifyChallengeOTP: FC<TVerifyChallengeOTP> = ({
   const otp = searchParams.get('otp');
   const challengeId = searchParams.get('challenge_id');
 
-  const [valueOTP, setValueOTP] = useState(otp ?? '');
+  const [valueOTP, setValueOTP] = useState('');
+  const [responseError, setResponseError] = useState<string | null>(null);
   const { state } = location as {
     state: {
       identity: 'email' | 'phone';
@@ -56,38 +54,40 @@ export const VerifyChallengeOTP: FC<TVerifyChallengeOTP> = ({
   };
 
   useEffect(() => {
-    if ((otp && challengeId) || valueOTP.length === numInputs) {
-      let payload: AoothPasswordlessSignInCompletePayload | AoothValidatePayload;
-      if (state) {
-        payload = {
-          challenge_id: state.challengeId,
-          challenge_type: 'otp',
-          otp: valueOTP,
-        };
-      } else {
-        payload = {
-          challenge_id: challengeId ?? '',
-          challenge_type: 'magic_link',
-          otp: valueOTP,
-        };
-      }
-
-      const chId = challengeId && challengeId?.length > 1 ? challengeId : state.challengeId;
-
+    if (otp && otp.length === numInputs && challengeId) {
       void (async () => {
-        const status =
-          state && state?.type === 'passwordless'
-            ? await fetch(payload)
-            : await fetchPasskey(valueOTP, chId, appId ?? undefined);
+        const status = await fetchPasskey(otp, challengeId, appId ?? undefined);
         if (status) {
           if (!isValidUrl(successAuthRedirect)) navigate(successAuthRedirect);
           else window.location.href = await getUrlWithTokens(aooth, successAuthRedirect);
+        } else {
+          setResponseError('Invalid OTP code. Please try again.');
         }
       })();
     }
-    reset();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [valueOTP, numInputs, state]);
+  }, []);
+
+  useEffect(() => {
+    if (state && state.challengeId && valueOTP.length === numInputs) {
+      const payload: AoothPasswordlessSignInCompletePayload = {
+        challenge_id: state.challengeId,
+        challenge_type: 'otp',
+        otp: valueOTP,
+      };
+
+      void (async () => {
+        const status = await fetch(payload);
+        if (status) {
+          if (!isValidUrl(successAuthRedirect)) navigate(successAuthRedirect);
+          else window.location.href = await getUrlWithTokens(aooth, successAuthRedirect);
+        } else {
+          setResponseError('Invalid OTP code. Please try again.');
+        }
+      })();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [valueOTP]);
 
   const challengeTypeFullString = {
     email: 'email address',
@@ -111,6 +111,13 @@ export const VerifyChallengeOTP: FC<TVerifyChallengeOTP> = ({
   const onClickResendHandler = () => void refetch(state.passwordlessPayload, 'passwordless');
 
   if (!state && isError && error) throw new Error(error);
+
+  if (!state && (!otp || !challengeId || !appId))
+    throw new Error('State (challenge id, otp, app id, email or phone) is not provided');
+
+  if (responseError) throw new Error(responseError);
+
+  if (!successAuthRedirect || size(successAuthRedirect) === 0) throw new Error('Success redirectTo url is not provided');
 
   if (state) {
     const { identity, identityValue } = state;
