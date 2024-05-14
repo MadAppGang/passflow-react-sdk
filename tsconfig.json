@@ -35,7 +35,7 @@
   },
   "include": [
     "src",
-    "tests",
+    "playwright",
     "vite.config.ts",
     ".eslintrc.cjs",
     "tailwind.config.js",

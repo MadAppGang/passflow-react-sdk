@@ -1,0 +1,56 @@
+{
+  "id": "2fJW5WnmP45BxYvxuA85V9e85Iq",
+  "secret": "",
+  "active": false,
+  "name": "The new super app",
+  "description": "The app created in postman",
+  "offline": true,
+  "type": "web",
+  "redirect_urls": null,
+  "origins": null,
+  "login_app_settings": null,
+  "custom_email_templates": false,
+  "auth_strategies": [
+    {
+      "strategy": {
+        "identity": "email",
+        "challenge": "password",
+        "transport": "none"
+      },
+      "type": "first_factor_internal"
+    },
+    {
+      "strategy": {
+        "identity": "phone",
+        "challenge": "password",
+        "transport": "none"
+      },
+      "type": "first_factor_internal"
+    },
+    {
+      "strategy": {
+        "identity": "phone",
+        "challenge": "otp",
+        "transport": "sms"
+      },
+      "type": "first_factor_internal"
+    },
+    {
+      "strategy": {
+        "identity": "email",
+        "challenge": "magic_link",
+        "transport": "email"
+      },
+      "type": "first_factor_internal"
+    }
+  ],
+  "pkce_enabled": false,
+  "custom_sms_messages": null,
+  "registration_allowed": true,
+  "passwordless_registration_allowed": true,
+  "anonymous_registration_allowed": false,
+  "create_tenant_on_registration": "",
+  "fim_merge_by_email_allowed": true,
+  "debug_otp_code_allowed": false,
+  "debug_otp_code_for_registration": ""
+}
