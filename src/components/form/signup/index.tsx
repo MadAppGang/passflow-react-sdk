@@ -138,7 +138,9 @@ export const SignUpForm: FC<TSignUp> = ({
       ...(!isEmail && !isPhone && size(identity) === 0 && size(phone) === 0 && { user_id: '' }),
       relying_party_id: relyingPartyId,
       create_tenant: createTenant,
+      redirect_url: successAuthRedirect,
     };
+
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
     const response = await fetch(payload, 'passkey');
@@ -148,22 +150,25 @@ export const SignUpForm: FC<TSignUp> = ({
       else window.location.href = await getUrlWithTokens(aooth, successAuthRedirect);
     }
 
+    const paramsState = {
+      // eslint-disable-next-line no-nested-ternary
+      identity: isEmail ? 'email' : isPhone ? 'phone' : 'username',
+      identity_value: identity ?? phone,
+      create_tenant: createTenant ? 'true' : 'false',
+      challenge_type: 'otp',
+      challenge_id: response as string,
+      type: 'passkey',
+    };
+
+    const params = new URLSearchParams(window.location.search);
+
+    Object.keys(paramsState).forEach((key) => params.set(key, paramsState[key as keyof typeof paramsState]));
+
     if (get(passkeyProvider, 'validation', false) === 'otp' && response)
-      navigate(
-        {
-          pathname: verifyOTPPath ?? routes.verify_otp.path,
-        },
-        {
-          state: {
-            // eslint-disable-next-line no-nested-ternary
-            identity: isEmail ? 'email' : isPhone ? 'phone' : 'username',
-            identityValue: identity ?? phone,
-            challengeId: response,
-            passwordlessPayload: payload,
-            type: 'passkey',
-          },
-        },
-      );
+      navigate({
+        pathname: verifyOTPPath ?? routes.verify_otp.path,
+        search: params.toString(),
+      });
     if (get(passkeyProvider, 'validation', false) === 'magic_link' && response)
       navigate(
         {
@@ -187,26 +192,29 @@ export const SignUpForm: FC<TSignUp> = ({
         create_tenant: createTenant,
         challenge_type: type,
         ...(field === 'email' ? { email: value } : { phone: value }),
+        redirect_url: successAuthRedirect,
       };
 
       const response = (await fetch(payload, 'passwordless')) as AoothPasswordlessResponse;
 
+      const paramsState = {
+        identity: field,
+        identity_value: value,
+        create_tenant: createTenant ? 'true' : 'false',
+        challenge_type: type,
+        challenge_id: response.challenge_id,
+        type: 'passwordless',
+      };
+
+      const params = new URLSearchParams(window.location.search);
+
+      Object.keys(paramsState).forEach((key) => params.set(key, paramsState[key as keyof typeof paramsState]));
+
       if (type === 'otp' && (response satisfies AoothPasswordlessResponse))
-        navigate(
-          {
-            pathname: verifyOTPPath ?? routes.verify_otp.path,
-            search: window.location.search,
-          },
-          {
-            state: {
-              identity: field,
-              identityValue: value,
-              challengeId: response.challenge_id,
-              passwordlessPayload: payload,
-              type: 'passwordless',
-            },
-          },
-        );
+        navigate({
+          pathname: verifyOTPPath ?? routes.verify_otp.path,
+          search: params.toString(),
+        });
       if (type === 'magic_link' && (response satisfies AoothPasswordlessResponse))
         navigate(
           {
@@ -508,7 +516,7 @@ export const SignUpForm: FC<TSignUp> = ({
           />
         )}
         <p className='aooth-text-Grey-One aooth-text-body-2-medium aooth-text-center aooth-mt-[32px]'>
-          Don&apos;t have an account?{' '}
+          Do you have an account?{' '}
           <Link to={signInPath ?? routes.signin.path} className='aooth-text-Primary aooth-text-body-2-semiBold'>
             Sign In
           </Link>{' '}

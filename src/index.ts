@@ -1,4 +1,5 @@
 import '@/styles/index.css';
+import '@/utils/get-app-version';
 
 export * from './components/flow';
 export * from './components/form';
