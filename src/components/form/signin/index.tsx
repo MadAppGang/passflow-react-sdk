@@ -115,26 +115,29 @@ export const SignInForm: FC<TSignIn> = ({
         create_tenant: createTenant,
         challenge_type: type,
         ...(field === 'email' ? { email: value } : { phone: value }),
+        redirect_url: successAuthRedirect,
       };
 
       const response = (await fetch(payload, 'passwordless')) as AoothPasswordlessResponse;
 
+      const paramsState = {
+        identity: field,
+        identity_value: value,
+        create_tenant: createTenant ? 'true' : 'false',
+        challenge_type: type,
+        challenge_id: response.challenge_id,
+        type: 'passwordless',
+      };
+
+      const params = new URLSearchParams(window.location.search);
+
+      Object.keys(paramsState).forEach((key) => params.set(key, paramsState[key as keyof typeof paramsState]));
+
       if (type === 'otp' && (response satisfies AoothPasswordlessResponse))
-        navigate(
-          {
-            pathname: verifyOTPPath ?? routes.verify_otp.path,
-            search: window.location.search,
-          },
-          {
-            state: {
-              identity: field,
-              identityValue: value,
-              challengeId: response.challenge_id,
-              passwordlessPayload: payload,
-              type: 'passwordless',
-            },
-          },
-        );
+        navigate({
+          pathname: verifyOTPPath ?? routes.verify_otp.path,
+          search: params.toString(),
+        });
       if (type === 'magic_link' && (response satisfies AoothPasswordlessResponse))
         navigate(
           {
@@ -156,6 +159,7 @@ export const SignInForm: FC<TSignIn> = ({
   const onSubmitPasskeyHandler = async () => {
     const payload = {
       relying_party_id: relyingPartyId,
+      redirect_url: successAuthRedirect,
     };
     const status = await fetch(payload, 'passkey');
     if (status) {

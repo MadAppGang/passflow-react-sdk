@@ -25,6 +25,11 @@ export const TimerButton: FC<TTimerButton> = ({ totalSecond, onClick, className 
     };
   }, [seconds]);
 
+  const onClickHandler = () => {
+    onClick();
+    setSeconds(totalSecond);
+  };
+
   return (
     <Button
       disabled={seconds > 0}
@@ -39,7 +44,7 @@ export const TimerButton: FC<TTimerButton> = ({ totalSecond, onClick, className 
         },
         className,
       )}
-      onClick={onClick}
+      onClick={onClickHandler}
       {...props}
     >
       Resend {seconds > 0 ? `(${seconds})` : ''}

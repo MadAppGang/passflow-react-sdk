@@ -12,9 +12,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@aooth/aooth-js-sdk@npm:^0.1.12":
-  version: 0.1.12
-  resolution: "@aooth/aooth-js-sdk@npm:0.1.12"
+"@aooth/aooth-js-sdk@npm:^0.1.13":
+  version: 0.1.13
+  resolution: "@aooth/aooth-js-sdk@npm:0.1.13"
   dependencies:
     "@simplewebauthn/browser": "npm:^10.0.0"
     "@simplewebauthn/types": "npm:^10.0.0"
@@ -22,7 +22,7 @@ __metadata:
     axios-retry: "npm:^4.1.0"
     dayjs: "npm:^1.11.11"
     uuid: "npm:^9.0.1"
-  checksum: 10c0/dba0413d88bb852c3ca2e02a0e950efc5bd0cecd2b4df1a54daf191fa80eefaaeb43be5864890e3ad3b7ebda033fb44fcc89fb83cedd3f15990d4d2e673a1d39
+  checksum: 10c0/a755367eb81da3096ba12f5d57ccec1383efcbca710b2bac4796649a6367b292aadc2f17baf7f30645ed6ed8bcfe3c823e159982900526b185affe2fd160dee6
   languageName: node
   linkType: hard
 
@@ -30,7 +30,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@aooth/aooth-react-sdk@workspace:."
   dependencies:
-    "@aooth/aooth-js-sdk": "npm:^0.1.12"
+    "@aooth/aooth-js-sdk": "npm:^0.1.13"
     "@eslint/js": "npm:^9.1.1"
     "@playwright/test": "npm:^1.43.1"
     "@radix-ui/react-dialog": "npm:^1.0.5"
@@ -2249,13 +2249,13 @@ __metadata:
   linkType: hard
 
 "axios-retry@npm:^4.1.0":
-  version: 4.1.0
-  resolution: "axios-retry@npm:4.1.0"
+  version: 4.2.0
+  resolution: "axios-retry@npm:4.2.0"
   dependencies:
     is-retry-allowed: "npm:^2.2.0"
   peerDependencies:
     axios: 0.x || 1.x
-  checksum: 10c0/381ae8b03f2edf444e426a4be3c94e31b0b66c45bac30ce0dcf3aff48d9f2ed9607c826fa32d4a8cf0d40ae0cb9369449bb69837abe478d8821ce3375f34d73a
+  checksum: 10c0/41651f223d92a938bcfe7dc2954dfa9649f53f12a4636d20f3109350c13a809d6518a66384f41ea7bb66e2cd38201f36ba0aa8ad89d77a5ee1fc4fe40ab2020d
   languageName: node
   linkType: hard
 

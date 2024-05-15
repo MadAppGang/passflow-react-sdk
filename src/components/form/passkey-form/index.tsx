@@ -69,6 +69,7 @@ export const PasskeyForm: FC<TPasskeyForm> = ({
       ...(isPhone && { phone }),
       relying_party_id: relyingPartyId,
       create_tenant: createTenant,
+      redirect_url: successAuthRedirect,
     };
 
     const response = await fetch(payload as AoothPasskeyRegisterStartPayload, 'passkey');
@@ -77,22 +78,25 @@ export const PasskeyForm: FC<TPasskeyForm> = ({
       else window.location.href = await getUrlWithTokens(aooth, successAuthRedirect);
     }
 
+    const paramsState = {
+      // eslint-disable-next-line no-nested-ternary
+      identity: isEmail ? 'email' : isPhone ? 'phone' : 'username',
+      identity_value: identity ?? phone,
+      create_tenant: createTenant ? 'true' : 'false',
+      challenge_type: 'otp',
+      challenge_id: response as string,
+      type: 'passkey',
+    };
+
+    const params = new URLSearchParams(window.location.search);
+
+    Object.keys(paramsState).forEach((key) => params.set(key, paramsState[key as keyof typeof paramsState]));
+
     if (get(passkeySettings, 'validation', false) === 'otp' && response)
-      navigate(
-        {
-          pathname: verifyOTPPath ?? routes.verify_otp.path,
-        },
-        {
-          state: {
-            // eslint-disable-next-line no-nested-ternary
-            identity: isEmail ? 'email' : isPhone ? 'phone' : 'username',
-            identityValue: identity ?? phone,
-            challengeId: response,
-            passwordlessPayload: payload,
-            type: 'passkey',
-          },
-        },
-      );
+      navigate({
+        pathname: verifyOTPPath ?? routes.verify_otp.path,
+        search: params.toString(),
+      });
     if (get(passkeySettings, 'validation', false) === 'magic_link' && response)
       navigate(
         {
