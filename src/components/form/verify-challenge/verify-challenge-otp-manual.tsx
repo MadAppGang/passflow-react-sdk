@@ -87,9 +87,7 @@ export const VerifyChallengeOTPManual: FC<VerifyChallengeOTPManualProps> = ({
       };
       const fetchData = async () => {
         const response =
-          type === 'passwordless'
-            ? await fetchPasswordlessComplete(payload)
-            : await fetchPasskey(valueOTP, challengeId, successAuthRedirect);
+          type === 'passwordless' ? await fetchPasswordlessComplete(payload) : await fetchPasskey(valueOTP, challengeId);
         if (response) {
           if (response.redirect_url) {
             if (!isValidUrl(response.redirect_url)) navigate(response.redirect_url);
@@ -122,22 +120,24 @@ export const VerifyChallengeOTPManual: FC<VerifyChallengeOTPManualProps> = ({
         className={`aooth-flex aooth-flex-col aooth-gap-[56px] aooth-p-[24px] aooth-pb-[56px]
           aooth-rounded-[6px] aooth-shadow-[0_4px_15px_0_rgba(0,0,0,0.09)]`}
       >
-        <Button
-          size='big'
-          type='button'
-          variant='outlined'
-          className='aooth-relative aooth-bg-Background aooth-border-none'
-          withIcon
-        >
-          <Icon id={identity === 'email' ? 'mail' : 'phone'} type='general' size='small' />
-          {identityValue}
-          <Icon
-            id='edit'
-            type='general'
-            size='small'
-            className='aooth-absolute aooth-top-1/2 aooth-right-[12px] -aooth-translate-y-1/2'
-          />
-        </Button>
+        {identityValue && (
+          <Button
+            size='big'
+            type='button'
+            variant='outlined'
+            className='aooth-relative aooth-bg-Background aooth-border-none'
+            withIcon
+          >
+            <Icon id={identity === 'email' ? 'mail' : 'phone'} type='general' size='small' />
+            {identityValue}
+            <Icon
+              id='edit'
+              type='general'
+              size='small'
+              className='aooth-absolute aooth-top-1/2 aooth-right-[12px] -aooth-translate-y-1/2'
+            />
+          </Button>
+        )}
         <div id='otp-wrapper' className='aooth-flex aooth-flex-col aooth-items-center aooth-justify-center aooth-gap-[6px]'>
           <OtpInput
             value={valueOTP}

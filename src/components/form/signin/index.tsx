@@ -4,7 +4,7 @@ import { ChangeEvent, FC, useLayoutEffect, useState } from 'react';
 import { Button, FieldPassword, FieldPhone, FieldText, Icon, Link, ProvidersBox, Switch } from '@/components/ui';
 import { Form, Formik, FormikErrors, FormikHandlers, FormikState } from 'formik';
 import { AoothPasswordlessResponse, AoothPasswordlessSignInPayload, ChallengeType, Providers } from '@aooth/aooth-js-sdk';
-import { find, includes, size, some } from 'lodash';
+import { find, get, includes, size, some } from 'lodash';
 import { Wrapper } from '../wrapper';
 import { useAooth, useAppSettings, useProvider, useSignIn } from '@/hooks';
 import { cn, emailRegex, getUrlWithTokens, isValidUrl, validationSingInSchemas } from '@/utils';
@@ -54,7 +54,7 @@ export const SignInForm: FC<TSignIn> = ({
 }) => {
   const aooth = useAooth();
   const { fetch, isError, error, reset, isLoading } = useSignIn();
-  const { appSettings, passwordPolicy, isError: isErrorApp, error: errorApp } = useAppSettings();
+  const { appSettings, passwordPolicy, passkeyProvider, isError: isErrorApp, error: errorApp } = useAppSettings();
   const { federatedWithRedirect, federatedWithPopup } = useProvider(federatedCallbackUrl);
   const navigate = useNavigate();
 
@@ -161,11 +161,43 @@ export const SignInForm: FC<TSignIn> = ({
       relying_party_id: relyingPartyId,
       redirect_url: successAuthRedirect,
     };
-    const status = await fetch(payload, 'passkey');
-    if (status) {
+
+    const response = await fetch(payload, 'passkey');
+
+    if (response && typeof response === 'boolean') {
       if (!isValidUrl(successAuthRedirect)) navigate(successAuthRedirect);
       else window.location.href = await getUrlWithTokens(aooth, successAuthRedirect);
     }
+
+    const paramsState = {
+      identity: passkeyProvider?.id_field ?? 'email',
+      create_tenant: createTenant ? 'true' : 'false',
+      challenge_type: 'otp',
+      challenge_id: response as string,
+      type: 'passkey',
+    };
+
+    const params = new URLSearchParams(window.location.search);
+
+    Object.keys(paramsState).forEach((key) => params.set(key, paramsState[key as keyof typeof paramsState]));
+
+    if (get(passkeyProvider, 'validation', false) === 'otp' && response)
+      navigate({
+        pathname: verifyOTPPath ?? routes.verify_otp.path,
+        search: params.toString(),
+      });
+    if (get(passkeyProvider, 'validation', false) === 'magic_link' && response)
+      navigate(
+        {
+          pathname: verifyMagicLinkPath ?? routes.verify_magic_link.path,
+        },
+        {
+          state: {
+            identity: passkeyProvider?.id_field ?? 'email',
+            type: 'passkey',
+          },
+        },
+      );
   };
 
   const onSwitchFieldHandler = (
