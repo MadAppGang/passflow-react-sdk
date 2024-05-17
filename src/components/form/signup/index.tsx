@@ -180,6 +180,7 @@ export const SignUpForm: FC<TSignUp> = ({
             identity: isEmail ? 'email' : isPhone ? 'phone' : 'username',
             identityValue: identity ?? phone,
             challengeId: response,
+            type: 'passkey',
             passwordlessPayload: payload,
           },
         },

@@ -1,6 +1,6 @@
 import { useCallback, useState } from 'react';
 import {
-  AoothPasskeyRegisterCompleteMessage,
+  AoothPasskeyCompleteMessage,
   AoothPasskeyRegisterStartPayload,
   AoothPasswordlessResponse,
   AoothPasswordlessSignInPayload,
@@ -35,8 +35,8 @@ export const useSignUp: TuseSignUp = () => {
         if (type === 'password') await aooth.signUp(payload as AoothSignUpPayload);
         else if (type === 'passkey') {
           const response = await aooth.passkeyRegister(payload as AoothPasskeyRegisterStartPayload);
-          if ((response as AoothPasskeyRegisterCompleteMessage)?.challenge_id)
-            return (response as AoothPasskeyRegisterCompleteMessage).challenge_id;
+          if ((response as AoothPasskeyCompleteMessage)?.challenge_id)
+            return (response as AoothPasskeyCompleteMessage).challenge_id;
         } else {
           const passwordlessResponse = await aooth.passwordlessSignIn(payload as AoothPasswordlessSignInPayload);
           return passwordlessResponse;

@@ -26,7 +26,7 @@ const RAW_RUNTIME_STATE =
       [null, {\
         "packageLocation": "./",\
         "packageDependencies": [\
-          ["@aooth/aooth-js-sdk", "npm:0.1.13"],\
+          ["@aooth/aooth-js-sdk", "npm:0.1.14"],\
           ["@eslint/js", "npm:9.1.1"],\
           ["@playwright/test", "npm:1.43.1"],\
           ["@radix-ui/react-dialog", "virtual:0e09f225152713bf80394067a05a12376b27c348c48e29ec26743e3d42d1ffb053cddc16788684badc247258700138106b5f345f82346139de5d77ebd34dbd8e#npm:1.0.5"],\
@@ -95,14 +95,14 @@ const RAW_RUNTIME_STATE =
       }]\
     ]],\
     ["@aooth/aooth-js-sdk", [\
-      ["npm:0.1.13", {\
-        "packageLocation": "../../.yarn/berry/cache/@aooth-aooth-js-sdk-npm-0.1.13-5f70abfb3c-10c0.zip/node_modules/@aooth/aooth-js-sdk/",\
+      ["npm:0.1.14", {\
+        "packageLocation": "../../.yarn/berry/cache/@aooth-aooth-js-sdk-npm-0.1.14-9a228fbd96-10c0.zip/node_modules/@aooth/aooth-js-sdk/",\
         "packageDependencies": [\
-          ["@aooth/aooth-js-sdk", "npm:0.1.13"],\
+          ["@aooth/aooth-js-sdk", "npm:0.1.14"],\
           ["@simplewebauthn/browser", "npm:10.0.0"],\
           ["@simplewebauthn/types", "npm:10.0.0"],\
           ["axios", "npm:1.6.8"],\
-          ["axios-retry", "virtual:5f70abfb3c265b1b569c36a7864417caecd44e0de3248b5f941c55ce75711cddd8b57c324f89d3121808d565f501abb9d560fe07f2241faf518550e27ff7706e#npm:4.2.0"],\
+          ["axios-retry", "virtual:9a228fbd965d4edf2ca2d6b9fff3b77669471eea5c54c157f99f1a481c3eec0ee44f6333dd701d45df7036bf9c7581b84c57d13d7b58c4714fa7c52b8ad9697d#npm:4.2.0"],\
           ["dayjs", "npm:1.11.11"],\
           ["uuid", "npm:9.0.1"]\
         ],\
@@ -114,7 +114,7 @@ const RAW_RUNTIME_STATE =
         "packageLocation": "./",\
         "packageDependencies": [\
           ["@aooth/aooth-react-sdk", "workspace:."],\
-          ["@aooth/aooth-js-sdk", "npm:0.1.13"],\
+          ["@aooth/aooth-js-sdk", "npm:0.1.14"],\
           ["@eslint/js", "npm:9.1.1"],\
           ["@playwright/test", "npm:1.43.1"],\
           ["@radix-ui/react-dialog", "virtual:0e09f225152713bf80394067a05a12376b27c348c48e29ec26743e3d42d1ffb053cddc16788684badc247258700138106b5f345f82346139de5d77ebd34dbd8e#npm:1.0.5"],\
@@ -2951,10 +2951,10 @@ const RAW_RUNTIME_STATE =
         ],\
         "linkType": "SOFT"\
       }],\
-      ["virtual:5f70abfb3c265b1b569c36a7864417caecd44e0de3248b5f941c55ce75711cddd8b57c324f89d3121808d565f501abb9d560fe07f2241faf518550e27ff7706e#npm:4.2.0", {\
-        "packageLocation": "./.yarn/__virtual__/axios-retry-virtual-3960b2af57/3/.yarn/berry/cache/axios-retry-npm-4.2.0-08d1f9034c-10c0.zip/node_modules/axios-retry/",\
+      ["virtual:9a228fbd965d4edf2ca2d6b9fff3b77669471eea5c54c157f99f1a481c3eec0ee44f6333dd701d45df7036bf9c7581b84c57d13d7b58c4714fa7c52b8ad9697d#npm:4.2.0", {\
+        "packageLocation": "./.yarn/__virtual__/axios-retry-virtual-41c7f99c40/3/.yarn/berry/cache/axios-retry-npm-4.2.0-08d1f9034c-10c0.zip/node_modules/axios-retry/",\
         "packageDependencies": [\
-          ["axios-retry", "virtual:5f70abfb3c265b1b569c36a7864417caecd44e0de3248b5f941c55ce75711cddd8b57c324f89d3121808d565f501abb9d560fe07f2241faf518550e27ff7706e#npm:4.2.0"],\
+          ["axios-retry", "virtual:9a228fbd965d4edf2ca2d6b9fff3b77669471eea5c54c157f99f1a481c3eec0ee44f6333dd701d45df7036bf9c7581b84c57d13d7b58c4714fa7c52b8ad9697d#npm:4.2.0"],\
           ["@types/axios", null],\
           ["axios", "npm:1.6.8"],\
           ["is-retry-allowed", "npm:2.2.0"]\
