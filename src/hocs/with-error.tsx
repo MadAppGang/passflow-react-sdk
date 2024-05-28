@@ -24,14 +24,14 @@ export const withError =
 
     if ((!context?.state.appId || !context.state.url) && !excludeRoutes.some((route) => pathname.includes(route))) {
       const errorMessage = 'Missing appId or url';
-      return <ErrorComponent goBackRedirectTo={successAuthRedirect} error={errorMessage} />;
+      return <ErrorComponent goBackRedirectTo={successAuthRedirect ?? '/'} error={errorMessage} />;
     }
 
     return (
       <ErrorBoundary
         // eslint-disable-next-line react/no-unstable-nested-components
         FallbackComponent={({ error }: TFallbackComponentProps) => (
-          <ErrorComponent goBackRedirectTo={successAuthRedirect} error={error.message} />
+          <ErrorComponent goBackRedirectTo={successAuthRedirect ?? '/'} error={error.message} />
         )}
       >
         <Component {...props} />

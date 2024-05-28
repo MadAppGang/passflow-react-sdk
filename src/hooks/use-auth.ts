@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useAooth } from './use-aooth';
 import { ParsedTokens, Token, isTokenExpired } from '@aooth/aooth-js-sdk';
-import { isEqual } from 'lodash';
 
 type useAuthReturn = {
   isAuthenticated: boolean;
@@ -10,6 +9,7 @@ type useAuthReturn = {
   refreshToken?: Token;
   scopes?: string[];
   error?: string;
+  isRefreshing?: boolean;
 };
 
 export const useAuth = (doRefresh: boolean): useAuthReturn => {
@@ -17,47 +17,38 @@ export const useAuth = (doRefresh: boolean): useAuthReturn => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   // Do we need proactively refresh the token?
   // or do we need to do it when we do api call?
-  const [needToRefreshToken, setNeedToRefreshToken] = useState(false);
-  const [doRefreshState] = useState(doRefresh);
   const [tokens, setTokens] = useState<ParsedTokens | undefined>(aooth.getParsedTokenCache());
+  // When an access token has expired and we need to refresh it,
+  // we signal to the stat that the token is being refreshed and we cannot make any requests
+  // without the refreshed token until it is successfully refreshed.
+  const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
   const [error, setError] = useState<string | undefined>(undefined);
 
-  const tokensCache = aooth.getParsedTokenCache();
-  if (!isEqual(tokensCache, tokens)) {
-    setTokens(tokensCache);
-    setNeedToRefreshToken(doRefreshState);
-    setIsAuthenticated(tokensCache?.access_token !== undefined);
-  } else if (tokens?.access_token) {
-    const tokenExpired = isTokenExpired(tokens.access_token);
-    setNeedToRefreshToken(tokenExpired && doRefreshState);
-  } else {
-    setNeedToRefreshToken(false);
-    setIsAuthenticated(false);
-    setTokens(undefined);
-  }
-
   useEffect(() => {
-    if (needToRefreshToken) {
-      const refreshToken = async () => {
-        try {
-          await aooth.refreshToken();
-          setTokens(aooth.getParsedTokenCache());
-          const newTokens = aooth.getParsedTokenCache();
-          setIsAuthenticated(newTokens?.access_token !== undefined);
-          setNeedToRefreshToken(false);
-          setError(undefined);
-        } catch (e: unknown) {
-          const ee = e as Error;
-          setTokens(undefined);
-          setError(ee.message);
+    // eslint-disable-next-line @typescript-eslint/no-floating-promises
+    (async () => {
+      if (tokens) {
+        const tokenExpired = isTokenExpired(tokens.access_token);
+        if (tokenExpired && doRefresh) {
+          try {
+            setIsRefreshing(true);
+            await aooth.refreshToken();
+            setTokens(aooth.getParsedTokenCache());
+            setIsAuthenticated(tokens?.access_token !== undefined);
+          } catch (e) {
+            const ee = e as Error;
+            setError(ee.message);
+            setTokens(undefined);
+            setIsAuthenticated(false);
+          } finally {
+            setIsRefreshing(false);
+          }
+        } else {
+          setIsAuthenticated(tokens?.access_token !== undefined);
         }
-      };
-      if (needToRefreshToken) {
-        // eslint-disable-next-line no-console
-        refreshToken().catch(console.error);
       }
-    }
-  }, [aooth, needToRefreshToken]);
+    })();
+  }, [aooth, doRefresh, tokens]);
 
   return {
     isAuthenticated,
@@ -66,5 +57,6 @@ export const useAuth = (doRefresh: boolean): useAuthReturn => {
     refreshToken: tokens?.refresh_token,
     scopes: tokens?.scopes,
     error,
+    isRefreshing,
   };
 };
