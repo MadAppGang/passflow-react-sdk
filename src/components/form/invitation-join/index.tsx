@@ -1,14 +1,13 @@
+/* eslint-disable complexity */
 import { FC, useState } from 'react';
-import { Button } from '@/components/ui';
-import { Wrapper } from '../wrapper';
-import { useAooth, useAppSettings, useJoinInvite } from '@/hooks';
-import '@/styles/index.css';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { InvitationToken, parseToken } from '@aooth/aooth-js-sdk';
-
-type TInvitationJoin = {
-  signInPath: string;
-};
+import { Error as ErrorComponent } from '@/components/error';
+import { Button } from '@/components/ui';
+import { Wrapper } from '../wrapper';
+import { useAooth, useJoinInvite } from '@/hooks';
+import '@/styles/index.css';
+import { withError } from '@/hocs';
 
 function undefinedOnCatch<T, K>(fn: (t: K) => T): (t: K) => T | undefined {
   return (t: K) => {
@@ -20,12 +19,11 @@ function undefinedOnCatch<T, K>(fn: (t: K) => T): (t: K) => T | undefined {
   };
 }
 
-export const InvitationJoin: FC<TInvitationJoin> = () => {
-  useAppSettings();
+const InvitationJoinFlow: FC = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const aooth = useAooth();
-  const { fetch: joinInvite, isLoading: isInvitationJoinLoading } = useJoinInvite();
+  const { fetch: joinInvite, isLoading: isInvitationJoinLoading, error, isError } = useJoinInvite();
   const [isLoading, setLoading] = useState(false);
   const invitationToken = searchParams.get('token') ?? undefined;
   const invitationTokenData = invitationToken ? undefinedOnCatch(parseToken)(invitationToken) : undefined;
@@ -41,6 +39,10 @@ export const InvitationJoin: FC<TInvitationJoin> = () => {
       }
     }
   };
+
+  if (isError && error) throw Error(error);
+
+  if (!invitationTokenData) throw Error('Invalid invitation token.');
 
   if (invitationTokenData) {
     const {
@@ -72,3 +74,5 @@ export const InvitationJoin: FC<TInvitationJoin> = () => {
 
   return null;
 };
+
+export const InvitationJoin = withError(InvitationJoinFlow, ErrorComponent);

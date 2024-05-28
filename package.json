@@ -1,8 +1,8 @@
 {
   "name": "@aooth/aooth-react-sdk",
   "description": "Aooth React UI Kit",
-  "packageManager": "yarn@4.1.1",
-  "version": "0.1.17",
+  "packageManager": "yarn@4.2.2",
+  "version": "0.1.18",
   "type": "module",
   "files": [
     "dist"
@@ -39,7 +39,7 @@
     "react-router-dom": "^6.23.0"
   },
   "dependencies": {
-    "@aooth/aooth-js-sdk": "^0.1.14",
+    "@aooth/aooth-js-sdk": "^0.1.16",
     "@radix-ui/react-dialog": "^1.0.5",
     "@radix-ui/react-popover": "^1.0.7",
     "@types/jest": "^29.5.12",
@@ -91,7 +91,7 @@
     "prettier": "^3.2.5",
     "ts-node": "^10.9.2",
     "tsc-alias": "^1.8.8",
-    "typescript": "^5.4.5",
+    "typescript": "5.2.2",
     "typescript-eslint": "^7.8.0",
     "vite": "^5.2.10",
     "vite-plugin-dts": "^3.9.0",
