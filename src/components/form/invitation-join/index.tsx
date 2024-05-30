@@ -8,16 +8,7 @@ import { Wrapper } from '../wrapper';
 import { useAooth, useJoinInvite } from '@/hooks';
 import '@/styles/index.css';
 import { withError } from '@/hocs';
-
-function undefinedOnCatch<T, K>(fn: (t: K) => T): (t: K) => T | undefined {
-  return (t: K) => {
-    try {
-      return fn(t);
-    } catch (error) {
-      return undefined;
-    }
-  };
-}
+import { undefinedOnCatch } from '@/utils';
 
 const InvitationJoinFlow: FC = () => {
   const navigate = useNavigate();

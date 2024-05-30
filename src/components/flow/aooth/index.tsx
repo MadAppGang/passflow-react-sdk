@@ -98,6 +98,7 @@ const AoothFlowWrapper: FC<TAoothFlow> = ({
         path={routesWithPrefix.forgot_password}
         element={
           <ForgotPassword
+            successResetRedirect={successAuthRedirect}
             signInPath={routesWithPrefix.signin}
             forgotPasswordSuccessPath={routesWithPrefix.forgot_password_success}
           />

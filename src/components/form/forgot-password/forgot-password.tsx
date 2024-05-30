@@ -17,11 +17,13 @@ const initialValues = {
 };
 
 type TForgotPassword = {
+  successResetRedirect: string;
   signInPath?: string;
   forgotPasswordSuccessPath?: string;
 };
 
 export const ForgotPassword: FC<TForgotPassword> = ({
+  successResetRedirect,
   signInPath = routes.signin.path,
   forgotPasswordSuccessPath = routes.forgot_password_success.path,
 }) => {
@@ -43,6 +45,7 @@ export const ForgotPassword: FC<TForgotPassword> = ({
       ...(isEmail && { email: identity }),
       ...(isPhone && { phone: phone.replace('+', '') }),
       ...(!isEmail && !isPhone && { username: identity }),
+      redirect_url: successResetRedirect,
     } as AoothSendPasswordResetEmailPayload;
 
     const status = await fetch(payload);
