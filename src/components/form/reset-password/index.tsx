@@ -1,13 +1,14 @@
 /* eslint-disable jsx-a11y/label-has-associated-control */
 import { ChangeEvent, FC } from 'react';
 import { Form, Formik, FormikHandlers } from 'formik';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Button, FieldPassword, Icon } from '@/components/ui';
 import { Wrapper } from '../wrapper';
 import { useAooth, useAppSettings, useResetPassword } from '@/hooks';
-import { cn, getUrlWithTokens, isValidUrl, validationResetPasswordSchema } from '@/utils';
+import { cn, getUrlWithTokens, isValidUrl, undefinedOnCatch, validationResetPasswordSchema } from '@/utils';
 import '@/styles/index.css';
 import { SuccessAuthRedirect } from '@/types';
+import { Token, parseToken } from '@aooth/aooth-js-sdk';
 
 const initialValues = {
   password: '',
@@ -17,16 +18,26 @@ type TResetPassword = {
   successAuthRedirect: SuccessAuthRedirect;
 };
 
+type ResetToken = Token & {
+  redirect_url: string;
+};
+
 export const ResetPassword: FC<TResetPassword> = ({ successAuthRedirect }) => {
   const aooth = useAooth();
   const { fetch, error, isError, isLoading, reset } = useResetPassword();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { passwordPolicy } = useAppSettings();
+  const resetToken = searchParams.get('token') ?? undefined;
+  const resetTokenData = resetToken ? undefinedOnCatch(parseToken)(resetToken) : undefined;
+
   const onSubmitHanlder = async (values: typeof initialValues) => {
+    const resetTokenType = resetTokenData as ResetToken;
     const status = await fetch(values.password);
     if (status) {
-      if (!isValidUrl(successAuthRedirect)) navigate(successAuthRedirect);
-      else window.location.href = await getUrlWithTokens(aooth, successAuthRedirect);
+      if (!isValidUrl(resetTokenType?.redirect_url ?? successAuthRedirect))
+        navigate(resetTokenType?.redirect_url ?? successAuthRedirect);
+      else window.location.href = await getUrlWithTokens(aooth, resetTokenType?.redirect_url ?? successAuthRedirect);
     }
   };
 
