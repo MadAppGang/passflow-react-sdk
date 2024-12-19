@@ -1,11 +1,11 @@
-import { useAooth } from './use-aooth';
+import { usePassflow } from './use-passflow';
 
-type TuseAuthCloudRedirect = (cloudAoothUrl: string) => () => void;
+type UseAuthCloudRedirectProps = (cloudPassflowUrl: string) => () => void;
 
-export const useAuthCloudRedirect: TuseAuthCloudRedirect = (cloudAoothUrl: string) => {
-  const aooth = useAooth();
+export const useAuthCloudRedirect: UseAuthCloudRedirectProps = (cloudPassflowUrl: string) => {
+  const passflow = usePassflow();
 
-  const redirect = () => aooth.authCloudRedirect(cloudAoothUrl);
+  const redirect = () => passflow.authCloudRedirect(cloudPassflowUrl);
 
   return redirect;
 };

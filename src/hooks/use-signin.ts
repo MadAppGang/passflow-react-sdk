@@ -1,44 +1,44 @@
 import { useCallback, useState } from 'react';
 import {
-  AoothPasskeyAuthenticateStartPayload,
-  AoothPasskeyCompleteMessage,
-  AoothPasswordlessResponse,
-  AoothPasswordlessSignInPayload,
-  AoothSignInPayload,
-} from '@aooth/aooth-js-sdk';
-import { useAooth } from './use-aooth';
+  PassflowPasskeyAuthenticateStartPayload,
+  PassflowPasskeyCompleteMessage,
+  PassflowPasswordlessResponse,
+  PassflowPasswordlessSignInPayload,
+  PassflowSignInPayload,
+} from '@passflow/passflow-js-sdk';
+import { usePassflow } from './use-passflow';
 
-export type TuseSignIn = () => {
+export type UseSignInProps = () => {
   fetch: (
-    payload: AoothPasskeyAuthenticateStartPayload | AoothSignInPayload | AoothPasswordlessSignInPayload,
+    payload: PassflowPasskeyAuthenticateStartPayload | PassflowSignInPayload | PassflowPasswordlessSignInPayload,
     type: 'passkey' | 'password' | 'passwordless',
-  ) => Promise<boolean | string | AoothPasswordlessResponse>;
+  ) => Promise<boolean | string | PassflowPasswordlessResponse>;
   isLoading: boolean;
   isError: boolean;
   error: string;
   reset: () => void;
 };
 
-export const useSignIn: TuseSignIn = () => {
-  const aooth = useAooth();
+export const useSignIn: UseSignInProps = () => {
+  const passflow = usePassflow();
   const [errorMessage, setErrorMessage] = useState('');
   const [isError, setIsError] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
   const fetch = useCallback(
     async (
-      payload: AoothPasskeyAuthenticateStartPayload | AoothSignInPayload | AoothPasswordlessSignInPayload,
+      payload: PassflowPasskeyAuthenticateStartPayload | PassflowSignInPayload | PassflowPasswordlessSignInPayload,
       type: 'passkey' | 'password' | 'passwordless',
-    ): Promise<boolean | string | AoothPasswordlessResponse> => {
+    ): Promise<boolean | string | PassflowPasswordlessResponse> => {
       try {
         setIsLoading(true);
-        if (type === 'password') await aooth.signIn(payload as AoothSignInPayload);
+        if (type === 'password') await passflow.signIn(payload as PassflowSignInPayload);
         else if (type === 'passkey') {
-          const response = await aooth.passkeyAuthenticate(payload as AoothPasskeyAuthenticateStartPayload);
-          if ((response as AoothPasskeyCompleteMessage)?.challenge_id)
-            return (response as AoothPasskeyCompleteMessage).challenge_id;
+          const response = await passflow.passkeyAuthenticate(payload as PassflowPasskeyAuthenticateStartPayload);
+          if ((response as PassflowPasskeyCompleteMessage)?.challenge_id)
+            return (response as PassflowPasskeyCompleteMessage).challenge_id;
         } else {
-          const passwordlessResponse = await aooth.passwordlessSignIn(payload as AoothPasswordlessSignInPayload);
+          const passwordlessResponse = await passflow.passwordlessSignIn(payload as PassflowPasswordlessSignInPayload);
           return passwordlessResponse;
         }
         setIsLoading(false);

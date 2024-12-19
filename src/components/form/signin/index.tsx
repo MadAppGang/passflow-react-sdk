@@ -1,23 +1,34 @@
+/* eslint-disable @typescript-eslint/no-misused-promises */
+/* eslint-disable react/jsx-props-no-spreading */
+/* eslint-disable max-len */
 /* eslint-disable complexity */
 /* eslint-disable jsx-a11y/label-has-associated-control */
-import { ChangeEvent, FC, useLayoutEffect, useState } from 'react';
+import { ChangeEvent, FC, useEffect, useMemo, useState } from 'react';
 import { Button, FieldPassword, FieldPhone, FieldText, Icon, Link, ProvidersBox, Switch } from '@/components/ui';
-import { Form, Formik, FormikErrors, FormikHandlers, FormikState } from 'formik';
-import { AoothPasswordlessResponse, AoothPasswordlessSignInPayload, ChallengeType, Providers } from '@aooth/aooth-js-sdk';
-import { find, get, includes, size, some } from 'lodash';
+import { Controller, useForm } from 'react-hook-form';
+import {
+  PassflowPasskeyAuthenticateStartPayload,
+  PassflowPasswordlessResponse,
+  PassflowPasswordlessSignInPayload,
+  PassflowSignInPayload,
+  Providers,
+} from '@passflow/passflow-js-sdk';
+import { phone } from 'phone';
+import queryString from 'query-string';
+import { eq, has, size } from 'lodash';
 import { Wrapper } from '../wrapper';
-import { useAooth, useAppSettings, useProvider, useSignIn } from '@/hooks';
-import { cn, emailRegex, getUrlWithTokens, isValidUrl, validationSingInSchemas } from '@/utils';
+import { useAppSettings, usePassflow, useProvider, useSignIn } from '@/hooks';
+import { cn, emailRegex, getAuthMethods, getIdentityLabel, getPasswordlessData, getUrlWithTokens, isValidUrl } from '@/utils';
 import { routes } from '@/context';
 import { useNavigate } from 'react-router-dom';
-import { PreferIdentity, SuccessAuthRedirect } from '@/types';
+import { DefaultMethod, SuccessAuthRedirect } from '@/types';
 import { withError } from '@/hocs';
 import { Error as ErrorComponent } from '@/components/error';
 import '@/styles/index.css';
 
 const initialValues = {
   password: '',
-  identity: '',
+  email_or_username: '',
   phone: '',
 };
 
@@ -33,472 +44,496 @@ export type TSignIn = {
   forgotPasswordPath?: string;
 };
 
-const generateIdentityLabel = (identities: string[], useString: boolean): string => {
-  if (includes(identities, 'username') && includes(identities, 'email'))
-    return useString ? 'Use email or username' : 'Email or username';
-  if (includes(identities, 'email')) return useString ? 'Use email' : 'Email';
-  if (includes(identities, 'username')) return useString ? 'Use username' : 'Username';
-  return '';
-};
-
 export const SignInForm: FC<TSignIn> = ({
   federatedCallbackUrl = window.location.origin,
   successAuthRedirect,
   relyingPartyId = window.location.hostname,
-  federatedDisplayMode = 'redirect',
   signUpPath = routes.signup.path,
   createTenant = false,
   verifyOTPPath = routes.verify_otp.path,
   verifyMagicLinkPath = routes.verify_magic_link.path,
   forgotPasswordPath = routes.forgot_password.path,
 }) => {
-  const aooth = useAooth();
-  const { fetch, isError, error, reset, isLoading } = useSignIn();
-  const { appSettings, passwordPolicy, passkeyProvider, isError: isErrorApp, error: errorApp } = useAppSettings();
-  const { federatedWithRedirect, federatedWithPopup } = useProvider(federatedCallbackUrl);
+  const {
+    getValues,
+    control,
+    trigger,
+    register,
+    formState: { errors, isDirty, isValid },
+    clearErrors,
+    reset: resetForm,
+  } = useForm({
+    defaultValues: initialValues,
+  });
+  const passflow = usePassflow();
   const navigate = useNavigate();
+  const { appSettings, passwordPolicy, passkeyProvider, isError: isErrorApp, error: errorApp } = useAppSettings();
+  const { federatedWithRedirect } = useProvider(federatedCallbackUrl);
 
-  const [validationSchema, setValidationSchema] = useState<ReturnType<typeof validationSingInSchemas> | null>(null);
+  if (isErrorApp) throw new Error(errorApp);
 
-  const [passwordlessExperience, setPasswordlessExperience] = useState<boolean>(false);
-  const [currentIdentityField, setCurrentIdentityField] = useState<PreferIdentity>('none');
-  const [hasPassword, setHasPassword] = useState<boolean>(false);
-  const [hasMainChallenges, setHasMainChallenges] = useState<boolean>(false);
+  const authMethods = useMemo(() => getAuthMethods(appSettings?.auth_strategies), [appSettings]);
 
-  useLayoutEffect(() => {
-    if (appSettings) {
-      const { IDENTITY_FIELDS, INTERNAL } = appSettings;
-      let preferredIdentity = 'none' as PreferIdentity;
-      const checkHasMainChallenges = some(['email', 'phone', 'username'], (challenge) => includes(IDENTITY_FIELDS, challenge));
-      if (some(['email', 'username'], (identity) => includes(IDENTITY_FIELDS, identity)) && checkHasMainChallenges)
-        preferredIdentity = 'identity';
-      else if (includes(IDENTITY_FIELDS, 'phone') && checkHasMainChallenges) preferredIdentity = 'phone';
-      else preferredIdentity = 'none';
-      const identityField = preferredIdentity === 'identity' ? ['email', 'username'] : ['phone'];
-      const identityHasPassword = identityField.find((idField: string) => find(INTERNAL[idField], { challenge: 'password' }));
-      if (identityHasPassword) setHasPassword(true);
-      else setHasPassword(false);
-      if (
-        includes(appSettings.CHALLENGES, 'passkey') &&
-        some(['email', 'username', 'phone'], (identity) => includes(appSettings.IDENTITY_FIELDS, identity))
-      )
-        setPasswordlessExperience(true);
-      const schema = validationSingInSchemas({
-        identity: preferredIdentity,
-        challenge: identityHasPassword ? 'password' : 'none',
-      });
-      setHasMainChallenges(checkHasMainChallenges);
-      setCurrentIdentityField(preferredIdentity);
-      setValidationSchema(schema);
+  const { fetch, isError, error, reset, isLoading } = useSignIn();
+
+  const [forcePasswordless, setForcePasswordless] = useState<boolean>(
+    authMethods.email.passkey || authMethods.phone.passkey || authMethods.username.passkey || false,
+  );
+
+  const [defaultMethod, setDefaultMethod] = useState<DefaultMethod | null>(() => {
+    if (authMethods.hasEmailMethods || authMethods.hasUsernameMethods) return 'email_or_username';
+    if (authMethods.hasPhoneMethods) return 'phone';
+    return null;
+  });
+
+  useEffect(() => {
+    setForcePasswordless(authMethods.email.passkey || authMethods.phone.passkey || authMethods.username.passkey || false);
+
+    if (authMethods.hasSignInEmailMethods || authMethods.hasSignInUsernameMethods) {
+      setDefaultMethod('email_or_username');
+    } else if (authMethods.hasSignInPhoneMethods) {
+      setDefaultMethod('phone');
+    } else {
+      setDefaultMethod(null);
     }
-  }, [appSettings]);
+  }, [authMethods]);
 
-  const onSubmitHanlder = async (values: typeof initialValues) => {
-    const { identity, phone, password } = values;
-    const isEmail = identity.match(emailRegex);
-    const payload = {
-      password,
-      ...(isEmail ? { email: identity } : { username: identity }),
-      ...(size(phone) > 0 && { phone }),
-    };
+  const resetFormStates = () => {
+    resetForm();
+    clearErrors();
+    reset();
+  };
 
-    const status = await fetch(payload, 'password');
+  const handleDefaultMethod = (method: DefaultMethod) => {
+    setDefaultMethod(method);
+    resetFormStates();
+  };
+
+  const hasPassword =
+    (eq(defaultMethod, 'phone') && authMethods.phone.password) ||
+    (eq(defaultMethod, 'email_or_username') && (authMethods.email.password || authMethods.username.password));
+
+  const hasPasswordless =
+    (eq(defaultMethod, 'phone') && (authMethods.phone.otp || authMethods.phone.magicLink)) ||
+    (eq(defaultMethod, 'email_or_username') && (authMethods.email.otp || authMethods.email.magicLink));
+
+  const hasPasskey = authMethods.phone.passkey || authMethods.email.passkey || authMethods.username.passkey;
+
+  const onChangePasswordlessExperience = (e: ChangeEvent<HTMLInputElement>) => {
+    const { checked } = e.target;
+    setForcePasswordless(checked);
+
+    resetFormStates();
+  };
+
+  const onSubmitPasswordHandler = async (userPayload: PassflowSignInPayload) => {
+    const status = await fetch(userPayload, 'password');
+
     if (status) {
       if (!isValidUrl(successAuthRedirect)) navigate(successAuthRedirect);
-      else window.location.href = await getUrlWithTokens(aooth, successAuthRedirect);
+      else window.location.href = await getUrlWithTokens(passflow, successAuthRedirect);
     }
   };
 
-  const onSubmitPasswordlessHandler =
-    (field: keyof Pick<AoothPasswordlessSignInPayload, 'email' | 'phone'>, value: string, type: ChallengeType) => async () => {
+  const onSubmitPasskeyHandler = async (passkeyPayload: PassflowPasskeyAuthenticateStartPayload) => {
+    const response = await fetch(passkeyPayload, 'passkey');
+
+    if (response && typeof response === 'boolean') {
+      if (!isValidUrl(successAuthRedirect)) navigate(successAuthRedirect);
+      else window.location.href = await getUrlWithTokens(passflow, successAuthRedirect);
+    }
+
+    const params = new URLSearchParams(window.location.search);
+    const searchParamsState = {
+      ...passkeyPayload,
+      type: 'passkey',
+      challenge_id: response as string,
+      challenge_type: passkeyProvider?.validation,
+      create_tenant: createTenant,
+    };
+    const newParams = queryString.stringify({
+      ...params,
+      ...searchParamsState,
+    });
+
+    if (response && eq(passkeyProvider?.validation, 'otp'))
+      navigate({
+        pathname: verifyOTPPath ?? routes.verify_otp.path,
+        search: newParams.toString(),
+      });
+    if (response && eq(passkeyProvider?.validation, 'magic_link'))
+      navigate({
+        pathname: verifyMagicLinkPath ?? routes.verify_magic_link.path,
+        search: newParams.toString(),
+      });
+  };
+
+  const onSubmitPasswordlessHandler = async (userPayload: Partial<PassflowPasswordlessSignInPayload>) => {
+    const currentChallegeType = getPasswordlessData(authMethods, defaultMethod)?.challengeType;
+
+    const payload = {
+      ...userPayload,
+      challenge_type: getPasswordlessData(authMethods, defaultMethod)?.challengeType,
+      create_tenant: createTenant,
+      redirect_url: successAuthRedirect,
+    } as PassflowPasswordlessSignInPayload;
+
+    const response = (await fetch(payload, 'passwordless')) as PassflowPasswordlessResponse;
+
+    const params = new URLSearchParams(window.location.search);
+    const searchParamsState = {
+      ...payload,
+      ...response,
+      type: 'passwordless',
+      challenge_type: currentChallegeType,
+      create_tenant: createTenant,
+    };
+    const newParams = queryString.stringify({
+      ...params,
+      ...searchParamsState,
+    });
+
+    if (eq(currentChallegeType, 'otp') && (response satisfies PassflowPasswordlessResponse))
+      navigate({
+        pathname: verifyOTPPath ?? routes.verify_otp.path,
+        search: newParams.toString(),
+      });
+
+    if (eq(currentChallegeType, 'magic_link') && (response satisfies PassflowPasswordlessResponse))
+      navigate({
+        pathname: verifyMagicLinkPath ?? routes.verify_magic_link.path,
+        search: newParams.toString(),
+      });
+  };
+
+  const onSubmitHandler = async (
+    data: Partial<typeof initialValues> | PassflowPasskeyAuthenticateStartPayload,
+    type: 'passkey' | 'password' | 'passwordless',
+  ) => {
+    if (eq(type, 'password')) await onSubmitPasswordHandler(data as PassflowSignInPayload);
+    if (eq(type, 'passkey')) await onSubmitPasskeyHandler(data as PassflowPasskeyAuthenticateStartPayload);
+    if (eq(type, 'passwordless')) await onSubmitPasswordlessHandler(data as PassflowPasswordlessSignInPayload);
+  };
+
+  const validateSignInPasswordless = async () => {
+    let isValidated;
+    if (eq(defaultMethod, 'phone')) isValidated = await trigger(['phone']);
+    if (eq(defaultMethod, 'email_or_username')) isValidated = await trigger(['email_or_username']);
+
+    if (isValidated) {
+      const values = getValues();
+      const isEmail = values.email_or_username.match(emailRegex);
+      const validatedPhone = phone(values.phone);
+      const isPhone = validatedPhone.isValid;
+
       const payload = {
-        create_tenant: createTenant,
-        challenge_type: type,
-        ...(field === 'email' ? { email: value } : { phone: value }),
-        redirect_url: successAuthRedirect,
+        ...(isEmail && { email: values.email_or_username }),
+        ...(isPhone && { phone: validatedPhone.phoneNumber }),
       };
 
-      const response = (await fetch(payload, 'passwordless')) as AoothPasswordlessResponse;
+      await onSubmitHandler(payload, 'passwordless');
+    }
+  };
 
-      const paramsState = {
-        identity: field,
-        identity_value: value,
-        create_tenant: createTenant ? 'true' : 'false',
-        challenge_type: type,
-        challenge_id: response.challenge_id,
-        type: 'passwordless',
-      };
+  const validateSingIn = async () => {
+    const values = getValues();
+    const isEmail = values.email_or_username.match(emailRegex);
+    const isUsername = !isEmail && size(values.email_or_username) > 0;
+    const validatedPhone = phone(values.phone);
+    const isPhone = validatedPhone.isValid;
 
-      const params = new URLSearchParams(window.location.search);
-
-      Object.keys(paramsState).forEach((key) => params.set(key, paramsState[key as keyof typeof paramsState]));
-
-      if (type === 'otp' && (response satisfies AoothPasswordlessResponse))
-        navigate({
-          pathname: verifyOTPPath ?? routes.verify_otp.path,
-          search: params.toString(),
-        });
-      if (type === 'magic_link' && (response satisfies AoothPasswordlessResponse))
-        navigate(
-          {
-            pathname: verifyMagicLinkPath ?? routes.verify_magic_link.path,
-            search: window.location.search,
-          },
-          {
-            state: {
-              identity: field,
-              identityValue: value,
-              challengeId: response.challenge_id,
-              passwordlessPayload: payload,
-              type: 'passwordless',
-            },
-          },
-        );
+    const payload = {
+      ...(isEmail && { email: values.email_or_username }),
+      ...(isUsername && { username: values.email_or_username }),
+      ...(isPhone && { phone: validatedPhone.phoneNumber }),
+      password: values.password,
     };
 
-  const onSubmitPasskeyHandler = async () => {
+    await onSubmitHandler(payload, 'password');
+  };
+
+  const validateSignInPasskey = async () => {
     const payload = {
       relying_party_id: relyingPartyId,
       redirect_url: successAuthRedirect,
     };
 
-    const response = await fetch(payload, 'passkey');
-
-    if (response && typeof response === 'boolean') {
-      if (!isValidUrl(successAuthRedirect)) navigate(successAuthRedirect);
-      else window.location.href = await getUrlWithTokens(aooth, successAuthRedirect);
-    }
-
-    const paramsState = {
-      identity: passkeyProvider?.id_field ?? 'email',
-      create_tenant: createTenant ? 'true' : 'false',
-      challenge_type: 'otp',
-      challenge_id: response as string,
-      type: 'passkey',
-    };
-
-    const params = new URLSearchParams(window.location.search);
-
-    Object.keys(paramsState).forEach((key) => params.set(key, paramsState[key as keyof typeof paramsState]));
-
-    if (get(passkeyProvider, 'validation', false) === 'otp' && response)
-      navigate({
-        pathname: verifyOTPPath ?? routes.verify_otp.path,
-        search: params.toString(),
-      });
-    if (get(passkeyProvider, 'validation', false) === 'magic_link' && response)
-      navigate(
-        {
-          pathname: verifyMagicLinkPath ?? routes.verify_magic_link.path,
-        },
-        {
-          state: {
-            identity: passkeyProvider?.id_field ?? 'email',
-            type: 'passkey',
-          },
-        },
-      );
+    await onSubmitHandler(payload, 'passkey');
   };
 
-  const onSwitchFieldHandler = (
-    field: PreferIdentity,
-    validateForm: (values: typeof initialValues) => Promise<FormikErrors<typeof initialValues>>,
-    resetForm: (nextState?: Partial<FormikState<typeof initialValues>>) => void,
-  ) => {
-    const identityField = field === 'identity' ? ['email', 'username'] : ['phone'];
-    if (appSettings) {
-      const { INTERNAL } = appSettings;
-      const fieldHasPassword = identityField.find((idField: string) => find(INTERNAL[idField], { challenge: 'password' }));
-      if (fieldHasPassword) setHasPassword(true);
-      else setHasPassword(false);
-      const schema = validationSingInSchemas({
-        identity: field,
-        challenge: fieldHasPassword ? 'password' : 'none',
-      });
+  const onClickProviderHandler = (provider: Providers) => federatedWithRedirect(provider);
 
-      setCurrentIdentityField(field);
-      setValidationSchema(schema);
-      void validateForm(initialValues);
-      resetForm();
-      reset();
-    }
-  };
-
-  const onCustomChangeHandler = (handleChange: FormikHandlers['handleChange']) => (e: ChangeEvent<HTMLInputElement>) => {
-    handleChange(e);
-    if (isError) {
-      reset();
-    }
-  };
-
-  const onClickProviderHandler = (provider: Providers) =>
-    federatedDisplayMode === 'redirect' ? federatedWithRedirect(provider) : federatedWithPopup(provider);
-
-  const passwordlessChallengeButton = (values: typeof initialValues, isValid: boolean, dirty: boolean) => {
-    if (!appSettings) return null;
-
-    const { identity, phone } = values;
-
-    const passwordlessStyle = cn('aooth-m-auto aooth-text-White aooth-text-body-2-semiBold', {
-      'aooth-mb-[16px]': includes(appSettings.CHALLENGES, 'passkey'),
-      'aooth-border-Primary !aooth-text-Primary !aooth-text-body-2-medium': hasPassword,
-    });
-
-    const { INTERNAL } = appSettings;
-    const identityField = currentIdentityField === 'identity' ? 'email' : 'phone';
-
-    const magicLink = find(INTERNAL[identityField], {
-      challenge: 'magic_link',
-    });
-    const otp = find(INTERNAL[identityField], { challenge: 'otp' });
-
-    if (otp) {
-      const onClickHandler =
-        identityField === 'email'
-          ? onSubmitPasswordlessHandler('email', identity, 'otp')
-          : onSubmitPasswordlessHandler('phone', phone, 'otp');
-      return (
-        <Button
-          size='big'
-          variant={hasPassword ? 'outlined' : 'primary'}
-          type='button'
-          className={passwordlessStyle}
-          onClick={onClickHandler as () => void}
-          disabled={!hasPassword ? !isValid || !dirty : false}
-        >
-          Sign In with {identityField === 'email' ? 'email code' : 'SMS code'}
-        </Button>
-      );
-    }
-
-    if (magicLink) {
-      const onClickHandler =
-        identityField === 'email'
-          ? onSubmitPasswordlessHandler('email', identity, 'magic_link')
-          : onSubmitPasswordlessHandler('phone', phone, 'magic_link');
-      return (
-        <Button
-          size='big'
-          variant={hasPassword ? 'outlined' : 'primary'}
-          type='button'
-          className={passwordlessStyle}
-          onClick={onClickHandler as () => void}
-          disabled={!hasPassword ? !isValid || !dirty : false}
-        >
-          Sign In with {identityField === 'email' ? 'link' : 'SMS link'}
-        </Button>
-      );
-    }
-
-    return null;
-  };
-
-  const onChangePasswordlessExperience = (e: ChangeEvent<HTMLInputElement>) => {
-    const { checked } = e.target;
-    setPasswordlessExperience(checked);
-  };
-
-  const labelStyle = cn('aooth-text-caption-1-medium aooth-text-Grey-One aooth-normal-case', {
-    'aooth-text-Warning': isError,
+  const labelStyle = cn('passflow-text-caption-1-medium passflow-text-Grey-Six passflow-normal-case', {
+    'passflow-text-Warning': isError,
   });
 
-  if (isError && error && passwordlessExperience) throw new Error(error);
-
-  if (isErrorApp && errorApp) throw new Error('Could not connect to server, please check your network and try again later.');
-
-  if (appSettings) {
-    return (
-      <Wrapper title='Sign In to your account' subtitle='To Aooth by Madappgang'>
-        {includes(appSettings.CHALLENGES, 'passkey') &&
-          some(['email', 'username', 'phone'], (identity) => includes(appSettings.IDENTITY_FIELDS, identity)) && (
-            <div className='aooth-w-full aooth-flex aooth-items-center aooth-justify-center aooth-mb-[-8px] aooth-mt-[32px]'>
-              <Switch
-                label='Passwordless experience'
-                checked={passwordlessExperience}
-                onChange={onChangePasswordlessExperience}
-              />
-            </div>
-          )}
-        <Formik
-          initialValues={initialValues}
-          validationSchema={validationSchema}
-          onSubmit={onSubmitHanlder}
-          validateOnChange
-          enableReinitialize
-          validateOnMount
-        >
-          {({ isValid, dirty, handleChange, handleBlur, values, setFieldValue, validateForm, resetForm }) => (
-            <>
-              <Form className='aooth-flex aooth-flex-col aooth-gap-[32px] aooth-mt-[32px]'>
-                {!passwordlessExperience && hasMainChallenges && (
-                  <>
-                    <div
-                      className={`aooth-flex aooth-flex-col aooth-gap-[24px] aooth-w-full aooth-p-[24px] 
-                      aooth-rounded-[6px] aooth-shadow-[0_4px_15px_0_rgba(0,0,0,0.09)]`}
+  return (
+    <Wrapper title='Sign In to your account' subtitle='To Passflow by Madappgang'>
+      {hasPasskey && (hasPasswordless || hasPassword) && (
+        <div className='passflow-w-full passflow-flex passflow-items-center passflow-justify-center passflow-mb-[-8px]'>
+          <Switch label='Passwordless experience' checked={forcePasswordless} onChange={onChangePasswordlessExperience} />
+        </div>
+      )}
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          if (!forcePasswordless) {
+            if (hasPassword) void validateSingIn();
+            if (!hasPassword && hasPasswordless) void validateSignInPasswordless();
+          }
+        }}
+        className='passflow-flex passflow-flex-col passflow-gap-[32px] passflow-max-w-[384px] passflow-w-full'
+      >
+        {!forcePasswordless && defaultMethod ? (
+          <>
+            <div className='passflow-p-[24px] passflow-rounded-[6px] passflow-max-w-[384px] passflow-w-full passflow-flex passflow-flex-col passflow-items-start passflow-justify-start passflow-gap-[24px] passflow-shadow-[0_4px_15px_0_rgba(0,0,0,0.09)]'>
+              {eq(defaultMethod, 'email_or_username') && (
+                <div className='passflow-w-full passflow-flex passflow-flex-col passflow-items-start passflow-justify-start passflow-gap-[6px]'>
+                  <div className='passflow-w-full passflow-flex passflow-items-center passflow-justify-between'>
+                    <label
+                      htmlFor='identity'
+                      className={cn(labelStyle, { 'passflow-text-Warning': isError || has(errors, 'email_or_username') })}
                     >
-                      <div
-                        className={`group aooth-relative aooth-flex aooth-flex-col aooth-items-start 
-                          aooth-justify-center aooth-gap-[6px]`}
+                      {getIdentityLabel(authMethods, 'label')}
+                    </label>
+                    {authMethods.hasSignInPhoneMethods && (
+                      <Button
+                        size='small'
+                        variant='clean'
+                        type='button'
+                        className={`passflow-text-Primary passflow-text-caption-1-medium
+                                      passflow-h-max passflow-max-w-max passflow-p-0`}
+                        onClick={() => handleDefaultMethod('phone')}
                       >
-                        {includes(appSettings.IDENTITY_FIELDS, 'phone') && currentIdentityField === 'phone' && (
-                          <>
-                            <div className='aooth-w-full aooth-flex aooth-items-center aooth-justify-between'>
-                              <label htmlFor='phone' className={labelStyle}>
-                                Use phone
-                              </label>
-                              {some(['email', 'username'], (identity) => includes(appSettings.IDENTITY_FIELDS, identity)) && (
-                                <Button
-                                  size='small'
-                                  variant='clean'
-                                  type='button'
-                                  className={`aooth-text-Primary aooth-text-caption-1-semiBold 
-                                    aooth-h-max aooth-max-w-max aooth-p-0`}
-                                  onClick={() => onSwitchFieldHandler('identity', validateForm, resetForm)}
-                                >
-                                  {generateIdentityLabel(appSettings.IDENTITY_FIELDS, true)}
-                                </Button>
-                              )}
-                            </div>
-                            <FieldPhone
-                              id='phone'
-                              name='phone'
-                              isError={isError}
-                              value={values.phone}
-                              setValue={setFieldValue}
-                              onChange={onCustomChangeHandler(handleChange)}
-                              onBlur={handleBlur}
-                            />
-                          </>
-                        )}
-                        {some(['email', 'username'], (identity) => includes(appSettings.IDENTITY_FIELDS, identity)) &&
-                          currentIdentityField === 'identity' && (
-                            <>
-                              <div className='aooth-w-full aooth-flex aooth-items-center aooth-justify-between'>
-                                <label htmlFor='identity' className={labelStyle}>
-                                  {generateIdentityLabel(appSettings.IDENTITY_FIELDS, false)}
-                                </label>
-                                {includes(appSettings.IDENTITY_FIELDS, 'phone') && (
-                                  <Button
-                                    size='small'
-                                    variant='clean'
-                                    type='button'
-                                    className={`aooth-text-Primary aooth-text-caption-1-semiBold 
-                                      aooth-h-max aooth-max-w-max aooth-p-0`}
-                                    onClick={() => onSwitchFieldHandler('phone', validateForm, resetForm)}
-                                  >
-                                    Use phone
-                                  </Button>
-                                )}
-                              </div>
-                              <FieldText
-                                isError={isError}
-                                id='identity'
-                                type='text'
-                                name='identity'
-                                onChange={onCustomChangeHandler(handleChange)}
-                                onBlur={handleBlur}
-                              />
-                            </>
-                          )}
-                        {isError && (
-                          <div className='aooth-flex aooth-items-center aooth-justify-center aooth-gap-[4px]'>
-                            <Icon size='small' id='warning' type='general' className='icon-warning' />
-                            <span className='aooth-text-caption-1-medium aooth-text-Warning'>{error}</span>
-                          </div>
-                        )}
-                      </div>
-                      {includes(appSettings.CHALLENGES, 'password') && hasPassword && (
-                        <div
-                          className={`group aooth-relative aooth-flex aooth-flex-col aooth-items-start 
-                          aooth-justify-center aooth-gap-[6px]`}
-                        >
-                          <div className='aooth-w-full aooth-flex aooth-items-center aooth-justify-between'>
-                            <label htmlFor='password' className={labelStyle}>
-                              Password
-                            </label>
-                            <Link
-                              to={forgotPasswordPath ?? routes.forgot_password.path}
-                              state={{ identity: currentIdentityField }}
-                              className='aooth-text-Primary aooth-text-caption-1-semiBold'
-                            >
-                              Forgot password
-                            </Link>
-                          </div>
-                          <FieldPassword
-                            isError={isError}
-                            value={values.password}
-                            passwordPolicy={passwordPolicy}
-                            id='password'
-                            name='password'
-                            onChange={onCustomChangeHandler(handleChange)}
-                            onBlur={handleBlur}
-                          />
-                        </div>
-                      )}
-                    </div>
-                    <div className='aooth-flex aooth-flex-col'>
-                      {hasPassword && (
-                        <Button
-                          size='big'
-                          variant='primary'
-                          type='submit'
-                          disabled={!isValid || !dirty || isLoading}
-                          className={cn('aooth-m-auto', {
-                            'aooth-mb-[16px]': some(['passkey', 'otp', 'magic_link'], (challenge) =>
-                              includes(appSettings.CHALLENGES, challenge),
-                            ),
-                          })}
-                        >
-                          Sign In
-                        </Button>
-                      )}
-                      {passwordlessChallengeButton(values, isValid, dirty)}
-                    </div>
-                  </>
-                )}
-              </Form>
-              <div>
-                {includes(appSettings.CHALLENGES, 'passkey') && (
-                  <Button
-                    size='big'
-                    variant='dark'
-                    type='button'
-                    className='aooth-m-auto'
-                    withIcon
-                    onClick={onSubmitPasskeyHandler as () => void}
-                  >
-                    <Icon id='key' size='small' type='general' className='icon-white' />
-                    Sign In with a Passkey
-                  </Button>
-                )}
-                <p className='aooth-text-Grey-One aooth-text-body-2-medium aooth-text-center aooth-mt-[32px]'>
-                  Don&apos;t have an account?{' '}
-                  <Link to={signUpPath ?? routes.signup.path} className='aooth-text-Primary aooth-text-body-2-semiBold'>
-                    Sign Up
-                  </Link>{' '}
-                </p>
-                {size(appSettings.PROVIDERS) > 0 && (
-                  <div className='aooth-mt-[32px] aooth-px-[24px]'>
-                    <div className='aooth-relative aooth-w-full aooth-h-[1px] aooth-bg-Grey-Four aooth-mb-[24px]'>
-                      <span
-                        className={`aooth-absolute aooth-bg-White aooth-px-[15px] aooth-top-1/2 aooth-left-1/2 
-                        -aooth-translate-x-1/2 -aooth-translate-y-1/2 aooth-text-Grey-One aooth-text-caption-1-medium`}
-                      >
-                        Or continue with
+                        Use phone
+                      </Button>
+                    )}
+                  </div>
+                  <Controller
+                    name='email_or_username'
+                    control={control}
+                    rules={{ required: 'Email is required' }}
+                    render={({ field }) => (
+                      <FieldText
+                        {...field}
+                        {...register('email_or_username')}
+                        isError={isError || has(errors, 'email_or_username')}
+                        id='email_or_username'
+                        type='text'
+                        name='email_or_username'
+                      />
+                    )}
+                  />
+                  {has(errors, 'email_or_username') && (
+                    <div className='passflow-flex passflow-items-center passflow-justify-center passflow-gap-[4px] passflow-mt-[4px]'>
+                      <Icon size='small' id='warning' type='general' className='icon-warning' />
+                      <span className='passflow-text-caption-1-medium passflow-text-Warning'>
+                        {errors.email_or_username?.message}
                       </span>
                     </div>
-                    <ProvidersBox providers={appSettings.PROVIDERS} onClick={onClickProviderHandler} />
+                  )}
+                </div>
+              )}
+              {eq(defaultMethod, 'phone') && (
+                <div className='passflow-w-full passflow-flex passflow-flex-col passflow-items-start passflow-justify-start passflow-gap-[6px]'>
+                  <div className='passflow-w-full passflow-flex passflow-items-center passflow-justify-between'>
+                    <label
+                      htmlFor='phone'
+                      className={cn(labelStyle, { 'passflow-text-Warning': isError || has(errors, 'phone') })}
+                    >
+                      Phone number
+                    </label>
+                    {(authMethods.hasSignInEmailMethods || authMethods.hasSignInUsernameMethods) && (
+                      <Button
+                        size='small'
+                        variant='clean'
+                        type='button'
+                        className={`passflow-text-Primary passflow-text-caption-1-medium
+                                    passflow-h-max passflow-max-w-max passflow-p-0`}
+                        onClick={() => handleDefaultMethod('email_or_username')}
+                      >
+                        {getIdentityLabel(authMethods, 'button')}
+                      </Button>
+                    )}
                   </div>
-                )}
+                  <Controller
+                    name='phone'
+                    control={control}
+                    rules={{
+                      required: 'Phone number is required',
+                      validate: (value) => {
+                        const validatePhone = phone(value);
+                        if (validatePhone.isValid) return true;
+                        return 'Invalid phone number';
+                      },
+                    }}
+                    render={({ field }) => (
+                      <FieldPhone
+                        {...register('phone')}
+                        ref={null}
+                        onChange={(e) => field.onChange(e)}
+                        id='phone'
+                        name='phone'
+                        isError={isError || has(errors, 'phone')}
+                      />
+                    )}
+                  />
+                  {has(errors, 'phone') && (
+                    <div className='passflow-flex passflow-items-center passflow-justify-center passflow-gap-[4px] passflow-mt-[4px]'>
+                      <Icon size='small' id='warning' type='general' className='icon-warning' />
+                      <span className='passflow-text-caption-1-medium passflow-text-Warning'>{errors.phone?.message}</span>
+                    </div>
+                  )}
+                </div>
+              )}
+              {hasPassword ? (
+                <div className='passflow-w-full passflow-flex passflow-flex-col passflow-items-start passflow-justify-start passflow-gap-[6px]'>
+                  <div className='passflow-w-full passflow-flex passflow-items-center passflow-justify-between'>
+                    <label
+                      htmlFor='password'
+                      className={cn(labelStyle, { 'passflow-text-Warning': isError || has(errors, 'password') })}
+                    >
+                      Password
+                    </label>
+                    <Link
+                      to={{
+                        pathname: forgotPasswordPath ?? routes.forgot_password.path,
+                        search: queryString.stringify({ default_method: defaultMethod }),
+                      }}
+                      className='passflow-text-Primary passflow-text-caption-1-medium'
+                    >
+                      Forgot password
+                    </Link>
+                  </div>
+                  <Controller
+                    name='password'
+                    control={control}
+                    rules={{ required: 'Password is required' }}
+                    render={({ field }) => (
+                      <FieldPassword
+                        {...field}
+                        {...register('password')}
+                        isError={isError || has(errors, 'password')}
+                        passwordPolicy={passwordPolicy}
+                        id='password'
+                        name='password'
+                      />
+                    )}
+                  />
+                  {has(errors, 'password') && (
+                    <div className='passflow-flex passflow-items-center passflow-justify-center passflow-gap-[4px] passflow-mt-[4px]'>
+                      <Icon size='small' id='warning' type='general' className='icon-warning' />
+                      <span className='passflow-text-caption-1-medium passflow-text-Warning'>{errors.password?.message}</span>
+                    </div>
+                  )}
+                </div>
+              ) : null}
+              {isError && (
+                <div className='passflow-flex passflow-items-center passflow-justify-center passflow-gap-[4px]'>
+                  <Icon size='small' id='warning' type='general' className='icon-warning' />
+                  <span className='passflow-text-caption-1-medium passflow-text-Warning'>{error}</span>
+                </div>
+              )}
+            </div>
+            {hasPassword ? (
+              <Button
+                size='big'
+                variant='primary'
+                type='submit'
+                disabled={!isDirty || !isValid || isLoading}
+                className='passflow-mx-auto passflow-text-body-2-semibold passflow-text-White !passflow-shadow-primary'
+              >
+                Sign In
+              </Button>
+            ) : null}
+            {hasPasswordless && (
+              <Button
+                size='big'
+                variant={hasPassword ? 'outlined' : 'primary'}
+                type={hasPassword ? 'button' : 'submit'}
+                className={cn('passflow-m-auto passflow-text-White passflow-text-body-2-semiBold', {
+                  'passflow-border passflow-border-Primary !passflow-text-Primary passflow-bg-transparent !passflow-text-body-2-medium !passflow-mt-[-16px]':
+                    hasPassword,
+                })}
+                onClick={() => (hasPassword ? validateSignInPasswordless() : null)}
+                disabled={(() => {
+                  const values = getValues();
+                  if (size(values[defaultMethod]) === 0) return true;
+                  return false;
+                })()}
+              >
+                Sign In with {getPasswordlessData(authMethods, defaultMethod)?.label}
+              </Button>
+            )}
+            {hasPasskey ? (
+              <Button
+                size='big'
+                variant='dark'
+                type='button'
+                className={cn('passflow-m-auto', {
+                  '!passflow-mt-[-16px]': hasPassword || hasPasswordless,
+                })}
+                withIcon
+                onClick={validateSignInPasskey}
+              >
+                <Icon id='key' size='small' type='general' className='icon-white' />
+                Sign In with a Passkey
+              </Button>
+            ) : null}
+          </>
+        ) : null}
+        {forcePasswordless && hasPasskey ? (
+          <>
+            {isError && (
+              <div className='passflow-flex passflow-items-center passflow-justify-center passflow-gap-[4px] passflow-max-w-[336px] passflow-w-full passflow-mx-auto'>
+                <Icon size='small' id='warning' type='general' className='icon-warning' />
+                <span className='passflow-text-caption-1-medium passflow-text-Warning'>{error}</span>
               </div>
-            </>
+            )}
+            <Button
+              size='big'
+              variant='dark'
+              type='button'
+              className='passflow-m-auto'
+              withIcon
+              onClick={validateSignInPasskey}
+            >
+              <Icon id='key' size='small' type='general' className='icon-white' />
+              Sign In with a Passkey
+            </Button>
+          </>
+        ) : null}
+        <div
+          className={cn(
+            'passflow-mx-auto passflow-max-w-[336px] passflow-w-full passflow-flex passflow-items-center passflow-justify-center',
+            {
+              '!passflow-mt-[-8px]': hasPassword || hasPasskey,
+            },
           )}
-        </Formik>
-      </Wrapper>
-    );
-  }
-
-  return null;
+        >
+          <p className='passflow-text-Grey-Six passflow-text-body-2-medium passflow-text-center'>
+            Don&apos;t have an account?{' '}
+            <Link to={signUpPath ?? routes.signup.path} className='passflow-text-Primary passflow-text-body-2-semiBold'>
+              Sign Up
+            </Link>
+          </p>
+        </div>
+        {size(authMethods.providers) > 0 && (
+          <div className='passflow-mx-auto passflow-max-w-[336px] passflow-w-full passflow-flex passflow-flex-col passflow-items-start passflow-justify-start passflow-gap-[24px]'>
+            {hasPassword || hasPasswordless || hasPasskey ? (
+              <div className='passflow-w-full passflow-py-[9px] passflow-relative'>
+                <div className='passflow-w-full passflow-h-[1px] passflow-bg-Grey-Four' />
+                <span className='passflow-absolute passflow-top-1/2 -passflow-translate-y-1/2 passflow-left-1/2 -passflow-translate-x-1/2 passflow-px-[15px] passflow-text-Grey-Six passflow-text-caption-1-medium passflow-bg-White'>
+                  Or continue with
+                </span>
+              </div>
+            ) : null}
+            <ProvidersBox providers={authMethods.providers} onClick={onClickProviderHandler} />
+          </div>
+        )}
+      </form>
+    </Wrapper>
+  );
 };
 
 export const SignIn = withError(SignInForm, ErrorComponent);

@@ -3,7 +3,7 @@ import { isolateInsideOfContainer, scopedPreflightStyles } from 'tailwindcss-sco
 /** @type {import('tailwindcss').Config} */
 export default {
   content: ['./index.html', './src/**/*.{js,ts,jsx,tsx}'],
-  prefix: 'aooth-',
+  prefix: 'passflow-',
   corePlugins: {
     preflight: false,
   },
@@ -54,12 +54,13 @@ export default {
       },
       boxShadow: {
         dark: '3px 5px 13px 0px rgba(26, 29, 31, 0.15), -3px 5px 13px 0px rgba(26, 29, 31, 0.15)',
+        primary: '3px 5px 13px 0px #0C59DD26, -3px 5px 13px 0px #1A1D1F26',
       },
     },
   },
   plugins: [
     scopedPreflightStyles({
-      isolationStrategy: isolateInsideOfContainer('#aooth-wrapper'),
+      isolationStrategy: isolateInsideOfContainer('#passflow-wrapper'),
     }),
   ],
 };

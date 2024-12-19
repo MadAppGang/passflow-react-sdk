@@ -1,21 +1,21 @@
 @layer components {
-  .aooth-field {
-    @apply aooth-w-full aooth-px-[12px] aooth-py-[11px] aooth-rounded-[4px] aooth-flex aooth-items-center aooth-justify-start aooth-bg-Background aooth-text-body-2-medium aooth-text-Dark placeholder:aooth-text-Grey-One;
+  .passflow-field {
+    @apply passflow-min-h-[48px] passflow-w-full passflow-px-[12px] passflow-py-[11px] passflow-rounded-[4px] passflow-flex passflow-items-center passflow-justify-start passflow-bg-Background passflow-text-body-2-medium passflow-text-Dark placeholder:passflow-text-Grey-One;
   }
 
-  .aooth-field--focused {
-    @apply focus-visible:aooth-border-Primary focus-visible:aooth-outline-none;
+  .passflow-field--focused {
+    @apply focus-visible:passflow-outline-Primary focus-visible:passflow-outline-1 focus-visible:passflow-outline;
   }
 
-  .aooth-field--warning {
-    @apply aooth-border-Warning aooth-border-[1px] aooth-border-solid focus-visible:aooth-border-Warning;
+  .passflow-field--warning {
+    @apply passflow-outline-Warning passflow-outline-[1px] passflow-outline focus-visible:passflow-outline-Warning;
   }
 
-  .aooth-field:disabled {
-    @apply aooth-border-Grey-Four aooth-text-Grey-One aooth-bg-Background aooth-cursor-not-allowed;
+  .passflow-field:disabled {
+    @apply passflow-border-Grey-Four passflow-text-Grey-One passflow-bg-Background passflow-cursor-not-allowed;
   }
 
-  .aooth-field-otp {
-    @apply aooth-w-[48px] aooth-h-[48px] aooth-rounded-[4px] aooth-bg-Background aooth-border-solid aooth-text-Dark aooth-text-body-2-medium aooth-text-center;
+  .passflow-field-otp {
+    @apply passflow-w-[48px] passflow-h-[48px] passflow-rounded-[4px] passflow-bg-Background passflow-border-solid passflow-text-Dark passflow-text-body-2-medium passflow-text-center;
   }
 }

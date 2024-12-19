@@ -1,18 +1,26 @@
+/* eslint-disable max-len */
+/* eslint-disable react/jsx-props-no-spreading */
 /* eslint-disable jsx-a11y/label-has-associated-control */
-import { ChangeEvent, FC } from 'react';
-import { Form, Formik, FormikHandlers } from 'formik';
+import { FC } from 'react';
+import * as Yup from 'yup';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Button, FieldPassword, Icon } from '@/components/ui';
 import { Wrapper } from '../wrapper';
-import { useAooth, useAppSettings, useResetPassword } from '@/hooks';
-import { cn, getUrlWithTokens, isValidUrl, undefinedOnCatch, validationResetPasswordSchema } from '@/utils';
+import { useAppSettings, usePassflow, useResetPassword } from '@/hooks';
+import { cn, getUrlWithTokens, isValidUrl, passwordValidation, undefinedOnCatch } from '@/utils';
 import '@/styles/index.css';
 import { SuccessAuthRedirect } from '@/types';
-import { Token, parseToken } from '@aooth/aooth-js-sdk';
+import { Token, parseToken } from '@passflow/passflow-js-sdk';
+import { Controller, useForm } from 'react-hook-form';
+import { has } from 'lodash';
 
 const initialValues = {
   password: '',
 };
+
+const searchParamsResetPasswordSchema = Yup.object().shape({
+  token: Yup.string().required(),
+});
 
 type TResetPassword = {
   successAuthRedirect: SuccessAuthRedirect;
@@ -23,90 +31,139 @@ type ResetToken = Token & {
 };
 
 export const ResetPassword: FC<TResetPassword> = ({ successAuthRedirect }) => {
-  const aooth = useAooth();
-  const { fetch, error, isError, isLoading, reset } = useResetPassword();
+  const {
+    getValues,
+    control,
+    register,
+    trigger,
+    formState: { errors, isDirty, isValid },
+    clearErrors,
+    setError,
+  } = useForm({
+    defaultValues: initialValues,
+  });
+
+  const passflow = usePassflow();
+  const { fetch, error, isError, isLoading } = useResetPassword();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const { passwordPolicy } = useAppSettings();
-  const resetToken = searchParams.get('token') ?? undefined;
+  const { passwordPolicy, isError: isErrorApp, error: errorApp } = useAppSettings();
+
+  if (isErrorApp) throw new Error(errorApp);
+
+  const params = {
+    token: searchParams.get('token'),
+  };
+
+  try {
+    searchParamsResetPasswordSchema.validateSync(params, { abortEarly: false });
+  } catch (err) {
+    throw new Error('Invalid reset token.');
+  }
+
+  const { token: resetToken } = params;
+
   const resetTokenData = resetToken ? undefinedOnCatch(parseToken)(resetToken) : undefined;
 
-  const onSubmitHanlder = async (values: typeof initialValues) => {
+  const onSubmitHanlder = async () => {
+    const values = getValues();
     const resetTokenType = resetTokenData as ResetToken;
     const status = await fetch(values.password);
     if (status) {
       if (!isValidUrl(resetTokenType?.redirect_url ?? successAuthRedirect))
         navigate(resetTokenType?.redirect_url ?? successAuthRedirect);
-      else window.location.href = await getUrlWithTokens(aooth, resetTokenType?.redirect_url ?? successAuthRedirect);
+      else window.location.href = await getUrlWithTokens(passflow, resetTokenType?.redirect_url ?? successAuthRedirect);
     }
   };
 
-  const onCustomChangeHandler = (handleChange: FormikHandlers['handleChange']) => (e: ChangeEvent<HTMLInputElement>) => {
-    handleChange(e);
-    if (isError) {
-      reset();
-    }
+  const handlePasswordChange = async () => {
+    await trigger(['password']);
   };
 
-  const labelStyle = cn('aooth-text-caption-1-medium aooth-text-Grey-One', {
-    'aooth-text-Warning': isError,
+  const labelStyle = cn('passflow-text-caption-1-medium passflow-text-Grey-One', {
+    'passflow-text-Warning': isError,
   });
 
   return (
     <Wrapper title='Reset password' subtitle='Let’s get you back in.'>
-      <span className='aooth-block aooth-text-body-2-medium aooth-text-Grey-One aooth-text-center'>
+      <span className='passflow-block passflow-text-body-2-medium passflow-text-Grey-Six passflow-text-center passflow-mt-[-32px]'>
         Enter your new password below.
       </span>
-      <Formik
-        initialValues={initialValues}
-        validationSchema={validationResetPasswordSchema(passwordPolicy)}
-        onSubmit={onSubmitHanlder}
-        validateOnChange
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          void onSubmitHanlder();
+        }}
+        className='passflow-flex passflow-flex-col passflow-gap-[32px] passflow-max-w-[384px] passflow-w-full'
       >
-        {({ isValid, dirty, handleChange, handleBlur, values, errors }) => (
-          <Form className='aooth-flex aooth-flex-col aooth-gap-[32px] aooth-mt-[32px]'>
-            <div
-              className={`aooth-flex aooth-flex-col aooth-gap-[24px] aooth-w-full aooth-p-[24px] 
-              aooth-rounded-[6px] aooth-shadow-[0_4px_15px_0_rgba(0,0,0,0.09)]`}
-            >
-              <div
-                className={`group aooth-relative aooth-flex aooth-flex-col aooth-items-start 
-                aooth-justify-center aooth-gap-[6px]`}
-              >
-                <label htmlFor='password' className={labelStyle}>
-                  New password
-                </label>
+        <div
+          className={`passflow-flex passflow-flex-col passflow-gap-[24px] passflow-w-full passflow-p-[24px] 
+              passflow-rounded-[6px] passflow-shadow-[0_4px_15px_0_rgba(0,0,0,0.09)]`}
+        >
+          <div
+            className={`group passflow-relative passflow-flex passflow-flex-col passflow-items-start 
+                passflow-justify-center passflow-gap-[6px]`}
+          >
+            <label htmlFor='password' className={labelStyle}>
+              New password
+            </label>
+            <Controller
+              name='password'
+              control={control}
+              rules={{
+                required: 'Password is required',
+                validate: (value) => {
+                  try {
+                    passwordValidation(passwordPolicy).validateSync(value);
+                    clearErrors('password');
+                    return true;
+                  } catch (err) {
+                    const passwordErrors = err as { errors: string[] };
+                    setError('password', {
+                      type: 'manual',
+                      message: passwordErrors.errors.join(', '),
+                    });
+                    return passwordErrors.errors.join(', ');
+                  }
+                },
+              }}
+              render={({ field }) => (
                 <FieldPassword
+                  {...field}
+                  {...register('password')}
                   isError={isError}
-                  id='password'
-                  value={values.password}
                   passwordPolicy={passwordPolicy}
-                  validationErrors={errors.password}
-                  withMessages
+                  validationErrors={
+                    has(errors, 'password') && errors.password?.message ? errors.password.message.split(', ') : undefined
+                  }
+                  id='password'
                   name='password'
-                  onChange={onCustomChangeHandler(handleChange)}
-                  onBlur={handleBlur}
+                  withMessages
+                  onChange={(e) => {
+                    field.onChange(e);
+                    void handlePasswordChange();
+                  }}
                 />
-                {isError && (
-                  <div className='aooth-flex aooth-items-center aooth-justify-center aooth-gap-[4px]'>
-                    <Icon size='small' id='warning' type='general' className='icon-warning' />
-                    <span className='aooth-text-caption-1-medium aooth-text-Warning'>{error}</span>
-                  </div>
-                )}
+              )}
+            />
+            {isError && (
+              <div className='passflow-flex passflow-items-center passflow-justify-center passflow-gap-[4px]'>
+                <Icon size='small' id='warning' type='general' className='icon-warning' />
+                <span className='passflow-text-caption-1-medium passflow-text-Warning'>{error}</span>
               </div>
-            </div>
-            <Button
-              size='big'
-              variant='primary'
-              type='submit'
-              disabled={!isValid || !dirty || isLoading}
-              className='aooth-m-auto'
-            >
-              Save new password
-            </Button>
-          </Form>
-        )}
-      </Formik>
+            )}
+          </div>
+        </div>
+        <Button
+          size='big'
+          variant='primary'
+          type='submit'
+          disabled={!isDirty || !isValid || isLoading}
+          className='passflow-m-auto'
+        >
+          Save new password
+        </Button>
+      </form>
     </Wrapper>
   );
 };

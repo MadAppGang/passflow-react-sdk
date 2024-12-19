@@ -1,9 +1,9 @@
 import { useLayoutEffect, useState } from 'react';
-import { useAooth } from './use-aooth';
-import { AoothUserPasskey } from '@aooth/aooth-js-sdk';
+import { usePassflow } from './use-passflow';
+import { PassflowUserPasskey } from '@passflow/passflow-js-sdk';
 
-export type TuseUserPasskeys = () => {
-  data: AoothUserPasskey[];
+export type UseUserPasskeysProps = () => {
+  data: PassflowUserPasskey[];
   createUserPasskey: (relaingPartyId: string) => Promise<void>;
   editUserPasskey: (newName: string, passkeyId: string) => Promise<void>;
   deleteUserPasskey: (passkeyId: string) => Promise<void>;
@@ -12,9 +12,9 @@ export type TuseUserPasskeys = () => {
   errorMessage: string;
 };
 
-export const useUserPasskeys: TuseUserPasskeys = () => {
-  const aooth = useAooth();
-  const [data, setData] = useState<AoothUserPasskey[]>([]);
+export const useUserPasskeys: UseUserPasskeysProps = () => {
+  const passflow = usePassflow();
+  const [data, setData] = useState<PassflowUserPasskey[]>([]);
   const [isError, setIsError] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string>('');
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -23,8 +23,8 @@ export const useUserPasskeys: TuseUserPasskeys = () => {
     const fetch = async (): Promise<void> => {
       setIsLoading(true);
       try {
-        const response = await aooth.getUserPasskeys();
-        setData(response as unknown as AoothUserPasskey[]);
+        const response = await passflow.getUserPasskeys();
+        setData(response as unknown as PassflowUserPasskey[]);
       } catch (e) {
         setIsError(true);
         const error = e as Error;
@@ -35,15 +35,15 @@ export const useUserPasskeys: TuseUserPasskeys = () => {
     };
 
     void fetch();
-  }, [aooth]);
+  }, [passflow]);
 
   const createUserPasskey = async (relaingPartyId: string): Promise<void> => {
     setIsLoading(true);
     try {
-      const createUserPasskeyStatus = await aooth.createUserPasskey(relaingPartyId);
+      const createUserPasskeyStatus = await passflow.createUserPasskey(relaingPartyId);
       if (createUserPasskeyStatus) {
-        const userPasskeys = await aooth.getUserPasskeys();
-        setData(userPasskeys as unknown as AoothUserPasskey[]);
+        const userPasskeys = await passflow.getUserPasskeys();
+        setData(userPasskeys as unknown as PassflowUserPasskey[]);
       }
     } catch (e) {
       setIsError(true);
@@ -57,10 +57,10 @@ export const useUserPasskeys: TuseUserPasskeys = () => {
   const editUserPasskey = async (newName: string, passkeyId: string): Promise<void> => {
     setIsLoading(true);
     try {
-      const editUserPasskeyStatus = await aooth.renameUserPasskey(newName, passkeyId);
+      const editUserPasskeyStatus = await passflow.renameUserPasskey(newName, passkeyId);
       if (editUserPasskeyStatus) {
-        const userPasskeys = await aooth.getUserPasskeys();
-        setData(userPasskeys as unknown as AoothUserPasskey[]);
+        const userPasskeys = await passflow.getUserPasskeys();
+        setData(userPasskeys as unknown as PassflowUserPasskey[]);
       }
     } catch (e) {
       setIsError(true);
@@ -74,10 +74,10 @@ export const useUserPasskeys: TuseUserPasskeys = () => {
   const deleteUserPasskey = async (passkeyId: string): Promise<void> => {
     setIsLoading(true);
     try {
-      const deleteUserPasskeyStatus = await aooth.deleteUserPasskey(passkeyId);
+      const deleteUserPasskeyStatus = await passflow.deleteUserPasskey(passkeyId);
       if (deleteUserPasskeyStatus) {
-        const userPasskeys = await aooth.getUserPasskeys();
-        setData(userPasskeys as unknown as AoothUserPasskey[]);
+        const userPasskeys = await passflow.getUserPasskeys();
+        setData(userPasskeys as unknown as PassflowUserPasskey[]);
       }
     } catch (e) {
       setIsError(true);

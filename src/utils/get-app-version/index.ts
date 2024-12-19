@@ -2,11 +2,11 @@ import { version } from '../../../package.json';
 
 declare global {
   interface Window {
-    aoothReactAppVersion: () => void;
+    passflowReactAppVersion: () => void;
   }
 }
 
-window.aoothReactAppVersion = () => {
+window.passflowReactAppVersion = () => {
   // eslint-disable-next-line no-console
   console.log(`App Version: ${version}`);
 };

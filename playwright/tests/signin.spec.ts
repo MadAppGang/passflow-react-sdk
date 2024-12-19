@@ -4,7 +4,7 @@ import { expect, test } from '../fixture';
 test.describe('default passwordless experience', () => {
   test('has all elements of passwordless signin', async ({ page }) => {
     await page.goto('/web/signin');
-    await expect(page).toHaveTitle(/Aooth/);
+    await expect(page).toHaveTitle(/Passflow/);
     await expect(page.getByRole('button', { name: 'key Sign In with a Passkey' })).toBeVisible();
     await expect(page.getByText('Passwordless experience')).toBeVisible();
     await expect(page.locator('label div')).toBeChecked();
@@ -17,9 +17,9 @@ test.describe('default passwordless experience', () => {
 test.describe('default signin flow', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/web/signin');
-    await expect(page).toHaveTitle(/Aooth/);
+    await expect(page).toHaveTitle(/Passflow/);
     await expect(page.getByText('Sign In to your account', { exact: true })).toBeVisible();
-    await expect(page.getByText('To Aooth by Madappgang', { exact: true })).toBeVisible();
+    await expect(page.getByText('To Passflow by Madappgang', { exact: true })).toBeVisible();
     await page.locator('label div').click();
     await expect(page.locator('label div')).toBeVisible();
     await expect(page.locator('label div')).not.toBeChecked();
@@ -59,7 +59,7 @@ test.describe('default signin flow', () => {
 test.describe('default signin flow with providers', () => {
   test.beforeEach(async ({ page }) => {
     await page.route('**/settings', async (route) => {
-      await route.fulfill({ path: './tests/responses/aooth-settings.json' });
+      await route.fulfill({ path: './tests/responses/passflow-settings.json' });
     });
     await page.route('**/app/settings', async (route) => {
       await route.fulfill({ path: './tests/responses/app-settings-with-google.json' });
@@ -76,7 +76,7 @@ test.describe('default signin flow with providers', () => {
 test.describe('default signin flow without passkey', () => {
   test.beforeEach(async ({ page }) => {
     await page.route('**/settings', async (route) => {
-      await route.fulfill({ path: './tests/responses/aooth-settings.json' });
+      await route.fulfill({ path: './tests/responses/passflow-settings.json' });
     });
     await page.route('**/app/settings', async (route) => {
       await route.fulfill({ path: './tests/responses/app-settings-without-passkey.json' });
@@ -102,7 +102,7 @@ test.describe('default signin flow without passkey', () => {
 test.describe('default signin flow with email and password', () => {
   test.beforeEach(async ({ page }) => {
     await page.route('**/settings', async (route) => {
-      await route.fulfill({ path: './tests/responses/aooth-settings.json' });
+      await route.fulfill({ path: './tests/responses/passflow-settings.json' });
     });
     await page.route('**/app/settings', async (route) => {
       await route.fulfill({ path: './tests/responses/app-settings-default.json' });

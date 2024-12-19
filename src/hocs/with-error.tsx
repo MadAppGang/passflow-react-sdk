@@ -2,12 +2,12 @@
 /* eslint-disable react/jsx-props-no-spreading */
 import { ComponentType, useContext } from 'react';
 import { TError } from '@/components/error';
-import { AoothContext } from '@/context';
+import { PassflowContext } from '@/context';
 import { ErrorBoundary } from 'react-error-boundary';
 import { TSignIn, TSignUp } from '@/components/form';
-import { TAoothFlow } from '@/components/flow/aooth';
+import { PassflowProps } from '@/components/flow/passflow';
 
-type UnionType = TSignIn | TSignUp | TAoothFlow;
+type UnionType = TSignIn | TSignUp | PassflowProps;
 type TFallbackComponentProps = {
   error: Error;
   resetErrorBoundary: (...args: unknown[]) => void;
@@ -18,7 +18,7 @@ const excludeRoutes = ['verify-challenge-otp', 'password/reset'];
 export const withError =
   <P extends UnionType>(Component: ComponentType<P>, ErrorComponent: ComponentType<TError>) =>
   (props: P) => {
-    const context = useContext(AoothContext);
+    const context = useContext(PassflowContext);
     const { successAuthRedirect } = props;
     const { pathname } = window.location;
 

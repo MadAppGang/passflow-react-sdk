@@ -1,44 +1,69 @@
-import { Navigate, useLocation } from 'react-router-dom';
+/* eslint-disable no-nested-ternary */
+/* eslint-disable complexity */
+import { useSearchParams } from 'react-router-dom';
+import * as Yup from 'yup';
 import { Button } from '@/components/ui';
 import { Wrapper } from '../wrapper';
 import { useForgotPassword } from '@/hooks';
 import '@/styles/index.css';
-import { AoothSendPasswordResetEmailPayload } from '@aooth/aooth-js-sdk';
+import { PassflowSendPasswordResetEmailPayload } from '@passflow/passflow-js-sdk';
+import { eq } from 'lodash';
+
+const searchParamsForgotPasswordSuccessSchema = Yup.object().shape({
+  identity: Yup.string().oneOf(['email', 'phone']).required(),
+  identityValue: Yup.string().required(),
+  redirectUrl: Yup.string().required(),
+});
 
 export const ForgotPasswordSuccess = () => {
   const { fetch: refetch } = useForgotPassword();
-  const location = useLocation();
+  const [searchParams] = useSearchParams();
 
-  const { state } = location as {
-    state: AoothSendPasswordResetEmailPayload;
+  const params = {
+    identity: searchParams.has('email') ? 'email' : searchParams.has('phone') ? 'phone' : null,
+    identityValue: searchParams.has('email')
+      ? searchParams.get('email')
+      : searchParams.has('phone')
+        ? searchParams.get('phone')
+        : null,
+    redirectUrl: searchParams.get('redirect_url'),
   };
 
-  // eslint-disable-next-line no-void
-  const onClickResendHandler = () => void refetch(state);
+  try {
+    searchParamsForgotPasswordSuccessSchema.validateSync(params, { abortEarly: false });
+  } catch (err) {
+    throw new Error('Invalid search params');
+  }
 
-  if (!state) return <Navigate to={{ pathname: '*', search: window.location.search }} replace />;
+  const onClickResendHandler = async () => {
+    const resendPayload = {
+      ...(params.identity === 'email' ? { email: params.identityValue } : undefined),
+      ...(params.identity === 'phone' ? { phone: params.identityValue } : undefined),
+      redirect_url: params.redirectUrl,
+    };
 
-  const currentIdentityString = () => {
-    if (state.email) return state.email;
-    if (state.phone) return state.phone;
-    return state.username;
+    await refetch(resendPayload as PassflowSendPasswordResetEmailPayload);
   };
 
   return (
-    <Wrapper title={`Check your ${state.email ? 'email' : 'phone'}`} className='aooth-flex aooth-flex-col aooth-max-w-[336px]'>
-      <div className='aooth-w-full aooth-flex aooth-flex-col aooth-gap-[32px]'>
-        <p className='aooth-text-body-2-medium aooth-text-Grey-One aooth-text-center aooth-mt-[8px]'>
-          We sent a link to {state.phone ? 'phone number' : 'email address'}{' '}
-          <strong className='aooth-text-body-2-bold'>{currentIdentityString()}</strong>. Click the link to reset your password.
+    <Wrapper
+      title={`Check your ${params.identity}`}
+      className='passflow-flex passflow-flex-col passflow-max-w-[336px] passflow-mx-auto'
+    >
+      <div className='passflow-w-full passflow-flex passflow-flex-col passflow-gap-[32px] passflow-mt-[-8px]'>
+        <p className='passflow-text-body-2-medium passflow-text-Grey-One passflow-text-center'>
+          We sent a link to {eq(params.identity, 'phone') ? 'phone number' : 'email address'}{' '}
+          <strong className='passflow-text-body-2-bold'>{params.identityValue}</strong>. Click the link to reset your password.
         </p>
         <Button
           size='big'
           variant='secondary'
           type='button'
-          className='aooth-text-body-2-medium aooth-m-auto aooth-max-w-[196px]'
+          className='passflow-text-body-2-medium passflow-m-auto passflow-max-w-[196px]'
+          // eslint-disable-next-line @typescript-eslint/no-misused-promises
           onClick={onClickResendHandler}
         >
-          Resend {state.email ? 'email' : 'SMS'}
+          Resend {eq(params.identity, 'email') ? 'email' : 'SMS'}
         </Button>
       </div>
     </Wrapper>

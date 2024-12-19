@@ -22,29 +22,29 @@ export const PasskeyDialog: FC<TPasskeyDialog> = ({ isOpen, onChangeOpen, passke
   return (
     <Dialog open={isOpen} onOpenChange={onChangeOpen}>
       <DialogContent
-        className={`aooth-w-[320px] aooth-h-[244px] aooth-p-[32px] aooth-rounded-[6px] 
-        aooth-bg-White aooth-shadow-[0_4px_15px_0_rgba(0,0,0,0.09)]`}
+        className={`passflow-w-[320px] passflow-h-[244px] passflow-p-[32px] passflow-rounded-[6px] 
+        passflow-bg-White passflow-shadow-[0_4px_15px_0_rgba(0,0,0,0.09)]`}
       >
         <DialogHeader>
-          <DialogTitle className='!aooth-text-title-2-medium !aooth-text-Dark-Three'>Edit your passkey name</DialogTitle>
+          <DialogTitle className='!passflow-text-title-2-medium !passflow-text-Dark-Three'>Edit your passkey name</DialogTitle>
         </DialogHeader>
-        <div className='aooth-flex aooth-flex-col aooth-gap-[6px] aooth-mt-[16px]'>
-          <label htmlFor='new-passkey-name' className='aooth-text-caption-1-medium aooth-text-Grey-Six'>
+        <div className='passflow-flex passflow-flex-col passflow-gap-[6px] passflow-mt-[16px]'>
+          <label htmlFor='new-passkey-name' className='passflow-text-caption-1-medium passflow-text-Grey-Six'>
             Passkey name
           </label>
           <FieldText id='new-passkey-name' value={value} onChange={onChangeValue} />
         </div>
-        <div className='aooth-flex aooth-items-center aooth-justify-between aooth-mt-[32px]'>
+        <div className='passflow-flex passflow-items-center passflow-justify-between passflow-mt-[32px]'>
           <Button
             type='submit'
             variant='primary'
             size='medium'
-            className='aooth-min-w-[120px]'
+            className='passflow-min-w-[120px]'
             onClick={onEditUserPasskeyHandler}
           >
             Save
           </Button>
-          <DialogClose className='button button--outlined button--medium aooth-min-w-[120px]'>Cancel</DialogClose>
+          <DialogClose className='button button--outlined button--medium passflow-min-w-[120px]'>Cancel</DialogClose>
         </div>
       </DialogContent>
     </Dialog>

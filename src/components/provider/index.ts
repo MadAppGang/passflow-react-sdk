@@ -1,1 +1,1 @@
-export { AoothProvider } from './aooth-provider';
+export { PassflowProvider } from './passflow-provider';

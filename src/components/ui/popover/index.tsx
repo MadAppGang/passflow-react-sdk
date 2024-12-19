@@ -17,7 +17,10 @@ const PopoverContent = forwardRef<
       ref={ref}
       align={align}
       sideOffset={sideOffset}
-      className={cn('aooth-z-10 aooth-bg-White aooth-rounded-[4px] aooth-shadow-[0_5px_20px_0_rgba(0,0,0,0.05)', className)}
+      className={cn(
+        'passflow-z-10 passflow-bg-White passflow-rounded-[4px] passflow-shadow-[0_5px_20px_0_rgba(0,0,0,0.05)',
+        className,
+      )}
       // eslint-disable-next-line react/jsx-props-no-spreading
       {...props}
     />

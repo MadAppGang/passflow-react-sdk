@@ -1,27 +1,27 @@
 import { useCallback, useState } from 'react';
-import { AoothPasswordlessSignInCompletePayload, AoothValidationResponse } from '@aooth/aooth-js-sdk';
-import { useAooth } from './use-aooth';
+import { PassflowPasswordlessSignInCompletePayload, PassflowValidationResponse } from '@passflow/passflow-js-sdk';
+import { usePassflow } from './use-passflow';
 
-export type TusePasswordlessComplete = () => {
-  fetch: (payload: AoothPasswordlessSignInCompletePayload) => Promise<AoothValidationResponse | null>;
-  fetchPasskey: (otp: string, challengeId: string, appId?: string) => Promise<AoothValidationResponse | null>;
+export type UsePasswordlessCompleteProps = () => {
+  fetch: (payload: PassflowPasswordlessSignInCompletePayload) => Promise<PassflowValidationResponse | null>;
+  fetchPasskey: (otp: string, challengeId: string, appId?: string) => Promise<PassflowValidationResponse | null>;
   isLoading: boolean;
   isError: boolean;
   error: string;
   reset: () => void;
 };
 
-export const usePasswordlessComplete: TusePasswordlessComplete = () => {
-  const aooth = useAooth();
+export const usePasswordlessComplete: UsePasswordlessCompleteProps = () => {
+  const passflow = usePassflow();
   const [errorMessage, setErrorMessage] = useState('');
   const [isError, setIsError] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
   const fetch = useCallback(
-    async (payload: AoothPasswordlessSignInCompletePayload): Promise<AoothValidationResponse | null> => {
+    async (payload: PassflowPasswordlessSignInCompletePayload): Promise<PassflowValidationResponse | null> => {
       try {
         setIsLoading(true);
-        const response = await aooth.passwordlessSignInComplete(payload);
+        const response = await passflow.passwordlessSignInComplete(payload);
         setIsLoading(false);
         return response;
       } catch (e) {
@@ -36,10 +36,10 @@ export const usePasswordlessComplete: TusePasswordlessComplete = () => {
   );
 
   const fetchPasskey = useCallback(
-    async (otp: string, challengeId: string, appId?: string): Promise<AoothValidationResponse | null> => {
+    async (otp: string, challengeId: string, appId?: string): Promise<PassflowValidationResponse | null> => {
       try {
         setIsLoading(true);
-        const response = await aooth.passkeyValidate(otp, challengeId, appId);
+        const response = await passflow.passkeyValidate(otp, challengeId, appId);
         setIsLoading(false);
         return response;
       } catch (e) {

@@ -1,7 +1,7 @@
-import { Aooth } from '@aooth/aooth-js-sdk';
+import { Passflow } from '@passflow/passflow-js-sdk';
 
-export const getUrlWithTokens = async (aooth: Aooth, url: string): Promise<string> => {
-  const tokens = await aooth.getTokens(false);
+export const getUrlWithTokens = async (passflow: Passflow, url: string): Promise<string> => {
+  const tokens = await passflow.getTokens(false);
 
   if (tokens) {
     tokens.scopes = undefined;
