@@ -14,14 +14,14 @@ type TPasskeyActions = {
 
 export const PasskeyActions: FC<TPasskeyActions> = ({ passkeyId, passkeyName, actions }) => (
   <Popover>
-    <PopoverTrigger asChild className='aooth-ml-auto'>
+    <PopoverTrigger asChild className='passflow-ml-auto'>
       <div>
         <Button
           type='button'
           variant='clean'
           size='small'
           asIcon
-          className='hover:aooth-bg-Background aooth-w-[28px] aooth-h-[28px]'
+          className='hover:passflow-bg-Background passflow-w-[28px] passflow-h-[28px]'
         >
           <Icon type='general' id='dots-vertical' size='small' />
         </Button>
@@ -29,8 +29,8 @@ export const PasskeyActions: FC<TPasskeyActions> = ({ passkeyId, passkeyName, ac
     </PopoverTrigger>
     <PopoverContent>
       <div
-        className={`aooth-w-[125px] aooth-p-[6px] aooth-flex aooth-flex-col aooth-gap-[4px] 
-        aooth-items-start aooth-shadow-[0_5px_20px_0px_rgba(0,0,0,0.05)]`}
+        className={`passflow-w-[125px] passflow-p-[6px] passflow-flex passflow-flex-col passflow-gap-[4px] 
+        passflow-items-start passflow-shadow-[0_5px_20px_0px_rgba(0,0,0,0.05)]`}
       >
         {actions.map(({ title, iconId, onClick }) => (
           <Button
@@ -39,13 +39,14 @@ export const PasskeyActions: FC<TPasskeyActions> = ({ passkeyId, passkeyName, ac
             variant='clean'
             size='small'
             withIcon
-            className='!aooth-max-w-full aooth-justify-start aooth-p-[6px] aooth-gap-[6px] hover:aooth-bg-Background'
+            // eslint-disable-next-line max-len
+            className='!passflow-max-w-full passflow-justify-start passflow-p-[6px] passflow-gap-[6px] hover:passflow-bg-Background'
             // eslint-disable-next-line no-void
             onClick={() => void onClick(passkeyId, passkeyName ?? '')}
           >
             <Icon type='general' id={iconId} size='small' className={cn({ 'icon-warning': iconId === 'trash' })} />
             <span
-              className={cn('aooth-text-body-2-medium aooth-text-Dark-Three', {
+              className={cn('passflow-text-body-2-medium passflow-text-Dark-Three', {
                 'text-Warning': iconId === 'trash',
               })}
             >

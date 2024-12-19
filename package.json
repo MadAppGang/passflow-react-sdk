@@ -1,8 +1,8 @@
 {
-  "name": "@aooth/aooth-react-sdk",
-  "description": "Aooth React UI Kit",
+  "name": "@passflow/passflow-react-sdk",
+  "description": "Passflow React UI Kit",
   "packageManager": "yarn@4.2.2",
-  "version": "0.1.19",
+  "version": "0.0.1",
   "type": "module",
   "files": [
     "dist"
@@ -39,9 +39,11 @@
     "react-router-dom": "^6.23.0"
   },
   "dependencies": {
-    "@aooth/aooth-js-sdk": "^0.1.17",
+    "@passflow/passflow-js-sdk": "^0.0.1",
     "@radix-ui/react-dialog": "^1.0.5",
     "@radix-ui/react-popover": "^1.0.7",
+    "@storybook/react": "^8.4.7",
+    "@storybook/react-vite": "^8.4.7",
     "@types/jest": "^29.5.12",
     "@types/querystringify": "^2.0.2",
     "classnames": "^2.5.1",
@@ -51,10 +53,14 @@
     "formik": "^2.4.6",
     "history": "^5.3.0",
     "lodash": "^4.17.21",
+    "phone": "^3.1.55",
+    "query-string": "^9.1.1",
     "querystringify": "^2.2.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-error-boundary": "^4.0.13",
+    "react-hook-form": "^7.54.1",
+    "react-international-phone": "^4.3.0",
     "react-otp-input": "^3.1.1",
     "react-router-dom": "^6.23.0",
     "tailwind-merge": "^2.3.0",
@@ -109,18 +115,18 @@
   ],
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/MadAppGang/aooth-react-sdk/issues"
+    "url": "https://github.com/MadAppGang/passflow-react-sdk/issues"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/MadAppGang/aooth-react-sdk.git",
-    "directory": "packages/react"
+    "url": "git+https://github.com/MadAppGang/passflow-react-sdk.git",
+    "directory": "packages/passflow-react-sdk"
   },
   "publishConfig": {
     "access": "public"
   },
   "keywords": [
-    "aooth",
+    "passflow",
     "auth",
     "authentication",
     "passwordless",
@@ -130,6 +136,6 @@
     "ui",
     "ui-kit",
     "react-ui-kit",
-    "aooth-react-ui-kit"
+    "passflow-react-ui-kit"
   ]
 }

@@ -9,15 +9,40 @@
 
 @layer components {
   * {
+    margin: 0;
+    padding: 0;
     box-sizing: border-box;
   }
 
-  #aooth-wrapper {
+  #passflow-wrapper {
     font-family: 'Inter', sans-serif;
     box-sizing: border-box;
 
-    @apply aooth-outline-offset-0 aooth-outline-1;
+    -webkit-font-smoothing: antialiased;
+
+    @apply passflow-outline-offset-0 passflow-outline-1;
 
     overflow-x: hidden;
+  }
+
+  .passflow-secondary-font {
+    font-family: 'Gasoek One', sans-serif;
+    font-style: normal;
+  }
+
+  /* RIPPLE */
+  .passflow-ripple {
+    position: absolute;
+    border-radius: 50%;
+    transform: scale(0);
+    animation: passflow-ripple 600ms linear;
+    background-color: rgba(255, 255, 255, 0.3);
+  }
+
+  @keyframes passflow-ripple {
+    to {
+      transform: scale(4);
+      opacity: 0;
+    }
   }
 }

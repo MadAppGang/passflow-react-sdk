@@ -1,31 +1,31 @@
-import { AoothFlow } from '@/components/flow';
+import { PassflowFlow } from '@/components/flow';
 import { BrowserRouter } from 'react-router-dom';
-import { AoothConfig } from '@aooth/aooth-js-sdk';
-import { AoothProvider } from './components/provider';
+import { PassflowConfig } from '@passflow/passflow-js-sdk';
+import { PassflowProvider } from './components/provider';
 
-const aoothConfig: AoothConfig = {
-  url: process.env.AOOTH_URL ?? 'http://localhost:5432',
-  appId: process.env.AOOTH_APP_ID ?? 'test_app_id',
+const passflowConfig: PassflowConfig = {
+  url: process.env.PASSFLOW_URL ?? 'http://localhost:5432',
+  appId: process.env.PASSFLOW_APP_ID ?? 'test_app_id',
   createTenantForNewUser: true,
   scopes: ['openid', 'email', 'profile', 'offline'],
 };
 
 export const App = () => (
-  <AoothProvider
-    url={aoothConfig.url}
-    appId={aoothConfig.appId}
-    createTenantForNewUser={aoothConfig.createTenantForNewUser}
-    scopes={aoothConfig.scopes}
+  <PassflowProvider
+    url={passflowConfig.url}
+    appId={passflowConfig.appId}
+    createTenantForNewUser={passflowConfig.createTenantForNewUser}
+    scopes={passflowConfig.scopes}
   >
     <BrowserRouter>
-      <AoothFlow
+      <PassflowFlow
         federatedDisplayMode='redirect'
         successAuthRedirect='https://jwt.io'
         federatedCallbackUrl='https://jwt.io'
         pathPrefix='/web'
       />
     </BrowserRouter>
-  </AoothProvider>
+  </PassflowProvider>
 );
 
 export default App;

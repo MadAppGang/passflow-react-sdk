@@ -1,15 +1,15 @@
-# @aooth/aooth-react-sdk
+# @passflow/passflow-react-sdk
 
 This is a SDK for react application.
 
 to install just type:
+
 ```
 yarn install
 yarn build
 ```
 
 we are using yarn 4 with pnp enabled. Please ansure you have it in the system.
-
 
 ## UI Testing
 

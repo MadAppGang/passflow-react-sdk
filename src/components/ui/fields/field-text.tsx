@@ -1,5 +1,5 @@
 /* eslint-disable react/jsx-props-no-spreading */
-import { FC, InputHTMLAttributes } from 'react';
+import { InputHTMLAttributes, forwardRef } from 'react';
 import '@/styles/index.css';
 import { cn } from '@/utils';
 
@@ -10,18 +10,21 @@ type TFieldText = InputHTMLAttributes<HTMLInputElement> & {
   disabled?: boolean;
 };
 
-export const FieldText: FC<TFieldText> = ({ id, isError = false, className = '', disabled = false, ...rest }) => {
-  const styles = {
-    'aooth-field--warning': isError,
-  };
+export const FieldText = forwardRef<HTMLInputElement, TFieldText>(
+  ({ id, isError = false, className = '', disabled = false, ...rest }, ref) => {
+    const styles = {
+      'passflow-field--warning': isError,
+    };
 
-  return (
-    <input
-      id={id}
-      type='text'
-      className={cn(styles, 'aooth-field aooth-field--focused', className)}
-      disabled={disabled}
-      {...rest}
-    />
-  );
-};
+    return (
+      <input
+        ref={ref}
+        id={id}
+        type='text'
+        className={cn(styles, 'passflow-field passflow-field--focused', className)}
+        disabled={disabled}
+        {...rest}
+      />
+    );
+  },
+);

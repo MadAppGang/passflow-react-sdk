@@ -17,7 +17,7 @@ const DialogOverlay = forwardRef<
 >(({ className, ...props }, ref) => (
   <DialogPrimitive.Overlay
     ref={ref}
-    className={cn('aooth-fixed aooth-inset-0 aooth-z-40 aooth-bg-Dark-Three/50', className)}
+    className={cn('passflow-fixed passflow-inset-0 passflow-z-40 passflow-bg-Dark-Three/50', className)}
     {...props}
   />
 ));
@@ -32,7 +32,8 @@ const DialogContent = forwardRef<
     <DialogPrimitive.Content
       ref={ref}
       className={cn(
-        'aooth-fixed aooth-z-50 aooth-left-[50%] aooth-top-[50%] aooth-translate-x-[-50%] aooth-translate-y-[-50%]',
+        'passflow-fixed passflow-z-50 passflow-left-[50%] passflow-top-[50%] passflow-translate-x-[-50%]',
+        'passflow-translate-y-[-50%]',
         className,
       )}
       {...props}
@@ -45,7 +46,7 @@ DialogContent.displayName = DialogPrimitive.Content.displayName;
 
 const DialogHeader = ({ className, ...props }: HTMLAttributes<HTMLDivElement>) => (
   <div
-    className={cn('aooth-flex aooth-flex-col aooth-space-y-1.5 aooth-text-center sm:aooth-text-left', className)}
+    className={cn('passflow-flex passflow-flex-col passflow-space-y-1.5 passflow-text-center sm:passflow-text-left', className)}
     {...props}
   />
 );
@@ -53,7 +54,10 @@ DialogHeader.displayName = 'DialogHeader';
 
 const DialogFooter = ({ className, ...props }: HTMLAttributes<HTMLDivElement>) => (
   <div
-    className={cn('aooth-flex aooth-flex-col-reverse sm:aooth-flex-row sm:aooth-justify-end sm:aooth-space-x-2', className)}
+    className={cn(
+      'passflow-flex passflow-flex-col-reverse sm:passflow-flex-row sm:passflow-justify-end sm:passflow-space-x-2',
+      className,
+    )}
     {...props}
   />
 );
@@ -65,7 +69,7 @@ const DialogTitle = forwardRef<
 >(({ className, ...props }, ref) => (
   <DialogPrimitive.Title
     ref={ref}
-    className={cn('aooth-text-lg aooth-font-semibold aooth-leading-none aooth-tracking-tight', className)}
+    className={cn('passflow-text-lg passflow-font-semibold passflow-leading-none passflow-tracking-tight', className)}
     {...props}
   />
 ));
@@ -75,7 +79,11 @@ const DialogDescription = forwardRef<
   ElementRef<typeof DialogPrimitive.Description>,
   ComponentPropsWithoutRef<typeof DialogPrimitive.Description>
 >(({ className, ...props }, ref) => (
-  <DialogPrimitive.Description ref={ref} className={cn('aooth-text-sm aooth-text-muted-foreground', className)} {...props} />
+  <DialogPrimitive.Description
+    ref={ref}
+    className={cn('passflow-text-sm passflow-text-muted-foreground', className)}
+    {...props}
+  />
 ));
 DialogDescription.displayName = DialogPrimitive.Description.displayName;
 

@@ -1,15 +1,15 @@
 import { useCallback, useState } from 'react';
-import { useAooth } from './use-aooth';
+import { usePassflow } from './use-passflow';
 
-export type TuseJoinInvite = () => {
+export type UseJoinInviteProps = () => {
   fetch: (token: string) => Promise<boolean>;
   isLoading: boolean;
   isError: boolean;
   error: string;
 };
 
-export const useJoinInvite: TuseJoinInvite = () => {
-  const aooth = useAooth();
+export const useJoinInvite: UseJoinInviteProps = () => {
+  const passflow = usePassflow();
   const [errorMessage, setErrorMessage] = useState('');
   const [isError, setIsError] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -17,7 +17,7 @@ export const useJoinInvite: TuseJoinInvite = () => {
   const fetch = useCallback(async (token: string): Promise<boolean> => {
     try {
       setIsLoading(true);
-      await aooth.joinInvitation(token);
+      await passflow.joinInvitation(token);
       setIsLoading(false);
       return true;
     } catch (e) {

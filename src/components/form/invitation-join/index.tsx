@@ -1,22 +1,40 @@
+/* eslint-disable max-len */
 /* eslint-disable complexity */
 import { FC, useState } from 'react';
+import * as Yup from 'yup';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { InvitationToken, parseToken } from '@aooth/aooth-js-sdk';
+import { InvitationToken, parseToken } from '@passflow/passflow-js-sdk';
 import { Error as ErrorComponent } from '@/components/error';
 import { Button } from '@/components/ui';
 import { Wrapper } from '../wrapper';
-import { useAooth, useJoinInvite } from '@/hooks';
+import { useJoinInvite, usePassflow } from '@/hooks';
 import '@/styles/index.css';
 import { withError } from '@/hocs';
 import { undefinedOnCatch } from '@/utils';
 
+const searchParamsInvitationJoinSchema = Yup.object().shape({
+  token: Yup.string().required(),
+});
+
 const InvitationJoinFlow: FC = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const aooth = useAooth();
+  const passflow = usePassflow();
   const { fetch: joinInvite, isLoading: isInvitationJoinLoading, error, isError } = useJoinInvite();
   const [isLoading, setLoading] = useState(false);
-  const invitationToken = searchParams.get('token') ?? undefined;
+
+  const params = {
+    token: searchParams.get('token'),
+  };
+
+  try {
+    searchParamsInvitationJoinSchema.validateSync(params, { abortEarly: false });
+  } catch (err) {
+    throw new Error('Invalid invitation token.');
+  }
+
+  const { token: invitationToken } = params;
+
   const invitationTokenData = invitationToken ? undefinedOnCatch(parseToken)(invitationToken) : undefined;
 
   const onClickAcceptInvitationHandler = async (successJoinPath: string) => {
@@ -24,7 +42,7 @@ const InvitationJoinFlow: FC = () => {
       const invitationJoinResponse = await joinInvite(invitationToken);
       if (invitationJoinResponse) {
         setLoading(true);
-        const refreshTokenResponse = await aooth.refreshToken();
+        const refreshTokenResponse = await passflow.refreshToken();
         setLoading(false);
         if (refreshTokenResponse) navigate(successJoinPath);
       }
@@ -43,16 +61,16 @@ const InvitationJoinFlow: FC = () => {
     } = invitationTokenData as InvitationToken;
 
     return (
-      <Wrapper title='Join to Aooth'>
-        <span className='aooth-block aooth-text-body-2-medium aooth-text-Grey-One aooth-text-center aooth-mt-[8px]'>
+      <Wrapper title='Join to Passflow'>
+        <span className='passflow-block passflow-text-body-2-medium passflow-text-Grey-One passflow-text-center passflow-mt-[8px]'>
           {inviterName} has invited you to workspace
-          <br /> <strong className='aooth-text-body-2-bold'>{tenantName}</strong>
+          <br /> <strong className='passflow-text-body-2-bold'>{tenantName}</strong>
         </span>
         <Button
           size='big'
           type='button'
           variant='primary'
-          className='aooth-mt-[32px] aooth-mx-auto'
+          className='passflow-mt-[32px] passflow-mx-auto'
           // eslint-disable-next-line no-void
           onClick={() => void onClickAcceptInvitationHandler(redirectUrl)}
           disabled={isInvitationJoinLoading || isLoading}

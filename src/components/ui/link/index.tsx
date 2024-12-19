@@ -4,12 +4,11 @@ import { Link as RouterLink, LinkProps as RouterLinkProps } from 'react-router-d
 import '@/styles/index.css';
 
 type TLink = RouterLinkProps & {
-  to: string;
   children: React.ReactNode | string;
 };
 
 export const Link: FC<TLink> = ({ to, children, ...props }) => (
-  <RouterLink to={{ pathname: to, search: window.location.search }} {...props}>
+  <RouterLink to={to} {...props}>
     {children}
   </RouterLink>
 );

@@ -5,14 +5,14 @@ import OtpInput from 'react-otp-input';
 import { Button, Icon } from '@/components/ui';
 import { Wrapper } from '../wrapper';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { useAooth, usePasswordlessComplete, useSignIn } from '@/hooks';
+import { usePassflow, usePasswordlessComplete, useSignIn } from '@/hooks';
 import { TimerButton } from './timer-button';
 import {
-  AoothPasswordlessResponse,
-  AoothPasswordlessSignInCompletePayload,
-  AoothPasswordlessSignInPayload,
   ChallengeType,
-} from '@aooth/aooth-js-sdk';
+  PassflowPasswordlessResponse,
+  PassflowPasswordlessSignInCompletePayload,
+  PassflowPasswordlessSignInPayload,
+} from '@passflow/passflow-js-sdk';
 import { cn, getUrlWithTokens, isValidUrl } from '@/utils';
 import { VerifyChallengeSuccess } from './varify-challenge-success';
 
@@ -44,8 +44,9 @@ export const VerifyChallengeOTPManual: FC<VerifyChallengeOTPManualProps> = ({
   numInputs,
   shouldAutoFocus,
   successAuthRedirect,
+  signUpPath,
 }) => {
-  const aooth = useAooth();
+  const passflow = usePassflow();
   const navigate = useNavigate();
   const { fetch: refetch } = useSignIn();
   const { fetch: fetchPasswordlessComplete, fetchPasskey, isError, error } = usePasswordlessComplete();
@@ -59,14 +60,14 @@ export const VerifyChallengeOTPManual: FC<VerifyChallengeOTPManualProps> = ({
 
   const onClickResendHandler = async () => {
     if (type && identity && identityValue && challengeType) {
-      const payload: AoothPasswordlessSignInPayload = {
+      const payload: PassflowPasswordlessSignInPayload = {
         create_tenant: createTenant ?? false,
         challenge_type: challengeType as ChallengeType,
         redirect_url: successAuthRedirect,
         ...(identity === 'email' ? { email: identityValue } : { phone: identityValue }),
       };
 
-      const refetchResponse = (await refetch(payload, type)) as AoothPasswordlessResponse;
+      const refetchResponse = (await refetch(payload, type)) as PassflowPasswordlessResponse;
       if (refetchResponse) {
         setSearchParams((params) => {
           params.set('challenge_id', refetchResponse.challenge_id);
@@ -80,7 +81,7 @@ export const VerifyChallengeOTPManual: FC<VerifyChallengeOTPManualProps> = ({
 
   useEffect(() => {
     if (valueOTP.length === numInputs && challengeId) {
-      const payload: AoothPasswordlessSignInCompletePayload = {
+      const payload: PassflowPasswordlessSignInCompletePayload = {
         challenge_id: challengeId,
         challenge_type: 'otp',
         otp: valueOTP,
@@ -91,42 +92,51 @@ export const VerifyChallengeOTPManual: FC<VerifyChallengeOTPManualProps> = ({
         if (response) {
           if (response.redirect_url) {
             if (!isValidUrl(response.redirect_url)) navigate(response.redirect_url);
-            else window.location.href = await getUrlWithTokens(aooth, response.redirect_url);
+            else window.location.href = await getUrlWithTokens(passflow, response.redirect_url);
           } else {
             setShowSuccessMessage(true);
           }
-        } else {
-          setParamsError('Something went wrong. Please try again later.');
         }
       };
 
       void fetchData();
     }
-  }, [valueOTP, numInputs, fetchPasswordlessComplete, challengeId, successAuthRedirect, navigate, aooth, type, fetchPasskey]);
-
-  if (isError && error) throw new Error(error);
+  }, [
+    valueOTP,
+    numInputs,
+    fetchPasswordlessComplete,
+    challengeId,
+    successAuthRedirect,
+    navigate,
+    passflow,
+    type,
+    fetchPasskey,
+  ]);
 
   if (paramsError) throw new Error(paramsError);
 
   if (showSuccessMessage) return <VerifyChallengeSuccess />;
 
+  const onClickNavigateBack = () => navigate(signUpPath);
+
   return (
     <Wrapper
       title={`Verify your ${identity}`}
       subtitle={`We sent OTP code to your ${challengeTypeFullString[identity as keyof typeof challengeTypeFullString]}`}
-      className='aooth-flex aooth-flex-col aooth-gap-[32px]'
+      className='passflow-flex passflow-flex-col passflow-gap-[32px]'
     >
       <div
-        className={`aooth-flex aooth-flex-col aooth-gap-[56px] aooth-p-[24px] aooth-pb-[56px]
-          aooth-rounded-[6px] aooth-shadow-[0_4px_15px_0_rgba(0,0,0,0.09)]`}
+        className={`passflow-flex passflow-flex-col passflow-gap-[56px] passflow-p-[24px] passflow-pb-[56px]
+          passflow-rounded-[6px] passflow-shadow-[0_4px_15px_0_rgba(0,0,0,0.09)]`}
       >
         {identityValue && (
           <Button
             size='big'
             type='button'
             variant='outlined'
-            className='aooth-relative aooth-bg-Background aooth-border-none'
+            className='passflow-relative passflow-bg-Background passflow-border-none'
             withIcon
+            onClick={onClickNavigateBack}
           >
             <Icon id={identity === 'email' ? 'mail' : 'phone'} type='general' size='small' />
             {identityValue}
@@ -134,33 +144,36 @@ export const VerifyChallengeOTPManual: FC<VerifyChallengeOTPManualProps> = ({
               id='edit'
               type='general'
               size='small'
-              className='aooth-absolute aooth-top-1/2 aooth-right-[12px] -aooth-translate-y-1/2'
+              className='passflow-absolute passflow-top-1/2 passflow-right-[12px] -passflow-translate-y-1/2'
             />
           </Button>
         )}
-        <div id='otp-wrapper' className='aooth-flex aooth-flex-col aooth-items-center aooth-justify-center aooth-gap-[6px]'>
+        <div
+          id='otp-wrapper'
+          className='passflow-flex passflow-flex-col passflow-items-center passflow-justify-center passflow-gap-[6px]'
+        >
           <OtpInput
             value={valueOTP}
             onChange={onChangeOTP}
             numInputs={numInputs}
             shouldAutoFocus={shouldAutoFocus}
             skipDefaultStyles
-            containerStyle='aooth-flex aooth-items-center aooth-justify-center aooth-gap-[10px]'
-            inputStyle={cn('aooth-field-otp', isError && 'aooth-field--warning')}
+            containerStyle='passflow-flex passflow-items-center passflow-justify-center passflow-gap-[10px]'
+            inputStyle={cn('passflow-field-otp', isError && 'passflow-field--warning')}
             inputType='text'
             // eslint-disable-next-line react/jsx-props-no-spreading
             renderInput={(props) => <input {...props} />}
           />
           {isError && (
-            <div className='aooth-flex aooth-items-center aooth-justify-center aooth-gap-[4px]'>
+            <div className='passflow-flex passflow-items-center passflow-justify-center passflow-gap-[4px]'>
               <Icon size='small' id='warning' type='general' className='icon-warning' />
-              <span className='aooth-text-caption-1-medium aooth-text-Warning'>{error}</span>
+              <span className='passflow-text-caption-1-medium passflow-text-Warning'>{error}</span>
             </div>
           )}
         </div>
       </div>
       {type === 'passwordless' && (
-        <p className='aooth-text-Grey-One aooth-text-body-2-medium aooth-text-center'>
+        <p className='passflow-text-Grey-One passflow-text-body-2-medium passflow-text-center'>
           Don&apos;t receive a code?
           <TimerButton totalSecond={30} onClick={() => void onClickResendHandler()} />
         </p>

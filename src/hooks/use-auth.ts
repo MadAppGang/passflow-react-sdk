@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
-import { useAooth } from './use-aooth';
-import { ParsedTokens, Token, isTokenExpired } from '@aooth/aooth-js-sdk';
+import { usePassflow } from './use-passflow';
+import { ParsedTokens, Token, isTokenExpired } from '@passflow/passflow-js-sdk';
 
 type useAuthReturn = {
   isAuthenticated: boolean;
@@ -13,11 +13,11 @@ type useAuthReturn = {
 };
 
 export const useAuth = (doRefresh: boolean): useAuthReturn => {
-  const aooth = useAooth();
+  const passflow = usePassflow();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   // Do we need proactively refresh the token?
   // or do we need to do it when we do api call?
-  const [tokens, setTokens] = useState<ParsedTokens | undefined>(aooth.getParsedTokenCache());
+  const [tokens, setTokens] = useState<ParsedTokens | undefined>(passflow.getParsedTokenCache());
   // When an access token has expired and we need to refresh it,
   // we signal to the stat that the token is being refreshed and we cannot make any requests
   // without the refreshed token until it is successfully refreshed.
@@ -32,8 +32,8 @@ export const useAuth = (doRefresh: boolean): useAuthReturn => {
         if (tokenExpired && doRefresh) {
           try {
             setIsRefreshing(true);
-            await aooth.refreshToken();
-            setTokens(aooth.getParsedTokenCache());
+            await passflow.refreshToken();
+            setTokens(passflow.getParsedTokenCache());
             setIsAuthenticated(tokens?.access_token !== undefined);
           } catch (e) {
             const ee = e as Error;
@@ -48,7 +48,7 @@ export const useAuth = (doRefresh: boolean): useAuthReturn => {
         }
       }
     })();
-  }, [aooth, doRefresh, tokens]);
+  }, [passflow, doRefresh, tokens]);
 
   return {
     isAuthenticated,

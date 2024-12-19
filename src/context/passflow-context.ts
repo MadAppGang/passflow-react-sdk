@@ -1,0 +1,41 @@
+import { AppSettings, Passflow, PassflowPasskeySettings, PassflowPasswordPolicySettings } from '@passflow/passflow-js-sdk';
+import { Dispatch, createContext } from 'react';
+
+export type PassflowState = {
+  appSettings: AppSettings | null;
+  passwordPolicy: PassflowPasswordPolicySettings | null;
+  passkeyProvider: PassflowPasskeySettings | null;
+  url?: string;
+  appId?: string;
+  scopes?: string[];
+  createTenantForNewUser?: boolean;
+};
+
+export type PassflowAction = { type: 'SET_PASSFLOW_STATE'; payload: PassflowState };
+
+export type PassflowContextType = {
+  state: PassflowState;
+  dispatch: Dispatch<PassflowAction>;
+  passflow: Passflow;
+};
+
+export const initialState: PassflowState = {
+  appSettings: null,
+  passwordPolicy: null,
+  passkeyProvider: null,
+  url: undefined,
+  appId: undefined,
+  scopes: undefined,
+  createTenantForNewUser: false,
+};
+
+export const PassflowContext = createContext<PassflowContextType | undefined>(undefined);
+
+export const passflowReducer = (state: PassflowState, action: PassflowAction): PassflowState => {
+  switch (action.type) {
+    case 'SET_PASSFLOW_STATE':
+      return { ...state, ...action.payload };
+    default:
+      return state;
+  }
+};

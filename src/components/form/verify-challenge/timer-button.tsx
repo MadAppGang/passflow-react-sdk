@@ -37,10 +37,10 @@ export const TimerButton: FC<TTimerButton> = ({ totalSecond, onClick, className 
       variant='clean'
       type='button'
       className={cn(
-        'aooth-text-body-2-semiBold aooth-inline-block aooth-max-w-max aooth-p-[3px]',
+        'passflow-text-body-2-semiBold passflow-inline-block passflow-max-w-max passflow-p-[3px]',
         {
-          'aooth-text-Grey-One !aooth-opacity-100': seconds > 0,
-          'aooth-text-Primary': seconds === 0,
+          'passflow-text-Grey-One !passflow-opacity-100': seconds > 0,
+          'passflow-text-Primary': seconds === 0,
         },
         className,
       )}

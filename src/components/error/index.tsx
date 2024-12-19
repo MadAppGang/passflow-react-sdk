@@ -1,3 +1,4 @@
+/* eslint-disable max-len */
 import { FC } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { isValidUrl } from '@/utils';
@@ -21,12 +22,12 @@ export const Error: FC<TError> = ({ error = defaultErrorMessage, goBackRedirectT
 
   return (
     <Wrapper iconId='logo-red'>
-      <div className='aooth-flex aooth-flex-col aooth-items-center aooth-justify-start aooth-gap-[32px]'>
-        <div className='aooth-flex aooth-flex-col aooth-items-center aooth-justify-start aooth-gap-[8px]'>
-          {error && <p className='aooth-text-title-2-bold aooth-text-Warning aooth-text-center'>{error}</p>}
-          <p className='aooth-text-body-2-medium aooth-text-Grey-One'>Please go back or try again later</p>
+      <div className='passflow-flex passflow-flex-col passflow-items-center passflow-justify-start passflow-gap-[32px] passflow-mt-[-8px]'>
+        <div className='passflow-flex passflow-flex-col passflow-items-center passflow-justify-start passflow-gap-[8px]'>
+          {error && <p className='passflow-text-title-2-bold passflow-text-Warning passflow-text-center'>{error}</p>}
+          <p className='passflow-text-body-2-medium passflow-text-Grey-One'>Please go back or try again later</p>
         </div>
-        <Button size='big' type='button' variant='primary' onClick={onGoBackHandler} className='aooth-max-w-[196px]'>
+        <Button size='big' type='button' variant='primary' onClick={onGoBackHandler} className='passflow-max-w-[196px]'>
           Go back
         </Button>
       </div>

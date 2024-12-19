@@ -15,7 +15,7 @@ import { SuccessAuthRedirect } from '@/types';
 import { withError } from '@/hocs';
 import { Error as ErrorComponent } from '@/components/error';
 
-export type TAoothFlow = {
+export type PassflowProps = {
   federatedDisplayMode: 'modal' | 'redirect';
   successAuthRedirect: SuccessAuthRedirect;
   error?: string;
@@ -40,7 +40,7 @@ const combineRoutesWithPrefix = (prefix?: string) =>
     {} as Record<keyof typeof routes, string>,
   );
 
-const AoothFlowWrapper: FC<TAoothFlow> = ({
+const PassflowWrapper: FC<PassflowProps> = ({
   federatedDisplayMode,
   successAuthRedirect,
   error = undefined,
@@ -111,4 +111,4 @@ const AoothFlowWrapper: FC<TAoothFlow> = ({
   );
 };
 
-export const AoothFlow = withError(AoothFlowWrapper, ErrorComponent);
+export const PassflowFlow = withError(PassflowWrapper, ErrorComponent);

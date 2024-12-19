@@ -7,15 +7,18 @@ type TSwitch = {
 };
 
 export const Switch: FC<TSwitch> = ({ label, checked, onChange }) => (
-  <label className='aooth-relative aooth-inline-flex aooth-items-center aooth-gap-[12px] aooth-cursor-pointer' htmlFor='switch'>
-    <span className='aooth-text-Dark-Three aooth-text-caption-1-medium'>{label}</span>
-    <input id='switch' type='checkbox' className='aooth-sr-only aooth-peer' checked={checked} onChange={onChange} />
+  <label
+    className='passflow-relative passflow-inline-flex passflow-items-center passflow-gap-[12px] passflow-cursor-pointer'
+    htmlFor='switch'
+  >
+    <span className='passflow-text-Dark-Three passflow-text-caption-1-medium'>{label}</span>
+    <input id='switch' type='checkbox' className='passflow-sr-only passflow-peer' checked={checked} onChange={onChange} />
     <div
-      className={`aooth-w-[28px] aooth-h-[16px] aooth-rounded-full dark:aooth-bg-Grey-Two 
-        peer-checked:after:aooth-translate-x-full rtl:peer-checked:after:-aooth-translate-x-full after:aooth-content-[''] 
-        after:aooth-absolute after:aooth-top-1/2 after:-aooth-translate-y-1/2 after:aooth-end-[14px] after:aooth-bg-white 
-        after:aooth-rounded-full after:aooth-h-[12px] after:aooth-w-[12px] after:aooth-transition-all 
-        peer-checked:aooth-bg-Primary`}
+      className={`passflow-w-[28px] passflow-h-[16px] passflow-rounded-full dark:passflow-bg-Grey-Two 
+        peer-checked:after:passflow-translate-x-full rtl:peer-checked:after:-passflow-translate-x-full
+        after:passflow-content-[''] after:passflow-absolute after:passflow-top-1/2 after:-passflow-translate-y-1/2 
+        after:passflow-end-[14px] after:passflow-bg-white after:passflow-rounded-full after:passflow-h-[12px] 
+        after:passflow-w-[12px] after:passflow-transition-all peer-checked:passflow-bg-Primary`}
     />
   </label>
 );

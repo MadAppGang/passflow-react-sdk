@@ -51,7 +51,7 @@ export const Passkey: FC<TPasskey> = ({ relaingPartyId }) => {
         type='button'
         variant='primary'
         size='big'
-        className='aooth-mt-[32px] aooth-mx-auto'
+        className='passflow-mt-[32px] passflow-mx-auto'
         onClick={onCreateUserPasskeyHandler}
       >
         Create a Passkey

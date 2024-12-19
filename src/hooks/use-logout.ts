@@ -1,15 +1,15 @@
 import { useCallback, useState } from 'react';
-import { useAooth } from './use-aooth';
+import { usePassflow } from './use-passflow';
 
-export type TuseLogout = () => {
+export type UseLogoutProps = () => {
   fetch: () => Promise<boolean>;
   isLoading: boolean;
   isError: boolean;
   error: string;
 };
 
-export const useLogout: TuseLogout = () => {
-  const aooth = useAooth();
+export const useLogout: UseLogoutProps = () => {
+  const passflow = usePassflow();
   const [errorMessage, setErrorMessage] = useState('');
   const [isError, setIsError] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -17,7 +17,7 @@ export const useLogout: TuseLogout = () => {
   const fetch = useCallback(async (): Promise<boolean> => {
     try {
       setIsLoading(true);
-      await aooth.logOut();
+      await passflow.logOut();
       setIsLoading(false);
       return true;
     } catch (e) {

@@ -1,72 +1,27 @@
 import { useContext, useLayoutEffect, useState } from 'react';
-import {
-  AoothPasskeySettings,
-  AoothPasswordPolicySettings,
-  AppSettings,
-  FirstFactorFim,
-  FirstFactorInternal,
-  Providers,
-} from '@aooth/aooth-js-sdk';
-import { useAooth } from './use-aooth';
-import { AoothContext } from '@/context';
-import { includes } from 'lodash';
-import { CombinedAppSettigns } from '@/types';
+import { AppSettings, PassflowPasskeySettings, PassflowPasswordPolicySettings } from '@passflow/passflow-js-sdk';
+import { usePassflow } from './use-passflow';
+import { PassflowContext } from '@/context';
 
-const appSettings = (data: AppSettings) =>
-  data.auth_strategies.reduce(
-    (acc, item) => {
-      if (item.type === 'first_factor_internal') {
-        const strategy = item.strategy as FirstFactorInternal;
-        const { identity, challenge, transport } = strategy;
-        if (acc.INTERNAL[identity]) {
-          acc.INTERNAL[identity]?.push({ challenge, transport });
-        } else {
-          acc.INTERNAL[identity] = [{ challenge, transport }];
-          acc.IDENTITY_FIELDS.push(identity);
-        }
-        if (!includes(acc.CHALLENGES, challenge)) acc.CHALLENGES.push(challenge);
-        if (challenge === 'passkey') acc.IDENTITY_FIELDS_PASSKEY.push(identity);
-      } else if (item.type === 'first_factor_fim') {
-        const strategy = item.strategy as FirstFactorFim;
-        const { fim_type: fimType } = strategy;
-        acc.PROVIDERS.push(fimType);
-      }
-      return acc;
-    },
-    {
-      PROVIDERS: [],
-      INTERNAL: {},
-      IDENTITY_FIELDS: [],
-      IDENTITY_FIELDS_PASSKEY: [],
-      CHALLENGES: [],
-    } as {
-      PROVIDERS: Providers[];
-      INTERNAL: { [key: string]: { challenge: string; transport: string }[] };
-      IDENTITY_FIELDS: string[];
-      IDENTITY_FIELDS_PASSKEY: string[];
-      CHALLENGES: string[];
-    },
-  );
-
-export type TuseAppSettings = () => {
-  appSettings: (AppSettings & ReturnType<typeof appSettings>) | null;
-  passwordPolicy: AoothPasswordPolicySettings | null;
-  passkeyProvider: AoothPasskeySettings | null;
+export type UseAppSettingsProps = () => {
+  appSettings: AppSettings | null;
+  passwordPolicy: PassflowPasswordPolicySettings | null;
+  passkeyProvider: PassflowPasskeySettings | null;
   isLoading: boolean;
   isError: boolean;
   error: string;
   reset: () => void;
 };
 
-export const useAppSettings: TuseAppSettings = () => {
-  const aooth = useAooth();
-  const context = useContext(AoothContext);
+export const useAppSettings: UseAppSettingsProps = () => {
+  const passflow = usePassflow();
+  const context = useContext(PassflowContext);
   const [isError, setIsError] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
   if (!context) {
-    throw new Error('useAppSetting must be used within an AoothProvider');
+    throw new Error('useAppSetting must be used within an PassflowProvider');
   }
 
   const { state, dispatch } = context;
@@ -76,20 +31,19 @@ export const useAppSettings: TuseAppSettings = () => {
       const fetchAllSettings = async (): Promise<void> => {
         setIsLoading(true);
         try {
-          const aoothSettingAll = await aooth.getSettingsAll();
-          let appSettingsCombined = {} as CombinedAppSettigns;
-          if (aooth.appId) {
-            const aoothAppSettings = await aooth.getAppSettings();
-            appSettingsCombined = appSettings(aoothAppSettings) as CombinedAppSettigns;
+          const passflowSettingAll = await passflow.getSettingsAll();
+          let appSettings = {} as AppSettings;
+          if (passflow.appId) {
+            appSettings = await passflow.getAppSettings();
           }
 
           dispatch({
-            type: 'SET_AOOTH_STATE',
+            type: 'SET_PASSFLOW_STATE',
             payload: {
               ...state,
-              appSettings: { ...appSettingsCombined },
-              passkeyProvider: aoothSettingAll.passkey_provider,
-              passwordPolicy: aoothSettingAll.password_policy,
+              appSettings,
+              passkeyProvider: passflowSettingAll.passkey_provider,
+              passwordPolicy: passflowSettingAll.password_policy,
             },
           });
         } catch (e) {
