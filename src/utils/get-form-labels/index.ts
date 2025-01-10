@@ -2,7 +2,7 @@
 import { eq } from 'lodash';
 import { AuthMethods } from '../get-auth-methods';
 import { DefaultMethod } from '@/types';
-import { ChallengeType } from '@passflow/passflow-js-sdk';
+import { InternalStrategyChallenge } from '@passflow/passflow-js-sdk';
 
 export const getIdentityLabel = (methods: AuthMethods, type: 'label' | 'button') => {
   if (methods.hasSignInEmailMethods && methods.hasSignInUsernameMethods)
@@ -16,15 +16,15 @@ export const getIdentityLabel = (methods: AuthMethods, type: 'label' | 'button')
 export const getPasswordlessData = (
   methods: AuthMethods,
   currentMethod: DefaultMethod | null,
-): { label: string; challengeType: ChallengeType } | null => {
+): { label: string; challengeType: InternalStrategyChallenge } | null => {
   if (eq(currentMethod, 'phone')) {
-    if (methods.phone.otp) return { label: 'SMS code', challengeType: 'otp' };
-    if (methods.phone.magicLink) return { label: 'SMS link', challengeType: 'magic_link' };
+    if (methods.internal.phone.otp) return { label: 'SMS code', challengeType: 'otp' };
+    if (methods.internal.phone.magicLink) return { label: 'SMS link', challengeType: 'magic_link' };
   }
 
   if (eq(currentMethod, 'email_or_username')) {
-    if (methods.email.otp) return { label: 'email code', challengeType: 'otp' };
-    if (methods.email.magicLink) return { label: 'email link', challengeType: 'magic_link' };
+    if (methods.internal.email.otp) return { label: 'email code', challengeType: 'otp' };
+    if (methods.internal.email.magicLink) return { label: 'email link', challengeType: 'magic_link' };
   }
 
   return null;

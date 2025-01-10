@@ -6,7 +6,6 @@ import * as Yup from 'yup';
 import { SuccessAuthRedirect } from '@/types';
 import { VerifyChallengeOTPRedirect } from './varify-challenge-otp-redirect';
 import { VerifyChallengeOTPManual } from './verify-challenge-otp-manual';
-import { usePassflow } from '@/hooks';
 
 import '@/styles/index.css';
 
@@ -18,14 +17,18 @@ type TVerifyChallengeOTP = {
   createTenant?: boolean;
 };
 
-const searchParamsVerifyChallengeOtpSchema = Yup.object().shape({
+const redirectSearchParamsVerifyChallengeOtpSchema = Yup.object().shape({
   appId: Yup.string().required(),
+  challengeId: Yup.string().required(),
+  otp: Yup.string().optional(),
+});
+
+const searchParamsVerifyChallengeOtpSchema = Yup.object().shape({
   challengeId: Yup.string().required(),
   identity: Yup.string().oneOf(['email', 'phone']).required(),
   identityValue: Yup.string().required(),
   challengeType: Yup.string().required(),
   type: Yup.string().oneOf(['passwordless', 'passkey']).optional(),
-  otp: Yup.string().optional(),
 });
 
 export const VerifyChallengeOTP: FC<TVerifyChallengeOTP> = ({
@@ -35,7 +38,6 @@ export const VerifyChallengeOTP: FC<TVerifyChallengeOTP> = ({
   signUpPath,
   createTenant = false,
 }) => {
-  const passflow = usePassflow();
   const [searchParams] = useSearchParams({
     otp: '',
     app_id: '',
@@ -46,9 +48,27 @@ export const VerifyChallengeOTP: FC<TVerifyChallengeOTP> = ({
     type: '',
   });
 
+  const typeChallenge = searchParams.get('type');
+
+  if (typeChallenge !== 'passwordless' && typeChallenge !== 'passkey') {
+    const redirectParams = {
+      appId: searchParams.get('app_id'),
+      challengeId: searchParams.get('challenge_id'),
+      otp: searchParams.get('otp'),
+    };
+
+    try {
+      redirectSearchParamsVerifyChallengeOtpSchema.validateSync(redirectParams, { abortEarly: false });
+    } catch (err) {
+      throw new Error('Invalid search params');
+    }
+
+    const { appId, otp, challengeId } = redirectParams;
+
+    return <VerifyChallengeOTPRedirect appId={appId} challengeId={challengeId} otp={otp} />;
+  }
+
   const params = {
-    otp: searchParams.get('otp'),
-    appId: searchParams.get('app_id') || passflow.appId || null,
     challengeId: searchParams.get('challenge_id'),
     identity: searchParams.has('email') ? 'email' : searchParams.has('phone') ? 'phone' : null,
     identityValue: searchParams.has('email')
@@ -66,10 +86,9 @@ export const VerifyChallengeOTP: FC<TVerifyChallengeOTP> = ({
     throw new Error('Invalid search params');
   }
 
-  const { appId, otp, challengeId, identity, identityValue, challengeType, type } = params;
+  const { challengeId, identity, identityValue, challengeType, type } = params;
 
-  if (type !== 'passwordless' && type !== 'passkey')
-    return <VerifyChallengeOTPRedirect appId={appId} challengeId={challengeId} otp={otp} />;
+  if (!type) throw new Error('Invalid type params');
 
   return (
     <VerifyChallengeOTPManual
@@ -77,7 +96,7 @@ export const VerifyChallengeOTP: FC<TVerifyChallengeOTP> = ({
       identityValue={identityValue}
       challengeType={challengeType}
       challengeId={challengeId}
-      type={type}
+      type={type as 'passwordless' | 'passkey'}
       createTenant={createTenant}
       numInputs={numInputs}
       shouldAutoFocus={shouldAutoFocus}

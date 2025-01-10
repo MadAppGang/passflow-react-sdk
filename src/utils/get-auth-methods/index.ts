@@ -1,24 +1,26 @@
-import { AuthStrategies, FirstFactorFim, FirstFactorInternal, Providers } from '@passflow/passflow-js-sdk';
+import { AuthStrategies, FimStrategy, InternalStrategy, Providers } from '@passflow/passflow-js-sdk';
 import { eq } from 'lodash';
 
 export type AuthMethods = {
-  username: {
-    password: boolean;
-    passkey: boolean;
+  internal: {
+    username: {
+      password: boolean;
+    };
+    email: {
+      password: boolean;
+      otp: boolean;
+      magicLink: boolean;
+    };
+    phone: {
+      password: boolean;
+      otp: boolean;
+      magicLink: boolean;
+    };
   };
-  email: {
-    password: boolean;
-    otp: boolean;
-    magicLink: boolean;
-    passkey: boolean;
+  fim: {
+    providers: Providers[];
   };
-  phone: {
-    password: boolean;
-    otp: boolean;
-    magicLink: boolean;
-    passkey: boolean;
-  };
-  providers: Providers[];
+  passkey: boolean;
   hasEmailMethods: boolean;
   hasSignInEmailMethods: boolean;
   hasPhoneMethods: boolean;
@@ -29,23 +31,25 @@ export type AuthMethods = {
 
 export const getAuthMethods = (strategies?: AuthStrategies[]): AuthMethods => {
   const methods: AuthMethods = {
-    username: {
-      password: false,
-      passkey: false,
+    internal: {
+      username: {
+        password: false,
+      },
+      email: {
+        password: false,
+        otp: false,
+        magicLink: false,
+      },
+      phone: {
+        password: false,
+        otp: false,
+        magicLink: false,
+      },
     },
-    email: {
-      password: false,
-      otp: false,
-      magicLink: false,
-      passkey: false,
+    fim: {
+      providers: [],
     },
-    phone: {
-      password: false,
-      otp: false,
-      magicLink: false,
-      passkey: false,
-    },
-    providers: [],
+    passkey: false,
     hasEmailMethods: false,
     hasSignInEmailMethods: false,
     hasPhoneMethods: false,
@@ -58,40 +62,45 @@ export const getAuthMethods = (strategies?: AuthStrategies[]): AuthMethods => {
 
   // eslint-disable-next-line complexity
   strategies.forEach((strategy: AuthStrategies) => {
-    const { identity, challenge, fim_type: fimType } = strategy.strategy as FirstFactorInternal & FirstFactorFim;
+    const { identity, challenge, fim_type: fimType } = strategy.strategy as InternalStrategy & FimStrategy;
 
     switch (strategy.type) {
-      case 'first_factor_internal':
+      case 'internal':
         switch (identity) {
           case 'email':
-            if (eq(challenge, 'magic_link')) methods.email.magicLink = true;
-            else methods.email[challenge as keyof AuthMethods['email']] = true;
+            if (eq(challenge, 'magic_link')) methods.internal.email.magicLink = true;
+            else methods.internal.email[challenge as keyof AuthMethods['internal']['email']] = true;
             methods.hasEmailMethods = true;
 
-            if (methods.email.magicLink || methods.email.otp || methods.email.password) methods.hasSignInEmailMethods = true;
+            if (methods.internal.email.magicLink || methods.internal.email.otp || methods.internal.email.password)
+              methods.hasSignInEmailMethods = true;
 
             break;
           case 'phone':
-            if (eq(challenge, 'magic_link')) methods.phone.magicLink = true;
-            else methods.phone[challenge as keyof AuthMethods['phone']] = true;
+            if (eq(challenge, 'magic_link')) methods.internal.phone.magicLink = true;
+            else methods.internal.phone[challenge as keyof AuthMethods['internal']['phone']] = true;
             methods.hasPhoneMethods = true;
 
-            if (methods.phone.magicLink || methods.phone.otp || methods.phone.password) methods.hasSignInPhoneMethods = true;
+            if (methods.internal.phone.magicLink || methods.internal.phone.otp || methods.internal.phone.password)
+              methods.hasSignInPhoneMethods = true;
 
             break;
           case 'username':
-            methods.username[challenge as keyof AuthMethods['username']] = true;
+            methods.internal.username[challenge as keyof AuthMethods['internal']['username']] = true;
             methods.hasUsernameMethods = true;
 
-            if (methods.username.password) methods.hasSignInUsernameMethods = true;
+            if (methods.internal.username.password) methods.hasSignInUsernameMethods = true;
 
             break;
           default:
             throw new Error(`Unsupported identity type: ${identity}`);
         }
         break;
-      case 'first_factor_fim':
-        methods.providers.push(fimType);
+      case 'fim':
+        methods.fim.providers.push(fimType);
+        break;
+      case 'passkey':
+        methods.passkey = true;
         break;
       default:
         throw new Error(`Unsupported strategy type: ${strategy.type}`);

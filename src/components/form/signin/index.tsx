@@ -67,7 +67,7 @@ export const SignInForm: FC<TSignIn> = ({
   });
   const passflow = usePassflow();
   const navigate = useNavigate();
-  const { appSettings, passwordPolicy, passkeyProvider, isError: isErrorApp, error: errorApp } = useAppSettings();
+  const { appSettings, passwordPolicy, isError: isErrorApp, error: errorApp } = useAppSettings();
   const { federatedWithRedirect } = useProvider(federatedCallbackUrl);
 
   if (isErrorApp) throw new Error(errorApp);
@@ -77,7 +77,7 @@ export const SignInForm: FC<TSignIn> = ({
   const { fetch, isError, error, reset, isLoading } = useSignIn();
 
   const [forcePasswordless, setForcePasswordless] = useState<boolean>(
-    authMethods.email.passkey || authMethods.phone.passkey || authMethods.username.passkey || false,
+    (appSettings?.force_passwordless_login && authMethods.passkey) || false,
   );
 
   const [defaultMethod, setDefaultMethod] = useState<DefaultMethod | null>(() => {
@@ -87,7 +87,7 @@ export const SignInForm: FC<TSignIn> = ({
   });
 
   useEffect(() => {
-    setForcePasswordless(authMethods.email.passkey || authMethods.phone.passkey || authMethods.username.passkey || false);
+    setForcePasswordless((appSettings?.force_passwordless_login && authMethods.passkey) || false);
 
     if (authMethods.hasSignInEmailMethods || authMethods.hasSignInUsernameMethods) {
       setDefaultMethod('email_or_username');
@@ -96,7 +96,7 @@ export const SignInForm: FC<TSignIn> = ({
     } else {
       setDefaultMethod(null);
     }
-  }, [authMethods]);
+  }, [appSettings?.force_passwordless_login, authMethods]);
 
   const resetFormStates = () => {
     resetForm();
@@ -110,14 +110,14 @@ export const SignInForm: FC<TSignIn> = ({
   };
 
   const hasPassword =
-    (eq(defaultMethod, 'phone') && authMethods.phone.password) ||
-    (eq(defaultMethod, 'email_or_username') && (authMethods.email.password || authMethods.username.password));
+    (eq(defaultMethod, 'phone') && authMethods.internal.phone.password) ||
+    (eq(defaultMethod, 'email_or_username') && (authMethods.internal.email.password || authMethods.internal.username.password));
 
   const hasPasswordless =
-    (eq(defaultMethod, 'phone') && (authMethods.phone.otp || authMethods.phone.magicLink)) ||
-    (eq(defaultMethod, 'email_or_username') && (authMethods.email.otp || authMethods.email.magicLink));
+    (eq(defaultMethod, 'phone') && (authMethods.internal.phone.otp || authMethods.internal.phone.magicLink)) ||
+    (eq(defaultMethod, 'email_or_username') && (authMethods.internal.email.otp || authMethods.internal.email.magicLink));
 
-  const hasPasskey = authMethods.phone.passkey || authMethods.email.passkey || authMethods.username.passkey;
+  const hasPasskey = authMethods.passkey;
 
   const onChangePasswordlessExperience = (e: ChangeEvent<HTMLInputElement>) => {
     const { checked } = e.target;
@@ -138,34 +138,10 @@ export const SignInForm: FC<TSignIn> = ({
   const onSubmitPasskeyHandler = async (passkeyPayload: PassflowPasskeyAuthenticateStartPayload) => {
     const response = await fetch(passkeyPayload, 'passkey');
 
-    if (response && typeof response === 'boolean') {
+    if (response) {
       if (!isValidUrl(successAuthRedirect)) navigate(successAuthRedirect);
       else window.location.href = await getUrlWithTokens(passflow, successAuthRedirect);
     }
-
-    const params = new URLSearchParams(window.location.search);
-    const searchParamsState = {
-      ...passkeyPayload,
-      type: 'passkey',
-      challenge_id: response as string,
-      challenge_type: passkeyProvider?.validation,
-      create_tenant: createTenant,
-    };
-    const newParams = queryString.stringify({
-      ...params,
-      ...searchParamsState,
-    });
-
-    if (response && eq(passkeyProvider?.validation, 'otp'))
-      navigate({
-        pathname: verifyOTPPath ?? routes.verify_otp.path,
-        search: newParams.toString(),
-      });
-    if (response && eq(passkeyProvider?.validation, 'magic_link'))
-      navigate({
-        pathname: verifyMagicLinkPath ?? routes.verify_magic_link.path,
-        search: newParams.toString(),
-      });
   };
 
   const onSubmitPasswordlessHandler = async (userPayload: Partial<PassflowPasswordlessSignInPayload>) => {
@@ -255,7 +231,6 @@ export const SignInForm: FC<TSignIn> = ({
   const validateSignInPasskey = async () => {
     const payload = {
       relying_party_id: relyingPartyId,
-      redirect_url: successAuthRedirect,
     };
 
     await onSubmitHandler(payload, 'passkey');
@@ -518,7 +493,7 @@ export const SignInForm: FC<TSignIn> = ({
             </Link>
           </p>
         </div>
-        {size(authMethods.providers) > 0 && (
+        {size(authMethods.fim.providers) > 0 && (
           <div className='passflow-mx-auto passflow-max-w-[336px] passflow-w-full passflow-flex passflow-flex-col passflow-items-start passflow-justify-start passflow-gap-[24px]'>
             {hasPassword || hasPasswordless || hasPasskey ? (
               <div className='passflow-w-full passflow-py-[9px] passflow-relative'>
@@ -528,7 +503,7 @@ export const SignInForm: FC<TSignIn> = ({
                 </span>
               </div>
             ) : null}
-            <ProvidersBox providers={authMethods.providers} onClick={onClickProviderHandler} />
+            <ProvidersBox providers={authMethods.fim.providers} onClick={onClickProviderHandler} />
           </div>
         )}
       </form>
