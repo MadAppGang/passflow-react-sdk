@@ -2,7 +2,7 @@
   "name": "@passflow/passflow-react-sdk",
   "description": "Passflow React UI Kit",
   "packageManager": "yarn@4.2.2",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "type": "module",
   "files": [
     "dist"
@@ -39,7 +39,7 @@
     "react-router-dom": "^6.23.0"
   },
   "dependencies": {
-    "@passflow/passflow-js-sdk": "^0.0.1",
+    "@passflow/passflow-js-sdk": "^0.0.2",
     "@radix-ui/react-dialog": "^1.0.5",
     "@radix-ui/react-popover": "^1.0.7",
     "@storybook/react": "^8.4.7",

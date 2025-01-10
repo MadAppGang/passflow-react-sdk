@@ -771,9 +771,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@passflow/passflow-js-sdk@npm:^0.0.1":
-  version: 0.0.1
-  resolution: "@passflow/passflow-js-sdk@npm:0.0.1"
+"@passflow/passflow-js-sdk@npm:^0.0.2":
+  version: 0.0.2
+  resolution: "@passflow/passflow-js-sdk@npm:0.0.2"
   dependencies:
     "@simplewebauthn/browser": "npm:^10.0.0"
     "@simplewebauthn/types": "npm:^10.0.0"
@@ -781,7 +781,7 @@ __metadata:
     axios-retry: "npm:^4.1.0"
     dayjs: "npm:^1.11.11"
     uuid: "npm:^9.0.1"
-  checksum: 10c0/86bdd4a4923146c147d6c6b77f9c115610c1a2ddb7092aa420f775ce8b38ec390bc648dc6bbd7540eb6acbe54edb33bd5e548851a66b5c657517e91625118bd0
+  checksum: 10c0/f59e9c1b8af89b5a72754e3e89dad441aee9147f7f745b6aaa400a992ccffc07ed177a2be76d5909b253406e7cc2ceb2743fffecc14d4aaf99be433b68c628f9
   languageName: node
   linkType: hard
 
@@ -790,7 +790,7 @@ __metadata:
   resolution: "@passflow/passflow-react-sdk@workspace:."
   dependencies:
     "@eslint/js": "npm:^9.1.1"
-    "@passflow/passflow-js-sdk": "npm:^0.0.1"
+    "@passflow/passflow-js-sdk": "npm:^0.0.2"
     "@playwright/test": "npm:^1.43.1"
     "@radix-ui/react-dialog": "npm:^1.0.5"
     "@radix-ui/react-popover": "npm:^1.0.7"

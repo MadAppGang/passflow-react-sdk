@@ -79,7 +79,7 @@ export const SignUpForm: FC<TSignUp> = ({
   });
   const passflow = usePassflow();
   const navigate = useNavigate();
-  const { appSettings, passwordPolicy, passkeyProvider, isError: isErrorApp, error: errorApp } = useAppSettings();
+  const { appSettings, passwordPolicy, isError: isErrorApp, error: errorApp } = useAppSettings();
 
   if (isErrorApp) throw new Error(errorApp);
 
@@ -90,7 +90,7 @@ export const SignUpForm: FC<TSignUp> = ({
   const { fetch, isError, error, reset, isLoading } = useSignUp();
 
   const [forcePasswordless, setForcePasswordless] = useState<boolean>(
-    authMethods.email.passkey || authMethods.phone.passkey || authMethods.username.passkey || false,
+    (appSettings?.force_passwordless_login && authMethods.passkey) || false,
   );
 
   const [defaultMethod, setDefaultMethod] = useState<DefaultMethod | null>(() => {
@@ -100,7 +100,7 @@ export const SignUpForm: FC<TSignUp> = ({
   });
 
   useEffect(() => {
-    setForcePasswordless(authMethods.email.passkey || authMethods.phone.passkey || authMethods.username.passkey || false);
+    setForcePasswordless((appSettings?.force_passwordless_login && authMethods.passkey) || false);
 
     if (authMethods.hasSignInEmailMethods || authMethods.hasSignInUsernameMethods) {
       setDefaultMethod('email_or_username');
@@ -109,7 +109,7 @@ export const SignUpForm: FC<TSignUp> = ({
     } else {
       setDefaultMethod(null);
     }
-  }, [authMethods]);
+  }, [appSettings?.force_passwordless_login, authMethods]);
 
   const resetFormStates = () => {
     resetForm();
@@ -124,18 +124,14 @@ export const SignUpForm: FC<TSignUp> = ({
   };
 
   const hasPassword =
-    (eq(defaultMethod, 'phone') && authMethods.phone.password) ||
-    (eq(defaultMethod, 'email_or_username') && (authMethods.email.password || authMethods.username.password));
+    (eq(defaultMethod, 'phone') && authMethods.internal.phone.password) ||
+    (eq(defaultMethod, 'email_or_username') && (authMethods.internal.email.password || authMethods.internal.username.password));
 
   const hasPasswordless =
-    (eq(defaultMethod, 'phone') && (authMethods.phone.otp || authMethods.phone.magicLink)) ||
-    (eq(defaultMethod, 'email_or_username') && (authMethods.email.otp || authMethods.email.magicLink));
+    (eq(defaultMethod, 'phone') && (authMethods.internal.phone.otp || authMethods.internal.phone.magicLink)) ||
+    (eq(defaultMethod, 'email_or_username') && (authMethods.internal.email.otp || authMethods.internal.email.magicLink));
 
-  const hasPasskey =
-    (eq(defaultMethod, 'phone') && authMethods.phone.passkey) ||
-    (eq(defaultMethod, 'email_or_username') && (authMethods.email.passkey || authMethods.username.passkey));
-
-  const hasPasskeyAuthMethod = authMethods.phone.passkey || authMethods.email.passkey || authMethods.username.passkey;
+  const hasPasskey = authMethods.passkey;
 
   const onChangePasswordlessExperience = (e: ChangeEvent<HTMLInputElement>) => {
     const { checked } = e.target;
@@ -158,9 +154,8 @@ export const SignUpForm: FC<TSignUp> = ({
     }
   };
 
-  const onSubmitPasskeyHandler = async (userPayload: Partial<PassflowPasskeyRegisterStartPayload>) => {
+  const onSubmitPasskeyHandler = async () => {
     const payload = {
-      ...userPayload,
       relying_party_id: relyingPartyId,
       create_tenant: createTenant,
       redirect_url: successAuthRedirect,
@@ -168,34 +163,10 @@ export const SignUpForm: FC<TSignUp> = ({
 
     const response = await fetch(payload, 'passkey');
 
-    if (response && passkeyProvider?.validation === 'none') {
+    if (response) {
       if (!isValidUrl(successAuthRedirect)) navigate(successAuthRedirect);
       else window.location.href = await getUrlWithTokens(passflow, successAuthRedirect);
     }
-
-    const params = new URLSearchParams(window.location.search);
-    const searchParamsState = {
-      ...payload,
-      type: 'passkey',
-      challenge_id: response as string,
-      challenge_type: passkeyProvider?.validation,
-      create_tenant: createTenant,
-    };
-    const newParams = queryString.stringify({
-      ...params,
-      ...searchParamsState,
-    });
-
-    if (response && eq(passkeyProvider?.validation, 'otp'))
-      navigate({
-        pathname: verifyOTPPath ?? routes.verify_otp.path,
-        search: newParams.toString(),
-      });
-    if (response && eq(passkeyProvider?.validation, 'magic_link'))
-      navigate({
-        pathname: verifyMagicLinkPath ?? routes.verify_magic_link.path,
-        search: newParams.toString(),
-      });
   };
 
   const onSubmitPasswordlessHandler = async (userPayload: Partial<PassflowPasswordlessSignInPayload>) => {
@@ -238,7 +209,7 @@ export const SignUpForm: FC<TSignUp> = ({
 
   const onSubmitHandler = async (data: Partial<typeof initialValues>, type: 'passkey' | 'password' | 'passwordless') => {
     if (eq(type, 'password')) await onSubmitPasswordHandler(data as PassflowUserPayload);
-    if (eq(type, 'passkey')) await onSubmitPasskeyHandler(data as PassflowPasskeyRegisterStartPayload);
+    // if (eq(type, 'passkey')) await onSubmitPasskeyHandler();
     if (eq(type, 'passwordless')) await onSubmitPasswordlessHandler(data as PassflowPasswordlessSignInPayload);
   };
 
@@ -262,43 +233,7 @@ export const SignUpForm: FC<TSignUp> = ({
     }
   };
 
-  const validateSignUpPasskey = async () => {
-    const validatedData = {
-      isValid: false,
-      idField: passkeyProvider?.id_field,
-    };
-
-    if (eq(passkeyProvider?.id_field, 'none')) validatedData.isValid = true;
-    if (eq(passkeyProvider?.id_field, 'email'))
-      validatedData.isValid = await trigger(forcePasswordless ? ['passkeyEmail'] : ['email_or_username']);
-    if (eq(passkeyProvider?.id_field, 'username'))
-      validatedData.isValid = await trigger(forcePasswordless ? ['passkeyUsername'] : ['email_or_username']);
-    if (eq(passkeyProvider?.id_field, 'phone'))
-      validatedData.isValid = await trigger(forcePasswordless ? ['passkeyPhone'] : ['phone']);
-
-    if (validatedData.isValid) {
-      const values = getValues();
-
-      const currentEmail = forcePasswordless ? values.passkeyEmail : values.email_or_username;
-      const isEmail = currentEmail.match(emailRegex);
-
-      const currentUsername = forcePasswordless ? values.passkeyUsername : values.email_or_username;
-      const isUsername = !isEmail && size(currentUsername) > 0;
-
-      const currentPhone = forcePasswordless ? values.passkeyPhone : values.phone;
-      const validatedPhone = phone(currentPhone);
-      const isPhone = validatedPhone.isValid;
-
-      const payload = {
-        ...(isEmail && { email: currentEmail }),
-        ...(isUsername && { username: currentUsername }),
-        ...(isPhone && { phone: currentPhone }),
-        ...(!isEmail && !isPhone && !isUsername && { user_id: '' }),
-      };
-
-      await onSubmitHandler(payload, 'passkey');
-    }
-  };
+  const validateSignUpPasskey = async () => onSubmitPasskeyHandler();
 
   const validateSingUp = async () => {
     const values = getValues();
@@ -329,7 +264,7 @@ export const SignUpForm: FC<TSignUp> = ({
 
   return (
     <Wrapper title='Create account to sign up' subtitle='For Passflow by Madappgang'>
-      {hasPasskeyAuthMethod && (hasPasswordless || hasPassword) && (
+      {hasPasskey && (hasPasswordless || hasPassword) && (
         <div className='passflow-w-full passflow-flex passflow-items-center passflow-justify-center passflow-mb-[-8px]'>
           <Switch label='Passwordless experience' checked={forcePasswordless} onChange={onChangePasswordlessExperience} />
         </div>
@@ -341,107 +276,10 @@ export const SignUpForm: FC<TSignUp> = ({
             if (hasPassword) void validateSingUp();
             if (!hasPassword && hasPasswordless) void validateSignUpPasswordless();
           }
-          if (forcePasswordless && hasPasskeyAuthMethod) void validateSignUpPasskey();
+          if (forcePasswordless && hasPasskey) void validateSignUpPasskey();
         }}
         className='passflow-flex passflow-flex-col passflow-gap-[32px] passflow-max-w-[384px] passflow-w-full'
       >
-        {forcePasswordless && !eq(passkeyProvider?.id_field, 'none') ? (
-          <div className='passflow-p-[24px] passflow-rounded-[6px] passflow-max-w-[384px] passflow-w-full passflow-flex passflow-flex-col passflow-items-start passflow-justify-start passflow-gap-[24px] passflow-shadow-[0_4px_15px_0_rgba(0,0,0,0.09)]'>
-            {eq(passkeyProvider?.id_field, 'email') && (
-              <div className='passflow-w-full passflow-flex passflow-flex-col passflow-items-start passflow-justify-start passflow-gap-[6px]'>
-                <label htmlFor='passkeyEmail' className={labelStyle}>
-                  Email
-                </label>
-                <Controller
-                  name='passkeyEmail'
-                  control={control}
-                  rules={{ required: 'Email is required', pattern: { value: emailRegex, message: 'Invalid email' } }}
-                  render={({ field }) => (
-                    <FieldText
-                      {...field}
-                      {...register('passkeyEmail')}
-                      isError={isError || has(errors, 'passkeyEmail')}
-                      id='passkeyEmail'
-                      type='text'
-                      name='passkeyEmail'
-                    />
-                  )}
-                />
-                {has(errors, 'passkeyEmail') && (
-                  <div className='passflow-flex passflow-items-center passflow-justify-center passflow-gap-[4px] passflow-mt-[4px]'>
-                    <Icon size='small' id='warning' type='general' className='icon-warning' />
-                    <span className='passflow-text-caption-1-medium passflow-text-Warning'>{errors.passkeyEmail?.message}</span>
-                  </div>
-                )}
-              </div>
-            )}
-            {eq(passkeyProvider?.id_field, 'username') && (
-              <div className='passflow-w-full passflow-flex passflow-flex-col passflow-items-start passflow-justify-start passflow-gap-[6px]'>
-                <label htmlFor='passkeyUsername' className={labelStyle}>
-                  Username
-                </label>
-                <Controller
-                  name='passkeyUsername'
-                  control={control}
-                  rules={{ required: 'Username is required' }}
-                  render={({ field }) => (
-                    <FieldText
-                      {...field}
-                      {...register('passkeyUsername')}
-                      isError={isError || has(errors, 'passkeyUsername')}
-                      id='passkeyUsername'
-                      type='text'
-                      name='passkeyUsername'
-                    />
-                  )}
-                />
-                {has(errors, 'passkeyUsername') && (
-                  <div className='passflow-flex passflow-items-center passflow-justify-center passflow-gap-[4px] passflow-mt-[4px]'>
-                    <Icon size='small' id='warning' type='general' className='icon-warning' />
-                    <span className='passflow-text-caption-1-medium passflow-text-Warning'>
-                      {errors.passkeyUsername?.message}
-                    </span>
-                  </div>
-                )}
-              </div>
-            )}
-            {eq(passkeyProvider?.id_field, 'phone') && (
-              <div className='passflow-w-full passflow-flex passflow-flex-col passflow-items-start passflow-justify-start passflow-gap-[6px]'>
-                <label htmlFor='passkeyPhone' className={labelStyle}>
-                  Phone number
-                </label>
-                <Controller
-                  name='passkeyPhone'
-                  control={control}
-                  rules={{
-                    required: 'Phone number is required',
-                    validate: (value) => {
-                      const validatePhone = phone(value);
-                      if (validatePhone.isValid) return true;
-                      return 'Invalid phone number';
-                    },
-                  }}
-                  render={({ field }) => (
-                    <FieldPhone
-                      {...register('passkeyPhone')}
-                      ref={null}
-                      onChange={(e) => field.onChange(e)}
-                      id='passkeyPhone'
-                      name='passkeyPhone'
-                      isError={isError || has(errors, 'passkeyPhone')}
-                    />
-                  )}
-                />
-                {has(errors, 'passkeyPhone') && (
-                  <div className='passflow-flex passflow-items-center passflow-justify-center passflow-gap-[4px] passflow-mt-[4px]'>
-                    <Icon size='small' id='warning' type='general' className='icon-warning' />
-                    <span className='passflow-text-caption-1-medium passflow-text-Warning'>{errors.passkeyPhone?.message}</span>
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-        ) : null}
         {!forcePasswordless && defaultMethod ? (
           <>
             <div className='passflow-p-[24px] passflow-rounded-[6px] passflow-max-w-[384px] passflow-w-full passflow-flex passflow-flex-col passflow-items-start passflow-justify-start passflow-gap-[24px] passflow-shadow-[0_4px_15px_0_rgba(0,0,0,0.09)]'>
@@ -658,7 +496,7 @@ export const SignUpForm: FC<TSignUp> = ({
             ) : null}
           </>
         ) : null}
-        {forcePasswordless && hasPasskeyAuthMethod ? (
+        {forcePasswordless && hasPasskey ? (
           <Button size='big' variant='dark' type='submit' className='passflow-m-auto' withIcon>
             <Icon id='key' size='small' type='general' className='icon-white' />
             Sign Up with a Passkey
@@ -668,7 +506,7 @@ export const SignUpForm: FC<TSignUp> = ({
           className={cn(
             'passflow-mx-auto passflow-max-w-[336px] passflow-w-full passflow-flex passflow-items-center passflow-justify-center',
             {
-              '!passflow-mt-[-8px]': hasPassword || hasPasskeyAuthMethod,
+              '!passflow-mt-[-8px]': hasPassword || hasPasskey,
             },
           )}
         >
@@ -679,9 +517,9 @@ export const SignUpForm: FC<TSignUp> = ({
             </Link>
           </p>
         </div>
-        {size(authMethods.providers) > 0 && (
+        {size(authMethods.fim.providers) > 0 && (
           <div className='passflow-mx-auto passflow-max-w-[336px] passflow-w-full passflow-flex passflow-flex-col passflow-items-start passflow-justify-start passflow-gap-[24px]'>
-            {hasPassword || hasPasswordless || hasPasskeyAuthMethod ? (
+            {hasPassword || hasPasswordless || hasPasskey ? (
               <div className='passflow-w-full passflow-py-[9px] passflow-relative'>
                 <div className='passflow-w-full passflow-h-[1px] passflow-bg-Grey-Four' />
                 <span className='passflow-absolute passflow-top-1/2 -passflow-translate-y-1/2 passflow-left-1/2 -passflow-translate-x-1/2 passflow-px-[15px] passflow-text-Grey-Six passflow-text-caption-1-medium passflow-bg-White'>
@@ -689,7 +527,7 @@ export const SignUpForm: FC<TSignUp> = ({
                 </span>
               </div>
             ) : null}
-            <ProvidersBox providers={authMethods.providers} onClick={onClickProviderHandler} />
+            <ProvidersBox providers={authMethods.fim.providers} onClick={onClickProviderHandler} />
           </div>
         )}
       </form>

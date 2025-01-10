@@ -8,7 +8,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { usePassflow, usePasswordlessComplete, useSignIn } from '@/hooks';
 import { TimerButton } from './timer-button';
 import {
-  ChallengeType,
+  InternalStrategyChallenge,
   PassflowPasswordlessResponse,
   PassflowPasswordlessSignInCompletePayload,
   PassflowPasswordlessSignInPayload,
@@ -62,7 +62,7 @@ export const VerifyChallengeOTPManual: FC<VerifyChallengeOTPManualProps> = ({
     if (type && identity && identityValue && challengeType) {
       const payload: PassflowPasswordlessSignInPayload = {
         create_tenant: createTenant ?? false,
-        challenge_type: challengeType as ChallengeType,
+        challenge_type: challengeType as InternalStrategyChallenge,
         redirect_url: successAuthRedirect,
         ...(identity === 'email' ? { email: identityValue } : { phone: identityValue }),
       };

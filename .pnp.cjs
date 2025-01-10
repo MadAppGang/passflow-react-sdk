@@ -28,7 +28,7 @@ const RAW_RUNTIME_STATE =
         "packageLocation": "./",\
         "packageDependencies": [\
           ["@eslint/js", "npm:9.1.1"],\
-          ["@passflow/passflow-js-sdk", "npm:0.0.1"],\
+          ["@passflow/passflow-js-sdk", "npm:0.0.2"],\
           ["@playwright/test", "npm:1.43.1"],\
           ["@radix-ui/react-dialog", "virtual:a416014badde41fdb50680c06e3415e0769e90bd7a4cad213c196293d104c348b5955bc7402e066db507aaea459e8e0c6d4edd5b814b165f0ee26cb7e53783ac#npm:1.0.5"],\
           ["@radix-ui/react-popover", "virtual:a416014badde41fdb50680c06e3415e0769e90bd7a4cad213c196293d104c348b5955bc7402e066db507aaea459e8e0c6d4edd5b814b165f0ee26cb7e53783ac#npm:1.0.7"],\
@@ -1017,14 +1017,14 @@ const RAW_RUNTIME_STATE =
       }]\
     ]],\
     ["@passflow/passflow-js-sdk", [\
-      ["npm:0.0.1", {\
-        "packageLocation": "../../.yarn/berry/cache/@passflow-passflow-js-sdk-npm-0.0.1-b0a0151ecf-10c0.zip/node_modules/@passflow/passflow-js-sdk/",\
+      ["npm:0.0.2", {\
+        "packageLocation": "../../.yarn/berry/cache/@passflow-passflow-js-sdk-npm-0.0.2-3fbbd3df2a-10c0.zip/node_modules/@passflow/passflow-js-sdk/",\
         "packageDependencies": [\
-          ["@passflow/passflow-js-sdk", "npm:0.0.1"],\
+          ["@passflow/passflow-js-sdk", "npm:0.0.2"],\
           ["@simplewebauthn/browser", "npm:10.0.0"],\
           ["@simplewebauthn/types", "npm:10.0.0"],\
           ["axios", "npm:1.7.9"],\
-          ["axios-retry", "virtual:b0a0151ecf54080a09a11f05275423b2222227e63776fb3e6cb8c6e0ba31df1320aef8f08e22b2e78dbe9e6dd241b458eb45b73cff1b4babbeab2bd96616df9d#npm:4.5.0"],\
+          ["axios-retry", "virtual:3fbbd3df2a73c5accb59d9a7920c18405441e3529723dbaf16ae2359125937997a37457b5c99cdbc87818f5dad28f82b4c8f35b75f6a89f247fc5064f72470ad#npm:4.5.0"],\
           ["dayjs", "npm:1.11.11"],\
           ["uuid", "npm:9.0.1"]\
         ],\
@@ -1037,7 +1037,7 @@ const RAW_RUNTIME_STATE =
         "packageDependencies": [\
           ["@passflow/passflow-react-sdk", "workspace:."],\
           ["@eslint/js", "npm:9.1.1"],\
-          ["@passflow/passflow-js-sdk", "npm:0.0.1"],\
+          ["@passflow/passflow-js-sdk", "npm:0.0.2"],\
           ["@playwright/test", "npm:1.43.1"],\
           ["@radix-ui/react-dialog", "virtual:a416014badde41fdb50680c06e3415e0769e90bd7a4cad213c196293d104c348b5955bc7402e066db507aaea459e8e0c6d4edd5b814b165f0ee26cb7e53783ac#npm:1.0.5"],\
           ["@radix-ui/react-popover", "virtual:a416014badde41fdb50680c06e3415e0769e90bd7a4cad213c196293d104c348b5955bc7402e066db507aaea459e8e0c6d4edd5b814b165f0ee26cb7e53783ac#npm:1.0.7"],\
@@ -3600,10 +3600,10 @@ const RAW_RUNTIME_STATE =
         ],\
         "linkType": "SOFT"\
       }],\
-      ["virtual:b0a0151ecf54080a09a11f05275423b2222227e63776fb3e6cb8c6e0ba31df1320aef8f08e22b2e78dbe9e6dd241b458eb45b73cff1b4babbeab2bd96616df9d#npm:4.5.0", {\
-        "packageLocation": "./.yarn/__virtual__/axios-retry-virtual-77f1b72191/3/.yarn/berry/cache/axios-retry-npm-4.5.0-f595810c17-10c0.zip/node_modules/axios-retry/",\
+      ["virtual:3fbbd3df2a73c5accb59d9a7920c18405441e3529723dbaf16ae2359125937997a37457b5c99cdbc87818f5dad28f82b4c8f35b75f6a89f247fc5064f72470ad#npm:4.5.0", {\
+        "packageLocation": "./.yarn/__virtual__/axios-retry-virtual-06b5c90c8d/3/.yarn/berry/cache/axios-retry-npm-4.5.0-f595810c17-10c0.zip/node_modules/axios-retry/",\
         "packageDependencies": [\
-          ["axios-retry", "virtual:b0a0151ecf54080a09a11f05275423b2222227e63776fb3e6cb8c6e0ba31df1320aef8f08e22b2e78dbe9e6dd241b458eb45b73cff1b4babbeab2bd96616df9d#npm:4.5.0"],\
+          ["axios-retry", "virtual:3fbbd3df2a73c5accb59d9a7920c18405441e3529723dbaf16ae2359125937997a37457b5c99cdbc87818f5dad28f82b4c8f35b75f6a89f247fc5064f72470ad#npm:4.5.0"],\
           ["@types/axios", null],\
           ["axios", "npm:1.7.9"],\
           ["is-retry-allowed", "npm:2.2.0"]\
@@ -13089,7 +13089,7 @@ class MountFS extends BasePortableFakeFS {
         if (this.notMount.has(filePath))
           continue;
         try {
-          if (this.typeCheck !== null && (this.baseFs.statSync(filePath).mode & fs.constants.S_IFMT) !== this.typeCheck) {
+          if (this.typeCheck !== null && (this.baseFs.lstatSync(filePath).mode & fs.constants.S_IFMT) !== this.typeCheck) {
             this.notMount.add(filePath);
             continue;
           }
