@@ -51,3 +51,4 @@ vite.config.ts.*
 
 
 *storybook.log
+test-results
