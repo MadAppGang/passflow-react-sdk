@@ -49,7 +49,7 @@ export const VerifyChallengeOTPManual: FC<VerifyChallengeOTPManualProps> = ({
   const passflow = usePassflow();
   const navigate = useNavigate();
   const { fetch: refetch } = useSignIn();
-  const { fetch: fetchPasswordlessComplete, fetchPasskey, isError, error } = usePasswordlessComplete();
+  const { fetch: fetchPasswordlessComplete, isError, error } = usePasswordlessComplete();
   const [valueOTP, setValueOTP] = useState('');
   const [paramsError, setParamsError] = useState<string | null>(null);
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
@@ -87,8 +87,7 @@ export const VerifyChallengeOTPManual: FC<VerifyChallengeOTPManualProps> = ({
         otp: valueOTP,
       };
       const fetchData = async () => {
-        const response =
-          type === 'passwordless' ? await fetchPasswordlessComplete(payload) : await fetchPasskey(valueOTP, challengeId);
+        const response = await fetchPasswordlessComplete(payload)
         if (response) {
           if (response.redirect_url) {
             if (!isValidUrl(response.redirect_url)) navigate(response.redirect_url);
@@ -110,7 +109,6 @@ export const VerifyChallengeOTPManual: FC<VerifyChallengeOTPManualProps> = ({
     navigate,
     passflow,
     type,
-    fetchPasskey,
   ]);
 
   if (paramsError) throw new Error(paramsError);

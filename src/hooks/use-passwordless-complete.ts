@@ -4,7 +4,6 @@ import { usePassflow } from './use-passflow';
 
 export type UsePasswordlessCompleteProps = () => {
   fetch: (payload: PassflowPasswordlessSignInCompletePayload) => Promise<PassflowValidationResponse | null>;
-  fetchPasskey: (otp: string, challengeId: string, appId?: string) => Promise<PassflowValidationResponse | null>;
   isLoading: boolean;
   isError: boolean;
   error: string;
@@ -35,24 +34,6 @@ export const usePasswordlessComplete: UsePasswordlessCompleteProps = () => {
     [],
   );
 
-  const fetchPasskey = useCallback(
-    async (otp: string, challengeId: string, appId?: string): Promise<PassflowValidationResponse | null> => {
-      try {
-        setIsLoading(true);
-        const response = await passflow.passkeyValidate(otp, challengeId, appId);
-        setIsLoading(false);
-        return response;
-      } catch (e) {
-        setIsError(true);
-        const error = e as Error;
-        setErrorMessage(error.message);
-        return null;
-      }
-    },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [],
-  );
-
   const reset = () => {
     setIsError(false);
     setErrorMessage('');
@@ -61,7 +42,6 @@ export const usePasswordlessComplete: UsePasswordlessCompleteProps = () => {
 
   return {
     fetch,
-    fetchPasskey,
     isLoading,
     isError,
     error: errorMessage,

@@ -1,7 +1,6 @@
 import { useCallback, useState } from 'react';
 import {
   PassflowPasskeyAuthenticateStartPayload,
-  PassflowPasskeyCompleteMessage,
   PassflowPasswordlessResponse,
   PassflowPasswordlessSignInPayload,
   PassflowSignInPayload,
@@ -30,24 +29,26 @@ export const useSignIn: UseSignInProps = () => {
       payload: PassflowPasskeyAuthenticateStartPayload | PassflowSignInPayload | PassflowPasswordlessSignInPayload,
       type: 'passkey' | 'password' | 'passwordless',
     ): Promise<boolean | string | PassflowPasswordlessResponse> => {
-      try {
-        setIsLoading(true);
+      setIsLoading(true);
+      const cleanup = () => setIsLoading(false);
+      
+      // We'll make sure to call cleanup after the operation completes
+      try {        
         if (type === 'password') await passflow.signIn(payload as PassflowSignInPayload);
         else if (type === 'passkey') {
-          const response = await passflow.passkeyAuthenticate(payload as PassflowPasskeyAuthenticateStartPayload);
-          if ((response as PassflowPasskeyCompleteMessage)?.challenge_id)
-            return (response as PassflowPasskeyCompleteMessage).challenge_id;
+          await passflow.passkeyAuthenticate(payload as PassflowPasskeyAuthenticateStartPayload);
         } else {
           const passwordlessResponse = await passflow.passwordlessSignIn(payload as PassflowPasswordlessSignInPayload);
+          cleanup();
           return passwordlessResponse;
         }
-        setIsLoading(false);
+        cleanup();
         return true;
       } catch (e) {
-        setIsLoading(false);
         setIsError(true);
         const error = e as Error;
         setErrorMessage(error.message);
+        cleanup();
         return false;
       }
     },

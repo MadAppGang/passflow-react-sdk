@@ -16,7 +16,7 @@
     "moduleResolution": "Bundler",
     "resolveJsonModule": true,
     "isolatedModules": true,
-    "noEmit": false,
+    "noEmit": true,
     "jsx": "react-jsxdev",
     "esModuleInterop": false,
     "forceConsistentCasingInFileNames": true,
@@ -35,14 +35,9 @@
   },
   "include": [
     "src",
-    "playwright",
-    "vite.config.ts",
-    ".eslintrc.cjs",
-    "tailwind.config.js",
-    "postcss.config.js",
-    "playwright.config.ts"
+    "playwright"
   ],
-  "exclude": ["node_modules", "dist", "scripts", "playwright/tests-examples"],
+  "exclude": ["node_modules", "dist", "scripts", "playwright/tests-examples", "vite.config.ts"],
   "references": [
     {
       "path": "./tsconfig.node.json"

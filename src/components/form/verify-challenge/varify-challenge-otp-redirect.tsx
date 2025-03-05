@@ -16,7 +16,7 @@ export const VerifyChallengeOTPRedirect = ({ otp, challengeId, appId }: VerifyCh
   const navigate = useNavigate();
   const [paramsError, setParamsError] = useState<string | null>(null);
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
-  const { fetchPasskey, isError, error, isLoading } = usePasswordlessComplete();
+  const { fetch, isError, error, isLoading } = usePasswordlessComplete();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -34,7 +34,7 @@ export const VerifyChallengeOTPRedirect = ({ otp, challengeId, appId }: VerifyCh
       }
 
       if (!isLoading) {
-        const response = await fetchPasskey(otp, challengeId, appId);
+        const response = await fetch({otp, challenge_id: challengeId});
 
         if (response) {
           if (response.redirect_url) {

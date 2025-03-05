@@ -21,7 +21,7 @@ export const PasskeyList: FC<TPasskeyList> = ({ data, renderActions }) => {
       className={`passflow-flex passflow-flex-col passflow-gap-[24px] passflow-max-w-[384px] passflow-w-full passflow-p-[24px] 
       passflow-rounded-[6px] passflow-shadow-[0_4px_15px_0_rgba(0,0,0,0.09)] passflow-mt-[32px]`}
     >
-      {data.map(({ id, name, enrolled_at: enrolledAt, last_used: lastUsed }) => (
+      {data.map(({ id, name, enrolled_at: enrolledAt, last_auth_at: lastUsed }) => (
         <li key={id} className='passflow-flex passflow-gap-[16px] passflow-items-start passflow-justify-start'>
           <Icon type='general' id='passkey' size='large' />
           <div className='passflow-flex passflow-flex-col passflow-items-start passflow-justify-start passflow-gap-[2px]'>

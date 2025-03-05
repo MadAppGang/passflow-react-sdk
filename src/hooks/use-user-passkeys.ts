@@ -37,14 +37,10 @@ export const useUserPasskeys: UseUserPasskeysProps = () => {
     void fetch();
   }, [passflow]);
 
-  const createUserPasskey = async (relaingPartyId: string): Promise<void> => {
+  const createUserPasskey = async (relyingPartyId: string, passkeyUsername?: string, passkeyDisplayName?: string): Promise<void> => {
     setIsLoading(true);
     try {
-      const createUserPasskeyStatus = await passflow.createUserPasskey(relaingPartyId);
-      if (createUserPasskeyStatus) {
-        const userPasskeys = await passflow.getUserPasskeys();
-        setData(userPasskeys as unknown as PassflowUserPasskey[]);
-      }
+      await passflow.addUserPasskey({relyingPartyId, passkeyUsername, passkeyDisplayName});
     } catch (e) {
       setIsError(true);
       const error = e as Error;
