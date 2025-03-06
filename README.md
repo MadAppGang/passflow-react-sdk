@@ -9,9 +9,36 @@ pnpm install
 pnpm build
 ```
 
-## Test writing
+## Local Development
 
-## Environment Setup
+### Using Local Passflow JS SDK
+
+For local development and testing with a local version of the Passflow JS SDK, you need to:
+
+1. Clone the Passflow JS SDK repository in a sibling directory to this project.
+2. remove current dependecy `pnpm remove @passflow/passflow-js-sdk`
+3. Link folder with:
+
+```sh
+pnpm link ../passflow-js-sdk
+pnpm install
+```
+
+Now you can  run watch mode in libraray mode and change it. It will compile every changes incrementally.
+
+```sh
+pnpm watch
+```
+
+After all done, we need to unlink and return all to the original state
+
+```sh
+pnpm remove @passflow/passflow-js-sdk
+pnpm unlink @passflow/passflow-js-sdk
+pnpm install @passflow/passflow-js-sdk
+```
+
+## Test writing Environment Setup
 
 For local development and UI testing, you need to set up the Passflow environment:
 
@@ -51,5 +78,4 @@ To run the playwright in the design mode with ui, run the follwoing command:
 ```
 pnpm playwright test --ui
 ```
-
 
