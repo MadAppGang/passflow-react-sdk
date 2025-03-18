@@ -13,7 +13,7 @@ export const PassflowProvider: FC<PassflowProviderProps> = ({ children, ...confi
     ...config,
   });
 
-  const passflow = useMemo(() => new Passflow(config), [config]);
+  const passflow = useMemo(() => new Passflow(state), [state]);
   const value = useMemo(() => ({ state, dispatch, passflow }), [state, dispatch, passflow]);
 
   return <PassflowContext.Provider value={value}>{children}</PassflowContext.Provider>;
