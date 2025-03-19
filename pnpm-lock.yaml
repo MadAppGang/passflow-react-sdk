@@ -4,16 +4,13 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
-overrides:
-  '@passflow/passflow-js-sdk': file:../passflow-js-sdk
-
 importers:
 
   .:
     dependencies:
       '@passflow/passflow-js-sdk':
-        specifier: file:../passflow-js-sdk
-        version: file:../passflow-js-sdk
+        specifier: ^0.0.17
+        version: 0.0.17
       '@radix-ui/react-dialog':
         specifier: ^1.1.6
         version: 1.1.6(@types/react-dom@18.3.5(@types/react@18.3.18))(@types/react@18.3.18)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -571,8 +568,8 @@ packages:
     resolution: {integrity: sha512-oGB+UxlgWcgQkgwo8GcEGwemoTFt3FIO9ababBmaGwXIoBKZ+GTy0pP185beGg7Llih/NSHSV2XAs1lnznocSg==}
     engines: {node: '>= 8'}
 
-  '@passflow/passflow-js-sdk@file:../passflow-js-sdk':
-    resolution: {directory: ../passflow-js-sdk, type: directory}
+  '@passflow/passflow-js-sdk@0.0.17':
+    resolution: {integrity: sha512-JYvB7B7ewj4hwT9wCadfz2sRtZR9/ZULAgV1gDrmWqEM+CojIFWjdmcPc2oPg0q3l9CvT1Sej+5RcJ0lBfEtIw==}
 
   '@pkgjs/parseargs@0.11.0':
     resolution: {integrity: sha512-+1VkjdD0QBLPodGrJUeqarH8VAIvQODIbwh9XpP5Syisf7YoQgsJKPNFoqqLQlu+VQ/tVSshMR6loPMn8U+dPg==}
@@ -3953,7 +3950,7 @@ snapshots:
       '@nodelib/fs.scandir': 2.1.5
       fastq: 1.19.1
 
-  '@passflow/passflow-js-sdk@file:../passflow-js-sdk':
+  '@passflow/passflow-js-sdk@0.0.17':
     dependencies:
       '@simplewebauthn/browser': 13.1.0
       '@simplewebauthn/types': 12.0.0

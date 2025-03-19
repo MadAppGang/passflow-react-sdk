@@ -16,19 +16,6 @@ export const PassflowProvider: FC<PassflowProviderProps> = ({
 		...config,
 	});
 
-	console.log(
-		">>>>>>>>>>>>>>>>>>> JSON.stringify(initialState)",
-		JSON.stringify(initialState, null, 2),
-	);
-	console.log(
-		">>>>>>>>>>>>>>>>>>> JSON.stringify(config)",
-		JSON.stringify(config, null, 2),
-	);
-	console.log(
-		">>>>>>>>>>>>>>>>>>> JSON.stringify(config)",
-		JSON.stringify(config, null, 2),
-	);
-
 	const passflow = useMemo(() => new Passflow(state), [state]);
 	const value = useMemo(
 		() => ({ state, dispatch, passflow }),
