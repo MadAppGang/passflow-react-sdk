@@ -9,6 +9,7 @@ export type PassflowState = {
   appId?: string;
   scopes?: string[];
   createTenantForNewUser?: boolean;
+  parseQueryParams?: boolean;
 };
 
 export type PassflowAction = { type: 'SET_PASSFLOW_STATE'; payload: PassflowState };
@@ -27,6 +28,7 @@ export const initialState: PassflowState = {
   appId: undefined,
   scopes: undefined,
   createTenantForNewUser: false,
+  parseQueryParams: true
 };
 
 export const PassflowContext = createContext<PassflowContextType | undefined>(undefined);
