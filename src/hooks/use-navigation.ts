@@ -10,7 +10,19 @@ export type ReactRouterNavigateOptions = {
 
 export type TanstackRouterNavigateOptions = {
   to: string;
-  search: Record<string, string>;
+  search: Record<string, unknown>;
+  replace?: boolean;
+}
+
+export type WouterNavigateOptions = {
+  to: string;
+  search?: Record<string, unknown>;
+  replace?: boolean;
+}
+
+export type ReachRouterNavigateOptions = {
+  to: string;
+  search?: Record<string, unknown>;
   replace?: boolean;
 }
 
@@ -25,14 +37,14 @@ const parseSearch = (search: string): Record<string, string> => {
 export const useNavigation = () => {
   const { navigate, setNavigate, router } = useContext(NavigationContext);
 
-  const wrappedSetNavigate = useCallback((newNavigate: ((to: NavigateOptions | string | ReactRouterNavigateOptions | TanstackRouterNavigateOptions) => void) | null) => {
+  const wrappedSetNavigate = useCallback((newNavigate: ((to: NavigateOptions | string | ReactRouterNavigateOptions | TanstackRouterNavigateOptions | WouterNavigateOptions | ReachRouterNavigateOptions) => void) | null) => {
     if (!newNavigate) {
       setNavigate(null);
       return;
     }
 
     const wrappedNavigate = ((options: NavigateOptions) => {
-      const { to, search = '', replace = true } = options;
+      const { to, search = '', replace = false } = options;
 
       switch (router) {
         case 'react-router':
@@ -51,13 +63,18 @@ export const useNavigation = () => {
           } as TanstackRouterNavigateOptions);
           break;
 
+        case 'wouter': 
+          const searchParamWouter = search ? (search.startsWith('?') ? search : `?${search}`) : '';
+          newNavigate({to: `${to}${searchParamWouter}`, replace} as WouterNavigateOptions);
+          break;
+
         default:
           // default router
-          const searchParam = search ? (search.startsWith('?') ? search : `?${search}`) : '';
+          const searchParamDefault = search ? (search.startsWith('?') ? search : `?${search}`) : '';
           if (replace) {
-            window.location.replace(`${to}${searchParam}`);
+            window.location.replace(`${to}${searchParamDefault}`);
           } else {
-            window.location.href = `${to}${searchParam}`;
+            window.location.href = `${to}${searchParamDefault}`;
           }
       }
     }) as NavigateFunction;
