@@ -12,3 +12,4 @@ export { useUserPasskeys, type UseUserPasskeysProps } from './use-user-passkeys'
 export { useAuthCloudRedirect } from './use-auth-cloud-redirect';
 export { useJoinInvite } from './use-join-invite';
 export { useOutsideClick } from './use-outsideclick';
+export { useNavigation } from './use-navigation';

@@ -7,6 +7,9 @@ export default {
   corePlugins: {
     preflight: false,
   },
+  experimental: {
+    optimizeUniversalDefaults: true
+  },
   theme: {
     extend: {
       colors: {

@@ -2,29 +2,28 @@
 /* eslint-disable complexity */
 import { FC, useState } from 'react';
 import * as Yup from 'yup';
-import { useNavigate, useSearchParams } from 'react-router-dom';
 import { InvitationToken, parseToken } from '@passflow/passflow-js-sdk';
 import { Error as ErrorComponent } from '@/components/error';
 import { Button } from '@/components/ui';
 import { Wrapper } from '../wrapper';
-import { useJoinInvite, usePassflow } from '@/hooks';
+import { useJoinInvite, useNavigation, usePassflow } from '@/hooks';
 import '@/styles/index.css';
 import { withError } from '@/hocs';
-import { undefinedOnCatch } from '@/utils';
+import { undefinedOnCatch, useUrlParams } from '@/utils';
 
 const searchParamsInvitationJoinSchema = Yup.object().shape({
   token: Yup.string().required(),
 });
 
 const InvitationJoinFlow: FC = () => {
-  const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
+  const { navigate } = useNavigation();
+  const { get } = useUrlParams();
   const passflow = usePassflow();
   const { fetch: joinInvite, isLoading: isInvitationJoinLoading, error, isError } = useJoinInvite();
   const [isLoading, setLoading] = useState(false);
 
   const params = {
-    token: searchParams.get('token'),
+    token: get('token'),
   };
 
   try {
@@ -44,7 +43,7 @@ const InvitationJoinFlow: FC = () => {
         setLoading(true);
         const refreshTokenResponse = await passflow.refreshToken();
         setLoading(false);
-        if (refreshTokenResponse) navigate(successJoinPath);
+        if (refreshTokenResponse) navigate({to: successJoinPath});
       }
     }
   };

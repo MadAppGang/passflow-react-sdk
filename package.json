@@ -34,9 +34,8 @@
     "build-storybook": "storybook build"
   },
   "peerDependencies": {
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1",
-    "react-router-dom": "^6.23.0"
+    "react": "^18.0.0 || ^19.0.0",
+    "react-dom": "^18.0.0 || ^19.0.0"
   },
   "dependencies": {
     "@passflow/passflow-js-sdk": "^0.0.18",
@@ -56,19 +55,18 @@
     "phone": "^3.1.58",
     "query-string": "^9.1.1",
     "querystringify": "^2.2.0",
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1",
     "react-error-boundary": "^4.1.2",
     "react-hook-form": "^7.54.2",
     "react-international-phone": "^4.5.0",
     "react-otp-input": "^3.1.1",
-    "react-router-dom": "^6.30.0",
     "tailwind-merge": "^2.6.0",
     "tailwindcss": "^3.4.17",
     "tailwindcss-scoped-preflight": "^3.4.10",
+    "terser": "^5.39.0",
     "yup": "^1.6.1"
   },
   "devDependencies": {
+    "@babel/plugin-transform-react-jsx": "^7.25.9",
     "@eslint/js": "^9.22.0",
     "@playwright/test": "^1.51.1",
     "@types/lodash": "^4.17.16",
@@ -77,7 +75,7 @@
     "@types/react-dom": "^18.3.5",
     "@typescript-eslint/eslint-plugin": "^8.26.1",
     "@typescript-eslint/parser": "^8.26.1",
-    "@vitejs/plugin-react-swc": "^3.8.0",
+    "@vitejs/plugin-react": "^4.3.4",
     "autoprefixer": "^10.4.21",
     "cssnano": "^7.0.6",
     "eslint": "9.21.0",
@@ -95,6 +93,9 @@
     "globals": "^16.0.0",
     "postcss": "^8.5.3",
     "prettier": "^3.5.3",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-router-dom": "6.30.0",
     "ts-node": "^10.9.2",
     "tsc-alias": "^1.8.11",
     "typescript": "5.8.2",
