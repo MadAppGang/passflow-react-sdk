@@ -1,9 +1,7 @@
 import { FC, ReactNode, useCallback, useMemo, useReducer, useState } from "react";
-import { NavigateFunction, NavigationContext, PassflowContext, defaultNavigate, initialState, passflowReducer } from "@/context";
+import { NavigateFunction, NavigationContext, PassflowContext, RouterType, defaultNavigate, initialState, passflowReducer } from "@/context";
 import { Passflow, PassflowConfig } from "@passflow/passflow-js-sdk";
 import "@/styles/index.css";
-
-type RouterType = 'default' | 'react-router' | 'tanstack-router';
 
 type PassflowProviderProps = PassflowConfig & {
 	children: ReactNode;

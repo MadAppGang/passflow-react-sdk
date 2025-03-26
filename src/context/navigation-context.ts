@@ -6,7 +6,7 @@ export type NavigateOptions = {
   replace?: boolean;
 };
 
-export type RouterType = 'default' | 'react-router' | 'tanstack-router';
+export type RouterType = 'default' | 'react-router' | 'tanstack-router' | 'wouter';
 
 export type NavigateFunction = (options: NavigateOptions) => void;
 

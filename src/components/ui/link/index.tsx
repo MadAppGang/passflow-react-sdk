@@ -14,7 +14,7 @@ type LinkProps = PropsWithChildren<{
 export const Link: FC<LinkProps> = ({ 
   to, 
   search,
-  replace = true,
+  replace = false,
   children, 
   className, 
   onClick, 
