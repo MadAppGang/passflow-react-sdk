@@ -4,7 +4,6 @@
 /* eslint-disable complexity */
 /* eslint-disable jsx-a11y/label-has-associated-control */
 import { ChangeEvent, FC, useEffect, useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { Controller, useForm } from 'react-hook-form';
 import {
   PassflowPasskeyRegisterStartPayload,
@@ -18,7 +17,7 @@ import { phone } from 'phone';
 import queryString from 'query-string';
 import { Button, FieldPassword, FieldPhone, FieldText, Icon, Link, ProvidersBox, Switch } from '@/components/ui';
 import { Wrapper } from '../wrapper';
-import { useAppSettings, usePassflow, useProvider, useSignUp } from '@/hooks';
+import { useAppSettings, useNavigation, usePassflow, useProvider, useSignUp } from '@/hooks';
 import {
   cn,
   emailRegex,
@@ -78,7 +77,7 @@ export const SignUpForm: FC<TSignUp> = ({
     defaultValues: initialValues,
   });
   const passflow = usePassflow();
-  const navigate = useNavigate();
+  const { navigate } = useNavigation();
   const { appSettings, passwordPolicy, isError: isErrorApp, error: errorApp } = useAppSettings();
 
   if (isErrorApp) throw new Error(errorApp);
@@ -149,7 +148,7 @@ export const SignUpForm: FC<TSignUp> = ({
     const status = await fetch(payload, 'password');
 
     if (status) {
-      if (!isValidUrl(successAuthRedirect)) navigate(successAuthRedirect);
+      if (!isValidUrl(successAuthRedirect)) navigate({to: successAuthRedirect});
       else window.location.href = await getUrlWithTokens(passflow, successAuthRedirect);
     }
   };
@@ -164,7 +163,7 @@ export const SignUpForm: FC<TSignUp> = ({
     const response = await fetch(payload, 'passkey');
 
     if (response) {
-      if (!isValidUrl(successAuthRedirect)) navigate(successAuthRedirect);
+      if (!isValidUrl(successAuthRedirect)) navigate({to: successAuthRedirect});
       else window.location.href = await getUrlWithTokens(passflow, successAuthRedirect);
     }
   };
@@ -190,21 +189,15 @@ export const SignUpForm: FC<TSignUp> = ({
       create_tenant: createTenant,
     };
     const newParams = queryString.stringify({
-      ...params,
+      ...Object.fromEntries(params.entries()),
       ...searchParamsState,
     });
 
     if (eq(currentChallegeType, 'otp') && (response satisfies PassflowPasswordlessResponse))
-      navigate({
-        pathname: verifyOTPPath ?? routes.verify_otp.path,
-        search: newParams.toString(),
-      });
+      navigate({to: verifyOTPPath ?? routes.verify_otp.path, search: newParams});
 
     if (eq(currentChallegeType, 'magic_link') && (response satisfies PassflowPasswordlessResponse))
-      navigate({
-        pathname: verifyMagicLinkPath ?? routes.verify_magic_link.path,
-        search: newParams.toString(),
-      });
+      navigate({to: verifyMagicLinkPath ?? routes.verify_magic_link.path, search: newParams});
   };
 
   const onSubmitHandler = async (data: Partial<typeof initialValues>, type: 'passkey' | 'password' | 'passwordless') => {

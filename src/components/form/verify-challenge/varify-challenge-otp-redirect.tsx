@@ -1,7 +1,6 @@
 /* eslint-disable complexity */
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { usePassflow, usePasswordlessComplete } from '@/hooks';
+import { useNavigation, usePassflow, usePasswordlessComplete } from '@/hooks';
 import { getUrlWithTokens, isValidUrl } from '@/utils';
 import { VerifyChallengeSuccess } from './varify-challenge-success';
 
@@ -13,7 +12,7 @@ type VerifyChallengeOTPRedirectProps = {
 
 export const VerifyChallengeOTPRedirect = ({ otp, challengeId, appId }: VerifyChallengeOTPRedirectProps) => {
   const passflow = usePassflow();
-  const navigate = useNavigate();
+  const { navigate } = useNavigation();
   const [paramsError, setParamsError] = useState<string | null>(null);
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
   const { fetch, isError, error, isLoading } = usePasswordlessComplete();
@@ -38,7 +37,7 @@ export const VerifyChallengeOTPRedirect = ({ otp, challengeId, appId }: VerifyCh
 
         if (response) {
           if (response.redirect_url) {
-            if (!isValidUrl(response.redirect_url)) navigate(response.redirect_url);
+            if (!isValidUrl(response.redirect_url)) navigate({to: response.redirect_url});
             else window.location.href = await getUrlWithTokens(passflow, response.redirect_url);
           } else {
             setShowSuccessMessage(true);

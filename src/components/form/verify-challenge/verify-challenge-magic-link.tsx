@@ -1,11 +1,11 @@
 /* eslint-disable no-nested-ternary */
 import { PassflowPasswordlessSignInPayload } from '@passflow/passflow-js-sdk';
-import { useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui';
 import { useSignIn } from '@/hooks';
 import { Wrapper } from '../wrapper';
 import '@/styles/index.css';
 import { eq } from 'lodash';
+import { useUrlParams } from '@/utils';
 
 const challengeTypeFullString = {
   email: 'email address',
@@ -14,8 +14,7 @@ const challengeTypeFullString = {
 
 export const VerifyChallengeMagicLink = () => {
   const { fetch: refetch } = useSignIn();
-
-  const [searchParams] = useSearchParams({
+  const { get } = useUrlParams({
     identity: '',
     identity_value: '',
     challenge_type: '',
@@ -23,15 +22,15 @@ export const VerifyChallengeMagicLink = () => {
     redirect_url: '',
   });
 
-  const identity = searchParams.has('email') ? 'email' : searchParams.has('phone') ? 'phone' : undefined;
-  const identityValue = searchParams.has('email')
-    ? searchParams.get('email')
-    : searchParams.has('phone')
-      ? searchParams.get('phone')
+  const identity = get('email') ? 'email' : get('phone') ? 'phone' : undefined;
+  const identityValue = get('email')
+    ? get('email')
+    : get('phone')
+      ? get('phone')
       : undefined;
-  const challengeType = searchParams.get('challenge_type');
-  const type = searchParams.get('type') as 'passkey' | 'password' | 'passwordless';
-  const redirectUrl = searchParams.get('redirect_url');
+  const challengeType = get('challenge_type');
+  const type = get('type') as 'passkey' | 'password' | 'passwordless';
+  const redirectUrl = get('redirect_url');
 
   const onClickResendHandler = async () => {
     const resendPayload = {

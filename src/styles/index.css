@@ -8,7 +8,13 @@
 @import 'tailwindcss/utilities';
 
 @layer components {
-  * {
+  html, body {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  #passflow-wrapper > * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;

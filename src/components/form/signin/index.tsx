@@ -17,10 +17,9 @@ import { phone } from 'phone';
 import queryString from 'query-string';
 import { eq, has, size } from 'lodash';
 import { Wrapper } from '../wrapper';
-import { useAppSettings, usePassflow, useProvider, useSignIn } from '@/hooks';
+import { useAppSettings, useNavigation, usePassflow, useProvider, useSignIn } from '@/hooks';
 import { cn, emailRegex, getAuthMethods, getIdentityLabel, getPasswordlessData, getUrlWithTokens, isValidUrl } from '@/utils';
 import { routes } from '@/context';
-import { useNavigate } from 'react-router-dom';
 import { DefaultMethod, SuccessAuthRedirect } from '@/types';
 import { withError } from '@/hocs';
 import { Error as ErrorComponent } from '@/components/error';
@@ -66,7 +65,7 @@ export const SignInForm: FC<TSignIn> = ({
     defaultValues: initialValues,
   });
   const passflow = usePassflow();
-  const navigate = useNavigate();
+  const { navigate } = useNavigation();
   const { appSettings, passwordPolicy, isError: isErrorApp, error: errorApp } = useAppSettings();
   const { federatedWithRedirect } = useProvider(federatedCallbackUrl);
 
@@ -130,7 +129,7 @@ export const SignInForm: FC<TSignIn> = ({
     const status = await fetch(userPayload, 'password');
 
     if (status) {
-      if (!isValidUrl(successAuthRedirect)) navigate(successAuthRedirect);
+      if (!isValidUrl(successAuthRedirect)) navigate({to: successAuthRedirect});
       else window.location.href = await getUrlWithTokens(passflow, successAuthRedirect);
     }
   };
@@ -139,7 +138,7 @@ export const SignInForm: FC<TSignIn> = ({
     const response = await fetch(passkeyPayload, 'passkey');
 
     if (response) {
-      if (!isValidUrl(successAuthRedirect)) navigate(successAuthRedirect);
+      if (!isValidUrl(successAuthRedirect)) navigate({to: successAuthRedirect});
       else window.location.href = await getUrlWithTokens(passflow, successAuthRedirect);
     }
   };
@@ -165,21 +164,15 @@ export const SignInForm: FC<TSignIn> = ({
       create_tenant: createTenant,
     };
     const newParams = queryString.stringify({
-      ...params,
+      ...Object.fromEntries(params.entries()),
       ...searchParamsState,
     });
 
     if (eq(currentChallegeType, 'otp') && (response satisfies PassflowPasswordlessResponse))
-      navigate({
-        pathname: verifyOTPPath ?? routes.verify_otp.path,
-        search: newParams.toString(),
-      });
+      navigate({to: verifyOTPPath ?? routes.verify_otp.path, search: newParams});
 
     if (eq(currentChallegeType, 'magic_link') && (response satisfies PassflowPasswordlessResponse))
-      navigate({
-        pathname: verifyMagicLinkPath ?? routes.verify_magic_link.path,
-        search: newParams.toString(),
-      });
+      navigate({to: verifyMagicLinkPath ?? routes.verify_magic_link.path, search: newParams});
   };
 
   const onSubmitHandler = async (
@@ -371,10 +364,8 @@ export const SignInForm: FC<TSignIn> = ({
                       Password
                     </label>
                     <Link
-                      to={{
-                        pathname: forgotPasswordPath ?? routes.forgot_password.path,
-                        search: queryString.stringify({ default_method: defaultMethod }),
-                      }}
+                      to={forgotPasswordPath ?? routes.forgot_password.path}
+                      search={queryString.stringify({ default_method: defaultMethod })}
                       className='passflow-text-Primary passflow-text-caption-1-medium'
                     >
                       Forgot password

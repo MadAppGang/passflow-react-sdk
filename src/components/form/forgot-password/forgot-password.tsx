@@ -4,11 +4,10 @@
 /* eslint-disable jsx-a11y/label-has-associated-control */
 import { FC, useMemo } from 'react';
 import * as Yup from 'yup';
-import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Button, FieldPhone, FieldText, Icon, Link } from '@/components/ui';
 import { Wrapper } from '../wrapper';
-import { useAppSettings, useForgotPassword } from '@/hooks';
-import { cn, emailRegex, getAuthMethods, getIdentityLabel } from '@/utils';
+import { useAppSettings, useForgotPassword, useNavigation } from '@/hooks';
+import { cn, emailRegex, getAuthMethods, getIdentityLabel, useUrlParams } from '@/utils';
 import { routes } from '@/context';
 import { PassflowSendPasswordResetEmailPayload } from '@passflow/passflow-js-sdk';
 import { eq, has, size } from 'lodash';
@@ -52,13 +51,13 @@ export const ForgotPassword: FC<TForgotPassword> = ({
   if (isErrorApp) throw new Error(errorApp);
 
   const authMethods = useMemo(() => getAuthMethods(appSettings?.auth_strategies), [appSettings]);
-  const navigate = useNavigate();
-  const [searchParams] = useSearchParams({
+  const { navigate } = useNavigation();
+  const { get } = useUrlParams({
     default_method: '',
   });
 
   const params = {
-    defaultMethod: searchParams.get('default_method'),
+    defaultMethod: get('default_method'),
   };
 
   try {
@@ -90,10 +89,10 @@ export const ForgotPassword: FC<TForgotPassword> = ({
     if (status) {
       const currentSearchParams = new URLSearchParams(window.location.search);
       const newParams = queryString.stringify({
-        ...currentSearchParams,
+        ...Object.fromEntries(currentSearchParams.entries()),
         ...payload,
       });
-      navigate({ pathname: forgotPasswordSuccessPath, search: newParams.toString() });
+      navigate({to: forgotPasswordSuccessPath, search: newParams});
     }
   };
 

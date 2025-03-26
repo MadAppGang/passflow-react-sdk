@@ -1,0 +1,73 @@
+/**
+ * Utility for native handling of URL parameters
+ */
+
+/**
+ * Get URL parameters
+ * @param defaultValues Default values
+ * @returns Object with methods getAll, get, set
+ */
+export const useUrlParams = <T extends Record<string, string>>(defaultValues?: T) => {
+  const searchParams = new URLSearchParams(window.location.search);
+  
+  // Set default values if parameters don't exist
+  if (defaultValues) {
+    let hasChanged = false;
+    
+    Object.entries(defaultValues).forEach(([key, value]) => {
+      if (!searchParams.has(key)) {
+        searchParams.set(key, value);
+        hasChanged = true;
+      }
+    });
+    
+    if (hasChanged) {
+      const newUrl = `${window.location.pathname}?${searchParams.toString()}${window.location.hash}`;
+      window.history.replaceState(null, '', newUrl);
+    }
+  }
+  
+  /**
+   * Get all parameters
+   */
+  const getAll = () => {
+    const params: Record<string, string> = {};
+    
+    for (const [key, value] of searchParams.entries()) {
+      params[key] = value;
+    }
+    
+    return params;
+  };
+  
+  /**
+   * Get parameter value
+   * @param key Parameter key
+   */
+  const get = (key: string) => searchParams.get(key);
+  
+  /**
+   * Set parameters
+   * @param params Object with parameters
+   */
+  const set = (params: Record<string, string>) => {
+    const newSearchParams = new URLSearchParams(window.location.search);
+    
+    Object.entries(params).forEach(([key, value]) => {
+      if (value === null || value === undefined || value === '') {
+        newSearchParams.delete(key);
+      } else {
+        newSearchParams.set(key, value);
+      }
+    });
+    
+    const newUrl = `${window.location.pathname}?${newSearchParams.toString()}${window.location.hash}`;
+    window.history.pushState(null, '', newUrl);
+  };
+  
+  return {
+    getAll,
+    get,
+    set
+  };
+}; 

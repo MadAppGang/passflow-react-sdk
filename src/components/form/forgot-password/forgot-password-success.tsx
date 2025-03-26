@@ -1,6 +1,5 @@
 /* eslint-disable no-nested-ternary */
 /* eslint-disable complexity */
-import { useSearchParams } from 'react-router-dom';
 import * as Yup from 'yup';
 import { Button } from '@/components/ui';
 import { Wrapper } from '../wrapper';
@@ -8,6 +7,7 @@ import { useForgotPassword } from '@/hooks';
 import '@/styles/index.css';
 import { PassflowSendPasswordResetEmailPayload } from '@passflow/passflow-js-sdk';
 import { eq } from 'lodash';
+import { useUrlParams } from '@/utils';
 
 const searchParamsForgotPasswordSuccessSchema = Yup.object().shape({
   identity: Yup.string().oneOf(['email', 'phone']).required(),
@@ -17,16 +17,16 @@ const searchParamsForgotPasswordSuccessSchema = Yup.object().shape({
 
 export const ForgotPasswordSuccess = () => {
   const { fetch: refetch } = useForgotPassword();
-  const [searchParams] = useSearchParams();
+  const { get } = useUrlParams();
 
   const params = {
-    identity: searchParams.has('email') ? 'email' : searchParams.has('phone') ? 'phone' : null,
-    identityValue: searchParams.has('email')
-      ? searchParams.get('email')
-      : searchParams.has('phone')
-        ? searchParams.get('phone')
+    identity: get('email') ? 'email' : get('phone') ? 'phone' : null,
+    identityValue: get('email')
+      ? get('email')
+      : get('phone')
+        ? get('phone')
         : null,
-    redirectUrl: searchParams.get('redirect_url'),
+    redirectUrl: get('redirect_url'),
   };
 
   try {
@@ -48,9 +48,9 @@ export const ForgotPasswordSuccess = () => {
   return (
     <Wrapper
       title={`Check your ${params.identity}`}
-      className='passflow-flex passflow-flex-col passflow-max-w-[336px] passflow-mx-auto'
+      className='passflow-flex passflow-flex-col passflow-w-full passflow-mx-auto'
     >
-      <div className='passflow-w-full passflow-flex passflow-flex-col passflow-gap-[32px] passflow-mt-[-8px]'>
+      <div className='passflow-w-full passflow-max-w-[336px] passflow-flex passflow-flex-col passflow-gap-[32px] passflow-mt-[-8px]'>
         <p className='passflow-text-body-2-medium passflow-text-Grey-One passflow-text-center'>
           We sent a link to {eq(params.identity, 'phone') ? 'phone number' : 'email address'}{' '}
           <strong className='passflow-text-body-2-bold'>{params.identityValue}</strong>. Click the link to reset your password.

@@ -1,13 +1,13 @@
 /* eslint-disable complexity */
 /* eslint-disable no-nested-ternary */
 import { FC } from 'react';
-import { useSearchParams } from 'react-router-dom';
 import * as Yup from 'yup';
 import { SuccessAuthRedirect } from '@/types';
 import { VerifyChallengeOTPRedirect } from './varify-challenge-otp-redirect';
 import { VerifyChallengeOTPManual } from './verify-challenge-otp-manual';
 
 import '@/styles/index.css';
+import { useUrlParams } from '@/utils';
 
 type TVerifyChallengeOTP = {
   successAuthRedirect: SuccessAuthRedirect;
@@ -38,7 +38,7 @@ export const VerifyChallengeOTP: FC<TVerifyChallengeOTP> = ({
   signUpPath,
   createTenant = false,
 }) => {
-  const [searchParams] = useSearchParams({
+  const { get } = useUrlParams({
     otp: '',
     app_id: '',
     challenge_id: '',
@@ -48,13 +48,13 @@ export const VerifyChallengeOTP: FC<TVerifyChallengeOTP> = ({
     type: '',
   });
 
-  const typeChallenge = searchParams.get('type');
+  const typeChallenge = get('type');
 
   if (typeChallenge !== 'passwordless' && typeChallenge !== 'passkey') {
     const redirectParams = {
-      appId: searchParams.get('app_id'),
-      challengeId: searchParams.get('challenge_id'),
-      otp: searchParams.get('otp'),
+      appId: get('app_id'),
+      challengeId: get('challenge_id'),
+      otp: get('otp'),
     };
 
     try {
@@ -69,15 +69,15 @@ export const VerifyChallengeOTP: FC<TVerifyChallengeOTP> = ({
   }
 
   const params = {
-    challengeId: searchParams.get('challenge_id'),
-    identity: searchParams.has('email') ? 'email' : searchParams.has('phone') ? 'phone' : null,
-    identityValue: searchParams.has('email')
-      ? searchParams.get('email')
-      : searchParams.has('phone')
-        ? searchParams.get('phone')
+    challengeId: get('challenge_id'),
+    identity: get('email') ? 'email' : get('phone') ? 'phone' : null,
+    identityValue: get('email')
+      ? get('email')
+      : get('phone')
+        ? get('phone')
         : null,
-    challengeType: searchParams.get('challenge_type'),
-    type: searchParams.get('type'),
+    challengeType: get('challenge_type'),
+    type: get('type'),
   };
 
   try {
