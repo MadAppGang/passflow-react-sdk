@@ -389,10 +389,10 @@ Component for user authentication.
 | Prop | Type | Description | Default |
 |------|------|-------------|---------|
 | successAuthRedirect | string | URL to redirect after successful sign in | Required |
-| signUpPath | string | Path to sign up page (optional) | undefined |
-| forgotPasswordPath | string | Path to forgot password page (optional) | undefined |
-| verifyMagicLinkPath | string | Path to verify magic link page (optional) | undefined |
-| verifyOTPPath | string | Path to verify OTP page (optional) | undefined |
+| signUpPath | string | Path to sign up page (optional) | /signup |
+| forgotPasswordPath | string | Path to forgot password page (optional) | /forgot-password |
+| verifyMagicLinkPath | string | Path to verify magic link page (optional) | /verify-challenge-magic-link |
+| verifyOTPPath | string | Path to verify OTP page (optional) | /verify-challenge-otp |
 | federatedCallbackUrl | string | URL for federated authentication callback (optional) | window.location.origin |
 | federatedDisplayMode | "popup" \| "redirect" | Display mode for federated authentication (optional) | "popup" |
 
@@ -403,9 +403,9 @@ Component for user registration.
 | Prop | Type | Description | Default |
 |------|------|-------------|---------|
 | successAuthRedirect | string | URL to redirect after successful sign up | Required |
-| signInPath | string | Path to sign in page (optional) | undefined |
-| verifyMagicLinkPath | string | Path to verify magic link page (optional) | undefined |
-| verifyOTPPath | string | Path to verify OTP page (optional) | undefined |
+| signInPath | string | Path to sign in page (optional) | /signin |
+| verifyMagicLinkPath | string | Path to verify magic link page (optional) | /verify-challenge-magic-link |
+| verifyOTPPath | string | Path to verify OTP page (optional) | /verify-challenge-otp |
 | federatedCallbackUrl | string | URL for federated authentication callback (optional) | window.location.origin |
 | federatedDisplayMode | "popup" \| "redirect" | Display mode for federated authentication (optional) | "popup" |
 
@@ -416,8 +416,8 @@ Component for password recovery initiation.
 | Prop | Type | Description | Default |
 |------|------|-------------|---------|
 | successResetRedirect | string | URL to redirect after successful password reset | Required |
-| signInPath | string | Path to sign in page (optional) | undefined |
-| forgotPasswordSuccessPath | string | Path to success page after initiating password reset (optional) | undefined |
+| signInPath | string | Path to sign in page (optional) | /signin |
+| forgotPasswordSuccessPath | string | Path to success page after initiating password reset (optional) | /forgot-password/success |
 
 ### ForgotPasswordSuccess
 
@@ -448,7 +448,7 @@ Component for OTP verification.
 | successAuthRedirect | string | URL to redirect after successful verification | Required |
 | numInputs | number | Number of OTP input fields (optional) | 6 |
 | shouldAutoFocus | boolean | Whether to autofocus the first input (optional) | true |
-| signUpPath | string | Path to sign up page (optional) | undefined |
+| signUpPath | string | Path to sign up page (optional) | /signup |
 
 ### InvitationJoin
 
@@ -457,4 +457,4 @@ Component for accepting invitations and joining organizations.
 | Prop | Type | Description | Default |
 |------|------|-------------|---------|
 | successAuthRedirect | string | URL to redirect after successful join | Required |
-| signInPath | string | Path to sign in page (optional) | undefined |
+| signInPath | string | Path to sign in page (optional) | /signin |
