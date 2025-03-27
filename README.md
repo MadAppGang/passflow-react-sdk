@@ -107,7 +107,7 @@ const passflowConfig: PassflowConfig = {
 export const PassflowProviderWrapper: FC<PropsWithChildren> = ({
   children,
 }) => {
-  const navigate = useNavigate();
+  const navigate = useNavigate(); // from react-router-dom
 
   return (
     <PassflowProvider
@@ -217,6 +217,7 @@ export const App = () => (
           } 
         />
         <Route path="/forgot-password/success" element={<ForgotPasswordSuccess />} />
+        {/* Add other routes here */}
       </Routes>
     </PassflowProviderWrapper>
   </BrowserRouter>
@@ -278,6 +279,7 @@ export const App = () => (
       <Route path="/signup" component={SignUpWrapper} />
       <Route path="/forgot-password" component={ForgotPasswordWrapper} />
       <Route path="/forgot-password/success" component={ForgotPasswordSuccessWrapper} />
+      {/* Add other routes here */}
     </PassflowProviderWrapper>
   </Switch>
 );
@@ -360,7 +362,8 @@ const publicRoutes = [
   createRoute({
     path: '/forgot-password/success',
     component: () => <ForgotPasswordSuccess />
-  })
+  }),
+  {/* Add other routes here */}
 ];
 ```
 
@@ -374,5 +377,84 @@ const publicRoutes = [
 | appId | string | Application ID |
 | createTenantForNewUser | boolean | Whether to create a tenant for new users |
 | scopes | string[] | Array of required scopes |
-| router | "react-router" \| "wouter" \| "tanstack-router" | Router being used |
-| navigate | (options: NavigateOptions) => void | Navigation function |
+| router | "default" \| "react-router" \| "wouter" \| "tanstack-router" | Router being used (optional) (default is native window navigation) |
+| navigate | (options: NavigateOptions) => void | Navigation function (optional) (default is native window navigation) |
+
+## Form Components
+
+### SignIn
+
+Component for user authentication.
+
+| Prop | Type | Description | Default |
+|------|------|-------------|---------|
+| successAuthRedirect | string | URL to redirect after successful sign in | Required |
+| signUpPath | string | Path to sign up page (optional) | undefined |
+| forgotPasswordPath | string | Path to forgot password page (optional) | undefined |
+| verifyMagicLinkPath | string | Path to verify magic link page (optional) | undefined |
+| verifyOTPPath | string | Path to verify OTP page (optional) | undefined |
+| federatedCallbackUrl | string | URL for federated authentication callback (optional) | window.location.origin |
+| federatedDisplayMode | "popup" \| "redirect" | Display mode for federated authentication (optional) | "popup" |
+
+### SignUp
+
+Component for user registration.
+
+| Prop | Type | Description | Default |
+|------|------|-------------|---------|
+| successAuthRedirect | string | URL to redirect after successful sign up | Required |
+| signInPath | string | Path to sign in page (optional) | undefined |
+| verifyMagicLinkPath | string | Path to verify magic link page (optional) | undefined |
+| verifyOTPPath | string | Path to verify OTP page (optional) | undefined |
+| federatedCallbackUrl | string | URL for federated authentication callback (optional) | window.location.origin |
+| federatedDisplayMode | "popup" \| "redirect" | Display mode for federated authentication (optional) | "popup" |
+
+### ForgotPassword
+
+Component for password recovery initiation.
+
+| Prop | Type | Description | Default |
+|------|------|-------------|---------|
+| successResetRedirect | string | URL to redirect after successful password reset | Required |
+| signInPath | string | Path to sign in page (optional) | undefined |
+| forgotPasswordSuccessPath | string | Path to success page after initiating password reset (optional) | undefined |
+
+### ForgotPasswordSuccess
+
+Component for password recovery success. 
+
+No props required.
+
+### ResetPassword
+
+Component for setting a new password.
+
+| Prop | Type | Description | Default |
+|------|------|-------------|---------|
+| successAuthRedirect | string | URL to redirect after successful password reset | Required |
+
+### VerifyChallengeMagicLink
+
+Component for verifying magic link authentication.
+
+No props required.
+
+### VerifyChallengeOTP
+
+Component for OTP verification.
+
+| Prop | Type | Description | Default |
+|------|------|-------------|---------|
+| successAuthRedirect | string | URL to redirect after successful verification | Required |
+| numInputs | number | Number of OTP input fields (optional) | 6 |
+| shouldAutoFocus | boolean | Whether to autofocus the first input (optional) | true |
+| signUpPath | string | Path to sign up page (optional) | undefined |
+
+### InvitationJoin
+
+Component for accepting invitations and joining organizations.
+
+| Prop | Type | Description | Default |
+|------|------|-------------|---------|
+| successAuthRedirect | string | URL to redirect after successful join | Required |
+| signInPath | string | Path to sign in page (optional) | undefined |

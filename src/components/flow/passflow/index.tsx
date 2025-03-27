@@ -7,6 +7,7 @@ import {
 	SignUp,
 	VerifyChallengeMagicLink,
 	VerifyChallengeOTP,
+	InvitationJoin,
 } from "@/components/form";
 import { routes } from "@/context";
 import "@/styles/index.css";
@@ -149,6 +150,10 @@ const PassflowWrapper: FC<PassflowProps> = ({
 			<Route
 				path={routesWithPrefix.reset_password}
 				element={<ResetPassword successAuthRedirect={successAuthRedirect} />}
+			/>
+			<Route
+				path={routesWithPrefix.invitation_join}
+				element={<InvitationJoin successAuthRedirect={successAuthRedirect} signInPath={routesWithPrefix.signin} />}
 			/>
 			<Route
 				path="*"
