@@ -23,7 +23,13 @@ export const PassflowProviderWrapper: FC<PropsWithChildren> = ({
       createTenantForNewUser={passflowConfig.createTenantForNewUser}
       scopes={passflowConfig.scopes}
       navigate={(options) =>
-        navigate({ pathname: options.to, search: options.search })
+        navigate(
+          {
+            pathname: options.to,
+            search: options.search,
+          },
+          { replace: options.replace }
+        )
       }
       router="react-router"
     >

@@ -1,4 +1,4 @@
-import { FC, useMemo } from "react";
+import { FC, useEffect, useMemo, useState } from "react";
 import {
 	ForgotPassword,
 	ForgotPasswordSuccess,
@@ -49,12 +49,43 @@ const PassflowWrapper: FC<PassflowProps> = ({
 	federatedCallbackUrl = window.location.origin,
 	pathPrefix = "",
 }) => {
+	const [isLoading, setIsLoading] = useState<boolean>(true);
+	const [isRouterAvailable, setIsRouterAvailable] = useState<boolean>(false);
+	const [dependencyError, setDependencyError] = useState<string>('');
+
 	const routesWithPrefix = useMemo(
 		() => combineRoutesWithPrefix(pathPrefix),
 		[pathPrefix],
 	);
 
+	useEffect(() => {
+		const checkRouter = async () => {
+			setIsLoading(true);
+			try {
+				await import('react-router-dom');
+
+				setIsRouterAvailable(true);
+			} catch (e) {
+				setDependencyError(`[Passflow SDK] PassflowFlow requires react-router-dom to be installed. Please install it using: pnpm add react-router-dom`);
+				setIsRouterAvailable(false);
+			} finally {
+				setIsLoading(false);
+			}
+		};
+
+		checkRouter();
+	}, []);
+
+	if (isLoading) {
+		return null;
+	}
+
+	if (!isRouterAvailable) {
+		throw new Error(dependencyError);
+	}
+
 	if (error) throw new Error(error);
+
 	return (
 		<Routes>
 			<Route
