@@ -21,7 +21,7 @@ function subscribe(passflow: Passflow, event?: PassflowEvent[]): (onStoreChange:
 
 function subscriber(onStoreChange: () => void): PassflowSubscriber {
   return {
-    passflowEvent(): void {
+    onAuthChange: () => {
       onStoreChange();
     },
   };
