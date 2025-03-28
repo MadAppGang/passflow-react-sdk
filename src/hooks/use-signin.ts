@@ -1,5 +1,5 @@
 import { useCallback, useState } from 'react';
-import {
+import type {
   PassflowPasskeyAuthenticateStartPayload,
   PassflowPasswordlessResponse,
   PassflowPasswordlessSignInPayload,
@@ -24,6 +24,7 @@ export const useSignIn: UseSignInProps = () => {
   const [isError, setIsError] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
   const fetch = useCallback(
     async (
       payload: PassflowPasskeyAuthenticateStartPayload | PassflowSignInPayload | PassflowPasswordlessSignInPayload,
@@ -52,7 +53,6 @@ export const useSignIn: UseSignInProps = () => {
         return false;
       }
     },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     [],
   );
 

@@ -1,8 +1,9 @@
 import { PassflowFlow } from '@/components/flow';
 import { BrowserRouter, useNavigate } from 'react-router-dom';
-import { PassflowConfig } from '@passflow/passflow-js-sdk';
+import type { PassflowConfig } from '@passflow/passflow-js-sdk';
 import { PassflowProvider } from './components/provider';
-import { FC, PropsWithChildren } from 'react';
+import type { FC, PropsWithChildren } from 'react';
+import type { NavigateOptions } from '@/context';
 
 const passflowConfig: PassflowConfig = {
   url: process.env.PASSFLOW_URL ?? 'http://localhost:5432',
@@ -22,7 +23,7 @@ export const PassflowProviderWrapper: FC<PropsWithChildren> = ({
       appId={passflowConfig.appId}
       createTenantForNewUser={passflowConfig.createTenantForNewUser}
       scopes={passflowConfig.scopes}
-      navigate={(options) =>
+      navigate={(options: NavigateOptions) =>
         navigate(
           {
             pathname: options.to,
