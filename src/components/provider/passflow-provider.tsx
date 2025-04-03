@@ -1,5 +1,5 @@
 import { FC, ReactNode, useCallback, useMemo, useReducer, useState } from "react";
-import { NavigateFunction, NavigationContext, PassflowContext, RouterType, defaultNavigate, initialState, passflowReducer } from "@/context";
+import { NavigateFunction, NavigationContext, PassflowContext, RouterType, defaultNavigate, initialState, passflowReducer, AuthProvider } from "@/context";
 import { Passflow, PassflowConfig } from "@passflow/passflow-js-sdk";
 import "@/styles/index.css";
 
@@ -46,7 +46,9 @@ export const PassflowProvider: FC<PassflowProviderProps> = ({
 	return (
 		<PassflowContext.Provider value={passflowValue}>
 			<NavigationContext.Provider value={navigationValue}>
-				{children}
+				<AuthProvider>
+					{children}
+				</AuthProvider>
 			</NavigationContext.Provider>
 		</PassflowContext.Provider>
 	);
