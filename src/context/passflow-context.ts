@@ -28,7 +28,7 @@ export const initialState: PassflowState = {
   appId: undefined,
   scopes: undefined,
   createTenantForNewUser: false,
-  parseQueryParams: true
+  parseQueryParams: true,
 };
 
 export const PassflowContext = createContext<PassflowContextType | undefined>(undefined);

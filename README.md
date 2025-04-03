@@ -2,6 +2,51 @@
 
 This is a SDK for react application.
 
+## Table of Contents
+
+- [@passflow/passflow-react-sdk](#passflowpassflow-react-sdk)
+  - [Table of Contents](#table-of-contents)
+  - [Local Development](#local-development)
+    - [Using Local Passflow JS SDK](#using-local-passflow-js-sdk)
+  - [Test writing Environment Setup](#test-writing-environment-setup)
+  - [UI Testing](#ui-testing)
+    - [Writing your own ui tests.](#writing-your-own-ui-tests)
+  - [Installation](#installation)
+  - [Requirements](#requirements)
+  - [Integration](#integration)
+    - [Passflow Cloud](#passflow-cloud)
+    - [PassflowFlow](#passflowflow)
+    - [React Router DOM](#react-router-dom)
+    - [Wouter](#wouter)
+    - [TanStack Router](#tanstack-router)
+  - [Props](#props)
+    - [PassflowProvider](#passflowprovider)
+  - [Form Components](#form-components)
+    - [SignIn](#signin)
+    - [SignUp](#signup)
+    - [ForgotPassword](#forgotpassword)
+    - [ForgotPasswordSuccess](#forgotpasswordsuccess)
+    - [ResetPassword](#resetpassword)
+    - [VerifyChallengeMagicLink](#verifychallengemagiclink)
+    - [VerifyChallengeOTP](#verifychallengeotp)
+    - [InvitationJoin](#invitationjoin)
+  - [Hooks](#hooks)
+    - [useAuth](#useauth)
+    - [usePassflow](#usepassflow)
+    - [usePassflowStore](#usepassflowstore)
+    - [useSignIn](#usesignin)
+    - [useSignUp](#usesignup)
+    - [useNavigation](#usenavigation)
+    - [useProvider](#useprovider)
+    - [useResetPassword](#useresetpassword)
+    - [useUserPasskeys](#useuserpasskeys)
+    - [useAppSettings](#useappsettings)
+    - [useAuthCloudRedirect](#useauthcloudredirect)
+    - [useForgotPassword](#useforgotpassword)
+    - [useJoinInvite](#usejoininvite)
+    - [useLogout](#uselogout)
+    - [usePasswordlessComplete](#usepasswordlesscomplete)
+
 to install just type:
 
 ```
@@ -156,6 +201,7 @@ export const App = () => (
 ### React Router DOM
 
 Example of integration with React Router DOM:
+PS: The example uses the Declarative approach.
 
 ```tsx
 import {
@@ -288,6 +334,7 @@ export const App = () => (
 ### TanStack Router
 
 Example of integration with TanStack Router:
+PS: The example uses Code-Based Routing.
 
 ```tsx
 // App.tsx
@@ -336,35 +383,127 @@ export const Root = () => {
   return <Outlet />;
 };
 
-// routes.tsx
-import { createRoute } from '@tanstack/react-router';
-import { SignIn, SignUp, ForgotPassword, ForgotPasswordSuccess } from '@passflow/passflow-react-sdk';
+// router.tsx
+import { QueryClient } from '@tanstack/react-query';
+import { createRouter } from '@tanstack/react-router';
+import { queryClient } from '../query';
+import { routerTree } from './routes';
+import { Passflow } from '@passflow/passflow-react-sdk';
 
-const publicRoutes = [
-  createRoute({
-    path: '/signin',
-    component: () => <SignIn />
-  }),
-  createRoute({
-    path: '/signup',
-    component: () => <SignUp />
-  }),
-  createRoute({
-    path: '/forgot-password',
-    component: () => (
-      <ForgotPassword 
-        successResetRedirect="/" 
-        signInPath="/signin" 
-        forgotPasswordSuccessPath="/forgot-password/success" 
-      />
-    )
-  }),
-  createRoute({
-    path: '/forgot-password/success',
-    component: () => <ForgotPasswordSuccess />
-  }),
-  {/* Add other routes here */}
-];
+export interface RouterContext {
+  queryClient: QueryClient;
+  passflow?: Passflow;
+}
+
+export const router = createRouter({
+  routeTree: routerTree,
+  context: {
+    queryClient,
+    passflow: undefined,
+  },
+  defaultPreload: 'intent',
+});
+
+declare module '@tanstack/react-router' {
+  interface Register {
+    router: typeof router;
+  }
+}
+
+
+// routes.tsx
+import { Outlet, createRootRouteWithContext, createRoute, redirect } from '@tanstack/react-router';
+import { RouterContext } from './router';
+import { Root } from './root';
+import { About, Home } from '@/pages';
+import { ForgotPassword, ForgotPasswordSuccess, SignIn, SignUp } from '@passflow/passflow-react-sdk';
+import { RootLayout } from '@/layouts';
+
+const redirectToSignin = () => {
+  throw redirect({
+    to: '/signin',
+  });
+};
+
+const rootRoute = createRootRouteWithContext<RouterContext>()({
+  component: Root,
+  notFoundComponent: () => <div>404 Not Found</div>,
+});
+
+// PUBLIC ROUTES
+const publicRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  id: 'public',
+  component: () => <Outlet />,
+});
+
+const signInRoute = createRoute({
+  getParentRoute: () => publicRoute,
+  path: '/signin',
+  component: () => <SignIn successAuthRedirect='/' signUpPath='/signup' />,
+});
+
+const signUpRoute = createRoute({
+  getParentRoute: () => publicRoute,
+  path: '/signup',
+  component: () => <SignUp successAuthRedirect='/' signInPath='/signin' />,
+});
+
+const forgotPasswordRoute = createRoute({
+  getParentRoute: () => publicRoute,
+  path: '/forgot-password',
+  component: () => (
+    <ForgotPassword successResetRedirect='/' signInPath='/signin' forgotPasswordSuccessPath='/forgot-password/success' />
+  ),
+});
+
+const forgotPasswordSuccessRoute = createRoute({
+  getParentRoute: () => publicRoute,
+  path: '/forgot-password/success',
+  component: () => <ForgotPasswordSuccess />,
+});
+
+{/* Add other PASSFLOW COMPONENTS routes here */}
+
+// PROTECTED ROUTES
+const protectedRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  id: 'protected',
+  beforeLoad: async ({ context }) => {
+    const { passflow } = context;
+
+    await passflow?.session({
+      createSession: async (tokens) => {
+        console.log(tokens); // if session is created, this function will be called with the tokens
+      },
+      expiredSession: async () => {
+        console.log('expiredSession');
+        redirectToSignin(); // if session is expired and refresh token is not valid, redirect to signin
+      },
+      doRefresh: true,
+    });
+  },
+  component: () => <RootLayout />,
+});
+
+const dashboardRoute = createRoute({
+  getParentRoute: () => protectedRoute,
+  path: '/',
+  component: () => <Home />,
+});
+
+const aboutRoute = createRoute({
+  getParentRoute: () => protectedRoute,
+  path: '/about',
+  component: () => <About />,
+});
+
+{/* Add other protected routes here */}
+
+export const routerTree = rootRoute.addChildren([
+  publicRoute.addChildren([signInRoute, signUpRoute, forgotPasswordRoute, forgotPasswordSuccessRoute]),
+  protectedRoute.addChildren([dashboardRoute, aboutRoute]),
+]);
 ```
 
 ## Props
@@ -458,3 +597,253 @@ Component for accepting invitations and joining organizations.
 |------|------|-------------|---------|
 | successAuthRedirect | string | URL to redirect after successful join | Required |
 | signInPath | string | Path to sign in page (optional) | /signin |
+
+## Hooks
+
+### useAuth
+Hook for authentication management. Provides methods for checking authentication status, obtaining tokens, and logging out.
+
+```typescript
+const { isAuthenticated, getTokens, logout, isLoading } = useAuth();
+```
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| initialRefresh | `boolean` (optional) | Whether to refresh tokens on mount |
+
+**Returns:**
+
+| Property | Type | Description |
+|----------|------|-------------|
+| isAuthenticated | `() => boolean` | Current authentication status |
+| getTokens | `(doRefresh: boolean) => Promise<{ tokens: Tokens \| undefined; parsedTokens: ParsedTokens \| undefined; }>` | Function to get authentication tokens |
+| logout | `() => void` | Function to log out user |
+| isLoading | `boolean` | Loading state indicator |
+
+### usePassflow
+Hook for accessing the Passflow SDK instance. Must be used within PassflowProvider.
+
+```typescript
+const passflow = usePassflow();
+```
+
+**Returns:**
+
+| Type | Description |
+|------|-------------|
+| `Passflow` | Passflow SDK instance |
+
+### usePassflowStore
+Hook for synchronizing state with Passflow SDK. Allows subscribing to token changes.
+
+```typescript
+const tokens = usePassflowStore([PassflowEvent.SignIn, ...]);
+```
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| events | `PassflowEvent[]` (optional) | Events to subscribe to |
+
+**Returns:**
+
+| Type | Description |
+|------|-------------|
+| `Tokens \| undefined` | Current tokens state |
+
+### useSignIn
+Hook for implementing sign-in functionality. Supports password, passkey, and passwordless authentication.
+
+```typescript
+const { fetch, isLoading, isError, error } = useSignIn();
+```
+
+**Returns:**
+
+| Property | Type | Description |
+|----------|------|-------------|
+| fetch | `(payload: PassflowPasskeyAuthenticateStartPayload \| PassflowSignInPayload \| PassflowPasswordlessSignInPayload, type: 'passkey' \| 'password' \| 'passwordless') => Promise<boolean \| string \| PassflowPasswordlessResponse>` | Sign in function |
+| isLoading | `boolean` | Loading state |
+| isError | `boolean` | Error state |
+| error | `string` | Error message |
+
+### useSignUp
+Hook for implementing registration functionality. Supports password, passkey, and passwordless registration.
+
+```typescript
+const { fetch, isLoading, isError, error } = useSignUp();
+```
+
+**Returns:**
+
+| Property | Type | Description |
+|----------|------|-------------|
+| fetch | `(payload: PassflowPasskeyRegisterStartPayload \| PassflowSignUpPayload \| PassflowPasswordlessSignInPayload, type: 'passkey' \| 'password' \| 'passwordless') => Promise<boolean \| PassflowPasswordlessResponse>` | Sign up function |
+| isLoading | `boolean` | Loading state |
+| isError | `boolean` | Error state |
+| error | `string` | Error message |
+
+### useNavigation
+Hook for navigation between pages. Supports various routers (react-router, wouter, tanstack-router).
+
+```typescript
+const { navigate, setNavigate } = useNavigation();
+```
+
+**Returns:**
+
+| Property | Type | Description |
+|----------|------|-------------|
+| navigate | `NavigateFunction` | Navigation function |
+| setNavigate | `(newNavigate: NavigateFunction \| null) => void` | Function to update navigation handler |
+
+### useProvider
+Hook for working with federated authentication providers (OAuth).
+
+```typescript
+const { federatedWithPopup, federatedWithRedirect } = useProvider(redirectUrl);
+```
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| redirectUrl | `string` | URL to redirect after authentication |
+
+**Returns:**
+
+| Property | Type | Description |
+|----------|------|-------------|
+| federatedWithPopup | `(provider: Providers) => void` | Popup authentication function |
+| federatedWithRedirect | `(provider: Providers) => void` | Redirect authentication function |
+
+### useResetPassword
+Hook for resetting user password.
+
+```typescript
+const { fetch, isLoading, isError, error } = useResetPassword();
+```
+
+**Returns:**
+
+| Property | Type | Description |
+|----------|------|-------------|
+| fetch | `(newPassword: string) => Promise<boolean>` | Password reset function |
+| isLoading | `boolean` | Loading state |
+| isError | `boolean` | Error state |
+| error | `string` | Error message |
+
+### useUserPasskeys
+Hook for managing user passkeys (create, edit, delete).
+
+```typescript
+const { data, createUserPasskey, editUserPasskey, deleteUserPasskey } = useUserPasskeys();
+```
+
+**Returns:**
+
+| Property | Type | Description |
+|----------|------|-------------|
+| data | `PassflowUserPasskey[]` | List of user passkeys |
+| createUserPasskey | `(relyingPartyId: string) => Promise<void>` | Create passkey function |
+| editUserPasskey | `(newName: string, passkeyId: string) => Promise<void>` | Edit passkey function |
+| deleteUserPasskey | `(passkeyId: string) => Promise<void>` | Delete passkey function |
+| isLoading | `boolean` | Loading state |
+| isError | `boolean` | Error state |
+| errorMessage | `string` | Error message |
+
+### useAppSettings
+Hook for retrieving application settings and password policies.
+
+```typescript
+const { appSettings, passwordPolicy, passkeyProvider } = useAppSettings();
+```
+
+**Returns:**
+
+| Property | Type | Description |
+|----------|------|-------------|
+| appSettings | `AppSettings \| null` | Application settings |
+| passwordPolicy | `PassflowPasswordPolicySettings \| null` | Password policy settings |
+| passkeyProvider | `PassflowPasskeySettings \| null` | Passkey provider settings |
+| isLoading | `boolean` | Loading state |
+| isError | `boolean` | Error state |
+| error | `string` | Error message |
+
+### useAuthCloudRedirect
+Hook for redirecting to Passflow Cloud.
+
+```typescript
+const redirect = useAuthCloudRedirect(cloudPassflowUrl);
+```
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| cloudPassflowUrl | `string` | Passflow Cloud URL |
+
+**Returns:**
+
+| Type | Description |
+|------|-------------|
+| `() => void` | Redirect function |
+
+### useForgotPassword
+Hook for initiating the password recovery process.
+
+```typescript
+const { fetch, isLoading, isError, error } = useForgotPassword();
+```
+
+**Returns:**
+
+| Property | Type | Description |
+|----------|------|-------------|
+| fetch | `(payload: PassflowSendPasswordResetEmailPayload) => Promise<boolean>` | Password recovery function |
+| isLoading | `boolean` | Loading state |
+| isError | `boolean` | Error state |
+| error | `string` | Error message |
+
+### useJoinInvite
+Hook for accepting organization invitations.
+
+```typescript
+const { fetch, isLoading, isError, error } = useJoinInvite();
+```
+
+**Returns:**
+
+| Property | Type | Description |
+|----------|------|-------------|
+| fetch | `(token: string) => Promise<boolean>` | Join invitation function |
+| isLoading | `boolean` | Loading state |
+| isError | `boolean` | Error state |
+| error | `string` | Error message |
+
+### useLogout
+Hook for logging out of the system.
+
+```typescript
+const { fetch, isLoading, isError, error } = useLogout();
+```
+
+**Returns:**
+
+| Property | Type | Description |
+|----------|------|-------------|
+| fetch | `() => Promise<boolean>` | Logout function |
+| isLoading | `boolean` | Loading state |
+| isError | `boolean` | Error state |
+| error | `string` | Error message |
+
+### usePasswordlessComplete
+Hook for completing passwordless authentication.
+
+```typescript
+const { fetch, isLoading, isError, error } = usePasswordlessComplete();
+```
+
+**Returns:**
+
+| Property | Type | Description |
+|----------|------|-------------|
+| fetch | `(payload: PassflowPasswordlessSignInCompletePayload) => Promise<PassflowValidationResponse \| null>` | Complete passwordless auth function |
+| isLoading | `boolean` | Loading state |
+| isError | `boolean` | Error state |
+| error | `string` | Error message |
