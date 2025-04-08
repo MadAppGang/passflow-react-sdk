@@ -1,8 +1,8 @@
 /* eslint-disable max-len */
 /* eslint-disable complexity */
-import { FC, useState } from 'react';
+import { type FC, useState } from 'react';
 import * as Yup from 'yup';
-import { InvitationToken, parseToken } from '@passflow/passflow-js-sdk';
+import { type InvitationToken, parseToken } from '@passflow/passflow-js-sdk';
 import { Error as ErrorComponent } from '@/components/error';
 import { Button } from '@/components/ui';
 import { Wrapper } from '../wrapper';
