@@ -490,10 +490,18 @@ export const SignUpForm: FC<TSignUp> = ({
           </>
         ) : null}
         {forcePasswordless && hasPasskey ? (
-          <Button size='big' variant='dark' type='submit' className='passflow-m-auto' withIcon>
-            <Icon id='key' size='small' type='general' className='icon-white' />
-            Sign Up with a Passkey
-          </Button>
+          <>
+            <Button size='big' variant='dark' type='submit' className='passflow-m-auto' withIcon>
+              <Icon id='key' size='small' type='general' className='icon-white' />
+              Sign Up with a Passkey
+            </Button>
+            {isError && (
+              <div className='passflow-flex passflow-items-center passflow-justify-center passflow-gap-[4px] passflow-mt-[-8px]'>
+                <Icon size='small' id='warning' type='general' className='icon-warning' />
+                <span className='passflow-text-caption-1-medium passflow-text-Warning'>{error}</span>
+              </div>
+            )}
+          </>
         ) : null}
         <div
           className={cn(
