@@ -1,7 +1,7 @@
 {
   "name": "@passflow/passflow-react-sdk",
   "description": "Passflow React UI Kit",
-  "version": "0.1.23",
+  "version": "0.1.24",
   "type": "module",
   "files": [
     "dist"
@@ -41,7 +41,7 @@
     "react-router-dom": "^6.0.0 || ^7.0.0"
   },
   "dependencies": {
-    "@passflow/passflow-js-sdk": "^0.1.18",
+    "@passflow/passflow-js-sdk": "^0.1.20",
     "@radix-ui/react-dialog": "^1.1.6",
     "@radix-ui/react-popover": "^1.1.6",
     "@storybook/react": "^8.6.7",
@@ -144,5 +144,5 @@
   "pnpm": {
     "overrides": {}
   },
-  "packageManager": "pnpm@10.6.4+sha512.da3d715bfd22a9a105e6e8088cfc7826699332ded60c423b14ec613a185f1602206702ff0fe4c438cb15c979081ce4cb02568e364b15174503a63c7a8e2a5f6c"
+  "packageManager": "pnpm@10.8.0"
 }
