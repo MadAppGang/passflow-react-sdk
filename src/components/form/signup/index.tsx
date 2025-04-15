@@ -7,19 +7,22 @@ import {
   getAuthMethods,
   getIdentityLabel,
   getPasswordlessData,
+  getUrlErrors,
   getUrlWithTokens,
   getValidationErrorsLabel,
   isValidUrl,
   passwordValidation,
+  useUrlParams,
 } from '@/utils';
 import type {
   PassflowPasskeyRegisterStartPayload,
   PassflowPasswordlessResponse,
   PassflowPasswordlessSignInPayload,
+  PassflowSignUpPayload,
   PassflowUserPayload,
   Providers,
 } from '@passflow/passflow-js-sdk';
-import { eq, has, size } from 'lodash';
+import { eq, has, isEmpty, size } from 'lodash';
 import { phone } from 'phone';
 import queryString from 'query-string';
 import React, { type ChangeEvent, type FC, useEffect, useMemo, useState } from 'react';
@@ -81,6 +84,16 @@ export const SignUpForm: FC<TSignUp> = ({
 
   const authMethods = useMemo(() => getAuthMethods(appSettings?.auth_strategies), [appSettings]);
 
+  const { error: errorUrl, message: messageUrl } = getUrlErrors();
+
+  if (errorUrl && messageUrl) throw new Error(messageUrl);
+
+  const { get } = useUrlParams({
+    invite_token: '',
+  });
+
+  const inviteToken = get('invite_token');
+
   const { fetch, isError, error, reset, isLoading } = useSignUp();
 
   const [forcePasswordless, setForcePasswordless] = useState<boolean>(
@@ -138,7 +151,8 @@ export const SignUpForm: FC<TSignUp> = ({
     const payload = {
       user: userPayload,
       create_tenant: createTenant,
-    };
+      ...(!isEmpty(inviteToken) && { invite: inviteToken }),
+    } as PassflowSignUpPayload;
 
     const status = await fetch(payload, 'password');
 
@@ -153,6 +167,7 @@ export const SignUpForm: FC<TSignUp> = ({
       relying_party_id: relyingPartyId,
       create_tenant: createTenant,
       redirect_url: successAuthRedirect,
+      ...(!isEmpty(inviteToken) && { invite: inviteToken }),
     } as PassflowPasskeyRegisterStartPayload;
 
     const response = await fetch(payload, 'passkey');
@@ -171,6 +186,7 @@ export const SignUpForm: FC<TSignUp> = ({
       challenge_type: currentChallegeType,
       create_tenant: createTenant,
       redirect_url: successAuthRedirect,
+      ...(!isEmpty(inviteToken) && { invite: inviteToken }),
     } as PassflowPasswordlessSignInPayload;
 
     const response = (await fetch(payload, 'passwordless')) as PassflowPasswordlessResponse;
@@ -507,8 +523,12 @@ export const SignUpForm: FC<TSignUp> = ({
           )}
         >
           <p className='passflow-text-Grey-Six passflow-text-body-2-medium passflow-text-center'>
-            Do you have an account?{' '}
-            <Link to={signInPath ?? routes.signin.path} className='passflow-text-Primary passflow-text-body-2-semiBold'>
+            Already have an account?{' '}
+            <Link 
+              to={signInPath ?? routes.signin.path} 
+              search={window.location.search}
+              className='passflow-text-Primary passflow-text-body-2-semiBold'
+            >
               Sign In
             </Link>
           </p>

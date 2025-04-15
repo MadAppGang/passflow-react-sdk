@@ -7,3 +7,4 @@ export { undefinedOnCatch } from './undefined-on-catch';
 export { getAuthMethods, type AuthMethods } from './get-auth-methods';
 export { getIdentityLabel, getPasswordlessData, getValidationErrorsLabel } from './get-form-labels';
 export { useUrlParams } from './url-params';
+export { getUrlErrors } from './get-url-errors';

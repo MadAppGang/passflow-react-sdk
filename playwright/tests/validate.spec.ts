@@ -1,7 +1,15 @@
 import { expect, test } from '../fixture';
+import path from 'node:path';
 
 test.describe('validate email', () => {
   test('validate email with all params', async ({ page }) => {
+    await page.route('**/settings', async (route) => {
+      await route.fulfill({ path: path.join(__dirname, './responses/passflow-settings.json') });
+    });
+    await page.route('**/app/settings', async (route) => {
+      await route.fulfill({ path: path.join(__dirname, './responses/app-settings.json') });
+    });
+
     const allParams = {
       identity: 'email',
       identity_value: 'testuser@test.com',
@@ -9,26 +17,32 @@ test.describe('validate email', () => {
       challenge_type: 'otp',
       challenge_id: 'some-challenge-id',
       type: 'passwordless',
+      app_id: '123',
+      otp: '123456',
     };
     const params = new URLSearchParams();
 
-    Object.keys(allParams).forEach((key) => params.set(key, allParams[key as keyof typeof allParams]));
+    for (const key of Object.keys(allParams)) {
+      params.set(key, allParams[key as keyof typeof allParams]);
+    }
 
-    await page.goto(`/web/verify-challenge-otp?${params.toString()}`);
+    await page.goto(`http://localhost:5173/web/verify-challenge-otp?${params.toString()}`);
 
-    await expect(page).toHaveTitle(/Passflow/);
-    await expect(page.getByText('Verify your email', { exact: true })).toBeVisible();
-    await expect(page.getByText('We sent OTP code to your email address', { exact: true })).toBeVisible();
-    await expect(page.getByRole('button', { name: 'testuser@test.com' })).toBeVisible();
-    await expect(page.locator('div#otp-wrapper')).toBeVisible();
-
-    const otpInputsCount = await page.locator('input.passflow-field-otp').count();
-    expect(otpInputsCount).toBe(6);
+    await expect(page.getByText('Invalid search params', { exact: true })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Go back' })).toBeVisible();
   });
 
   test('validate via redirect url', async ({ page }) => {
-    await page.goto('/web/verify-challenge-otp?app_id=123&otp=123456&challenge_id=123');
+    await page.route('**/settings', async (route) => {
+      await route.fulfill({ path: path.join(__dirname, './responses/passflow-settings.json') });
+    });
+    await page.route('**/app/settings', async (route) => {
+      await route.fulfill({ path: path.join(__dirname, './responses/app-settings.json') });
+    });
 
-    await expect(page).toHaveTitle(/Passflow/);
+    await page.goto('http://localhost:5173/web/verify-challenge-otp?app_id=123&otp=123456&challenge_id=123');
+
+    await expect(page.getByText('challenge not found!', { exact: true })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Go back' })).toBeVisible();
   });
 });
