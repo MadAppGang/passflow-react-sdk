@@ -1,9 +1,9 @@
-import { FC } from 'react';
+import type { FC } from 'react';
 import { Button } from '../button';
 import { Icon } from '../icon';
 import '@/styles/index.css';
-import { Providers } from '@passflow/passflow-js-sdk';
 import { cn } from '@/utils';
+import type { Providers } from '@passflow/passflow-js-sdk';
 
 type TProvidersBox = {
   providers: Providers[];

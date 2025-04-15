@@ -1,11 +1,11 @@
-/* eslint-disable no-nested-ternary */
-import { PassflowPasswordlessSignInPayload } from '@passflow/passflow-js-sdk';
 import { Button } from '@/components/ui';
 import { useSignIn } from '@/hooks';
+/* eslint-disable no-nested-ternary */
+import type { PassflowPasswordlessSignInPayload } from '@passflow/passflow-js-sdk';
 import { Wrapper } from '../wrapper';
 import '@/styles/index.css';
-import { eq } from 'lodash';
 import { useUrlParams } from '@/utils';
+import { eq } from 'lodash';
 
 const challengeTypeFullString = {
   email: 'email address',
@@ -23,11 +23,7 @@ export const VerifyChallengeMagicLink = () => {
   });
 
   const identity = get('email') ? 'email' : get('phone') ? 'phone' : undefined;
-  const identityValue = get('email')
-    ? get('email')
-    : get('phone')
-      ? get('phone')
-      : undefined;
+  const identityValue = get('email') ? get('email') : get('phone') ? get('phone') : undefined;
   const challengeType = get('challenge_type');
   const type = get('type') as 'passkey' | 'password' | 'passwordless';
   const redirectUrl = get('redirect_url');

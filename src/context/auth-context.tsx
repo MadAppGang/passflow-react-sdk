@@ -1,5 +1,5 @@
 import type { ParsedTokens, Tokens } from '@passflow/passflow-js-sdk';
-import { type FC, type PropsWithChildren, createContext, useCallback, useState } from 'react';
+import React, { type FC, type PropsWithChildren, createContext, useCallback, useState } from 'react';
 import { usePassflow } from '../hooks/use-passflow';
 
 export type AuthContextValue = {

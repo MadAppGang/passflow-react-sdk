@@ -1,8 +1,8 @@
+import type { SuccessAuthRedirect } from '@/types';
 /* eslint-disable complexity */
 /* eslint-disable no-nested-ternary */
-import { FC } from 'react';
+import type { FC } from 'react';
 import * as Yup from 'yup';
-import { SuccessAuthRedirect } from '@/types';
 import { VerifyChallengeOTPRedirect } from './varify-challenge-otp-redirect';
 import { VerifyChallengeOTPManual } from './verify-challenge-otp-manual';
 
@@ -71,11 +71,7 @@ export const VerifyChallengeOTP: FC<TVerifyChallengeOTP> = ({
   const params = {
     challengeId: get('challenge_id'),
     identity: get('email') ? 'email' : get('phone') ? 'phone' : null,
-    identityValue: get('email')
-      ? get('email')
-      : get('phone')
-        ? get('phone')
-        : null,
+    identityValue: get('email') ? get('email') : get('phone') ? get('phone') : null,
     challengeType: get('challenge_type'),
     type: get('type'),
   };

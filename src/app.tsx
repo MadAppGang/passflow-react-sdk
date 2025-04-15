@@ -1,7 +1,7 @@
 import { PassflowFlow } from '@/components/flow';
 import type { NavigateOptions } from '@/context';
 import type { PassflowConfig } from '@passflow/passflow-js-sdk';
-import type { FC, PropsWithChildren } from 'react';
+import React, { type FC, type PropsWithChildren } from 'react';
 import { BrowserRouter, useNavigate } from 'react-router-dom';
 import { PassflowProvider } from './components/provider';
 

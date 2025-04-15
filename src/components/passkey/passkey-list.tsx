@@ -1,8 +1,8 @@
-import { FC, JSX } from 'react';
-import { PassflowUserPasskey } from '@passflow/passflow-js-sdk';
-import { Icon } from '../ui';
 import { FORMATS } from '@/constants';
 import { formatDateToString, usedFieldString } from '@/utils';
+import type { PassflowUserPasskey } from '@passflow/passflow-js-sdk';
+import type { FC, JSX } from 'react';
+import { Icon } from '../ui';
 
 type TPasskeyList = {
   data: PassflowUserPasskey[];

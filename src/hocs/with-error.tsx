@@ -2,6 +2,7 @@ import type { TError } from '@/components/error';
 import type { PassflowProps } from '@/components/flow/passflow';
 import type { TSignIn, TSignUp } from '@/components/form';
 import { PassflowContext } from '@/context';
+import React from 'react';
 /* eslint-disable react/prop-types */
 /* eslint-disable react/jsx-props-no-spreading */
 import { type ComponentType, useContext } from 'react';

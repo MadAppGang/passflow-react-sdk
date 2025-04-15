@@ -28,5 +28,5 @@ export const defaultNavigate: NavigateFunction = ({ to, search, replace }) => {
 export const NavigationContext = createContext<NavigationContextType>({
   navigate: defaultNavigate,
   setNavigate: () => undefined,
-  router: 'default'
-}); 
+  router: 'default',
+});

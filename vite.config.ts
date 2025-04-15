@@ -23,7 +23,7 @@ export default defineConfig({
     },
     rollupOptions: {
       external: (id) => {
-        return baseExternal.includes(id) || optionalExternal.some(dep => id.startsWith(dep));
+        return baseExternal.includes(id) || optionalExternal.some((dep) => id.startsWith(dep));
       },
       output: {
         globals: {
@@ -31,7 +31,7 @@ export default defineConfig({
           'react-dom': 'ReactDOM',
           'react/jsx-runtime': 'jsxRuntime',
         },
-      }
+      },
     },
     target: 'esnext',
     sourcemap: true,

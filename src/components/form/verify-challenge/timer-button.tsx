@@ -1,6 +1,5 @@
-/* eslint-disable react/jsx-props-no-spreading */
-import { FC, PropsWithChildren, useEffect, useState } from 'react';
 import { Button } from '@/components/ui';
+import React, { type FC, type PropsWithChildren, useEffect, useState } from 'react';
 import '@/styles/index.css';
 import { cn } from '@/utils';
 

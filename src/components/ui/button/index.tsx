@@ -1,7 +1,16 @@
+import { cn } from '@/utils';
 /* eslint-disable react/button-has-type */
 /* eslint-disable react/jsx-props-no-spreading */
-import { ButtonHTMLAttributes, CSSProperties, FC, JSX, MouseEvent, PropsWithChildren, useEffect, useState } from 'react';
-import { cn } from '@/utils';
+import {
+  type ButtonHTMLAttributes,
+  type CSSProperties,
+  type FC,
+  type JSX,
+  type MouseEvent,
+  type PropsWithChildren,
+  useEffect,
+  useState,
+} from 'react';
 import '@/styles/index.css';
 
 type RippleProps = {

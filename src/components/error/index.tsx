@@ -1,9 +1,9 @@
-/* eslint-disable max-len */
-import { FC } from 'react';
+import { useNavigation } from '@/hooks';
 import { isValidUrl } from '@/utils';
+import type { FC } from 'react';
+import React from 'react';
 import { Wrapper } from '../form';
 import { Button } from '../ui';
-import { useNavigation } from '@/hooks';
 
 export type TError = {
   goBackRedirectTo: string;
@@ -12,11 +12,11 @@ export type TError = {
 
 const defaultErrorMessage = 'Something went wrong';
 
-export const Error: FC<TError> = ({ error = defaultErrorMessage, goBackRedirectTo }) => {
+export const ErrorComponent: FC<TError> = ({ error = defaultErrorMessage, goBackRedirectTo }) => {
   const { navigate } = useNavigation();
 
   const onGoBackHandler = () => {
-    if (!isValidUrl(goBackRedirectTo)) navigate({to: goBackRedirectTo});
+    if (!isValidUrl(goBackRedirectTo)) navigate({ to: goBackRedirectTo });
     else window.location.href = goBackRedirectTo;
   };
 

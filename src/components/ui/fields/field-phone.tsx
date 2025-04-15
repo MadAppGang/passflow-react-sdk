@@ -1,15 +1,16 @@
+import { useOutsideClick } from '@/hooks';
+import { cn } from '@/utils';
+import { getCountryForTimezone } from 'countries-and-timezones';
+import { eq, size } from 'lodash';
 /* eslint-disable jsx-a11y/no-noninteractive-element-to-interactive-role */
 /* eslint-disable jsx-a11y/click-events-have-key-events */
-import { ChangeEvent, FC, InputHTMLAttributes, useMemo, useRef, useState } from 'react';
-import { CountryIso2, FlagImage, defaultCountries, parseCountry, usePhoneInput } from 'react-international-phone';
-import { getCountryForTimezone } from 'countries-and-timezones';
+import { type ChangeEvent, type FC, type InputHTMLAttributes, useMemo, useRef, useState } from 'react';
+import { type CountryIso2, FlagImage, defaultCountries, parseCountry, usePhoneInput } from 'react-international-phone';
 import { Button, Icon } from '..';
-import { eq, size } from 'lodash';
-import { cn } from '@/utils';
-import { useOutsideClick } from '@/hooks';
 
 import '@/styles/index.css';
 import 'react-international-phone/style.css';
+import React from 'react';
 
 type TFieldPhone = InputHTMLAttributes<HTMLInputElement> & {
   id: string;
@@ -160,8 +161,13 @@ export const FieldPhone: FC<TFieldPhone> = ({ id, onChange, isError = false, cla
                     <li
                       key={iso2}
                       title={name}
-                      role='button'
                       onClick={() => handleChangeCountry(iso2)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.preventDefault();
+                          handleChangeCountry(iso2);
+                        }
+                      }}
                       className={cn(
                         'passflow-group passflow-flex passflow-items-center passflow-justify-start passflow-bg-White',
                         'passflow-px-[12px] passflow-py-[7px] passflow-w-full passflow-max-h-[32px]',
@@ -200,8 +206,13 @@ export const FieldPhone: FC<TFieldPhone> = ({ id, onChange, isError = false, cla
                 <li
                   key={iso2}
                   title={name}
-                  role='button'
                   onClick={() => handleChangeCountry(iso2)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      handleChangeCountry(iso2);
+                    }
+                  }}
                   className={cn(
                     'passflow-group passflow-flex passflow-items-center passflow-justify-start passflow-bg-White',
                     'passflow-px-[12px] passflow-py-[7px] passflow-w-full passflow-max-h-[32px] hover:passflow-bg-Background',

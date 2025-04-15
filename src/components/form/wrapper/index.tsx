@@ -1,7 +1,7 @@
-/* eslint-disable max-len */
-import { FC, PropsWithChildren } from 'react';
 import { Icon } from '@/components/ui';
 import { cn } from '@/utils';
+/* eslint-disable max-len */
+import type { FC, PropsWithChildren } from 'react';
 import '@/styles/index.css';
 
 type TWrapper = PropsWithChildren & {

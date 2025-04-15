@@ -1,7 +1,7 @@
-import { useContext, useLayoutEffect, useState } from 'react';
-import { AppSettings, PassflowPasskeySettings, PassflowPasswordPolicySettings } from '@passflow/passflow-js-sdk';
-import { usePassflow } from './use-passflow';
 import { PassflowContext } from '@/context';
+import type { AppSettings, PassflowPasskeySettings, PassflowPasswordPolicySettings } from '@passflow/passflow-js-sdk';
+import { useContext, useLayoutEffect, useState } from 'react';
+import { usePassflow } from './use-passflow';
 
 export type UseAppSettingsProps = () => {
   appSettings: AppSettings | null;
@@ -56,8 +56,7 @@ export const useAppSettings: UseAppSettingsProps = () => {
       };
       void fetchAllSettings();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [dispatch, state.appSettings, passflow, state]);
 
   const reset = () => {
     setIsError(false);

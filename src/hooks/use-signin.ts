@@ -1,10 +1,10 @@
-import { useCallback, useState } from 'react';
 import type {
   PassflowPasskeyAuthenticateStartPayload,
   PassflowPasswordlessResponse,
   PassflowPasswordlessSignInPayload,
   PassflowSignInPayload,
 } from '@passflow/passflow-js-sdk';
+import { useCallback, useState } from 'react';
 import { usePassflow } from './use-passflow';
 
 export type UseSignInProps = () => {
@@ -32,9 +32,9 @@ export const useSignIn: UseSignInProps = () => {
     ): Promise<boolean | string | PassflowPasswordlessResponse> => {
       setIsLoading(true);
       const cleanup = () => setIsLoading(false);
-      
+
       // We'll make sure to call cleanup after the operation completes
-      try {        
+      try {
         if (type === 'password') await passflow.signIn(payload as PassflowSignInPayload);
         else if (type === 'passkey') {
           await passflow.passkeyAuthenticate(payload as PassflowPasskeyAuthenticateStartPayload);

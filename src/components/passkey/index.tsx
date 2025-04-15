@@ -1,10 +1,10 @@
-import { FC, useState } from 'react';
 import { useUserPasskeys } from '@/hooks';
+import { type FC, useState } from 'react';
 import { Wrapper } from '../form';
-import { PasskeyList } from './passkey-list';
 import { Button } from '../ui';
 import { PasskeyActions } from './passkey-actions';
 import { PasskeyDialog } from './passkey-dialog';
+import { PasskeyList } from './passkey-list';
 
 type TPasskey = {
   relaingPartyId: string;

@@ -15,20 +15,22 @@ export const useResetPassword: UseResetPasswordProps = () => {
   const [errorMessage, setErrorMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
-  const fetch = useCallback(async (newPassword: string): Promise<boolean> => {
-    try {
-      setIsLoading(true);
-      await passflow.resetPassword(newPassword);
-      setIsLoading(false);
-      return true;
-    } catch (e) {
-      setIsError(true);
-      const error = e as Error;
-      setErrorMessage(error.message);
-      return false;
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  const fetch = useCallback(
+    async (newPassword: string): Promise<boolean> => {
+      try {
+        setIsLoading(true);
+        await passflow.resetPassword(newPassword);
+        setIsLoading(false);
+        return true;
+      } catch (e) {
+        setIsError(true);
+        const error = e as Error;
+        setErrorMessage(error.message);
+        return false;
+      }
+    },
+    [passflow.resetPassword],
+  );
 
   const reset = () => {
     setIsError(false);

@@ -1,4 +1,4 @@
-import { FC } from 'react';
+import type { FC } from 'react';
 import { Wrapper } from '../wrapper';
 
 export const VerifyChallengeSuccess: FC = () => (

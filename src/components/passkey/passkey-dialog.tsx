@@ -1,5 +1,5 @@
 /* eslint-disable jsx-a11y/label-has-associated-control */
-import { ChangeEvent, FC, useState } from 'react';
+import { type ChangeEvent, type FC, useState } from 'react';
 import { Button, Dialog, DialogClose, DialogContent, DialogHeader, DialogTitle, FieldText } from '../ui';
 
 type TPasskeyDialog = {

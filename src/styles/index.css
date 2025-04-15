@@ -1,21 +1,22 @@
-@import 'tailwindcss/base';
-@import '@/styles/font.css';
+@import "tailwindcss/base";
+@import "@/styles/font.css";
 
-@import 'tailwindcss/components';
-@import '@/styles/button.css';
-@import '@/styles/field.css';
+@import "tailwindcss/components";
+@import "@/styles/button.css";
+@import "@/styles/field.css";
 
-@import 'tailwindcss/utilities';
+@import "tailwindcss/utilities";
 
 @layer components {
-  html, body {
+  html,
+  body {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
   }
 
   #passflow-wrapper {
-    font-family: 'Inter', sans-serif;
+    font-family: "Inter", sans-serif;
     box-sizing: border-box;
 
     -webkit-font-smoothing: antialiased;
@@ -26,7 +27,7 @@
   }
 
   .passflow-secondary-font {
-    font-family: 'Gasoek One', sans-serif;
+    font-family: "Gasoek One", sans-serif;
     font-style: normal;
   }
 

@@ -1,17 +1,17 @@
+import { Button, FieldPassword, Icon } from '@/components/ui';
+import { useAppSettings, useNavigation, usePassflow, useResetPassword } from '@/hooks';
+import { cn, getUrlWithTokens, isValidUrl, passwordValidation, undefinedOnCatch, useUrlParams } from '@/utils';
 /* eslint-disable max-len */
 /* eslint-disable react/jsx-props-no-spreading */
 /* eslint-disable jsx-a11y/label-has-associated-control */
-import { FC } from 'react';
+import type { FC } from 'react';
 import * as Yup from 'yup';
-import { Button, FieldPassword, Icon } from '@/components/ui';
 import { Wrapper } from '../wrapper';
-import { useAppSettings, useNavigation, usePassflow, useResetPassword } from '@/hooks';
-import { cn, getUrlWithTokens, isValidUrl, passwordValidation, undefinedOnCatch, useUrlParams } from '@/utils';
 import '@/styles/index.css';
-import { SuccessAuthRedirect } from '@/types';
-import { Token, parseToken } from '@passflow/passflow-js-sdk';
-import { Controller, useForm } from 'react-hook-form';
+import type { SuccessAuthRedirect } from '@/types';
+import { type Token, parseToken } from '@passflow/passflow-js-sdk';
 import { has } from 'lodash';
+import { Controller, useForm } from 'react-hook-form';
 
 const initialValues = {
   password: '',
@@ -70,7 +70,7 @@ export const ResetPassword: FC<TResetPassword> = ({ successAuthRedirect }) => {
     const status = await fetch(values.password);
     if (status) {
       if (!isValidUrl(resetTokenType?.redirect_url ?? successAuthRedirect))
-        navigate({to: resetTokenType?.redirect_url ?? successAuthRedirect});
+        navigate({ to: resetTokenType?.redirect_url ?? successAuthRedirect });
       else window.location.href = await getUrlWithTokens(passflow, resetTokenType?.redirect_url ?? successAuthRedirect);
     }
   };

@@ -1,22 +1,5 @@
-/* eslint-disable @typescript-eslint/no-misused-promises */
-/* eslint-disable react/jsx-props-no-spreading */
-/* eslint-disable max-len */
-/* eslint-disable complexity */
-/* eslint-disable jsx-a11y/label-has-associated-control */
-import { ChangeEvent, FC, useEffect, useMemo, useState } from 'react';
-import { Controller, useForm } from 'react-hook-form';
-import {
-  PassflowPasskeyRegisterStartPayload,
-  PassflowPasswordlessResponse,
-  PassflowPasswordlessSignInPayload,
-  PassflowUserPayload,
-  Providers,
-} from '@passflow/passflow-js-sdk';
-import { eq, has, size } from 'lodash';
-import { phone } from 'phone';
-import queryString from 'query-string';
 import { Button, FieldPassword, FieldPhone, FieldText, Icon, Link, ProvidersBox, Switch } from '@/components/ui';
-import { Wrapper } from '../wrapper';
+import { routes } from '@/context';
 import { useAppSettings, useNavigation, usePassflow, useProvider, useSignUp } from '@/hooks';
 import {
   cn,
@@ -29,11 +12,23 @@ import {
   isValidUrl,
   passwordValidation,
 } from '@/utils';
-import { routes } from '@/context';
+import type {
+  PassflowPasskeyRegisterStartPayload,
+  PassflowPasswordlessResponse,
+  PassflowPasswordlessSignInPayload,
+  PassflowUserPayload,
+  Providers,
+} from '@passflow/passflow-js-sdk';
+import { eq, has, size } from 'lodash';
+import { phone } from 'phone';
+import queryString from 'query-string';
+import React, { type ChangeEvent, type FC, useEffect, useMemo, useState } from 'react';
+import { Controller, useForm } from 'react-hook-form';
+import { Wrapper } from '../wrapper';
 import '@/styles/index.css';
-import { DefaultMethod, SuccessAuthRedirect } from '@/types';
-import { Error as ErrorComponent } from '@/components/error';
+import { ErrorComponent } from '@/components/error';
 import { withError } from '@/hocs';
+import type { DefaultMethod, SuccessAuthRedirect } from '@/types';
 
 const initialValues = {
   passkeyEmail: '',
@@ -148,7 +143,7 @@ export const SignUpForm: FC<TSignUp> = ({
     const status = await fetch(payload, 'password');
 
     if (status) {
-      if (!isValidUrl(successAuthRedirect)) navigate({to: successAuthRedirect});
+      if (!isValidUrl(successAuthRedirect)) navigate({ to: successAuthRedirect });
       else window.location.href = await getUrlWithTokens(passflow, successAuthRedirect);
     }
   };
@@ -163,7 +158,7 @@ export const SignUpForm: FC<TSignUp> = ({
     const response = await fetch(payload, 'passkey');
 
     if (response) {
-      if (!isValidUrl(successAuthRedirect)) navigate({to: successAuthRedirect});
+      if (!isValidUrl(successAuthRedirect)) navigate({ to: successAuthRedirect });
       else window.location.href = await getUrlWithTokens(passflow, successAuthRedirect);
     }
   };
@@ -194,10 +189,10 @@ export const SignUpForm: FC<TSignUp> = ({
     });
 
     if (eq(currentChallegeType, 'otp') && (response satisfies PassflowPasswordlessResponse))
-      navigate({to: verifyOTPPath ?? routes.verify_otp.path, search: newParams});
+      navigate({ to: verifyOTPPath ?? routes.verify_otp.path, search: newParams });
 
     if (eq(currentChallegeType, 'magic_link') && (response satisfies PassflowPasswordlessResponse))
-      navigate({to: verifyMagicLinkPath ?? routes.verify_magic_link.path, search: newParams});
+      navigate({ to: verifyMagicLinkPath ?? routes.verify_magic_link.path, search: newParams });
   };
 
   const onSubmitHandler = async (data: Partial<typeof initialValues>, type: 'passkey' | 'password' | 'passwordless') => {
@@ -207,7 +202,7 @@ export const SignUpForm: FC<TSignUp> = ({
   };
 
   const validateSignUpPasswordless = async () => {
-    let isValidated;
+    let isValidated = false;
     if (eq(defaultMethod, 'phone')) isValidated = await trigger(['phone']);
     if (eq(defaultMethod, 'email_or_username')) isValidated = await trigger(['email_or_username']);
 

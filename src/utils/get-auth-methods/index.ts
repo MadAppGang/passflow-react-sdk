@@ -1,4 +1,4 @@
-import { AuthStrategies, FimStrategy, InternalStrategy, Providers } from '@passflow/passflow-js-sdk';
+import type { AuthStrategies, FimStrategy, InternalStrategy, Providers } from '@passflow/passflow-js-sdk';
 import { eq } from 'lodash';
 
 export type AuthMethods = {
@@ -60,8 +60,7 @@ export const getAuthMethods = (strategies?: AuthStrategies[]): AuthMethods => {
 
   if (!strategies) return methods;
 
-  // eslint-disable-next-line complexity
-  strategies.forEach((strategy: AuthStrategies) => {
+  for (const strategy of strategies) {
     const { identity, challenge, fim_type: fimType } = strategy.strategy as InternalStrategy & FimStrategy;
 
     switch (strategy.type) {
@@ -105,7 +104,7 @@ export const getAuthMethods = (strategies?: AuthStrategies[]): AuthMethods => {
       default:
         throw new Error(`Unsupported strategy type: ${strategy.type}`);
     }
-  });
+  }
 
   return methods;
 };

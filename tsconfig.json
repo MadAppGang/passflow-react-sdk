@@ -33,10 +33,7 @@
     "noFallthroughCasesInSwitch": true,
     "noUncheckedIndexedAccess": true
   },
-  "include": [
-    "src",
-    "playwright"
-  ],
+  "include": ["src", "playwright"],
   "exclude": ["node_modules", "dist", "scripts", "playwright/tests-examples", "vite.config.ts"],
   "references": [
     {

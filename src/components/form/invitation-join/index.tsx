@@ -1,12 +1,12 @@
+import { Error as ErrorComponent } from '@/components/error';
+import { Button } from '@/components/ui';
+import { useJoinInvite, useNavigation, usePassflow } from '@/hooks';
+import { type InvitationToken, parseToken } from '@passflow/passflow-js-sdk';
 /* eslint-disable max-len */
 /* eslint-disable complexity */
 import { type FC, useState } from 'react';
 import * as Yup from 'yup';
-import { type InvitationToken, parseToken } from '@passflow/passflow-js-sdk';
-import { Error as ErrorComponent } from '@/components/error';
-import { Button } from '@/components/ui';
 import { Wrapper } from '../wrapper';
-import { useJoinInvite, useNavigation, usePassflow } from '@/hooks';
 import '@/styles/index.css';
 import { withError } from '@/hocs';
 import { undefinedOnCatch, useUrlParams } from '@/utils';
@@ -43,7 +43,7 @@ const InvitationJoinFlow: FC = () => {
         setLoading(true);
         const refreshTokenResponse = await passflow.refreshToken();
         setLoading(false);
-        if (refreshTokenResponse) navigate({to: successJoinPath});
+        if (refreshTokenResponse) navigate({ to: successJoinPath });
       }
     }
   };

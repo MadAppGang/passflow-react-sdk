@@ -1,4 +1,4 @@
-import { Providers } from '@passflow/passflow-js-sdk';
+import type { Providers } from '@passflow/passflow-js-sdk';
 import { usePassflow } from './use-passflow';
 
 export type UseProviderProps = (redirectUrl: string) => {

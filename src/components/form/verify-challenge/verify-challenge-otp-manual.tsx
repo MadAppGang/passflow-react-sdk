@@ -1,18 +1,18 @@
-/* eslint-disable no-void */
-/* eslint-disable complexity */
-import { FC, useEffect, useState } from 'react';
-import OtpInput from 'react-otp-input';
 import { Button, Icon } from '@/components/ui';
-import { Wrapper } from '../wrapper';
 import { useNavigation, usePassflow, usePasswordlessComplete, useSignIn } from '@/hooks';
-import { TimerButton } from './timer-button';
-import {
+import { cn, getUrlWithTokens, isValidUrl, useUrlParams } from '@/utils';
+import type {
   InternalStrategyChallenge,
   PassflowPasswordlessResponse,
   PassflowPasswordlessSignInCompletePayload,
   PassflowPasswordlessSignInPayload,
 } from '@passflow/passflow-js-sdk';
-import { cn, getUrlWithTokens, isValidUrl, useUrlParams } from '@/utils';
+/* eslint-disable no-void */
+/* eslint-disable complexity */
+import React, { type FC, useEffect, useState } from 'react';
+import OtpInput from 'react-otp-input';
+import { Wrapper } from '../wrapper';
+import { TimerButton } from './timer-button';
 import { VerifyChallengeSuccess } from './varify-challenge-success';
 
 type VerifyChallengeOTPManualProps = {
@@ -82,35 +82,25 @@ export const VerifyChallengeOTPManual: FC<VerifyChallengeOTPManualProps> = ({
         otp: valueOTP,
       };
       const fetchData = async () => {
-        const response = await fetchPasswordlessComplete(payload)
+        const response = await fetchPasswordlessComplete(payload);
         if (response) {
           if (response.redirect_url) {
-            if (!isValidUrl(response.redirect_url)) navigate({to: response.redirect_url});
+            if (!isValidUrl(response.redirect_url)) navigate({ to: response.redirect_url });
             else window.location.href = await getUrlWithTokens(passflow, response.redirect_url);
           } else {
             setShowSuccessMessage(true);
           }
         }
       };
-
       void fetchData();
     }
-  }, [
-    valueOTP,
-    numInputs,
-    fetchPasswordlessComplete,
-    challengeId,
-    successAuthRedirect,
-    navigate,
-    passflow,
-    type,
-  ]);
+  }, [valueOTP, numInputs, fetchPasswordlessComplete, challengeId, navigate, passflow]);
 
   if (paramsError) throw new Error(paramsError);
 
   if (showSuccessMessage) return <VerifyChallengeSuccess />;
 
-  const onClickNavigateBack = () => navigate({to: signUpPath});
+  const onClickNavigateBack = () => navigate({ to: signUpPath });
 
   return (
     <Wrapper

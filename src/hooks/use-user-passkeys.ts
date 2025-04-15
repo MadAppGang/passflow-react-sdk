@@ -1,6 +1,6 @@
+import type { PassflowUserPasskey } from '@passflow/passflow-js-sdk';
 import { useLayoutEffect, useState } from 'react';
 import { usePassflow } from './use-passflow';
-import { PassflowUserPasskey } from '@passflow/passflow-js-sdk';
 
 export type UseUserPasskeysProps = () => {
   data: PassflowUserPasskey[];
@@ -37,10 +37,14 @@ export const useUserPasskeys: UseUserPasskeysProps = () => {
     void fetch();
   }, [passflow]);
 
-  const createUserPasskey = async (relyingPartyId: string, passkeyUsername?: string, passkeyDisplayName?: string): Promise<void> => {
+  const createUserPasskey = async (
+    relyingPartyId: string,
+    passkeyUsername?: string,
+    passkeyDisplayName?: string,
+  ): Promise<void> => {
     setIsLoading(true);
     try {
-      await passflow.addUserPasskey({relyingPartyId, passkeyUsername, passkeyDisplayName});
+      await passflow.addUserPasskey({ relyingPartyId, passkeyUsername, passkeyDisplayName });
     } catch (e) {
       setIsError(true);
       const error = e as Error;

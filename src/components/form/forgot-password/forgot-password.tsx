@@ -1,18 +1,18 @@
+import { Button, FieldPhone, FieldText, Icon, Link } from '@/components/ui';
+import { routes } from '@/context';
+import { useAppSettings, useForgotPassword, useNavigation } from '@/hooks';
+import { cn, emailRegex, getAuthMethods, getIdentityLabel, useUrlParams } from '@/utils';
+import type { PassflowSendPasswordResetEmailPayload } from '@passflow/passflow-js-sdk';
+import { eq, has, size } from 'lodash';
+import { phone } from 'phone';
 /* eslint-disable max-len */
 /* eslint-disable react/jsx-props-no-spreading */
 /* eslint-disable complexity */
 /* eslint-disable jsx-a11y/label-has-associated-control */
-import { FC, useMemo } from 'react';
-import * as Yup from 'yup';
-import { Button, FieldPhone, FieldText, Icon, Link } from '@/components/ui';
-import { Wrapper } from '../wrapper';
-import { useAppSettings, useForgotPassword, useNavigation } from '@/hooks';
-import { cn, emailRegex, getAuthMethods, getIdentityLabel, useUrlParams } from '@/utils';
-import { routes } from '@/context';
-import { PassflowSendPasswordResetEmailPayload } from '@passflow/passflow-js-sdk';
-import { eq, has, size } from 'lodash';
+import { type FC, useMemo } from 'react';
 import { Controller, useForm } from 'react-hook-form';
-import { phone } from 'phone';
+import * as Yup from 'yup';
+import { Wrapper } from '../wrapper';
 
 import '@/styles/index.css';
 import queryString from 'query-string';
@@ -92,7 +92,7 @@ export const ForgotPassword: FC<TForgotPassword> = ({
         ...Object.fromEntries(currentSearchParams.entries()),
         ...payload,
       });
-      navigate({to: forgotPasswordSuccessPath, search: newParams});
+      navigate({ to: forgotPasswordSuccessPath, search: newParams });
     }
   };
 

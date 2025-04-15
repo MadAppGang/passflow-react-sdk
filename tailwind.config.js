@@ -8,7 +8,7 @@ export default {
     preflight: false,
   },
   experimental: {
-    optimizeUniversalDefaults: true
+    optimizeUniversalDefaults: true,
   },
   theme: {
     extend: {

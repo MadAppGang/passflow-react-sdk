@@ -1,5 +1,5 @@
-import { AppSettings, Passflow, PassflowPasskeySettings, PassflowPasswordPolicySettings } from '@passflow/passflow-js-sdk';
-import { Dispatch, createContext } from 'react';
+import type { AppSettings, Passflow, PassflowPasskeySettings, PassflowPasswordPolicySettings } from '@passflow/passflow-js-sdk';
+import { type Dispatch, createContext } from 'react';
 
 export type PassflowState = {
   appSettings: AppSettings | null;

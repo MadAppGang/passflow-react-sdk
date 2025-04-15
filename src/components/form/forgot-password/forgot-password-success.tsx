@@ -1,13 +1,13 @@
+import { Button } from '@/components/ui';
+import { useForgotPassword } from '@/hooks';
 /* eslint-disable no-nested-ternary */
 /* eslint-disable complexity */
 import * as Yup from 'yup';
-import { Button } from '@/components/ui';
 import { Wrapper } from '../wrapper';
-import { useForgotPassword } from '@/hooks';
 import '@/styles/index.css';
-import { PassflowSendPasswordResetEmailPayload } from '@passflow/passflow-js-sdk';
-import { eq } from 'lodash';
 import { useUrlParams } from '@/utils';
+import type { PassflowSendPasswordResetEmailPayload } from '@passflow/passflow-js-sdk';
+import { eq } from 'lodash';
 
 const searchParamsForgotPasswordSuccessSchema = Yup.object().shape({
   identity: Yup.string().oneOf(['email', 'phone']).required(),
@@ -21,11 +21,7 @@ export const ForgotPasswordSuccess = () => {
 
   const params = {
     identity: get('email') ? 'email' : get('phone') ? 'phone' : null,
-    identityValue: get('email')
-      ? get('email')
-      : get('phone')
-        ? get('phone')
-        : null,
+    identityValue: get('email') ? get('email') : get('phone') ? get('phone') : null,
     redirectUrl: get('redirect_url'),
   };
 

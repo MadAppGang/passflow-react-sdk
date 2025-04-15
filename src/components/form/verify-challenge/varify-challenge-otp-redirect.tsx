@@ -1,7 +1,6 @@
-/* eslint-disable complexity */
-import { useEffect, useState } from 'react';
 import { useNavigation, usePassflow, usePasswordlessComplete } from '@/hooks';
 import { getUrlWithTokens, isValidUrl } from '@/utils';
+import React, { useEffect, useState } from 'react';
 import { VerifyChallengeSuccess } from './varify-challenge-success';
 
 type VerifyChallengeOTPRedirectProps = {
@@ -17,6 +16,7 @@ export const VerifyChallengeOTPRedirect = ({ otp, challengeId, appId }: VerifyCh
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
   const { fetch, isError, error, isLoading } = usePasswordlessComplete();
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
   useEffect(() => {
     const fetchData = async () => {
       if (!appId) {
@@ -33,11 +33,11 @@ export const VerifyChallengeOTPRedirect = ({ otp, challengeId, appId }: VerifyCh
       }
 
       if (!isLoading) {
-        const response = await fetch({otp, challenge_id: challengeId});
+        const response = await fetch({ otp, challenge_id: challengeId });
 
         if (response) {
           if (response.redirect_url) {
-            if (!isValidUrl(response.redirect_url)) navigate({to: response.redirect_url});
+            if (!isValidUrl(response.redirect_url)) navigate({ to: response.redirect_url });
             else window.location.href = await getUrlWithTokens(passflow, response.redirect_url);
           } else {
             setShowSuccessMessage(true);

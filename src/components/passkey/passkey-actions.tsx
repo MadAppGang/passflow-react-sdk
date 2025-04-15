@@ -1,6 +1,6 @@
-import { FC } from 'react';
-import { Button, Icon, Popover, PopoverContent, PopoverTrigger } from '../ui';
 import { cn } from '@/utils';
+import type { FC } from 'react';
+import { Button, Icon, Popover, PopoverContent, PopoverTrigger } from '../ui';
 
 type TPasskeyActions = {
   passkeyId: string;

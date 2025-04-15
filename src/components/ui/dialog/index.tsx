@@ -1,7 +1,7 @@
-/* eslint-disable react/jsx-props-no-spreading */
-import { ComponentPropsWithoutRef, ElementRef, HTMLAttributes, forwardRef } from 'react';
-import * as DialogPrimitive from '@radix-ui/react-dialog';
 import { cn } from '@/utils';
+import * as DialogPrimitive from '@radix-ui/react-dialog';
+/* eslint-disable react/jsx-props-no-spreading */
+import { type ComponentPropsWithoutRef, type ElementRef, type HTMLAttributes, forwardRef } from 'react';
 
 const Dialog = DialogPrimitive.Root;
 

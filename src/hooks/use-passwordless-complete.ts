@@ -1,5 +1,5 @@
+import type { PassflowPasswordlessSignInCompletePayload, PassflowValidationResponse } from '@passflow/passflow-js-sdk';
 import { useCallback, useState } from 'react';
-import { PassflowPasswordlessSignInCompletePayload, PassflowValidationResponse } from '@passflow/passflow-js-sdk';
 import { usePassflow } from './use-passflow';
 
 export type UsePasswordlessCompleteProps = () => {
@@ -30,8 +30,7 @@ export const usePasswordlessComplete: UsePasswordlessCompleteProps = () => {
         return null;
       }
     },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [],
+    [passflow],
   );
 
   const reset = () => {

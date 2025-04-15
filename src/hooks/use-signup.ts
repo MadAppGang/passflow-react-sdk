@@ -1,10 +1,10 @@
-import { useCallback, useState } from 'react';
-import {
+import type {
   PassflowPasskeyRegisterStartPayload,
   PassflowPasswordlessResponse,
   PassflowPasswordlessSignInPayload,
   PassflowSignUpPayload,
 } from '@passflow/passflow-js-sdk';
+import { useCallback, useState } from 'react';
 import { usePassflow } from './use-passflow';
 
 export type UseSignUpProps = () => {
@@ -51,8 +51,7 @@ export const useSignUp: UseSignUpProps = () => {
         return false;
       }
     },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [],
+    [passflow.signUp, passflow.passkeyRegister, passflow.passwordlessSignIn],
   );
 
   const reset = () => {

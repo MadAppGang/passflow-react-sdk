@@ -26,8 +26,7 @@ export const useLogout: UseLogoutProps = () => {
       setErrorMessage(error.message);
       return false;
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [passflow]);
 
   return { fetch, isLoading, isError, error: errorMessage } as const;
 };
