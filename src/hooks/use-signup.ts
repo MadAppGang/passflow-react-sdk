@@ -49,6 +49,8 @@ export const useSignUp: UseSignUpProps = () => {
         setErrorMessage(error.message);
         cleanup();
         return false;
+      } finally {
+        cleanup();
       }
     },
     [passflow.signUp, passflow.passkeyRegister, passflow.passwordlessSignIn],

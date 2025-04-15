@@ -15,6 +15,7 @@ import { ErrorComponent } from '@/components/error';
 import { withError } from '@/hocs';
 import type { SuccessAuthRedirect } from '@/types';
 import { Navigate, Route, Routes } from 'react-router-dom';
+import { getUrlErrors } from '@/utils';
 
 export type PassflowProps = {
   federatedDisplayMode: 'modal' | 'redirect';
@@ -52,6 +53,12 @@ const PassflowWrapper: FC<PassflowProps> = ({
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isRouterAvailable, setIsRouterAvailable] = useState<boolean>(false);
   const [dependencyError, setDependencyError] = useState<string>('');
+
+  const { error: errorUrlSuccess, message: messageUrlSuccess } = getUrlErrors(successAuthRedirect);
+  const { error: errorUrlCallback, message: messageUrlCallback } = getUrlErrors(federatedCallbackUrl);
+
+  if (errorUrlSuccess && messageUrlSuccess) throw new Error(messageUrlSuccess);
+  if (errorUrlCallback && messageUrlCallback) throw new Error(messageUrlCallback);
 
   const routesWithPrefix = useMemo(() => combineRoutesWithPrefix(pathPrefix), [pathPrefix]);
 

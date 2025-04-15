@@ -24,7 +24,6 @@ export const useSignIn: UseSignInProps = () => {
   const [isError, setIsError] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
-  // biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
   const fetch = useCallback(
     async (
       payload: PassflowPasskeyAuthenticateStartPayload | PassflowSignInPayload | PassflowPasswordlessSignInPayload,
@@ -51,9 +50,11 @@ export const useSignIn: UseSignInProps = () => {
         setErrorMessage(error.message);
         cleanup();
         return false;
+      } finally {
+        cleanup();
       }
     },
-    [],
+    [passflow.passkeyAuthenticate, passflow.passwordlessSignIn, passflow.signIn],
   );
 
   const reset = () => {

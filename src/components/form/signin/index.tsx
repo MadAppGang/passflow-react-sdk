@@ -4,7 +4,7 @@ import { routes } from '@/context';
 import { withError } from '@/hocs';
 import { useAppSettings, useNavigation, usePassflow, useProvider, useSignIn } from '@/hooks';
 import type { DefaultMethod, SuccessAuthRedirect } from '@/types';
-import { cn, emailRegex, getAuthMethods, getIdentityLabel, getPasswordlessData, getUrlWithTokens, isValidUrl } from '@/utils';
+import { cn, emailRegex, getAuthMethods, getIdentityLabel, getPasswordlessData, getUrlErrors, getUrlWithTokens, isValidUrl } from '@/utils';
 import type {
   PassflowPasskeyAuthenticateStartPayload,
   PassflowPasswordlessResponse,
@@ -67,6 +67,10 @@ export const SignInForm: FC<TSignIn> = ({
   if (isErrorApp) throw new Error(errorApp);
 
   const authMethods = useMemo(() => getAuthMethods(appSettings?.auth_strategies), [appSettings]);
+
+  const { error: errorUrl, message: messageUrl } = getUrlErrors();
+
+  if (errorUrl && messageUrl) throw new Error(messageUrl);
 
   const { fetch, isError, error, reset, isLoading } = useSignIn();
 
@@ -358,13 +362,18 @@ export const SignInForm: FC<TSignIn> = ({
                     >
                       Password
                     </label>
-                    <Link
-                      to={forgotPasswordPath ?? routes.forgot_password.path}
-                      search={queryString.stringify({ default_method: defaultMethod })}
-                      className='passflow-text-Primary passflow-text-caption-1-medium'
-                    >
-                      Forgot password
-                    </Link>
+                    <div className="flex items-center justify-between">
+                      <Link 
+                        to={forgotPasswordPath ?? routes.forgot_password.path}
+                        search={queryString.stringify({
+                          ...queryString.parse(window.location.search),
+                          default_method: defaultMethod
+                        })}
+                        className='passflow-text-Primary passflow-text-caption-1-medium'
+                      >
+                        Forgot Password?
+                      </Link>
+                    </div>
                   </div>
                   <Controller
                     name='password'
@@ -474,7 +483,11 @@ export const SignInForm: FC<TSignIn> = ({
         >
           <p className='passflow-text-Grey-Six passflow-text-body-2-medium passflow-text-center'>
             Don&apos;t have an account?{' '}
-            <Link to={signUpPath ?? routes.signup.path} className='passflow-text-Primary passflow-text-body-2-semiBold'>
+            <Link 
+              to={signUpPath ?? routes.signup.path} 
+              search={window.location.search}
+              className='passflow-text-Primary passflow-text-body-2-semiBold'
+            >
               Sign Up
             </Link>
           </p>

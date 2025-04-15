@@ -15,14 +15,14 @@ export const useUrlParams = <T extends Record<string, string>>(defaultValues?: T
     let hasChanged = false;
 
     for (const [key, value] of Object.entries(defaultValues)) {
-      if (!searchParams.has(key)) {
+      if (!searchParams.has(key) && value !== '') {
         searchParams.set(key, value);
         hasChanged = true;
       }
     }
 
     if (hasChanged) {
-      const newUrl = `${window.location.pathname}?${searchParams.toString()}${window.location.hash}`;
+      const newUrl = `${window.location.pathname}${searchParams.toString() ? `?${searchParams.toString()}` : ''}${window.location.hash}`;
       window.history.replaceState(null, '', newUrl);
     }
   }
@@ -44,7 +44,10 @@ export const useUrlParams = <T extends Record<string, string>>(defaultValues?: T
    * Get parameter value
    * @param key Parameter key
    */
-  const get = (key: string) => searchParams.get(key);
+  const get = (key: string) => {
+    const value = searchParams.get(key);
+    return value === '' ? null : value;
+  };
 
   /**
    * Set parameters
@@ -61,7 +64,7 @@ export const useUrlParams = <T extends Record<string, string>>(defaultValues?: T
       }
     }
 
-    const newUrl = `${window.location.pathname}?${newSearchParams.toString()}${window.location.hash}`;
+    const newUrl = `${window.location.pathname}${newSearchParams.toString() ? `?${newSearchParams.toString()}` : ''}${window.location.hash}`;
     window.history.pushState(null, '', newUrl);
   };
 

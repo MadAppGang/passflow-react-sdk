@@ -1,7 +1,7 @@
 {
   "name": "@passflow/passflow-react-sdk",
   "description": "Passflow React UI Kit",
-  "version": "0.1.26",
+  "version": "0.1.27",
   "type": "module",
   "files": [
     "dist"
@@ -31,7 +31,8 @@
     "format": "biome format src",
     "format:fix": "biome format --write src",
     "preview": "vite preview",
-    "test:ui": "pnpm playwright test",
+    "test": "pnpm playwright test",
+    "test:ui": "pnpm playwright test --ui",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build"
   },
@@ -40,7 +41,7 @@
     "react-dom": "^18.0.0 || ^19.0.0"
   },
   "dependencies": {
-    "@passflow/passflow-js-sdk": "^0.1.21",
+    "@passflow/passflow-js-sdk": "^0.1.23",
     "@radix-ui/react-dialog": "^1.1.6",
     "@radix-ui/react-popover": "^1.1.6",
     "@storybook/react": "^8.6.7",
