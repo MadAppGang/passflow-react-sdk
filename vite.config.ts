@@ -2,14 +2,12 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import dts from 'vite-plugin-dts';
 import EnvironmentPlugin from 'vite-plugin-environment';
-import path from 'path';
-import { dependencies, peerDependencies, optionalDependencies } from './package.json';
+import path from 'node:path';
+import { dependencies, peerDependencies } from './package.json';
 import tailwindcss from 'tailwindcss';
 import cssnano from 'cssnano';
 
 const baseExternal = [...Object.keys(dependencies), ...Object.keys(peerDependencies), 'react/jsx-runtime'];
-
-const optionalExternal = Object.keys(optionalDependencies || {});
 
 // https://vitejs.dev/config/
 export default defineConfig({
@@ -23,7 +21,7 @@ export default defineConfig({
     },
     rollupOptions: {
       external: (id) => {
-        return baseExternal.includes(id) || optionalExternal.some((dep) => id.startsWith(dep));
+        return baseExternal.includes(id);
       },
       output: {
         globals: {
