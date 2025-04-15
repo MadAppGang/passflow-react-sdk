@@ -1,11 +1,11 @@
+import type { TError } from '@/components/error';
+import type { PassflowProps } from '@/components/flow/passflow';
+import type { TSignIn, TSignUp } from '@/components/form';
+import { PassflowContext } from '@/context';
 /* eslint-disable react/prop-types */
 /* eslint-disable react/jsx-props-no-spreading */
-import { ComponentType, useContext } from 'react';
-import { TError } from '@/components/error';
-import { PassflowContext } from '@/context';
+import { type ComponentType, useContext } from 'react';
 import { ErrorBoundary } from 'react-error-boundary';
-import { TSignIn, TSignUp } from '@/components/form';
-import { PassflowProps } from '@/components/flow/passflow';
 
 type UnionType = TSignIn | TSignUp | PassflowProps;
 type TFallbackComponentProps = {

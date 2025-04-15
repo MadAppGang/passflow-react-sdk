@@ -8,6 +8,7 @@
   "typescript.enablePromptUseWorkspaceTsdk": true,
   "prettier.prettierPath": ".yarn/sdks/prettier/index.cjs",
   "cSpell.words": [
+    "Holiak",
     "Passflow"
   ]
 }

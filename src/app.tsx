@@ -1,9 +1,9 @@
 import { PassflowFlow } from '@/components/flow';
-import { BrowserRouter, useNavigate } from 'react-router-dom';
-import type { PassflowConfig } from '@passflow/passflow-js-sdk';
-import { PassflowProvider } from './components/provider';
-import type { FC, PropsWithChildren } from 'react';
 import type { NavigateOptions } from '@/context';
+import type { PassflowConfig } from '@passflow/passflow-js-sdk';
+import type { FC, PropsWithChildren } from 'react';
+import { BrowserRouter, useNavigate } from 'react-router-dom';
+import { PassflowProvider } from './components/provider';
 
 const passflowConfig: PassflowConfig = {
   url: process.env.PASSFLOW_URL ?? 'http://localhost:5432',
@@ -12,9 +12,7 @@ const passflowConfig: PassflowConfig = {
   scopes: ['openid', 'email', 'profile', 'offline'],
 };
 
-export const PassflowProviderWrapper: FC<PropsWithChildren> = ({
-  children,
-}) => {
+export const PassflowProviderWrapper: FC<PropsWithChildren> = ({ children }) => {
   const navigate = useNavigate();
 
   return (
@@ -29,10 +27,10 @@ export const PassflowProviderWrapper: FC<PropsWithChildren> = ({
             pathname: options.to,
             search: options.search,
           },
-          { replace: options.replace }
+          { replace: options.replace },
         )
       }
-      router="react-router"
+      router='react-router'
     >
       {children}
     </PassflowProvider>
