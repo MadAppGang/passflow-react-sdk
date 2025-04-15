@@ -1,10 +1,8 @@
-import { Error as ErrorComponent } from '@/components/error';
+import { ErrorComponent } from '@/components/error';
 import { Button } from '@/components/ui';
 import { useJoinInvite, useNavigation, usePassflow } from '@/hooks';
 import { type InvitationToken, parseToken } from '@passflow/passflow-js-sdk';
-/* eslint-disable max-len */
-/* eslint-disable complexity */
-import { type FC, useState } from 'react';
+import React, { type FC, useState } from 'react';
 import * as Yup from 'yup';
 import { Wrapper } from '../wrapper';
 import '@/styles/index.css';
