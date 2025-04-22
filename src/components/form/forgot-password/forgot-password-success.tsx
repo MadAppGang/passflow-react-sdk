@@ -1,5 +1,5 @@
 import { Button } from '@/components/ui';
-import { useForgotPassword } from '@/hooks';
+import { useAppSettings, useForgotPassword } from '@/hooks';
 /* eslint-disable no-nested-ternary */
 /* eslint-disable complexity */
 import * as Yup from 'yup';
@@ -16,6 +16,7 @@ const searchParamsForgotPasswordSuccessSchema = Yup.object().shape({
 });
 
 export const ForgotPasswordSuccess = () => {
+  const { currentStyles } = useAppSettings();
   const { fetch: refetch } = useForgotPassword();
   const { get } = useUrlParams();
 
@@ -44,18 +45,20 @@ export const ForgotPasswordSuccess = () => {
   return (
     <Wrapper
       title={`Check your ${params.identity}`}
-      className='passflow-flex passflow-flex-col passflow-w-full passflow-mx-auto'
+      className='passflow-forgot-password-success-wrapper'
+      customCss={currentStyles?.custom_css}
     >
-      <div className='passflow-w-full passflow-max-w-[336px] passflow-flex passflow-flex-col passflow-gap-[32px] passflow-mt-[-8px]'>
-        <p className='passflow-text-body-2-medium passflow-text-Grey-One passflow-text-center'>
+      <div className='passflow-forgot-password-success-container'>
+        <p className='passflow-forgot-password-success-text'>
           We sent a link to {eq(params.identity, 'phone') ? 'phone number' : 'email address'}{' '}
-          <strong className='passflow-text-body-2-bold'>{params.identityValue}</strong>. Click the link to reset your password.
+          <strong className='passflow-forgot-password-success-text--strong'>{params.identityValue}</strong>. Click the link to
+          reset your password.
         </p>
         <Button
           size='big'
           variant='secondary'
           type='button'
-          className='passflow-text-body-2-medium passflow-m-auto passflow-max-w-[196px]'
+          className='passflow-button-resend-reset-password'
           // eslint-disable-next-line @typescript-eslint/no-misused-promises
           onClick={onClickResendHandler}
         >

@@ -1,5 +1,5 @@
 import { Button } from '@/components/ui';
-import { useSignIn } from '@/hooks';
+import { useAppSettings, useSignIn } from '@/hooks';
 /* eslint-disable no-nested-ternary */
 import type { PassflowPasswordlessSignInPayload } from '@passflow/passflow-js-sdk';
 import { Wrapper } from '../wrapper';
@@ -13,6 +13,7 @@ const challengeTypeFullString = {
 };
 
 export const VerifyChallengeMagicLink = () => {
+  const { currentStyles } = useAppSettings();
   const { fetch: refetch } = useSignIn();
   const { get } = useUrlParams({
     identity: '',
@@ -40,19 +41,23 @@ export const VerifyChallengeMagicLink = () => {
   };
 
   return (
-    <Wrapper title='Check your email' className='passflow-flex passflow-flex-col passflow-max-w-[336px] passflow-mx-auto'>
-      <div className='passflow-w-full passflow-flex passflow-flex-col passflow-gap-[32px] passflow-mt-[-24px]'>
-        <p className='passflow-text-body-2-medium passflow-text-Grey-One passflow-text-center passflow-mt-[8px]'>
+    <Wrapper
+      title='Check your email'
+      className='passflow-verify-challenge-magic-link-wrapper'
+      customCss={currentStyles?.custom_css}
+    >
+      <div className='passflow-verify-challenge-magic-link-container'>
+        <p className='passflow-verify-challenge-magic-link-text'>
           We sent a link to {challengeTypeFullString[identity as keyof typeof challengeTypeFullString]}{' '}
-          {identityValue && <strong className='passflow-text-body-2-bold'>{identityValue}</strong>}. Click on the link to
-          confirm your registration.
+          {identityValue && <strong className='passflow-verify-challenge-magic-link-text--strong'>{identityValue}</strong>}.
+          Click on the link to confirm your registration.
         </p>
         {type === 'passwordless' && (
           <Button
             size='big'
             variant='secondary'
             type='button'
-            className='passflow-text-body-2-medium passflow-m-auto passflow-max-w-[196px]'
+            className='passflow-button-resend-magic-link'
             // eslint-disable-next-line @typescript-eslint/no-misused-promises
             onClick={onClickResendHandler}
           >

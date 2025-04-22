@@ -13,7 +13,7 @@ type TFieldText = InputHTMLAttributes<HTMLInputElement> & {
 export const FieldText = forwardRef<HTMLInputElement, TFieldText>(
   ({ id, isError = false, className = '', disabled = false, ...rest }, ref) => {
     const styles = {
-      'passflow-field--warning': isError,
+      'passflow-field--error': isError,
     };
 
     return (
@@ -21,7 +21,7 @@ export const FieldText = forwardRef<HTMLInputElement, TFieldText>(
         ref={ref}
         id={id}
         type='text'
-        className={cn(styles, 'passflow-field passflow-field--focused', className)}
+        className={cn('passflow-field-input passflow-field--focused', styles, className)}
         disabled={disabled}
         {...rest}
       />

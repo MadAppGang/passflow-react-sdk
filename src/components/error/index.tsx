@@ -1,4 +1,4 @@
-import { useNavigation } from '@/hooks';
+import { useAppSettings, useNavigation } from '@/hooks';
 import { isValidUrl } from '@/utils';
 import type { FC } from 'react';
 import React from 'react';
@@ -14,6 +14,7 @@ const defaultErrorMessage = 'Something went wrong';
 
 export const ErrorComponent: FC<TError> = ({ error = defaultErrorMessage, goBackRedirectTo }) => {
   const { navigate } = useNavigation();
+  const { currentStyles } = useAppSettings();
 
   const onGoBackHandler = () => {
     if (!isValidUrl(goBackRedirectTo)) navigate({ to: goBackRedirectTo });
@@ -21,13 +22,13 @@ export const ErrorComponent: FC<TError> = ({ error = defaultErrorMessage, goBack
   };
 
   return (
-    <Wrapper iconId='logo-red'>
-      <div className='passflow-flex passflow-flex-col passflow-items-center passflow-justify-start passflow-gap-[32px] passflow-mt-[-8px]'>
-        <div className='passflow-flex passflow-flex-col passflow-items-center passflow-justify-start passflow-gap-[8px]'>
-          {error && <p className='passflow-text-title-2-bold passflow-text-Warning passflow-text-center'>{error}</p>}
-          <p className='passflow-text-body-2-medium passflow-text-Grey-One'>Please go back or try again later</p>
+    <Wrapper iconId='logo-red' className='passflow-error-wrapper' customCss={currentStyles?.custom_css}>
+      <div className='passflow-error-container'>
+        <div className='passflow-error-container-text-wrapper'>
+          {error && <p className='passflow-error-container-text'>{error}</p>}
+          <p className='passflow-error-container-text-secondary'>Please go back or try again later</p>
         </div>
-        <Button size='big' type='button' variant='primary' onClick={onGoBackHandler} className='passflow-max-w-[196px]'>
+        <Button size='big' type='button' variant='primary' onClick={onGoBackHandler} className='passflow-button-go-back-error'>
           Go back
         </Button>
       </div>

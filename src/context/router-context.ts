@@ -23,4 +23,7 @@ export const routes = {
   invitation_join: {
     path: '/invitation-join',
   },
+  passkey: {
+    path: '/passkeysss',
+  },
 };

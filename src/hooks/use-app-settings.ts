@@ -1,5 +1,12 @@
 import { PassflowContext } from '@/context';
-import type { AppSettings, PassflowPasskeySettings, PassflowPasswordPolicySettings } from '@passflow/passflow-js-sdk';
+import type {
+  AppSettings,
+  LoginWebAppStyle,
+  LoginWebAppTheme,
+  PassflowPasskeySettings,
+  PassflowPasswordPolicySettings,
+} from '@passflow/passflow-js-sdk';
+import { isEmpty } from 'lodash';
 import { useContext, useLayoutEffect, useState } from 'react';
 import { usePassflow } from './use-passflow';
 
@@ -11,6 +18,9 @@ export type UseAppSettingsProps = () => {
   isError: boolean;
   error: string;
   reset: () => void;
+  currentTheme: string;
+  currentStyles: LoginWebAppStyle | null;
+  loginAppTheme?: LoginWebAppTheme;
 };
 
 export const useAppSettings: UseAppSettingsProps = () => {
@@ -64,10 +74,54 @@ export const useAppSettings: UseAppSettingsProps = () => {
     setIsLoading(false);
   };
 
+  const applyThemeStyles = (style: LoginWebAppStyle) => {
+    const root = document.documentElement;
+
+    root.style.setProperty('--passflow-primary-color', style.primary_color);
+    root.style.setProperty('--passflow-text-color', style.text_color);
+    root.style.setProperty('--passflow-secondary-text-color', style.secondary_text_color);
+    root.style.setProperty('--passflow-background-color', style.background_color);
+    root.style.setProperty(
+      '--passflow-background-image',
+      isEmpty(style.background_image) ? 'none' : `url(${style.background_image})`,
+    );
+    root.style.setProperty('--passflow-card-color', style.card_color);
+    root.style.setProperty('--passflow-input-background-color', style.input_background_color);
+    root.style.setProperty('--passflow-input-border-color', style.input_border_color);
+    root.style.setProperty('--passflow-button-text-color', style.button_text_color);
+    root.style.setProperty('--passflow-passkey-button-text-color', style.passkey_button_text_color);
+    root.style.setProperty('--passflow-passkey-button-background-color', style.passkey_button_background_color);
+    root.style.setProperty('--passflow-divider-color', style.divider_color);
+    root.style.setProperty('--passflow-federated_button_background_color', style.federated_button_background_color);
+    root.style.setProperty('--passflow-federated_button_text_color', style.federated_button_text_color);
+
+    if (style.custom_css) {
+      const customStylesElement = document.querySelector('.psfw-custom-styles');
+      if (customStylesElement) {
+        customStylesElement.innerHTML = style.custom_css;
+      }
+    }
+  };
+
+  const currentTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+
+  const selectedStyle = state.appSettings?.login_app_theme
+    ? currentTheme === 'dark'
+      ? state.appSettings?.login_app_theme.dark_style
+      : state.appSettings?.login_app_theme.light_style
+    : null;
+
+  if (selectedStyle) {
+    applyThemeStyles(selectedStyle);
+  }
+
   return {
     appSettings: state.appSettings,
+    loginAppTheme: state.appSettings?.login_app_theme,
     passwordPolicy: state.passwordPolicy,
     passkeyProvider: state.passkeyProvider,
+    currentStyles: selectedStyle,
+    currentTheme: currentTheme,
     isLoading,
     isError,
     error: errorMessage,

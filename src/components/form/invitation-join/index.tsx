@@ -1,6 +1,6 @@
 import { ErrorComponent } from '@/components/error';
 import { Button } from '@/components/ui';
-import { useJoinInvite, useNavigation, usePassflow } from '@/hooks';
+import { useAppSettings, useJoinInvite, useNavigation, usePassflow } from '@/hooks';
 import { type InvitationToken, parseToken } from '@passflow/passflow-js-sdk';
 import React, { type FC, useState } from 'react';
 import * as Yup from 'yup';
@@ -14,6 +14,7 @@ const searchParamsInvitationJoinSchema = Yup.object().shape({
 });
 
 const InvitationJoinFlow: FC = () => {
+  const { currentStyles } = useAppSettings();
   const { navigate } = useNavigation();
   const { get } = useUrlParams();
   const passflow = usePassflow();
@@ -58,16 +59,16 @@ const InvitationJoinFlow: FC = () => {
     } = invitationTokenData as InvitationToken;
 
     return (
-      <Wrapper title='Join to Passflow'>
-        <span className='passflow-block passflow-text-body-2-medium passflow-text-Grey-One passflow-text-center passflow-mt-[8px]'>
+      <Wrapper title='Join to Passflow' className='passflow-invitation-join-wrapper' customCss={currentStyles?.custom_css}>
+        <span className='passflow-invitation-join-text'>
           {inviterName} has invited you to workspace
-          <br /> <strong className='passflow-text-body-2-bold'>{tenantName}</strong>
+          <br /> <strong className='passflow-invitation-join-text-strong'>{tenantName}</strong>
         </span>
         <Button
           size='big'
           type='button'
           variant='primary'
-          className='passflow-mt-[32px] passflow-mx-auto'
+          className='passflow-button-invitation-join'
           // eslint-disable-next-line no-void
           onClick={() => void onClickAcceptInvitationHandler(redirectUrl)}
           disabled={isInvitationJoinLoading || isLoading}

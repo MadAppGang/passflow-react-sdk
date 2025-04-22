@@ -76,25 +76,15 @@ export const FieldPhone: FC<TFieldPhone> = ({ id, onChange, isError = false, cla
     <div
       ref={refWrapper}
       className={cn(
-        'passflow-relative passflow-flex passflow-items-center passflow-justify-start passflow-bg-Background',
-        '!passflow-h-[48px] passflow-w-full passflow-rounded-[4px] passflow-text-body-2-medium passflow-text-Dark-Three',
-        { '!passflow-outline-Primary !passflow-outline-1 !passflow-outline': isFocused, 'passflow-field--warning': isError },
+        'passflow-field-phone-wrapper',
+        { 'passflow-field-phone-wrapper--focus': isFocused, 'passflow-field-phone-wrapper--error': isError },
         className,
       )}
     >
       {!show ? (
         <>
-          <Button
-            type='button'
-            variant='clean'
-            onClick={handleShow}
-            size='big'
-            className={cn(
-              'passflow-min-w-[41px] passflow-w-[41px] passflow-ml-[12px] passflow-rounded-[4px]',
-              'passflow-gap-[4px] passflow-bg-Background',
-            )}
-          >
-            <FlagImage iso2={country.iso2} className='passflow-w-[21px]' />
+          <Button type='button' variant='clean' onClick={handleShow} size='big' className={cn('passflow-button-show-country')}>
+            <FlagImage iso2={country.iso2} className='passflow-flag' style={{ width: '21px' }} />
             <Icon type='general' id='caret-down' size='small' />
           </Button>
           <input
@@ -104,55 +94,33 @@ export const FieldPhone: FC<TFieldPhone> = ({ id, onChange, isError = false, cla
             onChange={handlePhoneChange}
             onFocus={() => setIsFocused(true)}
             onBlur={() => setIsFocused(false)}
-            className={cn(
-              'passflow-w-full passflow-px-[8px] passflow-h-[48px] passflow-bg-Background passflow-text-Dark-Three',
-              'passflow-text-body-2-medium focus-within:passflow-outline-none passflow-rounded-[4px]',
-            )}
+            className={cn('passflow-field-phone-input')}
           />
         </>
       ) : (
-        <div
-          className={cn(
-            'passflow-w-full passflow-relative passflow-z-20 passflow-pl-[28px]',
-            'passflow-bg-Background passflow-rounded-[4px]',
-          )}
-        >
+        <div className={cn('passflow-field-country-search-wrapper')}>
           <input
             value={filterValue}
             onChange={(e) => setFilterValue(e.target.value)}
-            className={cn(
-              'passflow-w-full passflow-px-[8px] passflow-h-[48px] passflow-bg-Background passflow-text-Dark-Three',
-              'passflow-text-body-2-medium passflow-rounded-[4px] focus-visible:passflow-outline-none',
-            )}
+            className={cn('passflow-field-country-search')}
             onFocus={() => setIsFocused(true)}
             onBlur={() => setIsFocused(false)}
             placeholder='Search for a country'
           />
-          <div className='passflow-absolute passflow-left-[12px] passflow-top-1/2 -passflow-translate-y-1/2'>
+          <div className='passflow-field-country-search-icon'>
             <Icon type='general' id='search' size='small' />
-            {/* <SearchIcon /> */}
           </div>
         </div>
       )}
       <ul
-        className={cn(
-          'passflow-w-full passflow-absolute passflow-top-[2px] passflow-translate-y-[48px] passflow-left-0 passflow-z-10',
-          'passflow-max-h-[200px] passflow-rounded-b-[4px] passflow-overflow-y-auto passflow-bg-White',
-          'passflow-shadow-[0_4px_15px_0_#00000017]',
-          {
-            'passflow-block': show,
-            'passflow-hidden': !show,
-          },
-        )}
+        className={cn('passflow-country-search-wrapper', {
+          'passflow-country-search-wrapper--show': show,
+          'passflow-country-search-wrapper--hidden': !show,
+        })}
       >
         {size(filteredCountries) > 0 ? (
           <>
-            <div
-              className={cn(
-                'passflow-sticky passflow-top-0 passflow-left-0 passflow-w-full passflow-overflow-x-hidden',
-                'passflow-h-[10px] passflow-bg-White passflow-z-10',
-              )}
-            />
+            <div className='passflow-country-search-sticky-top' />
             {size(filterValue) === 0 && (
               <>
                 {preferredCountries.map((defCountry) => {
@@ -168,36 +136,15 @@ export const FieldPhone: FC<TFieldPhone> = ({ id, onChange, isError = false, cla
                           handleChangeCountry(iso2);
                         }
                       }}
-                      className={cn(
-                        'passflow-group passflow-flex passflow-items-center passflow-justify-start passflow-bg-White',
-                        'passflow-px-[12px] passflow-py-[7px] passflow-w-full passflow-max-h-[32px]',
-                        'hover:passflow-bg-Background passflow-cursor-pointer',
-                      )}
+                      className='passflow-country-search-item'
                     >
-                      <FlagImage iso2={iso2} className='passflow-w-[21px] passflow-h-[15px]' />
-                      <span className='passflow-ml-[8px] passflow-text-body-2-medium passflow-text-Dark-Three '>{name}</span>
-                      <span
-                        className={cn(
-                          'passflow-ml-auto passflow-text-body-2-medium passflow-text-Grey-Six',
-                          'group-hover:!passflow-text-Dark-Three',
-                        )}
-                      >
-                        +{dialCode}
-                      </span>
+                      <FlagImage iso2={iso2} className='passflow-country-search-flag' />
+                      <span className='passflow-country-search-name'>{name}</span>
+                      <span className='passflow-country-search-code'>+{dialCode}</span>
                     </li>
                   );
                 })}
-                <p
-                  className={cn(
-                    'passflow-text-caption-1-medium passflow-text-Grey-Six passflow-mx-[12px] passflow-pb-[6px]',
-                    'passflow-border-b passflow-border-GreySeven passflow-mb-[6px]',
-                    {
-                      'passflow-mt-[12px]': size(preferredCountries) > 0,
-                    },
-                  )}
-                >
-                  All contries
-                </p>
+                <p className='passflow-country-search-divider'>All contries</p>
               </>
             )}
             {filteredCountries.map((defCountry) => {
@@ -213,41 +160,18 @@ export const FieldPhone: FC<TFieldPhone> = ({ id, onChange, isError = false, cla
                       handleChangeCountry(iso2);
                     }
                   }}
-                  className={cn(
-                    'passflow-group passflow-flex passflow-items-center passflow-justify-start passflow-bg-White',
-                    'passflow-px-[12px] passflow-py-[7px] passflow-w-full passflow-max-h-[32px] hover:passflow-bg-Background',
-                    'passflow-cursor-pointer',
-                  )}
+                  className='passflow-country-search-item'
                 >
-                  <FlagImage iso2={iso2} className='passflow-w-[21px] passflow-h-[15px]' />
-                  <span className='passflow-ml-[8px] passflow-text-body-2-medium passflow-text-Dark-Three'>{name}</span>
-                  <span
-                    className={cn(
-                      'passflow-ml-auto passflow-text-body-2-medium passflow-text-Grey-Six',
-                      'group-hover:!passflow-text-Dark-Three',
-                    )}
-                  >
-                    +{dialCode}
-                  </span>
+                  <FlagImage iso2={iso2} className='passflow-country-search-flag' />
+                  <span className='passflow-country-search-name'>{name}</span>
+                  <span className='passflow-country-search-code'>+{dialCode}</span>
                 </li>
               );
             })}
-            <div
-              className={cn(
-                'passflow-sticky passflow-bottom-0 passflow-left-0 passflow-w-full passflow-h-[10px] passflow-bg-White',
-                'passflow-z-10 passflow-bg-White',
-              )}
-            />
+            <div className='passflow-country-search-sticky-bottom' />
           </>
         ) : (
-          <span
-            className={cn(
-              'passflow-text-body-2-medium passflow-text-Grey-Six passflow-mx-auto passflow-py-[15px]',
-              'passflow-text-center passflow-w-full passflow-block',
-            )}
-          >
-            No matches
-          </span>
+          <span className='passflow-country-search-no-matches'>No matches</span>
         )}
       </ul>
     </div>

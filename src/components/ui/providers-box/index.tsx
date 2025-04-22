@@ -12,24 +12,24 @@ type TProvidersBox = {
 };
 
 export const ProvidersBox: FC<TProvidersBox> = ({ providers, onClick, className = '' }) => {
-  const defaultStyle =
-    // eslint-disable-next-line max-len
-    'passflow-w-full passflow-flex passflow-justify-center passflow-items-center passflow-flex-row passflow-flex-wrap passflow-gap-[8px]';
-
-  const boxStyles = {
-    'passflow-flex-wrap': providers.length <= 1,
-    'passflow-grid passflow-grid-cols-providers passflow-gap-[8px] passflow-items-stretch passflow-justify-stretch':
-      providers.length > 1,
+  const styles = {
+    'passflow-providers-box--grid': providers.length > 1,
   };
 
   return (
-    <div className={cn(defaultStyle, boxStyles, className, 'passflow-grid-')}>
+    <div className={cn('passflow-providers-box', styles, className)}>
       {providers.map((provider) => (
-        <Button onClick={() => onClick(provider)} size='big' variant='provider' type='button' key={provider} withIcon>
+        <Button
+          onClick={() => onClick(provider)}
+          size='big'
+          variant='provider'
+          type='button'
+          key={provider}
+          withIcon
+          className='passflow-provider-item'
+        >
           <Icon size='small' type='providers' id={provider} />
-          {providers.length <= 2 && (
-            <p className='passflow-text-Dark-Three passflow-text-body-2-medium passflow-capitalize'>{provider}</p>
-          )}
+          {providers.length <= 2 && <p className='passflow-provider-text'>{provider}</p>}
         </Button>
       ))}
     </div>

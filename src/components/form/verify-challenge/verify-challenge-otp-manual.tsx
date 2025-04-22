@@ -1,5 +1,5 @@
 import { Button, Icon } from '@/components/ui';
-import { useNavigation, usePassflow, usePasswordlessComplete, useSignIn } from '@/hooks';
+import { useAppSettings, useNavigation, usePassflow, usePasswordlessComplete, useSignIn } from '@/hooks';
 import { cn, getUrlWithTokens, isValidUrl, useUrlParams } from '@/utils';
 import type {
   InternalStrategyChallenge,
@@ -14,6 +14,8 @@ import OtpInput from 'react-otp-input';
 import { Wrapper } from '../wrapper';
 import { TimerButton } from './timer-button';
 import { VerifyChallengeSuccess } from './varify-challenge-success';
+
+import '@/styles/index.css';
 
 type VerifyChallengeOTPManualProps = {
   identity: string | null;
@@ -46,6 +48,7 @@ export const VerifyChallengeOTPManual: FC<VerifyChallengeOTPManualProps> = ({
   signUpPath,
 }) => {
   const passflow = usePassflow();
+  const { currentStyles } = useAppSettings();
   const { navigate } = useNavigation();
   const { fetch: refetch } = useSignIn();
   const { fetch: fetchPasswordlessComplete, isError, error } = usePasswordlessComplete();
@@ -106,57 +109,46 @@ export const VerifyChallengeOTPManual: FC<VerifyChallengeOTPManualProps> = ({
     <Wrapper
       title={`Verify your ${identity}`}
       subtitle={`We sent OTP code to your ${challengeTypeFullString[identity as keyof typeof challengeTypeFullString]}`}
-      className='passflow-flex passflow-flex-col passflow-gap-[32px]'
+      className='passflow-verify-otp'
+      customCss={currentStyles?.custom_css}
     >
-      <div
-        className={`passflow-flex passflow-flex-col passflow-gap-[56px] passflow-p-[24px] passflow-pb-[56px]
-          passflow-rounded-[6px] passflow-shadow-[0_4px_15px_0_rgba(0,0,0,0.09)]`}
-      >
+      <div className='passflow-verify-otp-container'>
         {identityValue && (
           <Button
             size='big'
             type='button'
             variant='outlined'
-            className='passflow-relative passflow-bg-Background passflow-border-none'
+            className='passflow-verify-otp-button'
             withIcon
             onClick={onClickNavigateBack}
           >
             <Icon id={identity === 'email' ? 'mail' : 'phone'} type='general' size='small' />
             {identityValue}
-            <Icon
-              id='edit'
-              type='general'
-              size='small'
-              className='passflow-absolute passflow-top-1/2 passflow-right-[12px] -passflow-translate-y-1/2'
-            />
+            <Icon id='edit' type='general' size='small' className='passflow-verify-otp-button-icon' />
           </Button>
         )}
-        <div
-          id='otp-wrapper'
-          className='passflow-flex passflow-flex-col passflow-items-center passflow-justify-center passflow-gap-[6px]'
-        >
+        <div id='otp-wrapper' className='passflow-verify-otp-wrapper'>
           <OtpInput
             value={valueOTP}
             onChange={onChangeOTP}
             numInputs={numInputs}
             shouldAutoFocus={shouldAutoFocus}
             skipDefaultStyles
-            containerStyle='passflow-flex passflow-items-center passflow-justify-center passflow-gap-[10px]'
+            containerStyle='passflow-verify-otp-inputs'
             inputStyle={cn('passflow-field-otp', isError && 'passflow-field--warning')}
             inputType='text'
-            // eslint-disable-next-line react/jsx-props-no-spreading
             renderInput={(props) => <input {...props} />}
           />
           {isError && (
-            <div className='passflow-flex passflow-items-center passflow-justify-center passflow-gap-[4px]'>
+            <div className='passflow-verify-otp-error'>
               <Icon size='small' id='warning' type='general' className='icon-warning' />
-              <span className='passflow-text-caption-1-medium passflow-text-Warning'>{error}</span>
+              <span className='passflow-verify-otp-error-text'>{error}</span>
             </div>
           )}
         </div>
       </div>
       {type === 'passwordless' && (
-        <p className='passflow-text-Grey-One passflow-text-body-2-medium passflow-text-center'>
+        <p className='passflow-verify-otp-resend'>
           Don&apos;t receive a code?
           <TimerButton totalSecond={30} onClick={() => void onClickResendHandler()} />
         </p>

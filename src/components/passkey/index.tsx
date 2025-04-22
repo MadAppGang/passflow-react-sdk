@@ -1,4 +1,4 @@
-import { useUserPasskeys } from '@/hooks';
+import { useAppSettings, useUserPasskeys } from '@/hooks';
 import { type FC, useState } from 'react';
 import { Wrapper } from '../form';
 import { Button } from '../ui';
@@ -11,6 +11,7 @@ type TPasskey = {
 };
 
 export const Passkey: FC<TPasskey> = ({ relaingPartyId }) => {
+  const { currentStyles } = useAppSettings();
   const [editDialogIsOpen, setEditDialogIsOpen] = useState<boolean>(false);
   const [currentPasskeyId, setCurrentPasskeyId] = useState<string>('');
   const { data, createUserPasskey, editUserPasskey, deleteUserPasskey, isError } = useUserPasskeys();
@@ -42,7 +43,7 @@ export const Passkey: FC<TPasskey> = ({ relaingPartyId }) => {
   ];
 
   return (
-    <Wrapper title='Passkeys you created'>
+    <Wrapper title='Passkeys you created' className='passflow-passkey-wrapper' customCss={currentStyles?.custom_css}>
       <PasskeyList
         data={data}
         renderActions={(id, name) => <PasskeyActions passkeyId={id} passkeyName={name} actions={passkeyActions} />}

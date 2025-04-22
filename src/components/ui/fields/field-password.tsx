@@ -52,12 +52,12 @@ export const FieldPassword = forwardRef<HTMLInputElement, TFieldPassword>(
     const [isShowPassword, setIsShowPassword] = useState(false);
 
     const styles = {
-      'passflow-field--warning': isError,
+      'passflow-field--error': isError,
     };
 
     const errorStyles = (fields: string[]) => {
       if (size(value) > 0 && size(intersection(validationErrors, fields)) === 0)
-        return 'passflow-stroke-Success passflow-text-Success';
+        return 'passflow-password-validation-item--success';
       return null;
     };
 
@@ -65,9 +65,6 @@ export const FieldPassword = forwardRef<HTMLInputElement, TFieldPassword>(
       if (size(value) > 0 && size(intersection(validationErrors, fields)) === 0) return 'check';
       return 'close';
     };
-
-    const buttonStyle =
-      'passflow-absolute passflow-right-0 passflow-top-1/2 -passflow-translate-y-1/2 -passflow-translate-x-[12px]';
 
     const handleShowPassword = () => setIsShowPassword((prev) => !prev);
 
@@ -83,19 +80,19 @@ export const FieldPassword = forwardRef<HTMLInputElement, TFieldPassword>(
 
     return (
       <>
-        <div className='passflow-relative passflow-w-full'>
+        <div className='passflow-field-wrapper'>
           <input
             ref={ref}
             id={id}
             value={value}
             type={isShowPassword ? 'text' : 'password'}
-            className={cn(styles, 'passflow-field passflow-field--focused passflow-pr-[40px]', className)}
+            className={cn('passflow-field-input passflow-field--focused passflow-field-input--with-icon', styles, className)}
             disabled={disabled}
             {...rest}
           />
           {isShowPassword ? (
             <Button
-              className={buttonStyle}
+              className='passflow-button-display-password passflow-field-icon-button'
               size='small'
               type='button'
               variant='clean'
@@ -103,11 +100,11 @@ export const FieldPassword = forwardRef<HTMLInputElement, TFieldPassword>(
               withIcon
               onClick={handleShowPassword}
             >
-              <Icon size='small' type='general' id='eye-on' className='!passflow-bg-Background' />
+              <Icon size='small' type='general' id='eye-on' />
             </Button>
           ) : (
             <Button
-              className={buttonStyle}
+              className='passflow-button-display-password passflow-field-icon-button'
               size='small'
               type='button'
               variant='clean'
@@ -115,39 +112,22 @@ export const FieldPassword = forwardRef<HTMLInputElement, TFieldPassword>(
               withIcon
               onClick={handleShowPassword}
             >
-              <Icon size='small' type='general' id='eye-off' className='!passflow-bg-Background' />
+              <Icon size='small' type='general' id='eye-off' />
             </Button>
           )}
         </div>
         {withMessages && (
-          <div className='passflow-flex passflow-flex-col passflow-gap-[4px] passflow-mt-[4px]'>
-            <p
-              className={cn(
-                `passflow-flex passflow-gap-[4px] passflow-items-center passflow-justify-start 
-              passflow-text-caption-1-medium passflow-text-Grey-One`,
-                errorStyles(['length']),
-              )}
-            >
-              <Icon
-                size='small'
-                id={changeIcon(['length'])}
-                type='general'
-                className={cn('passflow-stroke-Grey-One', errorStyles(['length']))}
-              />
+          <div className='passflow-password-validation'>
+            <p className={cn('passflow-password-validation-item', errorStyles(['length']))}>
+              <Icon size='small' id={changeIcon(['length'])} type='general' className={cn(errorStyles(['length']))} />
               At least {minPasswordLength} characters
             </p>
-            <p
-              className={cn(
-                `passflow-flex passflow-gap-[4px] passflow-items-center passflow-justify-start 
-                passflow-text-caption-1-medium passflow-text-Grey-One`,
-                errorStyles(['uppercase', 'lowercase', 'number', 'symbol']),
-              )}
-            >
+            <p className={cn('passflow-password-validation-item', errorStyles(['uppercase', 'lowercase', 'number', 'symbol']))}>
               <Icon
                 size='small'
                 id={changeIcon(['uppercase', 'lowercase', 'number', 'symbol'])}
                 type='general'
-                className={cn('passflow-stroke-Grey-One', errorStyles(['uppercase', 'lowercase', 'number', 'symbol']))}
+                className={cn(errorStyles(['uppercase', 'lowercase', 'number', 'symbol']))}
               />
               {generateMessage({
                 requireNumber,

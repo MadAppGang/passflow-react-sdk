@@ -4,7 +4,6 @@ import dts from 'vite-plugin-dts';
 import EnvironmentPlugin from 'vite-plugin-environment';
 import path from 'node:path';
 import { dependencies, peerDependencies } from './package.json';
-import tailwindcss from 'tailwindcss';
 import cssnano from 'cssnano';
 
 const baseExternal = [...Object.keys(dependencies), ...Object.keys(peerDependencies), 'react/jsx-runtime'];
@@ -40,7 +39,6 @@ export default defineConfig({
   css: {
     postcss: {
       plugins: [
-        tailwindcss('./tailwind.config.js'),
         cssnano({
           preset: 'default',
         }),

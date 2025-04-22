@@ -27,7 +27,7 @@ export const Ripple: FC<RippleProps> = ({ size, x, y }) => {
     top: y,
   };
 
-  return <span className='passflow-ripple !passflow-bg-current/60' style={style} />;
+  return <span className='passflow-ripple passflow-ripple-effect' style={style} />;
 };
 
 type TButton = PropsWithChildren &
@@ -97,7 +97,7 @@ export const Button: FC<TButton> = ({
     <button className={cn(styles, className)} type={type} onClick={handleClick} {...rest}>
       {children}
       {withRipple && (
-        <div aria-hidden className='passflow-absolute passflow-inset-0 passflow-overflow-hidden'>
+        <div aria-hidden className='passflow-ripple-container'>
           {ripples}
         </div>
       )}

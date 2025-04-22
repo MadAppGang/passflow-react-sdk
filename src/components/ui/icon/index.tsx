@@ -52,10 +52,10 @@ type TIcon = {
 
 export const Icon = ({ type, id, size, className = '' }: TIcon) => {
   const styles = {
-    'passflow-w-[16px] passflow-h-[16px]': size === 'small',
-    'passflow-w-[20px] passflow-h-[20px]': size === 'medium',
-    'passflow-w-[32px] passflow-h-[32px]': size === 'big',
-    'passflow-w-[44px] passflow-h-[44px]': size === 'large',
+    'passflow-icon--small': size === 'small',
+    'passflow-icon--medium': size === 'medium',
+    'passflow-icon--big': size === 'big',
+    'passflow-icon--large': size === 'large',
   };
 
   const icons: Record<'providers' | 'general', Record<string, string>> = {
@@ -104,12 +104,12 @@ export const Icon = ({ type, id, size, className = '' }: TIcon) => {
   };
 
   if (type !== 'flags') {
-    return <img className={cn(styles, 'passflow-bg-transparent', className)} src={icons[type][id]} alt={id} />;
+    return <img className={cn('passflow-icon', styles, className)} src={icons[type][id]} alt={id} />;
   }
 
   return (
-    <div className={cn(styles, className)}>
-      <div className={cn(`passflow-flag ${id.toLocaleLowerCase()}`)} style={{ backgroundImage: `url(${flags})` }} />
+    <div className={cn('passflow-icon', styles, className)}>
+      <div className={cn('passflow-flag', id.toLowerCase())} style={{ backgroundImage: `url(${flags})` }} />
     </div>
   );
 };

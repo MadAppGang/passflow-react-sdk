@@ -142,7 +142,7 @@ test.describe('signup flow with invite token', () => {
       await route.fulfill({ path: path.join(__dirname, './responses/passflow-settings.json') });
     });
     await page.route('**/app/settings', async (route) => {
-      await route.fulfill({ path: path.join(__dirname, './responses/app-settings.json') });
+      await route.fulfill({ path: path.join(__dirname, './responses/app-settings-only-invite.json') });
     });
 
     await page.goto('http://localhost:5173/web/signup?invite_token=test-token');
@@ -185,7 +185,7 @@ test.describe('signup flow without invite token', () => {
       await route.fulfill({ path: path.join(__dirname, './responses/passflow-settings.json') });
     });
     await page.route('**/app/settings', async (route) => {
-      await route.fulfill({ path: path.join(__dirname, './responses/app-settings.json') });
+      await route.fulfill({ path: path.join(__dirname, './responses/app-settings-only-invite.json') });
     });
 
     await page.goto('http://localhost:5173/web/signup');

@@ -16,22 +16,13 @@ export const PasskeyActions: FC<TPasskeyActions> = ({ passkeyId, passkeyName, ac
   <Popover>
     <PopoverTrigger asChild className='passflow-ml-auto'>
       <div>
-        <Button
-          type='button'
-          variant='clean'
-          size='small'
-          asIcon
-          className='hover:passflow-bg-Background passflow-w-[28px] passflow-h-[28px]'
-        >
+        <Button type='button' variant='clean' size='small' asIcon className='passflow-button--hover-bg'>
           <Icon type='general' id='dots-vertical' size='small' />
         </Button>
       </div>
     </PopoverTrigger>
     <PopoverContent>
-      <div
-        className={`passflow-w-[125px] passflow-p-[6px] passflow-flex passflow-flex-col passflow-gap-[4px] 
-        passflow-items-start passflow-shadow-[0_5px_20px_0px_rgba(0,0,0,0.05)]`}
-      >
+      <div className='passflow-popover-menu'>
         {actions.map(({ title, iconId, onClick }) => (
           <Button
             key={title}
@@ -39,15 +30,13 @@ export const PasskeyActions: FC<TPasskeyActions> = ({ passkeyId, passkeyName, ac
             variant='clean'
             size='small'
             withIcon
-            // eslint-disable-next-line max-len
-            className='!passflow-max-w-full passflow-justify-start passflow-p-[6px] passflow-gap-[6px] hover:passflow-bg-Background'
-            // eslint-disable-next-line no-void
+            className='passflow-popover-menu-item'
             onClick={() => void onClick(passkeyId, passkeyName ?? '')}
           >
             <Icon type='general' id={iconId} size='small' className={cn({ 'icon-warning': iconId === 'trash' })} />
             <span
-              className={cn('passflow-text-body-2-medium passflow-text-Dark-Three', {
-                'text-Warning': iconId === 'trash',
+              className={cn('passflow-popover-menu-item-text', {
+                'passflow-popover-menu-item-text--warning': iconId === 'trash',
               })}
             >
               {title}

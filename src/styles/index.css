@@ -1,49 +1,1412 @@
-@import "tailwindcss/base";
-@import "@/styles/font.css";
+/* FONTS */
+@import url("https://fonts.googleapis.com/css2?family=Gasoek+One&family=Inter:opsz,wght@14..32,100..900&display=swap");
 
-@import "tailwindcss/components";
-@import "@/styles/button.css";
-@import "@/styles/field.css";
+/* RESET */
+@import "./reset.css";
 
-@import "tailwindcss/utilities";
+/* BASE STYLES */
+html,
+body {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
 
-@layer components {
-  html,
-  body {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
+/* THEME VARIABLES */
+:root {
+  /* Colors */
+  --passflow-primary: #0c59dd;
+  --passflow-primary-dark: #0a47b1;
+  --passflow-warning: #d85d5d;
+  --passflow-warning-dark: #b14d4d;
+  --passflow-dark: #1e1e1e;
+  --passflow-dark-two: #2e2e2e;
+  --passflow-dark-three: #3e3e3e;
+  --passflow-white: #ffffff;
+  --passflow-grey-one: #7f7f7f;
+  --passflow-grey-two: #bfbfbf;
+  --passflow-grey-three: #e9eaf0;
+  --passflow-grey-four: #f3f5f7;
+  --passflow-background: #f8f9fb;
+  --passflow-success: #4cb782;
+
+  /* Theme Colors */
+  --passflow-primary-color: var(--passflow-primary);
+  --passflow-text-color: var(--passflow-dark);
+  --passflow-secondary-text-color: var(--passflow-grey-one);
+  --passflow-button-text-color: var(--passflow-white);
+  --passflow-background-color: var(--passflow-white);
+  --passflow-background-image: url("");
+  --passflow-card-color: var(--passflow-white);
+  --passflow-input-background-color: var(--passflow-grey-four);
+  --passflow-input-border-color: var(--passflow-grey-four);
+  --passflow-passkey-button-text-color: var(--passflow-white);
+  --passflow-passkey-button-background-color: var(--passflow-dark);
+  --passflow-divider-color: var(--passflow-grey-three);
+  --passflow-federated_button_background_color: "";
+  --passflow-federated_button_text_color: "";
+
+  /* Typography */
+  --passflow-h1: 2rem;
+  --passflow-h2: 1.5rem;
+  --passflow-body-1: 1rem;
+  --passflow-body-2: 13px;
+  --passflow-caption: 12px;
+
+  --passflow-normal: 400;
+  --passflow-medium: 500;
+  --passflow-semibold: 600;
+  --passflow-bold: 700;
+
+  /* Spacing */
+  --passflow-spacing-1: 4px;
+  --passflow-spacing-2: 8px;
+  --passflow-spacing-3: 12px;
+  --passflow-spacing-4: 16px;
+  --passflow-spacing-5: 20px;
+  --passflow-spacing-6: 24px;
+}
+
+/* LAYOUT */
+#passflow-wrapper {
+  font-family: "Inter", sans-serif;
+  width: 100%;
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+  box-sizing: border-box;
+}
+
+.passflow-wrapper {
+  width: 100vw;
+  height: 100vh;
+  position: relative;
+  background-color: var(--passflow-background-color);
+  color: var(--passflow-text-color);
+  background-image: var(--passflow-background-image);
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+/* TYPOGRAPHY */
+.passflow-heading {
+  font-size: var(--passflow-h1);
+  font-weight: 600;
+  color: var(--passflow-text-color);
+  margin-bottom: var(--passflow-spacing-4);
+}
+
+.passflow-text {
+  color: var(--passflow-text-color);
+  font-size: var(--passflow-body-1);
+  line-height: 1.5;
+}
+
+.passflow-secondary-text {
+  color: var(--passflow-secondary-text-color);
+  font-size: var(--passflow-body-2);
+}
+
+.passflow-secondary-font {
+  font-family: "Gasoek One", sans-serif;
+  font-style: normal;
+}
+
+/* BUTTONS */
+.passflow-button {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--passflow-spacing-3) var(--passflow-spacing-6);
+  border-radius: 4px;
+  font-size: var(--passflow-body-2);
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  overflow: hidden;
+}
+
+.passflow-button:focus-visible {
+  outline: none;
+}
+
+.passflow-button--primary {
+  color: var(--passflow-button-text-color);
+  background-color: var(--passflow-primary-color);
+  box-shadow: 0 3px 15px 0 rgba(12, 89, 221, 0.35);
+}
+
+.passflow-button--primary:hover,
+.passflow-button--primary:focus-visible {
+  background-color: var(--passflow-primary-color);
+}
+
+.passflow-button--secondary {
+  background-color: var(--passflow-white);
+  border: 1px solid var(--passflow-primary-color);
+  color: var(--passflow-primary-color);
+}
+
+.passflow-button--secondary:hover,
+.passflow-button--secondary:focus-visible {
+  border-color: var(--passflow-primary-color);
+  color: var(--passflow-primary-color);
+}
+
+.passflow-button--outlined {
+  background-color: var(--passflow-white);
+  border: 1px solid var(--passflow-grey-four);
+  color: var(--passflow-dark);
+}
+
+.passflow-button--outlined:hover,
+.passflow-button--outlined:focus-visible {
+  background-color: var(--passflow-grey-four);
+}
+
+.passflow-button--warning {
+  background-color: var(--passflow-warning);
+  color: var(--passflow-button-text-color);
+  box-shadow: 0 5px 9px 0 rgba(216, 93, 93, 0.25);
+}
+
+.passflow-button--warning:hover,
+.passflow-button--warning:focus-visible {
+  background-color: var(--passflow-warning-dark);
+}
+
+.passflow-button--clean {
+  background-color: var(--passflow-white);
+  border: none;
+}
+
+.passflow-button--provider {
+  background-color: var(--passflow-background);
+}
+
+.passflow-button--provider:hover,
+.passflow-button--provider:focus-visible {
+  background-color: var(--passflow-grey-four);
+}
+
+.passflow-button--dark {
+  color: var(--passflow-button-text-color);
+  background-color: var(--passflow-dark-three);
+  box-shadow: 0 3px 15px 0 rgba(30, 30, 30, 0.35);
+}
+
+.passflow-button--dark:hover,
+.passflow-button--dark:focus-visible {
+  opacity: 0.9;
+}
+
+/* Button sizes */
+.passflow-button--small {
+  max-width: 28px;
+  width: 100%;
+  height: 28px;
+  padding: var(--passflow-spacing-1);
+}
+
+.passflow-button--medium {
+  max-width: 66px;
+  width: 100%;
+  height: 32px;
+  padding: 7px var(--passflow-spacing-3);
+  font-size: var(--passflow-body-2);
+}
+
+.passflow-button--big {
+  max-width: 336px;
+  min-width: 40px;
+  width: 100%;
+  height: 48px;
+  padding: 15px var(--passflow-spacing-2);
+  font-size: var(--passflow-body-2);
+  font-weight: 600;
+}
+
+/* Disabled states */
+.passflow-button--primary:disabled,
+.passflow-button--warning:disabled,
+.passflow-button--dark:disabled {
+  cursor: not-allowed;
+  background-color: var(--passflow-grey-two);
+  box-shadow: none;
+}
+
+.passflow-button--secondary:disabled,
+.passflow-button--outlined:disabled {
+  cursor: not-allowed;
+  background-color: var(--passflow-white);
+  border-color: var(--passflow-grey-four);
+  color: var(--passflow-grey-two);
+}
+
+.passflow-button--clean:disabled {
+  cursor: not-allowed;
+  background-color: transparent;
+  opacity: 0.5;
+}
+
+/* Button modifiers */
+.passflow-button--with-icon {
+  gap: var(--passflow-spacing-2);
+}
+
+.passflow-button--as-icon {
+  width: max-content;
+  height: max-content;
+  padding: 0;
+}
+
+.passflow-button-passkey,
+.passflow-button-signin,
+.passflow-button-signup,
+.passflow-button-passwordless,
+.passflow-button-send-reset-password,
+.passflow-button-resend-reset-password,
+.passflow-button-resend-magic-link,
+.passflow-button-invitation-join,
+.passflow-button-reset-password,
+.passflow-button-go-back-error {
+  margin: 0 auto;
+  font-size: var(--passflow-body-2);
+  line-height: 18px;
+  font-weight: var(--passflow-semibold);
+}
+
+.passflow-button-passkey {
+  background-color: var(--passflow-passkey-button-background-color);
+  color: var(--passflow-passkey-button-text-color);
+}
+
+.passflow-button-passwordless--active {
+  border: 1px solid var(--passflow-primary-color);
+  color: var(--passflow-primary-color);
+  background-color: transparent;
+  font-size: var(--passflow-body-2);
+  line-height: 18px;
+  font-weight: var(--passflow-semibold);
+}
+
+.passflow-button-show-country {
+  min-width: 41px;
+  width: 41px;
+  margin-left: 12px;
+  border-radius: 4px;
+  gap: 4px;
+  background-color: var(--passflow-input-background-color);
+}
+
+.passflow-button-display-password {
+  background-color: transparent;
+}
+
+.passflow-send-reset-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.passflow-button-resend-reset-password,
+.passflow-button-resend-magic-link,
+.passflow-button-go-back-error {
+  max-width: 196px;
+  font-weight: var(--passflow-medium);
+}
+
+.passflow-button-resend-magic-link:hover {
+  background-color: var(--passflow-grey-four);
+}
+
+.passflow-button-timer {
+  display: inline-block;
+  max-width: max-content;
+  padding: 3px;
+  font-weight: var(--passflow-semibold);
+  background-color: var(--passflow-background-color);
+}
+
+.passflow-button-timer--active {
+  color: var(--passflow-secondary-text-color);
+  opacity: 1 !important;
+}
+
+.passflow-button-timer--inactive {
+  color: var(--passflow-primary-color);
+}
+
+.passflow-button-invitation-join {
+  margin-top: 32px;
+}
+
+/* INPUTS */
+.passflow-field {
+  min-height: 48px;
+  width: 100%;
+  padding: 11px var(--passflow-spacing-3);
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  background-color: var(--passflow-input-background-color);
+  color: var(--passflow-dark);
+  font-size: var(--passflow-body-2);
+  outline: 1px solid var(--passflow-input-border-color);
+}
+
+.passflow-field::placeholder {
+  color: var(--passflow-secondary-text-color);
+}
+
+.passflow-field--focused:focus-visible {
+  outline: 1px solid var(--passflow-primary-color);
+}
+
+.passflow-field--error {
+  outline: 1px solid var(--passflow-warning) !important;
+}
+
+.passflow-field:disabled {
+  border-color: var(--passflow-input-border-color);
+  color: var(--passflow-secondary-text-color);
+  background-color: var(--passflow-input-background-color);
+  cursor: not-allowed;
+}
+
+.passflow-field-otp {
+  width: 48px;
+  height: 48px;
+  border-radius: 4px;
+  background-color: var(--passflow-input-background-color);
+  outline: 1px solid var(--passflow-input-border-color);
+  color: var(--passflow-dark);
+  font-size: var(--passflow-body-2);
+  text-align: center;
+}
+
+/* RIPPLE EFFECT */
+.passflow-ripple {
+  position: absolute;
+  border-radius: 50%;
+  transform: scale(0);
+  animation: passflow-ripple 600ms linear;
+  background-color: rgba(255, 255, 255, 0.3);
+}
+
+@keyframes passflow-ripple {
+  to {
+    transform: scale(4);
+    opacity: 0;
   }
+}
 
-  #passflow-wrapper {
-    font-family: "Inter", sans-serif;
-    box-sizing: border-box;
+/* CONTAINERS */
+.passflow-container {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 var(--passflow-spacing-4);
+}
 
-    -webkit-font-smoothing: antialiased;
+/* FLEX UTILITIES */
+.passflow-flex {
+  display: flex;
+}
 
-    @apply passflow-outline-offset-0 passflow-outline-1;
+.passflow-flex-col {
+  flex-direction: column;
+}
 
-    overflow-x: hidden;
+.passflow-items-center {
+  align-items: center;
+}
+
+.passflow-justify-center {
+  justify-content: center;
+}
+
+.passflow-justify-between {
+  justify-content: space-between;
+}
+
+/* SPACING UTILITIES */
+.passflow-mt-4 {
+  margin-top: var(--passflow-spacing-4);
+}
+
+.passflow-mb-4 {
+  margin-bottom: var(--passflow-spacing-4);
+}
+
+.passflow-gap-4 {
+  gap: var(--passflow-spacing-4);
+}
+
+/* BRANDING */
+.passflow-branding {
+  position: absolute;
+  right: 24px;
+  bottom: 24px;
+  background-color: var(--passflow-background);
+  border-radius: 4px;
+  padding: 7px 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+
+.passflow-branding-text {
+  font-size: 11px;
+  line-height: 18px;
+  font-weight: var(--passflow-bold);
+  color: var(--passflow-secondary-text-color);
+}
+
+.passflow-branding-text-secondary {
+  font-weight: var(--passflow-normal);
+}
+
+/* CUSTOM CSS FROM SETTINGS */
+
+/* WRAPPER COMPONENT */
+.passflow-form-main-wrapper {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 32px;
+  justify-content: center;
+  padding: 24px;
+  width: 100%;
+  height: 100%;
+  border-radius: 6px;
+}
+
+.passflow-form-main-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+  max-width: 384px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+.passflow-form-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.passflow-form-title {
+  color: var(--passflow-text-color);
+  font-size: var(--passflow-h2);
+  font-weight: var(--passflow-bold);
+}
+
+.passflow-form-subtitle {
+  font-size: var(--passflow-body-2);
+  font-weight: var(--passflow-medium);
+  color: var(--passflow-secondary-text-color);
+  text-align: center;
+}
+
+.passflow-form-subscriptions {
+  font-size: var(--passflow-body-2);
+  font-weight: var(--passflow-medium);
+  color: var(--passflow-secondary-text-color);
+  text-align: center;
+  display: flex;
+  margin: 0 auto;
+  margin-top: -24px;
+  max-width: 384px;
+}
+
+/* FORM FIELDS */
+.passflow-field-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.passflow-field-container {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+}
+
+.passflow-field-label {
+  color: var(--passflow-secondary-text-color);
+  font-size: var(--passflow-caption);
+  font-weight: var(--passflow-medium);
+  line-height: 18px;
+}
+
+.passflow-field-label--error {
+  color: var(--passflow-warning);
+}
+
+.passflow-field-label-button {
+  color: var(--passflow-primary-color);
+  font-size: var(--passflow-caption);
+  font-weight: var(--passflow-medium);
+  line-height: 18px;
+  width: max-content;
+  max-width: 100%;
+  background-color: var(--passflow-card-color);
+}
+
+.passflow-field-input {
+  width: 100%;
+  min-height: 48px;
+  padding: 11px var(--passflow-spacing-3);
+  border-radius: 4px;
+  background-color: var(--passflow-input-background-color);
+  color: var(--passflow-text-color);
+  font-size: var(--passflow-body-2);
+  line-height: 18px;
+  font-weight: var(--passflow-medium);
+  outline: 1px solid var(--passflow-input-border-color);
+}
+
+.passflow-field-input--with-icon {
+  padding-right: 40px;
+}
+
+.passflow-field-icon-button {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translate(-12px, -50%);
+}
+
+.passflow-field-error {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  margin-top: 4px;
+}
+
+.passflow-field-error-text {
+  font-size: var(--passflow-caption);
+  font-weight: var(--passflow-medium);
+  color: var(--passflow-warning);
+}
+
+.passflow-field-phone-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  background-color: var(--passflow-input-background-color);
+  height: 48px;
+  width: 100%;
+  border-radius: 4px;
+  color: var(--passflow-text-color);
+  font-size: var(--passflow-body-2);
+  font-weight: var(--passflow-medium);
+  outline: 1px solid var(--passflow-input-border-color);
+}
+
+.passflow-field-phone-wrapper--focus {
+  outline: 1px solid var(--passflow-primary-color);
+}
+
+.passflow-field-phone-wrapper--error {
+  outline: 1px solid var(--passflow-warning);
+}
+
+.passflow-field-phone-wrapper::placeholder {
+  color: var(--passflow-secondary-text-color);
+}
+
+.passflow-field-phone-input {
+  width: 100%;
+  height: 48px;
+  padding: 0 8px;
+  background-color: var(--passflow-input-background-color);
+  color: var(--passflow-text-color);
+  font-size: var(--passflow-body-2);
+  font-weight: var(--passflow-medium);
+  border-radius: 4px;
+}
+
+.passflow-field-phone-input:focus-within {
+  outline: none;
+}
+
+.passflow-field-country-search-wrapper {
+  width: 100%;
+  position: relative;
+  z-index: 20;
+  padding-left: 28px;
+  background-color: var(--passflow-input-background-color);
+  border-radius: 4px;
+}
+
+.passflow-field-country-search {
+  width: 100%;
+  height: 48px;
+  padding: 0 8px;
+  background-color: var(--passflow-input-background-color);
+  color: var(--passflow-text-color);
+  font-size: var(--passflow-body-2);
+  font-weight: var(--passflow-medium);
+  border-radius: 4px;
+}
+
+.passflow-field-country-search::placeholder {
+  color: var(--passflow-secondary-text-color);
+  font-size: var(--passflow-body-2);
+  line-height: 18px;
+  font-weight: var(--passflow-medium);
+}
+
+.passflow-field-country-search:focus-visible {
+  outline: none;
+}
+
+.passflow-field-country-search-icon {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+/* PASSWORD VALIDATION */
+.passflow-password-validation {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 4px;
+}
+
+.passflow-password-validation-item {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 4px;
+  font-size: var(--passflow-caption);
+  font-weight: var(--passflow-medium);
+  color: var(--passflow-secondary-text-color);
+}
+
+.passflow-password-validation-item--success {
+  color: var(--passflow-success);
+}
+
+/* DIALOG */
+.passflow-dialog-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  background-color: rgba(30, 30, 30, 0.5);
+}
+
+.passflow-dialog-content {
+  position: fixed;
+  z-index: 50;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.passflow-dialog-header {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  text-align: center;
+}
+
+@media (min-width: 640px) {
+  .passflow-dialog-header {
+    text-align: left;
   }
+}
 
-  .passflow-secondary-font {
-    font-family: "Gasoek One", sans-serif;
-    font-style: normal;
-  }
+.passflow-dialog-footer {
+  display: flex;
+  flex-direction: column-reverse;
+  gap: 8px;
+}
 
-  /* RIPPLE */
-  .passflow-ripple {
-    position: absolute;
-    border-radius: 50%;
-    transform: scale(0);
-    animation: passflow-ripple 600ms linear;
-    background-color: rgba(255, 255, 255, 0.3);
+@media (min-width: 640px) {
+  .passflow-dialog-footer {
+    flex-direction: row;
+    justify-content: flex-end;
   }
+}
 
-  @keyframes passflow-ripple {
-    to {
-      transform: scale(4);
-      opacity: 0;
-    }
-  }
+.passflow-dialog-title {
+  font-size: var(--passflow-h2);
+  font-weight: var(--passflow-semibold);
+  line-height: 1;
+  letter-spacing: -0.02em;
+}
+
+.passflow-dialog-description {
+  font-size: var(--passflow-body-2);
+  color: var(--passflow-secondary-text-color);
+}
+
+/* POPOVER */
+.passflow-popover-content {
+  z-index: 10;
+  background-color: var(--passflow-white);
+  border-radius: 4px;
+  box-shadow: 0 5px 20px 0 rgba(0, 0, 0, 0.05);
+}
+
+.passflow-popover-menu {
+  width: 125px;
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  align-items: flex-start;
+}
+
+.passflow-popover-menu-item {
+  width: 100%;
+  justify-content: flex-start;
+  padding: 6px;
+  gap: 6px;
+}
+
+.passflow-popover-menu-item:hover {
+  background-color: var(--passflow-background);
+}
+
+.passflow-popover-menu-item-text {
+  font-size: var(--passflow-body-2);
+  font-weight: var(--passflow-medium);
+  color: var(--passflow-dark-three);
+}
+
+.passflow-popover-menu-item-text--warning {
+  color: var(--passflow-warning);
+}
+
+/* SWITCH */
+.passflow-switch-wrapper {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+}
+
+.passflow-switch-label {
+  color: var(--passflow-text-color);
+  font-size: var(--passflow-caption);
+  font-weight: var(--passflow-medium);
+}
+
+.passflow-switch-input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.passflow-switch-track {
+  width: 28px;
+  height: 16px;
+  border-radius: 9999px;
+  background-color: var(--passflow-grey-two);
+  transition: background-color 0.2s;
+  position: relative;
+}
+
+.passflow-switch-track::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  right: 14px;
+  transform: translateY(-50%);
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background-color: var(--passflow-white);
+  transition: transform 0.2s;
+}
+
+.passflow-switch-input:checked + .passflow-switch-track {
+  background-color: var(--passflow-primary-color);
+}
+
+.passflow-switch-input:checked + .passflow-switch-track::after {
+  transform: translate(12px, -50%);
+}
+
+[dir="rtl"] .passflow-switch-input:checked + .passflow-switch-track::after {
+  transform: translate(-14px, -50%);
+}
+
+/* ICON */
+.passflow-icon {
+  background-color: transparent;
+}
+
+.passflow-icon--small {
+  width: 16px;
+  height: 16px;
+}
+
+.passflow-icon--medium {
+  width: 20px;
+  height: 20px;
+}
+
+.passflow-icon--big {
+  width: 32px;
+  height: 32px;
+}
+
+.passflow-icon--large {
+  width: 44px;
+  height: 44px;
+}
+
+.passflow-icon--warning {
+  stroke: var(--passflow-warning);
+}
+
+.passflow-icon--white {
+  background-color: var(--passflow-white);
+}
+
+.passflow-icon--success {
+  stroke: var(--passflow-primary-color);
+}
+
+/* FLAG ICONS */
+.passflow-flag {
+  width: 100%;
+  height: 100%;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: contain;
+}
+
+/* VERIFY CHALLENGE OTP */
+.passflow-verify-otp {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+.passflow-verify-otp-container {
+  display: flex;
+  flex-direction: column;
+  gap: 56px;
+  padding: 24px;
+  padding-bottom: 56px;
+  border-radius: 6px;
+  background-color: var(--passflow-card-color);
+  box-shadow: 0 4px 15px 0 rgba(0, 0, 0, 0.09);
+}
+
+.passflow-verify-otp-button {
+  position: relative;
+  background-color: var(--passflow-background);
+  border: none;
+}
+
+.passflow-verify-otp-button-icon {
+  position: absolute;
+  top: 50%;
+  right: 12px;
+  transform: translateY(-50%);
+}
+
+.passflow-verify-otp-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.passflow-verify-otp-inputs {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.passflow-verify-otp-error {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+
+.passflow-verify-otp-error-text {
+  font-size: var(--passflow-caption);
+  font-weight: var(--passflow-medium);
+  color: var(--passflow-warning);
+}
+
+.passflow-verify-otp-resend {
+  color: var(--passflow-secondary-text-color);
+  font-size: var(--passflow-body-2);
+  font-weight: var(--passflow-medium);
+  text-align: center;
+}
+
+/* PROVIDERS BOX */
+.passflow-providers-box {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.passflow-providers-box--grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(49px, 1fr));
+  gap: 8px;
+  align-items: stretch;
+  justify-content: stretch;
+}
+
+.passflow-provider-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.passflow-provider-text {
+  color: var(--passflow-dark);
+  font-size: var(--passflow-body-2);
+  font-weight: var(--passflow-medium);
+  text-transform: capitalize;
+}
+
+/* RIPPLE */
+.passflow-ripple-container {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+
+.passflow-ripple-effect {
+  background-color: currentColor;
+  opacity: 0.6;
+}
+
+/* FORMS */
+.passflow-form {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+  max-width: 384px;
+  width: 100%;
+}
+
+.passflow-form-switch {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: -8px;
+}
+
+.passflow-form-container {
+  padding: 24px;
+  border-radius: 6px;
+  max-width: 384px;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: flex-start;
+  gap: 24px;
+  background-color: var(--passflow-card-color);
+  box-shadow: 0 4px 15px 0 rgba(0, 0, 0, 0.09);
+}
+
+.passflow-form-field {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: flex-start;
+  gap: 6px;
+}
+
+.passflow-form-field__header {
+  width: 100%;
+  max-height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.passflow-form-error {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  margin-top: 4px;
+}
+
+.passflow-form-error-text {
+  font-size: var(--passflow-caption);
+  font-weight: var(--passflow-medium);
+  color: var(--passflow-warning);
+}
+
+.passflow-form-actions {
+  margin: 0 auto;
+  max-width: 336px;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.passflow-form-actions--top-space {
+  margin-top: -8px;
+}
+
+.passflow-form-divider {
+  width: 100%;
+  padding: 9px 0;
+  position: relative;
+}
+
+.passflow-form-divider__line {
+  width: 100%;
+  height: 1px;
+  background-color: var(--passflow-divider-color);
+}
+
+.passflow-form-divider__text {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  padding: 0 15px;
+  color: var(--passflow-secondary-text-color);
+  font-size: var(--passflow-caption);
+  font-weight: var(--passflow-medium);
+  background-color: var(--passflow-background-color);
+}
+
+.passflow-form-providers {
+  margin: 0 auto;
+  max-width: 336px;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: flex-start;
+  gap: 24px;
+}
+
+/* LINK */
+.passflow-link {
+  color: var(--passflow-primary-color);
+  font-size: var(--passflow-body-2);
+  line-height: 18px;
+  font-weight: var(--passflow-semibold);
+}
+
+/* HAVE/DONT HAVE ACCOUNT */
+.passflow-have-account,
+.passflow-dont-have-account,
+.passflow-remember-password {
+  text-align: center;
+  color: var(--passflow-secondary-text-color);
+  font-size: var(--passflow-body-2);
+  line-height: 18px;
+  font-weight: var(--passflow-medium);
+}
+
+/* COUNTRY SEARCH */
+.passflow-country-search-wrapper {
+  width: 100%;
+  position: absolute;
+  top: 2px;
+  left: 0;
+  transform: translateY(48px);
+  z-index: 10;
+  max-height: 200px;
+  border-bottom-left-radius: 4px;
+  border-bottom-right-radius: 4px;
+  overflow-y: auto;
+  background-color: var(--passflow-card-color);
+  box-shadow: 0 4px 15px 0 rgba(0, 0, 0, 0.09);
+  scrollbar-width: thin;
+  scrollbar-color: var(--passflow-secondary-text-color) transparent;
+}
+
+.passflow-country-search-wrapper::-webkit-scrollbar {
+  width: 6px;
+}
+
+.passflow-country-search-wrapper::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.passflow-country-search-wrapper::-webkit-scrollbar-thumb {
+  background-color: var(--passflow-secondary-text-color);
+  border-radius: 3px;
+}
+
+.passflow-country-search-wrapper--show {
+  display: block;
+  opacity: 1;
+  visibility: visible;
+  transition: opacity 0.2s ease, visibility 0.2s ease;
+}
+
+.passflow-country-search-wrapper--hidden {
+  display: none;
+  opacity: 0;
+  visibility: hidden;
+}
+
+.passflow-country-search-sticky-top,
+.passflow-country-search-sticky-bottom {
+  position: sticky;
+  left: 0;
+  width: 100%;
+  height: 10px;
+  background-color: var(--passflow-card-color);
+  z-index: 10;
+  overflow-x: hidden;
+}
+
+.passflow-country-search-sticky-top {
+  top: 0;
+}
+
+.passflow-country-search-sticky-bottom {
+  bottom: 0;
+}
+
+.passflow-country-search-item {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  background-color: var(--passflow-card-color);
+  padding: 7px 12px;
+  width: 100%;
+  max-height: 32px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.passflow-country-search-item:hover,
+.passflow-country-search-item:focus {
+  background-color: var(--passflow-background);
+}
+
+.passflow-country-search-flag {
+  width: 21px;
+  height: 15px;
+}
+
+.passflow-country-search-name {
+  margin-left: 8px;
+  font-size: var(--passflow-body-2);
+  font-weight: var(--passflow-medium);
+  color: var(--passflow-text-color);
+}
+
+.passflow-country-search-code {
+  margin-left: auto;
+  font-size: var(--passflow-body-2);
+  font-weight: var(--passflow-medium);
+  color: var(--passflow-secondary-text-color);
+  transition: color 0.2s ease;
+}
+
+.passflow-country-search-item:hover .passflow-country-search-code {
+  color: var(--passflow-text-color);
+}
+
+.passflow-country-search-divider {
+  font-size: var(--passflow-caption);
+  font-weight: var(--passflow-medium);
+  color: var(--passflow-secondary-text-color);
+  margin: 12px 12px 6px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--passflow-divider-color);
+}
+
+.passflow-country-search-no-matches {
+  font-size: var(--passflow-body-2);
+  font-weight: var(--passflow-medium);
+  color: var(--passflow-secondary-text-color);
+  margin: 0 auto;
+  padding: 15px;
+  text-align: center;
+  width: 100%;
+  display: block;
+}
+
+/* FORGOT PASSWORD SUCCESS */
+.passflow-forgot-password-success-wrapper {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.passflow-forgot-password-success-container {
+  width: 100%;
+  max-width: 336px;
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+  margin-top: -8px;
+}
+
+.passflow-forgot-password-success-text {
+  font-size: var(--passflow-body-2);
+  font-weight: var(--passflow-medium);
+  color: var(--passflow-secondary-text-color);
+  text-align: center;
+}
+
+.passflow-forgot-password-success-text--strong {
+  font-weight: var(--passflow-bold);
+}
+
+/* VERIFY CHALLENGE MAGIC LINK */
+.passflow-verify-challenge-magic-link-wrapper {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  margin: 0 auto;
+}
+
+.passflow-verify-challenge-magic-link-container {
+  width: 100%;
+  max-width: 336px;
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+  margin-top: -24px;
+}
+
+.passflow-verify-challenge-magic-link-text {
+  font-size: var(--passflow-body-2);
+  font-weight: var(--passflow-medium);
+  color: var(--passflow-secondary-text-color);
+  text-align: center;
+}
+
+.passflow-verify-challenge-magic-link-text--strong {
+  font-weight: var(--passflow-bold);
+}
+
+/* VERIFY CHALLENGE SUCCESS*/
+.passflow-verify-challenge-success-wrapper {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 32px;
+}
+
+.passflow-verify-challenge-success-container {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 8px;
+}
+
+.passflow-verify-challenge-success-text {
+  font-size: var(--passflow-h2);
+  font-weight: var(--passflow-bold);
+  color: var(--passflow-text-color);
+  text-align: center;
+}
+
+.passflow-verify-challenge-success-text-secondary {
+  font-size: var(--passflow-body-2);
+  font-weight: var(--passflow-medium);
+  color: var(--passflow-secondary-text-color);
+  text-align: center;
+}
+
+/* INVITATION JOIN */
+.passflow-invitation-join-text {
+  display: block;
+  font-size: var(--passflow-body-2);
+  font-weight: var(--passflow-medium);
+  color: var(--passflow-secondary-text-color);
+  text-align: center;
+  margin-top: -8px;
+}
+
+.passflow-invitation-join-text-strong {
+  font-weight: var(--passflow-bold);
+}
+
+/* RESET PASSWORD */
+.passflow-reset-password-text {
+  display: block;
+  font-size: var(--passflow-body-2);
+  font-weight: var(--passflow-medium);
+  color: var(--passflow-secondary-text-color);
+  text-align: center;
+  margin-top: -32px;
+}
+
+/* ERROR HOC */
+.passflow-error-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: start;
+  gap: 32px;
+  margin-top: -8px;
+}
+
+.passflow-error-container-text-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: start;
+  gap: 8px;
+}
+
+.passflow-error-container-text {
+  font-size: var(--passflow-h2);
+  font-weight: var(--passflow-bold);
+  color: var(--passflow-warning);
+  text-align: center;
+}
+
+.passflow-error-container-text-secondary {
+  font-size: var(--passflow-body-2);
+  font-weight: var(--passflow-medium);
+  color: var(--passflow-secondary-text-color);
+  text-align: center;
 }

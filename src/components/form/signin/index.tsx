@@ -4,7 +4,16 @@ import { routes } from '@/context';
 import { withError } from '@/hocs';
 import { useAppSettings, useNavigation, usePassflow, useProvider, useSignIn } from '@/hooks';
 import type { DefaultMethod, SuccessAuthRedirect } from '@/types';
-import { cn, emailRegex, getAuthMethods, getIdentityLabel, getPasswordlessData, getUrlErrors, getUrlWithTokens, isValidUrl } from '@/utils';
+import {
+  cn,
+  emailRegex,
+  getAuthMethods,
+  getIdentityLabel,
+  getPasswordlessData,
+  getUrlErrors,
+  getUrlWithTokens,
+  isValidUrl,
+} from '@/utils';
 import type {
   PassflowPasskeyAuthenticateStartPayload,
   PassflowPasswordlessResponse,
@@ -18,6 +27,7 @@ import queryString from 'query-string';
 import React, { type ChangeEvent, type FC, useEffect, useMemo, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { Wrapper } from '../wrapper';
+
 import '@/styles/index.css';
 
 const initialValues = {
@@ -61,7 +71,7 @@ export const SignInForm: FC<TSignIn> = ({
   });
   const passflow = usePassflow();
   const { navigate } = useNavigation();
-  const { appSettings, passwordPolicy, isError: isErrorApp, error: errorApp } = useAppSettings();
+  const { appSettings, passwordPolicy, currentStyles, isError: isErrorApp, error: errorApp } = useAppSettings();
   const { federatedWithRedirect } = useProvider(federatedCallbackUrl);
 
   if (isErrorApp) throw new Error(errorApp);
@@ -230,14 +240,15 @@ export const SignInForm: FC<TSignIn> = ({
 
   const onClickProviderHandler = (provider: Providers) => federatedWithRedirect(provider);
 
-  const labelStyle = cn('passflow-text-caption-1-medium passflow-text-Grey-Six passflow-normal-case', {
-    'passflow-text-Warning': isError,
-  });
-
   return (
-    <Wrapper title='Sign In to your account' subtitle='To Passflow by Madappgang'>
+    <Wrapper
+      title='Sign In to your account'
+      subtitle='To Passflow by Madappgang'
+      className='passflow-signin-wrapper'
+      customCss={currentStyles?.custom_css}
+    >
       {hasPasskey && (hasPasswordless || hasPassword) && (
-        <div className='passflow-w-full passflow-flex passflow-items-center passflow-justify-center passflow-mb-[-8px]'>
+        <div className='passflow-form-switch'>
           <Switch label='Passwordless experience' checked={forcePasswordless} onChange={onChangePasswordlessExperience} />
         </div>
       )}
@@ -249,17 +260,19 @@ export const SignInForm: FC<TSignIn> = ({
             if (!hasPassword && hasPasswordless) void validateSignInPasswordless();
           }
         }}
-        className='passflow-flex passflow-flex-col passflow-gap-[32px] passflow-max-w-[384px] passflow-w-full'
+        className='passflow-form'
       >
         {!forcePasswordless && defaultMethod ? (
           <>
-            <div className='passflow-p-[24px] passflow-rounded-[6px] passflow-max-w-[384px] passflow-w-full passflow-flex passflow-flex-col passflow-items-start passflow-justify-start passflow-gap-[24px] passflow-shadow-[0_4px_15px_0_rgba(0,0,0,0.09)]'>
+            <div className='passflow-form-container'>
               {eq(defaultMethod, 'email_or_username') && (
-                <div className='passflow-w-full passflow-flex passflow-flex-col passflow-items-start passflow-justify-start passflow-gap-[6px]'>
-                  <div className='passflow-w-full passflow-flex passflow-items-center passflow-justify-between'>
+                <div className='passflow-form-field'>
+                  <div className='passflow-form-field__header'>
                     <label
                       htmlFor='identity'
-                      className={cn(labelStyle, { 'passflow-text-Warning': isError || has(errors, 'email_or_username') })}
+                      className={cn('passflow-field-label', {
+                        'passflow-field-label--error': isError || has(errors, 'email_or_username'),
+                      })}
                     >
                       {getIdentityLabel(authMethods, 'label')}
                     </label>
@@ -268,8 +281,7 @@ export const SignInForm: FC<TSignIn> = ({
                         size='small'
                         variant='clean'
                         type='button'
-                        className={`passflow-text-Primary passflow-text-caption-1-medium
-                                      passflow-h-max passflow-max-w-max passflow-p-0`}
+                        className='passflow-field-label-button'
                         onClick={() => handleDefaultMethod('phone')}
                       >
                         Use phone
@@ -292,21 +304,19 @@ export const SignInForm: FC<TSignIn> = ({
                     )}
                   />
                   {has(errors, 'email_or_username') && (
-                    <div className='passflow-flex passflow-items-center passflow-justify-center passflow-gap-[4px] passflow-mt-[4px]'>
+                    <div className='passflow-form-error'>
                       <Icon size='small' id='warning' type='general' className='icon-warning' />
-                      <span className='passflow-text-caption-1-medium passflow-text-Warning'>
-                        {errors.email_or_username?.message}
-                      </span>
+                      <span className='passflow-form-error-text'>{errors.email_or_username?.message}</span>
                     </div>
                   )}
                 </div>
               )}
               {eq(defaultMethod, 'phone') && (
-                <div className='passflow-w-full passflow-flex passflow-flex-col passflow-items-start passflow-justify-start passflow-gap-[6px]'>
-                  <div className='passflow-w-full passflow-flex passflow-items-center passflow-justify-between'>
+                <div className='passflow-form-field'>
+                  <div className='passflow-form-field__header'>
                     <label
                       htmlFor='phone'
-                      className={cn(labelStyle, { 'passflow-text-Warning': isError || has(errors, 'phone') })}
+                      className={cn('passflow-field-label', { 'passflow-field-label--error': isError || has(errors, 'phone') })}
                     >
                       Phone number
                     </label>
@@ -315,8 +325,7 @@ export const SignInForm: FC<TSignIn> = ({
                         size='small'
                         variant='clean'
                         type='button'
-                        className={`passflow-text-Primary passflow-text-caption-1-medium
-                                    passflow-h-max passflow-max-w-max passflow-p-0`}
+                        className='passflow-field-label-button'
                         onClick={() => handleDefaultMethod('email_or_username')}
                       >
                         {getIdentityLabel(authMethods, 'button')}
@@ -346,34 +355,34 @@ export const SignInForm: FC<TSignIn> = ({
                     )}
                   />
                   {has(errors, 'phone') && (
-                    <div className='passflow-flex passflow-items-center passflow-justify-center passflow-gap-[4px] passflow-mt-[4px]'>
+                    <div className='passflow-form-error'>
                       <Icon size='small' id='warning' type='general' className='icon-warning' />
-                      <span className='passflow-text-caption-1-medium passflow-text-Warning'>{errors.phone?.message}</span>
+                      <span className='passflow-form-error-text'>{errors.phone?.message}</span>
                     </div>
                   )}
                 </div>
               )}
               {hasPassword ? (
-                <div className='passflow-w-full passflow-flex passflow-flex-col passflow-items-start passflow-justify-start passflow-gap-[6px]'>
-                  <div className='passflow-w-full passflow-flex passflow-items-center passflow-justify-between'>
+                <div className='passflow-form-field'>
+                  <div className='passflow-form-field__header'>
                     <label
                       htmlFor='password'
-                      className={cn(labelStyle, { 'passflow-text-Warning': isError || has(errors, 'password') })}
+                      className={cn('passflow-field-label', {
+                        'passflow-field-label--error': isError || has(errors, 'password'),
+                      })}
                     >
                       Password
                     </label>
-                    <div className="flex items-center justify-between">
-                      <Link 
-                        to={forgotPasswordPath ?? routes.forgot_password.path}
-                        search={queryString.stringify({
-                          ...queryString.parse(window.location.search),
-                          default_method: defaultMethod
-                        })}
-                        className='passflow-text-Primary passflow-text-caption-1-medium'
-                      >
-                        Forgot Password?
-                      </Link>
-                    </div>
+                    <Link
+                      to={forgotPasswordPath ?? routes.forgot_password.path}
+                      search={queryString.stringify({
+                        ...queryString.parse(window.location.search),
+                        default_method: defaultMethod,
+                      })}
+                      className='passflow-field-label-button'
+                    >
+                      Forgot Password?
+                    </Link>
                   </div>
                   <Controller
                     name='password'
@@ -391,17 +400,17 @@ export const SignInForm: FC<TSignIn> = ({
                     )}
                   />
                   {has(errors, 'password') && (
-                    <div className='passflow-flex passflow-items-center passflow-justify-center passflow-gap-[4px] passflow-mt-[4px]'>
+                    <div className='passflow-form-error'>
                       <Icon size='small' id='warning' type='general' className='icon-warning' />
-                      <span className='passflow-text-caption-1-medium passflow-text-Warning'>{errors.password?.message}</span>
+                      <span className='passflow-form-error-text'>{errors.password?.message}</span>
                     </div>
                   )}
                 </div>
               ) : null}
               {isError && (
-                <div className='passflow-flex passflow-items-center passflow-justify-center passflow-gap-[4px]'>
+                <div className='passflow-form-error'>
                   <Icon size='small' id='warning' type='general' className='icon-warning' />
-                  <span className='passflow-text-caption-1-medium passflow-text-Warning'>{error}</span>
+                  <span className='passflow-form-error-text'>{error}</span>
                 </div>
               )}
             </div>
@@ -411,7 +420,7 @@ export const SignInForm: FC<TSignIn> = ({
                 variant='primary'
                 type='submit'
                 disabled={!isDirty || !isValid || isLoading}
-                className='passflow-mx-auto passflow-text-body-2-semibold passflow-text-White !passflow-shadow-primary'
+                className='passflow-button-signin'
               >
                 Sign In
               </Button>
@@ -421,10 +430,10 @@ export const SignInForm: FC<TSignIn> = ({
                 size='big'
                 variant={hasPassword ? 'outlined' : 'primary'}
                 type={hasPassword ? 'button' : 'submit'}
-                className={cn('passflow-m-auto passflow-text-White passflow-text-body-2-semiBold', {
-                  'passflow-border passflow-border-Primary !passflow-text-Primary passflow-bg-transparent !passflow-text-body-2-medium !passflow-mt-[-16px]':
-                    hasPassword,
+                className={cn('passflow-button-passwordless', {
+                  'passflow-button-passwordless--active': hasPassword,
                 })}
+                style={hasPassword ? { marginTop: '-16px' } : {}}
                 onClick={() => (hasPassword ? validateSignInPasswordless() : null)}
                 disabled={(() => {
                   const values = getValues();
@@ -440,13 +449,12 @@ export const SignInForm: FC<TSignIn> = ({
                 size='big'
                 variant='dark'
                 type='button'
-                className={cn('passflow-m-auto', {
-                  '!passflow-mt-[-16px]': hasPassword || hasPasswordless,
-                })}
+                className={cn('passflow-button-passkey')}
+                style={hasPassword || hasPasswordless ? { marginTop: '-16px' } : {}}
                 withIcon
                 onClick={validateSignInPasskey}
               >
-                <Icon id='key' size='small' type='general' className='icon-white' />
+                <Icon id='key' size='small' type='general' className='icon-white passflow-button-passkey-icon' />
                 Sign In with a Passkey
               </Button>
             ) : null}
@@ -455,51 +463,38 @@ export const SignInForm: FC<TSignIn> = ({
         {forcePasswordless && hasPasskey ? (
           <>
             {isError && (
-              <div className='passflow-flex passflow-items-center passflow-justify-center passflow-gap-[4px] passflow-max-w-[336px] passflow-w-full passflow-mx-auto'>
+              <div className='passflow-form-error'>
                 <Icon size='small' id='warning' type='general' className='icon-warning' />
-                <span className='passflow-text-caption-1-medium passflow-text-Warning'>{error}</span>
+                <span className='passflow-form-error-text'>{error}</span>
               </div>
             )}
             <Button
               size='big'
               variant='dark'
               type='button'
-              className='passflow-m-auto'
+              className='passflow-button-passkey'
               withIcon
               onClick={validateSignInPasskey}
             >
-              <Icon id='key' size='small' type='general' className='icon-white' />
+              <Icon id='key' size='small' type='general' className='icon-white passflow-button-passkey-icon' />
               Sign In with a Passkey
             </Button>
           </>
         ) : null}
-        <div
-          className={cn(
-            'passflow-mx-auto passflow-max-w-[336px] passflow-w-full passflow-flex passflow-items-center passflow-justify-center',
-            {
-              '!passflow-mt-[-8px]': hasPassword || hasPasskey,
-            },
-          )}
-        >
-          <p className='passflow-text-Grey-Six passflow-text-body-2-medium passflow-text-center'>
+        <div className={cn('passflow-form-actions', { 'passflow-form-actions--top-space': hasPassword || hasPasskey })}>
+          <p className='passflow-dont-have-account'>
             Don&apos;t have an account?{' '}
-            <Link 
-              to={signUpPath ?? routes.signup.path} 
-              search={window.location.search}
-              className='passflow-text-Primary passflow-text-body-2-semiBold'
-            >
+            <Link to={signUpPath ?? routes.signup.path} search={window.location.search} className='passflow-link'>
               Sign Up
             </Link>
           </p>
         </div>
         {size(authMethods.fim.providers) > 0 && (
-          <div className='passflow-mx-auto passflow-max-w-[336px] passflow-w-full passflow-flex passflow-flex-col passflow-items-start passflow-justify-start passflow-gap-[24px]'>
+          <div className='passflow-form-providers'>
             {hasPassword || hasPasswordless || hasPasskey ? (
-              <div className='passflow-w-full passflow-py-[9px] passflow-relative'>
-                <div className='passflow-w-full passflow-h-[1px] passflow-bg-Grey-Four' />
-                <span className='passflow-absolute passflow-top-1/2 -passflow-translate-y-1/2 passflow-left-1/2 -passflow-translate-x-1/2 passflow-px-[15px] passflow-text-Grey-Six passflow-text-caption-1-medium passflow-bg-White'>
-                  Or continue with
-                </span>
+              <div className='passflow-form-divider'>
+                <div className='passflow-form-divider__line' />
+                <span className='passflow-form-divider__text'>Or continue with</span>
               </div>
             ) : null}
             <ProvidersBox providers={authMethods.fim.providers} onClick={onClickProviderHandler} />

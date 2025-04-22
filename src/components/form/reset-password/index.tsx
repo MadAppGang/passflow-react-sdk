@@ -46,7 +46,7 @@ export const ResetPassword: FC<TResetPassword> = ({ successAuthRedirect }) => {
   const { fetch, error, isError, isLoading } = useResetPassword();
   const { navigate } = useNavigation();
   const { get } = useUrlParams();
-  const { passwordPolicy, isError: isErrorApp, error: errorApp } = useAppSettings();
+  const { passwordPolicy, currentStyles, isError: isErrorApp, error: errorApp } = useAppSettings();
 
   if (isErrorApp) throw new Error(errorApp);
 
@@ -79,33 +79,28 @@ export const ResetPassword: FC<TResetPassword> = ({ successAuthRedirect }) => {
     await trigger(['password']);
   };
 
-  const labelStyle = cn('passflow-text-caption-1-medium passflow-text-Grey-One', {
-    'passflow-text-Warning': isError,
-  });
-
   return (
-    <Wrapper title='Reset password' subtitle='Let’s get you back in.'>
-      <span className='passflow-block passflow-text-body-2-medium passflow-text-Grey-Six passflow-text-center passflow-mt-[-32px]'>
-        Enter your new password below.
-      </span>
+    <Wrapper
+      title='Reset password'
+      subtitle='Let’s get you back in.'
+      className='passflow-reset-password-wrapper'
+      customCss={currentStyles?.custom_css}
+    >
+      <span className='passflow-reset-password-text'>Enter your new password below.</span>
       <form
         onSubmit={(e) => {
           e.preventDefault();
           void onSubmitHanlder();
         }}
-        className='passflow-flex passflow-flex-col passflow-gap-[32px] passflow-max-w-[384px] passflow-w-full'
+        className='passflow-form passflow-reset-password-form'
       >
-        <div
-          className={`passflow-flex passflow-flex-col passflow-gap-[24px] passflow-w-full passflow-p-[24px] 
-              passflow-rounded-[6px] passflow-shadow-[0_4px_15px_0_rgba(0,0,0,0.09)]`}
-        >
-          <div
-            className={`group passflow-relative passflow-flex passflow-flex-col passflow-items-start 
-                passflow-justify-center passflow-gap-[6px]`}
-          >
-            <label htmlFor='password' className={labelStyle}>
-              New password
-            </label>
+        <div className='passflow-form-container'>
+          <div className='passflow-form-field'>
+            <div className='passflow-form-field__header'>
+              <label htmlFor='password' className={cn('passflow-field-label', { 'passflow-field-label--error': isError })}>
+                New password
+              </label>
+            </div>
             <Controller
               name='password'
               control={control}
@@ -146,9 +141,9 @@ export const ResetPassword: FC<TResetPassword> = ({ successAuthRedirect }) => {
               )}
             />
             {isError && (
-              <div className='passflow-flex passflow-items-center passflow-justify-center passflow-gap-[4px]'>
+              <div className='passflow-form-error'>
                 <Icon size='small' id='warning' type='general' className='icon-warning' />
-                <span className='passflow-text-caption-1-medium passflow-text-Warning'>{error}</span>
+                <span className='passflow-form-error-text'>{error}</span>
               </div>
             )}
           </div>
@@ -158,7 +153,7 @@ export const ResetPassword: FC<TResetPassword> = ({ successAuthRedirect }) => {
           variant='primary'
           type='submit'
           disabled={!isDirty || !isValid || isLoading}
-          className='passflow-m-auto'
+          className='passflow-button-reset-password'
         >
           Save new password
         </Button>

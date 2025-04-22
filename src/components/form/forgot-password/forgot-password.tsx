@@ -46,7 +46,7 @@ export const ForgotPassword: FC<TForgotPassword> = ({
     defaultValues: initialValues,
   });
 
-  const { appSettings, isError: isErrorApp, error: errorApp } = useAppSettings();
+  const { appSettings, currentStyles, isError: isErrorApp, error: errorApp } = useAppSettings();
 
   if (isErrorApp) throw new Error(errorApp);
 
@@ -96,10 +96,6 @@ export const ForgotPassword: FC<TForgotPassword> = ({
     }
   };
 
-  const labelStyle = cn('passflow-text-caption-1-medium passflow-text-Grey-Six', {
-    'passflow-text-Warning': isError,
-  });
-
   // if (!state)
   //   return (
   //     <Navigate
@@ -120,27 +116,21 @@ export const ForgotPassword: FC<TForgotPassword> = ({
     : 'For security reasons, we do NOT store your password. So rest assured that we will never send your password via SMS.';
 
   return (
-    <Wrapper title='Forgot password?' subtitle={currentSubtitle}>
-      <span className='passflow-flex passflow-mt-[-24px] passflow-text-body-2-medium passflow-text-Grey-Six passflow-text-center passflow-max-w-[384px] passflow-mx-auto'>
-        {currentSubscriptions}
-      </span>
+    <Wrapper
+      title='Forgot password?'
+      subtitle={currentSubtitle}
+      className='passflow-forgot-password-wrapper'
+      customCss={currentStyles?.custom_css}
+    >
+      <span className='passflow-form-subscriptions'>{currentSubscriptions}</span>
 
-      <form
-        onSubmit={(e) => e.preventDefault()}
-        className='passflow-flex passflow-flex-col passflow-gap-[32px] passflow-max-w-[384px] passflow-w-full'
-      >
-        <div
-          className={`passflow-flex passflow-flex-col passflow-gap-[24px] passflow-p-[24px] passflow-rounded-[6px] 
-              passflow-shadow-[0_4px_15px_0_rgba(0,0,0,0.09)]`}
-        >
-          <div
-            className={`group passflow-relative passflow-flex passflow-flex-col passflow-items-start 
-                passflow-justify-center passflow-gap-[6px]`}
-          >
+      <form onSubmit={(e) => e.preventDefault()} className='passflow-form'>
+        <div className='passflow-form-container'>
+          <div className='passflow-form-field'>
             {eq(defaultMethod, 'email_or_username') && (
               <>
-                <div className='passflow-w-full passflow-flex passflow-items-center passflow-justify-between'>
-                  <label htmlFor='identity' className={labelStyle}>
+                <div className='passflow-form-field__header'>
+                  <label htmlFor='identity' className={cn('passflow-field-label', { 'passflow-field-label--error': isError })}>
                     {getIdentityLabel(authMethods, 'label')}
                   </label>
                 </div>
@@ -169,8 +159,8 @@ export const ForgotPassword: FC<TForgotPassword> = ({
             )}
             {eq(defaultMethod, 'phone') && (
               <>
-                <div className='passflow-w-full passflow-flex passflow-items-center passflow-justify-between'>
-                  <label htmlFor='phone' className={labelStyle}>
+                <div className='passflow-form-field__header'>
+                  <label htmlFor='phone' className={cn('passflow-field-label', { 'passflow-field-label--error': isError })}>
                     Phone
                   </label>
                 </div>
@@ -200,28 +190,28 @@ export const ForgotPassword: FC<TForgotPassword> = ({
               </>
             )}
             {isError && (
-              <div className='passflow-flex passflow-items-center passflow-justify-center passflow-gap-[4px]'>
+              <div className='passflow-form-error'>
                 <Icon size='small' id='warning' type='general' className='icon-warning' />
-                <span className='passflow-text-caption-1-medium passflow-text-Warning'>{error}</span>
+                <span className='passflow-form-error-text'>{error}</span>
               </div>
             )}
           </div>
         </div>
-        <div className='passflow-flex passflow-flex-col passflow-gap-[24px]'>
+        <div className='passflow-send-reset-wrapper'>
           <Button
             size='big'
             variant='primary'
             type='button'
             disabled={!isDirty || !isValid || isLoading}
-            className='passflow-m-auto'
+            className='passflow-button-send-reset-password'
             // eslint-disable-next-line @typescript-eslint/no-misused-promises
             onClick={onSubmitHanlder}
           >
             Send reset instructions
           </Button>
-          <p className='passflow-text-Grey-One passflow-text-body-2-medium passflow-text-center'>
+          <p className='passflow-remember-password'>
             Remember your password?{' '}
-            <Link to={signInPath ?? routes.signin.path} className='passflow-text-Primary passflow-text-body-2-semiBold'>
+            <Link to={signInPath ?? routes.signin.path} className='passflow-link'>
               Sign In
             </Link>{' '}
           </p>

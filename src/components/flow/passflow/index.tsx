@@ -14,8 +14,8 @@ import '@/styles/index.css';
 import { ErrorComponent } from '@/components/error';
 import { withError } from '@/hocs';
 import type { SuccessAuthRedirect } from '@/types';
-import { Navigate, Route, Routes } from 'react-router-dom';
 import { getUrlErrors } from '@/utils';
+import { Navigate, Route, Routes } from 'react-router-dom';
 
 export type PassflowProps = {
   federatedDisplayMode: 'modal' | 'redirect';
