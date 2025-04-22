@@ -14,7 +14,7 @@ const searchParamsInvitationJoinSchema = Yup.object().shape({
 });
 
 const InvitationJoinFlow: FC = () => {
-  const { currentStyles } = useAppSettings();
+  const { currentStyles, loginAppTheme } = useAppSettings();
   const { navigate } = useNavigation();
   const { get } = useUrlParams();
   const passflow = usePassflow();
@@ -59,7 +59,7 @@ const InvitationJoinFlow: FC = () => {
     } = invitationTokenData as InvitationToken;
 
     return (
-      <Wrapper title='Join to Passflow' className='passflow-invitation-join-wrapper' customCss={currentStyles?.custom_css}>
+      <Wrapper title='Join to Passflow' className='passflow-invitation-join-wrapper' customCss={currentStyles?.custom_css} customLogo={currentStyles?.logo_url} removeBranding={loginAppTheme?.remove_passflow_logo}>
         <span className='passflow-invitation-join-text'>
           {inviterName} has invited you to workspace
           <br /> <strong className='passflow-invitation-join-text-strong'>{tenantName}</strong>

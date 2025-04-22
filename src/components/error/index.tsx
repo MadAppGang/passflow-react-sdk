@@ -14,7 +14,7 @@ const defaultErrorMessage = 'Something went wrong';
 
 export const ErrorComponent: FC<TError> = ({ error = defaultErrorMessage, goBackRedirectTo }) => {
   const { navigate } = useNavigation();
-  const { currentStyles } = useAppSettings();
+  const { currentStyles, loginAppTheme } = useAppSettings();
 
   const onGoBackHandler = () => {
     if (!isValidUrl(goBackRedirectTo)) navigate({ to: goBackRedirectTo });
@@ -22,7 +22,7 @@ export const ErrorComponent: FC<TError> = ({ error = defaultErrorMessage, goBack
   };
 
   return (
-    <Wrapper iconId='logo-red' className='passflow-error-wrapper' customCss={currentStyles?.custom_css}>
+    <Wrapper iconId='logo-red' className='passflow-error-wrapper' customCss={currentStyles?.custom_css} customLogo={currentStyles?.logo_url} removeBranding={loginAppTheme?.remove_passflow_logo}>
       <div className='passflow-error-container'>
         <div className='passflow-error-container-text-wrapper'>
           {error && <p className='passflow-error-container-text'>{error}</p>}

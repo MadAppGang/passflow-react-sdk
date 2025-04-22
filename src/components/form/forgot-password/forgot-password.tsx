@@ -46,7 +46,7 @@ export const ForgotPassword: FC<TForgotPassword> = ({
     defaultValues: initialValues,
   });
 
-  const { appSettings, currentStyles, isError: isErrorApp, error: errorApp } = useAppSettings();
+  const { appSettings, currentStyles, isError: isErrorApp, error: errorApp, loginAppTheme } = useAppSettings();
 
   if (isErrorApp) throw new Error(errorApp);
 
@@ -121,6 +121,8 @@ export const ForgotPassword: FC<TForgotPassword> = ({
       subtitle={currentSubtitle}
       className='passflow-forgot-password-wrapper'
       customCss={currentStyles?.custom_css}
+      customLogo={currentStyles?.logo_url}
+      removeBranding={loginAppTheme?.remove_passflow_logo}
     >
       <span className='passflow-form-subscriptions'>{currentSubscriptions}</span>
 

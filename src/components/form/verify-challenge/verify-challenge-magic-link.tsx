@@ -13,7 +13,7 @@ const challengeTypeFullString = {
 };
 
 export const VerifyChallengeMagicLink = () => {
-  const { currentStyles } = useAppSettings();
+  const { currentStyles, loginAppTheme } = useAppSettings();
   const { fetch: refetch } = useSignIn();
   const { get } = useUrlParams({
     identity: '',
@@ -45,6 +45,8 @@ export const VerifyChallengeMagicLink = () => {
       title='Check your email'
       className='passflow-verify-challenge-magic-link-wrapper'
       customCss={currentStyles?.custom_css}
+      customLogo={currentStyles?.logo_url}
+      removeBranding={loginAppTheme?.remove_passflow_logo}
     >
       <div className='passflow-verify-challenge-magic-link-container'>
         <p className='passflow-verify-challenge-magic-link-text'>

@@ -46,7 +46,7 @@ export const ResetPassword: FC<TResetPassword> = ({ successAuthRedirect }) => {
   const { fetch, error, isError, isLoading } = useResetPassword();
   const { navigate } = useNavigation();
   const { get } = useUrlParams();
-  const { passwordPolicy, currentStyles, isError: isErrorApp, error: errorApp } = useAppSettings();
+  const { passwordPolicy, currentStyles, isError: isErrorApp, error: errorApp, loginAppTheme } = useAppSettings();
 
   if (isErrorApp) throw new Error(errorApp);
 
@@ -85,6 +85,8 @@ export const ResetPassword: FC<TResetPassword> = ({ successAuthRedirect }) => {
       subtitle='Let’s get you back in.'
       className='passflow-reset-password-wrapper'
       customCss={currentStyles?.custom_css}
+      customLogo={currentStyles?.logo_url}
+      removeBranding={loginAppTheme?.remove_passflow_logo}
     >
       <span className='passflow-reset-password-text'>Enter your new password below.</span>
       <form

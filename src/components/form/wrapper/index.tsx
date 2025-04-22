@@ -11,9 +11,12 @@ type TWrapper = PropsWithChildren & {
   subtitle?: string;
   className?: string;
   customCss?: string;
+  customLogo?: string;
+  removeBranding?: boolean;
 };
 
-export const Wrapper: FC<TWrapper> = ({ iconId = 'logo', title = '', subtitle = '', className = '', children, customCss }) => {
+export const Wrapper: FC<TWrapper> = ({ iconId = 'logo', title = '', subtitle = '', className = '', children, customCss, customLogo, removeBranding = false }) => {
+
   return (
     <HelmetProvider>
       <Helmet>
@@ -22,7 +25,11 @@ export const Wrapper: FC<TWrapper> = ({ iconId = 'logo', title = '', subtitle = 
       <div id='passflow-wrapper' className='passflow-wrapper'>
         <div className={cn('passflow-form-main-wrapper', className)}>
           <div className='passflow-form-main-container'>
-            <Icon id={iconId} size='large' type='general' />
+            {customLogo ? (
+              <img src={customLogo} alt='custom logo' className='passflow-form-main-container-logo' />
+            ) : (
+              <Icon id={iconId} size='large' type='general' />
+            )}
             {title && (
               <div className='passflow-form-header'>
                 <h2 className='passflow-form-title'>{title}</h2>
@@ -32,11 +39,13 @@ export const Wrapper: FC<TWrapper> = ({ iconId = 'logo', title = '', subtitle = 
           </div>
           {children}
         </div>
-        <div className='passflow-branding'>
-          <p className='passflow-branding-text'>
-            Secured by <span className='passflow-branding-text-secondary passflow-secondary-font'>PASSFLOW</span>
-          </p>
-        </div>
+        {!removeBranding && (
+          <div className='passflow-branding'>
+            <p className='passflow-branding-text'>
+              Secured by <span className='passflow-branding-text-secondary passflow-secondary-font'>PASSFLOW</span>
+            </p>
+          </div>
+        )}
       </div>
     </HelmetProvider>
   );

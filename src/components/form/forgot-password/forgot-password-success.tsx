@@ -16,7 +16,7 @@ const searchParamsForgotPasswordSuccessSchema = Yup.object().shape({
 });
 
 export const ForgotPasswordSuccess = () => {
-  const { currentStyles } = useAppSettings();
+  const { currentStyles, loginAppTheme } = useAppSettings();
   const { fetch: refetch } = useForgotPassword();
   const { get } = useUrlParams();
 
@@ -47,6 +47,8 @@ export const ForgotPasswordSuccess = () => {
       title={`Check your ${params.identity}`}
       className='passflow-forgot-password-success-wrapper'
       customCss={currentStyles?.custom_css}
+      customLogo={currentStyles?.logo_url}
+      removeBranding={loginAppTheme?.remove_passflow_logo}
     >
       <div className='passflow-forgot-password-success-container'>
         <p className='passflow-forgot-password-success-text'>

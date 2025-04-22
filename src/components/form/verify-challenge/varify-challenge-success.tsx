@@ -3,10 +3,10 @@ import type { FC } from 'react';
 import { Wrapper } from '../wrapper';
 
 export const VerifyChallengeSuccess: FC = () => {
-  const { currentStyles } = useAppSettings();
+  const { currentStyles, loginAppTheme } = useAppSettings();
 
   return (
-    <Wrapper iconId='logo' className='passflow-verify-challenge-success-wrapper' customCss={currentStyles?.custom_css}>
+    <Wrapper iconId='logo' className='passflow-verify-challenge-success-wrapper' customCss={currentStyles?.custom_css} customLogo={currentStyles?.logo_url} removeBranding={loginAppTheme?.remove_passflow_logo}>
       <div className='passflow-verify-challenge-success-wrapper'>
         <div className='passflow-verify-challenge-success-container'>
           <p className='passflow-verify-challenge-success-text'>Successful verification!</p>

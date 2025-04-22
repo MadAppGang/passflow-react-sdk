@@ -48,7 +48,7 @@ export const VerifyChallengeOTPManual: FC<VerifyChallengeOTPManualProps> = ({
   signUpPath,
 }) => {
   const passflow = usePassflow();
-  const { currentStyles } = useAppSettings();
+  const { currentStyles, loginAppTheme } = useAppSettings();
   const { navigate } = useNavigation();
   const { fetch: refetch } = useSignIn();
   const { fetch: fetchPasswordlessComplete, isError, error } = usePasswordlessComplete();
@@ -111,6 +111,8 @@ export const VerifyChallengeOTPManual: FC<VerifyChallengeOTPManualProps> = ({
       subtitle={`We sent OTP code to your ${challengeTypeFullString[identity as keyof typeof challengeTypeFullString]}`}
       className='passflow-verify-otp'
       customCss={currentStyles?.custom_css}
+      customLogo={currentStyles?.logo_url}
+      removeBranding={loginAppTheme?.remove_passflow_logo}
     >
       <div className='passflow-verify-otp-container'>
         {identityValue && (

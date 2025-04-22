@@ -71,7 +71,7 @@ export const SignInForm: FC<TSignIn> = ({
   });
   const passflow = usePassflow();
   const { navigate } = useNavigation();
-  const { appSettings, passwordPolicy, currentStyles, isError: isErrorApp, error: errorApp } = useAppSettings();
+  const { appSettings, passwordPolicy, currentStyles, isError: isErrorApp, error: errorApp, loginAppTheme } = useAppSettings();
   const { federatedWithRedirect } = useProvider(federatedCallbackUrl);
 
   if (isErrorApp) throw new Error(errorApp);
@@ -246,6 +246,8 @@ export const SignInForm: FC<TSignIn> = ({
       subtitle='To Passflow by Madappgang'
       className='passflow-signin-wrapper'
       customCss={currentStyles?.custom_css}
+      customLogo={currentStyles?.logo_url}
+      removeBranding={loginAppTheme?.remove_passflow_logo}
     >
       {hasPasskey && (hasPasswordless || hasPassword) && (
         <div className='passflow-form-switch'>

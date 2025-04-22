@@ -11,7 +11,7 @@ type TPasskey = {
 };
 
 export const Passkey: FC<TPasskey> = ({ relaingPartyId }) => {
-  const { currentStyles } = useAppSettings();
+  const { currentStyles, loginAppTheme } = useAppSettings();
   const [editDialogIsOpen, setEditDialogIsOpen] = useState<boolean>(false);
   const [currentPasskeyId, setCurrentPasskeyId] = useState<string>('');
   const { data, createUserPasskey, editUserPasskey, deleteUserPasskey, isError } = useUserPasskeys();
@@ -43,7 +43,7 @@ export const Passkey: FC<TPasskey> = ({ relaingPartyId }) => {
   ];
 
   return (
-    <Wrapper title='Passkeys you created' className='passflow-passkey-wrapper' customCss={currentStyles?.custom_css}>
+    <Wrapper title='Passkeys you created' className='passflow-passkey-wrapper' customCss={currentStyles?.custom_css} customLogo={currentStyles?.logo_url} removeBranding={loginAppTheme?.remove_passflow_logo}>
       <PasskeyList
         data={data}
         renderActions={(id, name) => <PasskeyActions passkeyId={id} passkeyName={name} actions={passkeyActions} />}

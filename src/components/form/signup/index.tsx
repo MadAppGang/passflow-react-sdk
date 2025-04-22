@@ -76,7 +76,7 @@ export const SignUpForm: FC<TSignUp> = ({
   });
   const passflow = usePassflow();
   const { navigate } = useNavigation();
-  const { appSettings, passwordPolicy, currentStyles, isError: isErrorApp, error: errorApp } = useAppSettings();
+  const { appSettings, passwordPolicy, currentStyles, isError: isErrorApp, error: errorApp, loginAppTheme } = useAppSettings();
 
   if (isErrorApp) throw new Error(errorApp);
 
@@ -268,6 +268,8 @@ export const SignUpForm: FC<TSignUp> = ({
       subtitle='For Passflow by Madappgang'
       className='passflow-signup-wrapper'
       customCss={currentStyles?.custom_css}
+      customLogo={currentStyles?.logo_url}
+      removeBranding={loginAppTheme?.remove_passflow_logo}
     >
       {hasPasskey && (hasPasswordless || hasPassword) && (
         <div className='passflow-form-switch'>

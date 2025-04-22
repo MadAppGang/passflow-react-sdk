@@ -1410,3 +1410,12 @@ body {
   color: var(--passflow-secondary-text-color);
   text-align: center;
 }
+
+/* CUSTOM LOGO */
+.passflow-form-main-container-logo {
+  border-radius: 8px;
+  width: 44px;
+  height: 44px;
+  object-fit: cover;
+  object-position: center;
+}
