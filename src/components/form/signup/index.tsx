@@ -529,8 +529,9 @@ export const SignUpForm: FC<TSignUp> = ({
           <div className='passflow-form-providers'>
             {hasPassword || hasPasswordless || hasPasskey ? (
               <div className='passflow-form-divider'>
-                <div className='passflow-form-divider__line' />
+                <div className='passflow-form-divider__line-left' />
                 <span className='passflow-form-divider__text'>Or continue with</span>
+                <div className='passflow-form-divider__line-right' />
               </div>
             ) : null}
             <ProvidersBox providers={authMethods.fim.providers} onClick={onClickProviderHandler} />

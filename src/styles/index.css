@@ -43,8 +43,8 @@ body {
   --passflow-passkey-button-text-color: var(--passflow-white);
   --passflow-passkey-button-background-color: var(--passflow-dark);
   --passflow-divider-color: var(--passflow-grey-three);
-  --passflow-federated_button_background_color: "";
-  --passflow-federated_button_text_color: "";
+  --passflow-federated_button_background_color: var(--passflow-background);
+  --passflow-federated_button_text_color: var(--passflow-dark);
 
   /* Typography */
   --passflow-h1: 2rem;
@@ -183,7 +183,7 @@ body {
 }
 
 .passflow-button--provider {
-  background-color: var(--passflow-background);
+  background-color: var(--passflow-federated_button_background_color);
 }
 
 .passflow-button--provider:hover,
@@ -995,7 +995,7 @@ body {
 }
 
 .passflow-provider-text {
-  color: var(--passflow-dark);
+  color: var(--passflow-federated_button_text_color);
   font-size: var(--passflow-body-2);
   font-weight: var(--passflow-medium);
   text-transform: capitalize;
@@ -1092,10 +1092,14 @@ body {
   width: 100%;
   padding: 9px 0;
   position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
 
-.passflow-form-divider__line {
-  width: 100%;
+.passflow-form-divider__line-left,
+.passflow-form-divider__line-right {
+  width: 105px;
   height: 1px;
   background-color: var(--passflow-divider-color);
 }
@@ -1109,7 +1113,7 @@ body {
   color: var(--passflow-secondary-text-color);
   font-size: var(--passflow-caption);
   font-weight: var(--passflow-medium);
-  background-color: var(--passflow-background-color);
+  background-color: transparent;
 }
 
 .passflow-form-providers {
