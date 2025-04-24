@@ -103,7 +103,15 @@ export const useAppSettings: UseAppSettingsProps = () => {
     }
   };
 
-  const currentTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  const getCurrentTheme = () => {
+    const theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+
+    if(state.appSettings?.login_app_theme?.color_scheme === 'system') return theme;
+
+    return state.appSettings?.login_app_theme?.color_scheme ?? theme;
+  };
+
+  const currentTheme = getCurrentTheme();
 
   const selectedStyle = state.appSettings?.login_app_theme
     ? currentTheme === 'dark'
