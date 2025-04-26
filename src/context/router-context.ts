@@ -20,8 +20,8 @@ export const routes = {
   reset_password: {
     path: '/password/reset',
   },
-  invitation_join: {
-    path: '/invitation-join',
+  invitation: {
+    path: '/invitation',
   },
   passkey: {
     path: '/passkeysss',

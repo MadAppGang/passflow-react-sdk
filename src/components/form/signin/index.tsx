@@ -13,6 +13,7 @@ import {
   getUrlErrors,
   getUrlWithTokens,
   isValidUrl,
+  useUrlParams,
 } from '@/utils';
 import type {
   PassflowPasskeyAuthenticateStartPayload,
@@ -21,7 +22,7 @@ import type {
   PassflowSignInPayload,
   Providers,
 } from '@passflow/passflow-js-sdk';
-import { eq, has, size } from 'lodash';
+import { eq, has, isEmpty, size } from 'lodash';
 import { phone } from 'phone';
 import queryString from 'query-string';
 import React, { type ChangeEvent, type FC, useEffect, useMemo, useState } from 'react';
@@ -72,7 +73,7 @@ export const SignInForm: FC<TSignIn> = ({
   const passflow = usePassflow();
   const { navigate } = useNavigation();
   const { appSettings, passwordPolicy, currentStyles, isError: isErrorApp, error: errorApp, loginAppTheme } = useAppSettings();
-  const { federatedWithRedirect } = useProvider(federatedCallbackUrl);
+  const { federatedWithRedirect } = useProvider(federatedCallbackUrl, createTenant);
 
   if (isErrorApp) throw new Error(errorApp);
 
@@ -81,6 +82,12 @@ export const SignInForm: FC<TSignIn> = ({
   const { error: errorUrl, message: messageUrl } = getUrlErrors();
 
   if (errorUrl && messageUrl) throw new Error(messageUrl);
+
+  const { get } = useUrlParams({
+    invite_token: '',
+  });
+
+  const inviteToken = get('invite_token');
 
   const { fetch, isError, error, reset, isLoading } = useSignIn();
 
@@ -135,7 +142,12 @@ export const SignInForm: FC<TSignIn> = ({
   };
 
   const onSubmitPasswordHandler = async (userPayload: PassflowSignInPayload) => {
-    const status = await fetch(userPayload, 'password');
+    const payload = {
+      ...userPayload,
+      ...(!isEmpty(inviteToken) && { invite_token: inviteToken }),
+    } as PassflowSignInPayload;
+
+    const status = await fetch(payload, 'password');
 
     if (status) {
       if (!isValidUrl(successAuthRedirect)) navigate({ to: successAuthRedirect });
@@ -144,7 +156,12 @@ export const SignInForm: FC<TSignIn> = ({
   };
 
   const onSubmitPasskeyHandler = async (passkeyPayload: PassflowPasskeyAuthenticateStartPayload) => {
-    const response = await fetch(passkeyPayload, 'passkey');
+    const payload = {
+      ...passkeyPayload,
+      ...(!isEmpty(inviteToken) && { invite_token: inviteToken }),
+    } as PassflowPasskeyAuthenticateStartPayload;
+
+    const response = await fetch(payload, 'passkey');
 
     if (response) {
       if (!isValidUrl(successAuthRedirect)) navigate({ to: successAuthRedirect });
@@ -160,6 +177,7 @@ export const SignInForm: FC<TSignIn> = ({
       challenge_type: getPasswordlessData(authMethods, defaultMethod)?.challengeType,
       create_tenant: createTenant,
       redirect_url: successAuthRedirect,
+      ...(!isEmpty(inviteToken) && { invite_token: inviteToken }),
     } as PassflowPasswordlessSignInPayload;
 
     const response = (await fetch(payload, 'passwordless')) as PassflowPasswordlessResponse;
@@ -238,7 +256,7 @@ export const SignInForm: FC<TSignIn> = ({
     await onSubmitHandler(payload, 'passkey');
   };
 
-  const onClickProviderHandler = (provider: Providers) => federatedWithRedirect(provider);
+  const onClickProviderHandler = (provider: Providers) => federatedWithRedirect(provider, inviteToken ?? undefined);
 
   return (
     <Wrapper

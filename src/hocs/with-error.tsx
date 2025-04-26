@@ -1,6 +1,6 @@
 import type { TError } from '@/components/error';
 import type { PassflowProps } from '@/components/flow/passflow';
-import type { TSignIn, TSignUp } from '@/components/form';
+import type { TInvitationJoinFlow, TSignIn, TSignUp } from '@/components/form';
 import { PassflowContext } from '@/context';
 import React from 'react';
 /* eslint-disable react/prop-types */
@@ -8,7 +8,7 @@ import React from 'react';
 import { type ComponentType, useContext } from 'react';
 import { ErrorBoundary } from 'react-error-boundary';
 
-type UnionType = TSignIn | TSignUp | PassflowProps;
+type UnionType = TSignIn | TSignUp | TInvitationJoinFlow | PassflowProps;
 type TFallbackComponentProps = {
   error: Error;
   resetErrorBoundary: (...args: unknown[]) => void;

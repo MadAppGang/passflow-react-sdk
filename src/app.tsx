@@ -9,7 +9,7 @@ const passflowConfig: PassflowConfig = {
   url: process.env.PASSFLOW_URL ?? 'http://localhost:5432',
   appId: process.env.PASSFLOW_APP_ID ?? 'test_app_id',
   createTenantForNewUser: true,
-  scopes: ['openid', 'email', 'profile', 'offline'],
+  scopes: ['id', 'offline', 'tenant', 'email', 'oidc', 'openid', 'access:tenant:all'],
 };
 
 export const PassflowProviderWrapper: FC<PropsWithChildren> = ({ children }) => {

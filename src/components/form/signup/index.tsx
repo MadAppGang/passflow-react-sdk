@@ -80,7 +80,7 @@ export const SignUpForm: FC<TSignUp> = ({
 
   if (isErrorApp) throw new Error(errorApp);
 
-  const { federatedWithRedirect } = useProvider(federatedCallbackUrl);
+  const { federatedWithRedirect } = useProvider(federatedCallbackUrl, createTenant);
 
   const authMethods = useMemo(() => getAuthMethods(appSettings?.auth_strategies), [appSettings]);
 
@@ -151,7 +151,7 @@ export const SignUpForm: FC<TSignUp> = ({
     const payload = {
       user: userPayload,
       create_tenant: createTenant,
-      ...(!isEmpty(inviteToken) && { invite: inviteToken }),
+      ...(!isEmpty(inviteToken) && { invite_token: inviteToken }),
     } as PassflowSignUpPayload;
 
     const status = await fetch(payload, 'password');
@@ -167,7 +167,7 @@ export const SignUpForm: FC<TSignUp> = ({
       relying_party_id: relyingPartyId,
       create_tenant: createTenant,
       redirect_url: successAuthRedirect,
-      ...(!isEmpty(inviteToken) && { invite: inviteToken }),
+      ...(!isEmpty(inviteToken) && { invite_token: inviteToken }),
     } as PassflowPasskeyRegisterStartPayload;
 
     const response = await fetch(payload, 'passkey');
@@ -186,7 +186,7 @@ export const SignUpForm: FC<TSignUp> = ({
       challenge_type: currentChallegeType,
       create_tenant: createTenant,
       redirect_url: successAuthRedirect,
-      ...(!isEmpty(inviteToken) && { invite: inviteToken }),
+      ...(!isEmpty(inviteToken) && { invite_token: inviteToken }),
     } as PassflowPasswordlessSignInPayload;
 
     const response = (await fetch(payload, 'passwordless')) as PassflowPasswordlessResponse;
@@ -260,7 +260,7 @@ export const SignUpForm: FC<TSignUp> = ({
     await trigger(['password']);
   };
 
-  const onClickProviderHandler = (provider: Providers) => federatedWithRedirect(provider);
+  const onClickProviderHandler = (provider: Providers) => federatedWithRedirect(provider, inviteToken ?? undefined);
 
   return (
     <Wrapper

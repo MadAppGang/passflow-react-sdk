@@ -148,7 +148,7 @@ const PassflowWrapper: FC<PassflowProps> = ({
       <Route path={routesWithPrefix.forgot_password_success} element={<ForgotPasswordSuccess />} />
       <Route path={routesWithPrefix.reset_password} element={<ResetPassword successAuthRedirect={successAuthRedirect} />} />
       <Route
-        path={routesWithPrefix.invitation_join}
+        path={routesWithPrefix.invitation}
         element={<InvitationJoin successAuthRedirect={successAuthRedirect} signInPath={routesWithPrefix.signin} />}
       />
       <Route

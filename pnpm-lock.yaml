@@ -9,8 +9,8 @@ importers:
   .:
     dependencies:
       '@passflow/passflow-js-sdk':
-        specifier: ^0.1.30
-        version: 0.1.30
+        specifier: ^0.1.35
+        version: 0.1.35
       '@radix-ui/react-dialog':
         specifier: ^1.1.6
         version: 1.1.6(@types/react-dom@18.3.5(@types/react@18.3.20))(@types/react@18.3.20)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -531,8 +531,8 @@ packages:
     resolution: {integrity: sha512-oGB+UxlgWcgQkgwo8GcEGwemoTFt3FIO9ababBmaGwXIoBKZ+GTy0pP185beGg7Llih/NSHSV2XAs1lnznocSg==}
     engines: {node: '>= 8'}
 
-  '@passflow/passflow-js-sdk@0.1.30':
-    resolution: {integrity: sha512-EhWB8B4tGvMlwTjJ+f2g5rQ2mG9Xi4+AC0OBlsQmCQE27ZmuMpU/azGYlBPt+n6fsjQduA/hhGZF6thj0wXV8A==}
+  '@passflow/passflow-js-sdk@0.1.35':
+    resolution: {integrity: sha512-NLNjtEcrPlIKFKGeEswg9FyiixTFUnKpNZ72AnPHoNLSk8NiYC8+F3gIoelxJODKTSZfhIU6vuQJWIIv2XuT6Q==}
 
   '@pkgjs/parseargs@0.11.0':
     resolution: {integrity: sha512-+1VkjdD0QBLPodGrJUeqarH8VAIvQODIbwh9XpP5Syisf7YoQgsJKPNFoqqLQlu+VQ/tVSshMR6loPMn8U+dPg==}
@@ -1197,8 +1197,8 @@ packages:
     resolution: {integrity: sha512-wvUjBtSGN7+7SjNpq/9M2Tg350UZD3q62IFZLbRAR1bSMlCo1ZaeW+BJ+D090e4hIIZLBcTDWe4Mh4jvUDajzQ==}
     engines: {node: '>= 0.4'}
 
-  axios@1.8.4:
-    resolution: {integrity: sha512-eBSYY4Y68NNlHbHBMdeDmKNtDgXWhQsJcGqzO3iLUM0GraQFSS9cVgPX5I9b3lbdFKyYoAEGAZF1DwhTaljNAw==}
+  axios@1.9.0:
+    resolution: {integrity: sha512-re4CqKTJaURpzbLHtIi6XpDv20/CnpXOtjRY5/CU32L8gU8ek9UIivcfvSWvmKEngmVbrUtPpdDwWDWL7DNHvg==}
 
   balanced-match@1.0.2:
     resolution: {integrity: sha512-3oSeUO0TMV67hN1AmbXsK4yaqU7tjiHlbxRDZOpH0KW9+CeX4bRAaX0Anxt0tx2MrpRpWwQaPwIlISEJhYU5Pw==}
@@ -3150,11 +3150,11 @@ snapshots:
       '@nodelib/fs.scandir': 2.1.5
       fastq: 1.19.1
 
-  '@passflow/passflow-js-sdk@0.1.30':
+  '@passflow/passflow-js-sdk@0.1.35':
     dependencies:
       '@simplewebauthn/browser': 13.1.0
       '@simplewebauthn/types': 12.0.0
-      axios: 1.8.4
+      axios: 1.9.0
       dayjs: 1.11.13
       uuid: 11.1.0
     transitivePeerDependencies:
@@ -3787,7 +3787,7 @@ snapshots:
     dependencies:
       possible-typed-array-names: 1.1.0
 
-  axios@1.8.4:
+  axios@1.9.0:
     dependencies:
       follow-redirects: 1.15.9
       form-data: 4.0.2

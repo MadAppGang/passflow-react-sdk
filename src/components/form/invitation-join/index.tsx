@@ -2,27 +2,32 @@ import { ErrorComponent } from '@/components/error';
 import { Button } from '@/components/ui';
 import { useAppSettings, useJoinInvite, useNavigation, usePassflow } from '@/hooks';
 import { type InvitationToken, parseToken } from '@passflow/passflow-js-sdk';
-import React, { type FC, useState } from 'react';
+import React, { type FC } from 'react';
 import * as Yup from 'yup';
 import { Wrapper } from '../wrapper';
 import '@/styles/index.css';
 import { withError } from '@/hocs';
-import { undefinedOnCatch, useUrlParams } from '@/utils';
+import { getUrlWithTokens, isValidUrl, undefinedOnCatch, useUrlParams } from '@/utils';
+import { routes } from '@/context';
 
 const searchParamsInvitationJoinSchema = Yup.object().shape({
-  token: Yup.string().required(),
+  invite_token: Yup.string().required(),
 });
 
-const InvitationJoinFlow: FC = () => {
+export type TInvitationJoinFlow = {
+  successAuthRedirect?: string;
+  signInPath?: string;
+}
+
+const InvitationJoinFlow: FC<TInvitationJoinFlow> = ({ signInPath = routes.signin.path, successAuthRedirect }) => {
   const { currentStyles, loginAppTheme } = useAppSettings();
   const { navigate } = useNavigation();
   const { get } = useUrlParams();
   const passflow = usePassflow();
   const { fetch: joinInvite, isLoading: isInvitationJoinLoading, error, isError } = useJoinInvite();
-  const [isLoading, setLoading] = useState(false);
 
   const params = {
-    token: get('token'),
+    invite_token: get('invite_token'),
   };
 
   try {
@@ -31,7 +36,7 @@ const InvitationJoinFlow: FC = () => {
     throw new Error('Invalid invitation token.');
   }
 
-  const { token: invitationToken } = params;
+  const { invite_token: invitationToken } = params;
 
   const invitationTokenData = invitationToken ? undefinedOnCatch(parseToken)(invitationToken) : undefined;
 
@@ -39,10 +44,8 @@ const InvitationJoinFlow: FC = () => {
     if (invitationToken) {
       const invitationJoinResponse = await joinInvite(invitationToken);
       if (invitationJoinResponse) {
-        setLoading(true);
-        const refreshTokenResponse = await passflow.refreshToken();
-        setLoading(false);
-        if (refreshTokenResponse) navigate({ to: successJoinPath });
+        if (!isValidUrl(successJoinPath)) navigate({ to: successJoinPath });
+        else window.location.href = await getUrlWithTokens(passflow, successJoinPath);
       }
     }
   };
@@ -58,22 +61,43 @@ const InvitationJoinFlow: FC = () => {
       redirect_url: redirectUrl,
     } = invitationTokenData as InvitationToken;
 
+    const parsedTokenCache = passflow.getParsedTokenCache();
+
+    const onClickNavigateToSignInHandler = () => navigate({ to: signInPath, search: window.location.search });
+
+    if(!parsedTokenCache?.access_token) onClickNavigateToSignInHandler();
+
     return (
-      <Wrapper title='Join to Passflow' className='passflow-invitation-join-wrapper' customCss={currentStyles?.custom_css} customLogo={currentStyles?.logo_url} removeBranding={loginAppTheme?.remove_passflow_logo}>
-        <span className='passflow-invitation-join-text'>
-          {inviterName} has invited you to workspace
-          <br /> <strong className='passflow-invitation-join-text-strong'>{tenantName}</strong>
-        </span>
+      <Wrapper title={`${inviterName || 'Someone'} invited you to join the ${tenantName} - want to accept?`} className='passflow-invitation-join-wrapper' customCss={currentStyles?.custom_css} customLogo={currentStyles?.logo_url} removeBranding={loginAppTheme?.remove_passflow_logo}>
+        {parsedTokenCache?.access_token && parsedTokenCache.id_token&& (
+          <span className='passflow-invitation-join-text'>
+            You're signed in as <strong className='passflow-invitation-join-text-strong'>{parsedTokenCache.id_token?.email}</strong>{' '}
+            right now. Do you want keep going as <strong className='passflow-invitation-join-text-strong'>{parsedTokenCache.id_token?.email}</strong>{' '}
+            or switch to different account?
+          </span>
+        )}
+        {parsedTokenCache?.access_token && (
+          <Button
+            size='big'
+            type='button'
+            variant='primary'
+            className='passflow-button-invitation-join'
+            onClick={() => void onClickAcceptInvitationHandler(redirectUrl ?? successAuthRedirect)}
+            disabled={isInvitationJoinLoading}
+          >
+            Accept invitation
+          </Button>
+        )}
         <Button
           size='big'
           type='button'
-          variant='primary'
-          className='passflow-button-invitation-join'
-          // eslint-disable-next-line no-void
-          onClick={() => void onClickAcceptInvitationHandler(redirectUrl)}
-          disabled={isInvitationJoinLoading || isLoading}
+          variant='secondary'
+          className='passflow-button-invitation-join-switch'
+          style={!parsedTokenCache?.access_token ? { marginTop: '32px' } : {}}
+          onClick={onClickNavigateToSignInHandler}
+          disabled={isInvitationJoinLoading}
         >
-          Accept invitation
+          Switch account
         </Button>
       </Wrapper>
     );

@@ -3,12 +3,22 @@
  */
 
 /**
+ * Decodes HTML entities in a string
+ */
+const decodeHtmlEntities = (input: string): string => {
+  const doc = new DOMParser().parseFromString(input, 'text/html');
+  return doc.documentElement.textContent || '';
+};
+
+/**
  * Get URL parameters
  * @param defaultValues Default values
  * @returns Object with methods getAll, get, set
  */
 export const useUrlParams = <T extends Record<string, string>>(defaultValues?: T) => {
-  const searchParams = new URLSearchParams(window.location.search);
+  // Decode HTML entities in location.search
+  const decodedSearch = decodeHtmlEntities(window.location.search);
+  const searchParams = new URLSearchParams(decodedSearch);
 
   // Set default values if parameters don't exist
   if (defaultValues) {

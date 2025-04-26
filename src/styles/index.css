@@ -270,6 +270,7 @@ body {
 .passflow-button-resend-reset-password,
 .passflow-button-resend-magic-link,
 .passflow-button-invitation-join,
+.passflow-button-invitation-join-switch,
 .passflow-button-reset-password,
 .passflow-button-go-back-error {
   margin: 0 auto;
@@ -504,6 +505,7 @@ body {
   align-items: center;
   justify-content: center;
   gap: 8px;
+  text-align: center;
 }
 
 .passflow-form-title {
@@ -1367,6 +1369,7 @@ body {
   color: var(--passflow-secondary-text-color);
   text-align: center;
   margin-top: -8px;
+  max-width: 320px;
 }
 
 .passflow-invitation-join-text-strong {
