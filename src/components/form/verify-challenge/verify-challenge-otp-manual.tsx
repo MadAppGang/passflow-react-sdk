@@ -137,7 +137,7 @@ export const VerifyChallengeOTPManual: FC<VerifyChallengeOTPManualProps> = ({
             shouldAutoFocus={shouldAutoFocus}
             skipDefaultStyles
             containerStyle='passflow-verify-otp-inputs'
-            inputStyle={cn('passflow-field-otp', isError && 'passflow-field--warning')}
+            inputStyle={cn('passflow-field-otp passflow-field-otp--focused', isError && 'passflow-field-otp--error')}
             inputType='text'
             renderInput={(props) => <input {...props} />}
           />

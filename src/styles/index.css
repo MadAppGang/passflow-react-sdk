@@ -363,11 +363,13 @@ body {
   color: var(--passflow-secondary-text-color);
 }
 
-.passflow-field--focused:focus-visible {
+.passflow-field--focused:focus-visible,
+.passflow-field-otp--focused:focus-visible {
   outline: 1px solid var(--passflow-primary-color);
 }
 
-.passflow-field--error {
+.passflow-field--error,
+.passflow-field-otp--error {
   outline: 1px solid var(--passflow-warning) !important;
 }
 
@@ -557,6 +559,7 @@ body {
 }
 
 .passflow-field-label-button {
+  text-decoration: none;
   color: var(--passflow-primary-color);
   font-size: var(--passflow-caption);
   font-weight: var(--passflow-medium);

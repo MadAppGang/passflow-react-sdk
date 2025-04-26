@@ -1,7 +1,5 @@
 /* Modern CSS Reset */
-*,
-*::before,
-*::after {
+[class*="passflow-"] {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
@@ -11,17 +9,17 @@
 }
 
 /* HTML5 display-role reset for older browsers */
-article,
-aside,
-details,
-figcaption,
-figure,
-footer,
-header,
-hgroup,
-menu,
-nav,
-section {
+.passflow-article,
+.passflow-aside,
+.passflow-details,
+.passflow-figcaption,
+.passflow-figure,
+.passflow-footer,
+.passflow-header,
+.passflow-hgroup,
+.passflow-menu,
+.passflow-nav,
+.passflow-section {
   display: block;
 }
 
@@ -39,29 +37,28 @@ body {
 }
 
 /* Remove list styles */
-ol,
-ul {
+.passflow-list {
   list-style: none;
 }
 
 /* Remove default styles from links */
-a {
+.passflow-link {
   text-decoration: none;
   color: inherit;
 }
 
 /* Make images easier to work with */
-img,
-picture,
-video,
-canvas,
-svg {
+.passflow-image,
+.passflow-picture,
+.passflow-video,
+.passflow-canvas,
+.passflow-svg {
   display: block;
   max-width: 100%;
 }
 
 /* Remove default button styles */
-button {
+.passflow-button {
   background: none;
   border: none;
   padding: 0;
@@ -71,24 +68,22 @@ button {
 }
 
 /* Remove default input styles */
-input,
-textarea,
-select {
+.passflow-input,
+.passflow-textarea,
+.passflow-select {
   font: inherit;
   color: inherit;
 }
 
 /* Remove default table styles */
-table {
+.passflow-table {
   border-collapse: collapse;
   border-spacing: 0;
 }
 
 /* Remove all animations and transitions for people that prefer not to see them */
 @media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
+  [class*="passflow-"] {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
