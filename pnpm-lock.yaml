@@ -9,8 +9,8 @@ importers:
   .:
     dependencies:
       '@passflow/passflow-js-sdk':
-        specifier: ^0.1.35
-        version: 0.1.35
+        specifier: ^0.1.37
+        version: 0.1.37
       '@radix-ui/react-dialog':
         specifier: ^1.1.6
         version: 1.1.6(@types/react-dom@18.3.5(@types/react@18.3.20))(@types/react@18.3.20)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -531,8 +531,8 @@ packages:
     resolution: {integrity: sha512-oGB+UxlgWcgQkgwo8GcEGwemoTFt3FIO9ababBmaGwXIoBKZ+GTy0pP185beGg7Llih/NSHSV2XAs1lnznocSg==}
     engines: {node: '>= 8'}
 
-  '@passflow/passflow-js-sdk@0.1.35':
-    resolution: {integrity: sha512-NLNjtEcrPlIKFKGeEswg9FyiixTFUnKpNZ72AnPHoNLSk8NiYC8+F3gIoelxJODKTSZfhIU6vuQJWIIv2XuT6Q==}
+  '@passflow/passflow-js-sdk@0.1.37':
+    resolution: {integrity: sha512-LxCyiUyD2Fp1Csih8RcduQIcvn/+LhaLmtAfwpzNuU5Oc1tleUw3zJzpnUwbHGIZj1fpxVxXXKKxrGI+WP1M6Q==}
 
   '@pkgjs/parseargs@0.11.0':
     resolution: {integrity: sha512-+1VkjdD0QBLPodGrJUeqarH8VAIvQODIbwh9XpP5Syisf7YoQgsJKPNFoqqLQlu+VQ/tVSshMR6loPMn8U+dPg==}
@@ -3150,7 +3150,7 @@ snapshots:
       '@nodelib/fs.scandir': 2.1.5
       fastq: 1.19.1
 
-  '@passflow/passflow-js-sdk@0.1.35':
+  '@passflow/passflow-js-sdk@0.1.37':
     dependencies:
       '@simplewebauthn/browser': 13.1.0
       '@simplewebauthn/types': 12.0.0
