@@ -180,12 +180,25 @@ test.describe('signup flow with invite token', () => {
 });
 
 test.describe('signup flow without invite token', () => {
+  const REGISTER_ONLY_VIA_INVITE_TOKEN_ERROR = {
+    error: {
+      "id": "error.app.registration.by.invitation.only",
+      "message": "registration is allowed by invitation only",
+      "status": 403,
+      "location": "location",
+      time: "time"
+    }
+  };
+
   test.beforeEach(async ({ page }) => {
     await page.route('**/settings', async (route) => {
       await route.fulfill({ path: path.join(__dirname, './responses/passflow-settings.json') });
     });
     await page.route('**/app/settings', async (route) => {
       await route.fulfill({ path: path.join(__dirname, './responses/app-settings-only-invite.json') });
+    });
+    await page.route('**/auth/register', async (route) => {
+      await route.fulfill({body: JSON.stringify(REGISTER_ONLY_VIA_INVITE_TOKEN_ERROR), status: 403});
     });
 
     await page.goto('http://localhost:5173/web/signup');

@@ -74,7 +74,7 @@
     "custom_sms_messages": null,
     "registration_allowed": false,
     "invite_only_registration": true,
-    "passwordless_registration_allowed": true,
+    "passwordless_registration_allowed": false,
     "anonymous_registration_allowed": false,
     "create_tenant_on_registration": "",
     "fim_merge_by_email_allowed": true,

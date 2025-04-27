@@ -17,9 +17,10 @@ const searchParamsInvitationJoinSchema = Yup.object().shape({
 export type TInvitationJoinFlow = {
   successAuthRedirect?: string;
   signInPath?: string;
+  signUpPath?: string;
 }
 
-const InvitationJoinFlow: FC<TInvitationJoinFlow> = ({ signInPath = routes.signin.path, successAuthRedirect }) => {
+const InvitationJoinFlow: FC<TInvitationJoinFlow> = ({ signInPath = routes.signin.path, signUpPath = routes.signup.path, successAuthRedirect }) => {
   const { currentStyles, loginAppTheme } = useAppSettings();
   const { navigate } = useNavigation();
   const { get } = useUrlParams();
@@ -64,6 +65,7 @@ const InvitationJoinFlow: FC<TInvitationJoinFlow> = ({ signInPath = routes.signi
     const parsedTokenCache = passflow.getParsedTokenCache();
 
     const onClickNavigateToSignInHandler = () => navigate({ to: signInPath, search: window.location.search });
+    const onClickNavigateToSignUpHandler = () => navigate({ to: signUpPath, search: window.location.search });
 
     if(!parsedTokenCache?.access_token) onClickNavigateToSignInHandler();
 
@@ -88,17 +90,28 @@ const InvitationJoinFlow: FC<TInvitationJoinFlow> = ({ signInPath = routes.signi
             Accept invitation
           </Button>
         )}
-        <Button
-          size='big'
-          type='button'
-          variant='secondary'
-          className='passflow-button-invitation-join-switch'
-          style={!parsedTokenCache?.access_token ? { marginTop: '32px' } : {}}
-          onClick={onClickNavigateToSignInHandler}
-          disabled={isInvitationJoinLoading}
-        >
-          Switch account
-        </Button>
+        <div className='passflow-invitation-join-actions' style={!parsedTokenCache?.access_token ? { marginTop: '32px' } : {}}>
+          <Button
+            size='big'
+            type='button'
+            variant='secondary'
+            className='passflow-button-invitation-join-switch'
+            onClick={onClickNavigateToSignInHandler}
+            disabled={isInvitationJoinLoading}
+          >
+            Switch account
+          </Button>
+          <Button
+            size='big'
+            type='button'
+            variant='secondary'
+            className='passflow-button-invitation-join-register'
+            onClick={onClickNavigateToSignUpHandler}
+            disabled={isInvitationJoinLoading}
+          >
+            Register new user
+          </Button>
+        </div>
       </Wrapper>
     );
   }

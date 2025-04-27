@@ -271,6 +271,7 @@ body {
 .passflow-button-resend-magic-link,
 .passflow-button-invitation-join,
 .passflow-button-invitation-join-switch,
+.passflow-button-invitation-join-register,
 .passflow-button-reset-password,
 .passflow-button-go-back-error {
   margin: 0 auto;
@@ -1377,6 +1378,15 @@ body {
 
 .passflow-invitation-join-text-strong {
   font-weight: var(--passflow-bold);
+}
+
+.passflow-invitation-join-actions {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: start;
+  gap: 16px;
 }
 
 /* RESET PASSWORD */
