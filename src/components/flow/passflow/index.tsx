@@ -9,13 +9,14 @@ import {
   VerifyChallengeOTP,
 } from '@/components/form';
 import { routes } from '@/context';
-import React, { type FC, useEffect, useMemo, useState } from 'react';
+import { type FC, type ReactNode, useEffect, useMemo, useState } from 'react';
 import '@/styles/index.css';
 import { ErrorComponent } from '@/components/error';
 import { withError } from '@/hocs';
 import type { SuccessAuthRedirect } from '@/types';
 import { getUrlErrors } from '@/utils';
-import { Navigate, Route, Routes } from 'react-router-dom';
+import { BrowserRouter, HashRouter, MemoryRouter, Navigate, Route, Routes, useNavigate } from 'react-router-dom';
+import { useNavigation } from '@/hooks';
 
 export type PassflowProps = {
   federatedDisplayMode: 'modal' | 'redirect';
@@ -24,6 +25,8 @@ export type PassflowProps = {
   relyingPartyId?: string;
   federatedCallbackUrl?: string;
   pathPrefix?: string;
+  routerType?: 'browser' | 'hash' | 'memory';
+  basename?: string;
 };
 
 const normalizePathPrefix = (path?: string) => {
@@ -42,6 +45,29 @@ const combineRoutesWithPrefix = (prefix?: string) =>
     {} as Record<keyof typeof routes, string>,
   );
 
+const RouterProvider: FC<{ children: ReactNode; routerType: 'hash' | 'memory' | 'browser' }> = ({ children, routerType }) => {
+  switch (routerType) {
+    case 'hash':
+      return <HashRouter>{children}</HashRouter>;
+    case 'memory':
+      return <MemoryRouter>{children}</MemoryRouter>;
+    default:
+      return <BrowserRouter>{children}</BrowserRouter>;
+  }
+};
+
+const RouterInnerWrapperProvider: FC<{ children: ReactNode }> = ({ children }) => {
+  const navigate = useNavigate();
+  const { setNavigate } = useNavigation();
+
+  useEffect(() => {
+    //@ts-ignore
+    setNavigate((options) => navigate(options));
+  }, [navigate, setNavigate]);
+
+  return children;
+};
+
 const PassflowWrapper: FC<PassflowProps> = ({
   federatedDisplayMode,
   successAuthRedirect,
@@ -49,6 +75,7 @@ const PassflowWrapper: FC<PassflowProps> = ({
   relyingPartyId = window.location.hostname,
   federatedCallbackUrl = window.location.origin,
   pathPrefix = '',
+  routerType = 'browser',
 }) => {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isRouterAvailable, setIsRouterAvailable] = useState<boolean>(false);
@@ -93,76 +120,80 @@ const PassflowWrapper: FC<PassflowProps> = ({
   if (error) throw new Error(error);
 
   return (
-    <Routes>
-      <Route
-        path={routesWithPrefix.signin}
-        element={
-          <SignIn
-            federatedCallbackUrl={federatedCallbackUrl}
-            successAuthRedirect={successAuthRedirect}
-            relyingPartyId={relyingPartyId}
-            federatedDisplayMode={federatedDisplayMode}
-            signUpPath={routesWithPrefix.signup}
-            forgotPasswordPath={routesWithPrefix.forgot_password}
-            verifyMagicLinkPath={routesWithPrefix.verify_magic_link}
-            verifyOTPPath={routesWithPrefix.verify_otp}
+    <RouterProvider routerType={routerType}>
+      <RouterInnerWrapperProvider>
+        <Routes>
+          <Route
+            path={routesWithPrefix.signin}
+            element={
+              <SignIn
+                federatedCallbackUrl={federatedCallbackUrl}
+                successAuthRedirect={successAuthRedirect}
+                relyingPartyId={relyingPartyId}
+                federatedDisplayMode={federatedDisplayMode}
+                signUpPath={routesWithPrefix.signup}
+                forgotPasswordPath={routesWithPrefix.forgot_password}
+                verifyMagicLinkPath={routesWithPrefix.verify_magic_link}
+                verifyOTPPath={routesWithPrefix.verify_otp}
+              />
+            }
           />
-        }
-      />
-      <Route
-        path={routesWithPrefix.signup}
-        element={
-          <SignUp
-            federatedCallbackUrl={federatedCallbackUrl}
-            successAuthRedirect={successAuthRedirect}
-            relyingPartyId={relyingPartyId}
-            federatedDisplayMode={federatedDisplayMode}
-            signInPath={routesWithPrefix.signin}
-            verifyMagicLinkPath={routesWithPrefix.verify_magic_link}
-            verifyOTPPath={routesWithPrefix.verify_otp}
+          <Route
+            path={routesWithPrefix.signup}
+            element={
+              <SignUp
+                federatedCallbackUrl={federatedCallbackUrl}
+                successAuthRedirect={successAuthRedirect}
+                relyingPartyId={relyingPartyId}
+                federatedDisplayMode={federatedDisplayMode}
+                signInPath={routesWithPrefix.signin}
+                verifyMagicLinkPath={routesWithPrefix.verify_magic_link}
+                verifyOTPPath={routesWithPrefix.verify_otp}
+              />
+            }
           />
-        }
-      />
-      <Route
-        path={routesWithPrefix.verify_otp}
-        element={
-          <VerifyChallengeOTP
-            successAuthRedirect={successAuthRedirect}
-            numInputs={6}
-            shouldAutoFocus
-            signUpPath={routesWithPrefix.signup}
+          <Route
+            path={routesWithPrefix.verify_otp}
+            element={
+              <VerifyChallengeOTP
+                successAuthRedirect={successAuthRedirect}
+                numInputs={6}
+                shouldAutoFocus
+                signUpPath={routesWithPrefix.signup}
+              />
+            }
           />
-        }
-      />
-      <Route path={routesWithPrefix.verify_magic_link} element={<VerifyChallengeMagicLink />} />
-      <Route
-        path={routesWithPrefix.forgot_password}
-        element={
-          <ForgotPassword
-            successResetRedirect={successAuthRedirect}
-            signInPath={routesWithPrefix.signin}
-            forgotPasswordSuccessPath={routesWithPrefix.forgot_password_success}
+          <Route path={routesWithPrefix.verify_magic_link} element={<VerifyChallengeMagicLink />} />
+          <Route
+            path={routesWithPrefix.forgot_password}
+            element={
+              <ForgotPassword
+                successResetRedirect={successAuthRedirect}
+                signInPath={routesWithPrefix.signin}
+                forgotPasswordSuccessPath={routesWithPrefix.forgot_password_success}
+              />
+            }
           />
-        }
-      />
-      <Route path={routesWithPrefix.forgot_password_success} element={<ForgotPasswordSuccess />} />
-      <Route path={routesWithPrefix.reset_password} element={<ResetPassword successAuthRedirect={successAuthRedirect} />} />
-      <Route
-        path={routesWithPrefix.invitation}
-        element={<InvitationJoin successAuthRedirect={successAuthRedirect} signInPath={routesWithPrefix.signin} signUpPath={routesWithPrefix.signup} />}
-      />
-      <Route
-        path='*'
-        element={
-          <Navigate
-            to={{
-              pathname: routesWithPrefix.signin,
-              search: window.location.search,
-            }}
+          <Route path={routesWithPrefix.forgot_password_success} element={<ForgotPasswordSuccess />} />
+          <Route path={routesWithPrefix.reset_password} element={<ResetPassword successAuthRedirect={successAuthRedirect} />} />
+          <Route
+            path={routesWithPrefix.invitation}
+            element={<InvitationJoin successAuthRedirect={successAuthRedirect} signInPath={routesWithPrefix.signin} signUpPath={routesWithPrefix.signup} />}
           />
-        }
-      />
-    </Routes>
+          <Route
+            path='*'
+            element={
+              <Navigate
+                to={{
+                  pathname: routesWithPrefix.signin,
+                  search: window.location.search,
+                }}
+              />
+            }
+          />
+        </Routes>
+      </RouterInnerWrapperProvider>
+    </RouterProvider>
   );
 };
 
