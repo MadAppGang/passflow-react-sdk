@@ -45,7 +45,6 @@ const initialValues = {
 export type TSignUp = {
   successAuthRedirect: SuccessAuthRedirect;
   relyingPartyId?: string;
-  federatedCallbackUrl?: string;
   createTenant?: boolean;
   federatedDisplayMode?: 'modal' | 'redirect';
   signInPath?: string;
@@ -54,7 +53,6 @@ export type TSignUp = {
 };
 
 export const SignUpForm: FC<TSignUp> = ({
-  federatedCallbackUrl = window.location.origin,
   successAuthRedirect,
   relyingPartyId = window.location.hostname,
   createTenant = false,
@@ -80,7 +78,7 @@ export const SignUpForm: FC<TSignUp> = ({
 
   if (isErrorApp) throw new Error(errorApp);
 
-  const { federatedWithRedirect } = useProvider(federatedCallbackUrl, createTenant);
+  const { federatedWithRedirect } = useProvider(successAuthRedirect, createTenant);
 
   const authMethods = useMemo(() => getAuthMethods(appSettings?.auth_strategies), [appSettings]);
 

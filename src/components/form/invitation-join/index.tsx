@@ -6,9 +6,9 @@ import React, { type FC } from 'react';
 import * as Yup from 'yup';
 import { Wrapper } from '../wrapper';
 import '@/styles/index.css';
+import { routes } from '@/context';
 import { withError } from '@/hocs';
 import { getUrlWithTokens, isValidUrl, undefinedOnCatch, useUrlParams } from '@/utils';
-import { routes } from '@/context';
 
 const searchParamsInvitationJoinSchema = Yup.object().shape({
   invite_token: Yup.string().required(),
@@ -18,9 +18,13 @@ export type TInvitationJoinFlow = {
   successAuthRedirect?: string;
   signInPath?: string;
   signUpPath?: string;
-}
+};
 
-const InvitationJoinFlow: FC<TInvitationJoinFlow> = ({ signInPath = routes.signin.path, signUpPath = routes.signup.path, successAuthRedirect }) => {
+const InvitationJoinFlow: FC<TInvitationJoinFlow> = ({
+  signInPath = routes.signin.path,
+  signUpPath = routes.signup.path,
+  successAuthRedirect,
+}) => {
   const { currentStyles, loginAppTheme } = useAppSettings();
   const { navigate } = useNavigation();
   const { get } = useUrlParams();
@@ -67,15 +71,23 @@ const InvitationJoinFlow: FC<TInvitationJoinFlow> = ({ signInPath = routes.signi
     const onClickNavigateToSignInHandler = () => navigate({ to: signInPath, search: window.location.search });
     const onClickNavigateToSignUpHandler = () => navigate({ to: signUpPath, search: window.location.search });
 
-    if(!parsedTokenCache?.access_token) onClickNavigateToSignInHandler();
+    if (!parsedTokenCache?.access_token) onClickNavigateToSignInHandler();
 
     return (
-      <Wrapper title={`${inviterName || 'Someone'} invited you to join the ${tenantName} - want to accept?`} className='passflow-invitation-join-wrapper' customCss={currentStyles?.custom_css} customLogo={currentStyles?.logo_url} removeBranding={loginAppTheme?.remove_passflow_logo}>
-        {parsedTokenCache?.access_token && parsedTokenCache.id_token&& (
+      <Wrapper
+        title={`${inviterName || 'Someone'} invited you to join the ${tenantName} - want to accept?`}
+        className='passflow-invitation-join-wrapper'
+        customCss={currentStyles?.custom_css}
+        customLogo={currentStyles?.logo_url}
+        removeBranding={loginAppTheme?.remove_passflow_logo}
+      >
+        {parsedTokenCache?.access_token && parsedTokenCache.id_token && (
           <span className='passflow-invitation-join-text'>
-            You're signed in as <strong className='passflow-invitation-join-text-strong'>{parsedTokenCache.id_token?.email}</strong>{' '}
-            right now. Do you want keep going as <strong className='passflow-invitation-join-text-strong'>{parsedTokenCache.id_token?.email}</strong>{' '}
-            or switch to different account?
+            You're signed in as{' '}
+            <strong className='passflow-invitation-join-text-strong'>{parsedTokenCache.id_token?.email}</strong> right now. Do
+            you want keep going as{' '}
+            <strong className='passflow-invitation-join-text-strong'>{parsedTokenCache.id_token?.email}</strong> or switch to
+            different account?
           </span>
         )}
         {parsedTokenCache?.access_token && (

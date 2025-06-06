@@ -43,7 +43,13 @@ export const Passkey: FC<TPasskey> = ({ relaingPartyId }) => {
   ];
 
   return (
-    <Wrapper title='Passkeys you created' className='passflow-passkey-wrapper' customCss={currentStyles?.custom_css} customLogo={currentStyles?.logo_url} removeBranding={loginAppTheme?.remove_passflow_logo}>
+    <Wrapper
+      title='Passkeys you created'
+      className='passflow-passkey-wrapper'
+      customCss={currentStyles?.custom_css}
+      customLogo={currentStyles?.logo_url}
+      removeBranding={loginAppTheme?.remove_passflow_logo}
+    >
       <PasskeyList
         data={data}
         renderActions={(id, name) => <PasskeyActions passkeyId={id} passkeyName={name} actions={passkeyActions} />}

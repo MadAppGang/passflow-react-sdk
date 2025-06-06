@@ -13,17 +13,16 @@ import { type FC, type ReactNode, useEffect, useMemo, useState } from 'react';
 import '@/styles/index.css';
 import { ErrorComponent } from '@/components/error';
 import { withError } from '@/hocs';
+import { useNavigation } from '@/hooks';
 import type { SuccessAuthRedirect } from '@/types';
 import { getUrlErrors } from '@/utils';
 import { BrowserRouter, HashRouter, MemoryRouter, Navigate, Route, Routes, useNavigate } from 'react-router-dom';
-import { useNavigation } from '@/hooks';
 
 export type PassflowProps = {
-  federatedDisplayMode: 'modal' | 'redirect';
   successAuthRedirect: SuccessAuthRedirect;
+  federatedDisplayMode?: 'modal' | 'redirect';
   error?: string;
   relyingPartyId?: string;
-  federatedCallbackUrl?: string;
   pathPrefix?: string;
   routerType?: 'browser' | 'hash' | 'memory';
   basename?: string;
@@ -69,11 +68,10 @@ const RouterInnerWrapperProvider: FC<{ children: ReactNode }> = ({ children }) =
 };
 
 const PassflowWrapper: FC<PassflowProps> = ({
-  federatedDisplayMode,
   successAuthRedirect,
+  federatedDisplayMode = 'redirect',
   error = undefined,
   relyingPartyId = window.location.hostname,
-  federatedCallbackUrl = window.location.origin,
   pathPrefix = '',
   routerType = 'browser',
 }) => {
@@ -82,10 +80,8 @@ const PassflowWrapper: FC<PassflowProps> = ({
   const [dependencyError, setDependencyError] = useState<string>('');
 
   const { error: errorUrlSuccess, message: messageUrlSuccess } = getUrlErrors(successAuthRedirect);
-  const { error: errorUrlCallback, message: messageUrlCallback } = getUrlErrors(federatedCallbackUrl);
 
   if (errorUrlSuccess && messageUrlSuccess) throw new Error(messageUrlSuccess);
-  if (errorUrlCallback && messageUrlCallback) throw new Error(messageUrlCallback);
 
   const routesWithPrefix = useMemo(() => combineRoutesWithPrefix(pathPrefix), [pathPrefix]);
 
@@ -127,7 +123,6 @@ const PassflowWrapper: FC<PassflowProps> = ({
             path={routesWithPrefix.signin}
             element={
               <SignIn
-                federatedCallbackUrl={federatedCallbackUrl}
                 successAuthRedirect={successAuthRedirect}
                 relyingPartyId={relyingPartyId}
                 federatedDisplayMode={federatedDisplayMode}
@@ -142,7 +137,6 @@ const PassflowWrapper: FC<PassflowProps> = ({
             path={routesWithPrefix.signup}
             element={
               <SignUp
-                federatedCallbackUrl={federatedCallbackUrl}
                 successAuthRedirect={successAuthRedirect}
                 relyingPartyId={relyingPartyId}
                 federatedDisplayMode={federatedDisplayMode}
@@ -178,7 +172,13 @@ const PassflowWrapper: FC<PassflowProps> = ({
           <Route path={routesWithPrefix.reset_password} element={<ResetPassword successAuthRedirect={successAuthRedirect} />} />
           <Route
             path={routesWithPrefix.invitation}
-            element={<InvitationJoin successAuthRedirect={successAuthRedirect} signInPath={routesWithPrefix.signin} signUpPath={routesWithPrefix.signup} />}
+            element={
+              <InvitationJoin
+                successAuthRedirect={successAuthRedirect}
+                signInPath={routesWithPrefix.signin}
+                signUpPath={routesWithPrefix.signup}
+              />
+            }
           />
           <Route
             path='*'

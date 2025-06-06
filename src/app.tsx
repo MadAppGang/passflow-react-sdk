@@ -1,8 +1,6 @@
 import { PassflowFlow } from '@/components/flow';
-import type { NavigateOptions } from '@/context';
 import type { PassflowConfig } from '@passflow/passflow-js-sdk';
 import React, { type FC, type PropsWithChildren } from 'react';
-import { BrowserRouter, useNavigate } from 'react-router-dom';
 import { PassflowProvider } from './components/provider';
 
 const passflowConfig: PassflowConfig = {
@@ -13,23 +11,12 @@ const passflowConfig: PassflowConfig = {
 };
 
 export const PassflowProviderWrapper: FC<PropsWithChildren> = ({ children }) => {
-  const navigate = useNavigate();
-
   return (
     <PassflowProvider
       url={passflowConfig.url}
       appId={passflowConfig.appId}
       createTenantForNewUser={passflowConfig.createTenantForNewUser}
       scopes={passflowConfig.scopes}
-      navigate={(options: NavigateOptions) =>
-        navigate(
-          {
-            pathname: options.to,
-            search: options.search,
-          },
-          { replace: options.replace },
-        )
-      }
       router='react-router'
     >
       {children}
@@ -38,16 +25,9 @@ export const PassflowProviderWrapper: FC<PropsWithChildren> = ({ children }) => 
 };
 
 export const App = () => (
-  <BrowserRouter>
-    <PassflowProviderWrapper>
-      <PassflowFlow
-        federatedDisplayMode='redirect'
-        successAuthRedirect='https://jwt.io'
-        federatedCallbackUrl='https://jwt.io'
-        pathPrefix='/web'
-      />
-    </PassflowProviderWrapper>
-  </BrowserRouter>
+  <PassflowProviderWrapper>
+    <PassflowFlow successAuthRedirect='https://jwt.io' pathPrefix='/web' />
+  </PassflowProviderWrapper>
 );
 
 export default App;

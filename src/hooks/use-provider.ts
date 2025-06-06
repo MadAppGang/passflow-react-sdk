@@ -1,9 +1,20 @@
-import type { PassflowFederatedAuthPayload, Providers } from '@passflow/passflow-js-sdk';
-import { usePassflow } from './use-passflow';
-import { useContext } from 'react';
 import { PassflowContext } from '@/context';
+import { isValidUrl } from '@/utils';
+import type { PassflowFederatedAuthPayload, Providers } from '@passflow/passflow-js-sdk';
+import { useContext } from 'react';
+import { usePassflow } from './use-passflow';
 
-export type UseProviderProps = (redirectUrl: string, createTenant?: boolean) => {
+const getFullRedirectUrl = (redirectUrl: string): string => {
+  if (isValidUrl(redirectUrl)) {
+    return redirectUrl;
+  }
+  return `${window.location.origin}${redirectUrl.startsWith('/') ? '' : '/'}${redirectUrl}`;
+};
+
+export type UseProviderProps = (
+  redirectUrl: string,
+  createTenant?: boolean,
+) => {
   federatedWithPopup: (provider: Providers, inviteToken?: string) => void;
   federatedWithRedirect: (provider: Providers, inviteToken?: string) => void;
 };
@@ -13,13 +24,15 @@ export const useProvider: UseProviderProps = (redirectUrl, createTenant) => {
   const context = useContext(PassflowContext);
 
   const payload = {
-    redirect_url: redirectUrl,
+    redirect_url: getFullRedirectUrl(redirectUrl),
     scopes: context?.state.scopes,
     create_tenant: context?.state.createTenantForNewUser ?? createTenant,
   };
 
-  const federatedWithPopup = (provider: Providers, inviteToken?: string) => passflow.federatedAuthWithPopup({provider, invite_token: inviteToken, ...payload} as PassflowFederatedAuthPayload);
-  const federatedWithRedirect = (provider: Providers, inviteToken?: string) => passflow.federatedAuthWithRedirect({provider, invite_token: inviteToken, ...payload} as PassflowFederatedAuthPayload);
+  const federatedWithPopup = (provider: Providers, inviteToken?: string) =>
+    passflow.federatedAuthWithPopup({ provider, invite_token: inviteToken, ...payload } as PassflowFederatedAuthPayload);
+  const federatedWithRedirect = (provider: Providers, inviteToken?: string) =>
+    passflow.federatedAuthWithRedirect({ provider, invite_token: inviteToken, ...payload } as PassflowFederatedAuthPayload);
 
   return {
     federatedWithPopup,

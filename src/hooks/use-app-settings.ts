@@ -3,17 +3,15 @@ import type {
   AppSettings,
   LoginWebAppStyle,
   LoginWebAppTheme,
-  PassflowPasskeySettings,
   PassflowPasswordPolicySettings,
 } from '@passflow/passflow-js-sdk';
-import { isEmpty } from 'lodash';
+import { isEmpty, some } from 'lodash';
 import { useContext, useLayoutEffect, useState } from 'react';
 import { usePassflow } from './use-passflow';
 
 export type UseAppSettingsProps = () => {
   appSettings: AppSettings | null;
   passwordPolicy: PassflowPasswordPolicySettings | null;
-  passkeyProvider: PassflowPasskeySettings | null;
   isLoading: boolean;
   isError: boolean;
   error: string;
@@ -21,6 +19,10 @@ export type UseAppSettingsProps = () => {
   currentTheme: string;
   currentStyles: LoginWebAppStyle | null;
   loginAppTheme?: LoginWebAppTheme;
+};
+
+const hasPasswordStrategy = (strategies: AppSettings['auth_strategies']): boolean => {
+  return some(strategies, (strategy) => strategy.type === 'internal' && strategy.strategy?.challenge === 'password');
 };
 
 export const useAppSettings: UseAppSettingsProps = () => {
@@ -41,10 +43,14 @@ export const useAppSettings: UseAppSettingsProps = () => {
       const fetchAllSettings = async (): Promise<void> => {
         setIsLoading(true);
         try {
-          const passflowSettingAll = await passflow.getSettingsAll();
           let appSettings = {} as AppSettings;
           if (passflow.appId) {
             appSettings = await passflow.getAppSettings();
+          }
+
+          let passwordPolicy = null;
+          if (appSettings.auth_strategies && hasPasswordStrategy(appSettings.auth_strategies)) {
+            passwordPolicy = await passflow.getPasswordPolicySettings();
           }
 
           dispatch({
@@ -52,8 +58,7 @@ export const useAppSettings: UseAppSettingsProps = () => {
             payload: {
               ...state,
               appSettings,
-              passkeyProvider: passflowSettingAll.passkey_provider,
-              passwordPolicy: passflowSettingAll.password_policy,
+              passwordPolicy,
             },
           });
         } catch (e) {
@@ -106,7 +111,7 @@ export const useAppSettings: UseAppSettingsProps = () => {
   const getCurrentTheme = () => {
     const theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
 
-    if(state.appSettings?.login_app_theme?.color_scheme === 'system') return theme;
+    if (state.appSettings?.login_app_theme?.color_scheme === 'system') return theme;
 
     return state.appSettings?.login_app_theme?.color_scheme ?? theme;
   };
@@ -127,7 +132,6 @@ export const useAppSettings: UseAppSettingsProps = () => {
     appSettings: state.appSettings,
     loginAppTheme: state.appSettings?.login_app_theme,
     passwordPolicy: state.passwordPolicy,
-    passkeyProvider: state.passkeyProvider,
     currentStyles: selectedStyle,
     currentTheme: currentTheme,
     isLoading,

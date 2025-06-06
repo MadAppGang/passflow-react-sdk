@@ -22,7 +22,13 @@ export const ErrorComponent: FC<TError> = ({ error = defaultErrorMessage, goBack
   };
 
   return (
-    <Wrapper iconId='logo-red' className='passflow-error-wrapper' customCss={currentStyles?.custom_css} customLogo={currentStyles?.logo_url} removeBranding={loginAppTheme?.remove_passflow_logo}>
+    <Wrapper
+      iconId='logo-red'
+      className='passflow-error-wrapper'
+      customCss={currentStyles?.custom_css}
+      customLogo={currentStyles?.logo_url}
+      removeBranding={loginAppTheme?.remove_passflow_logo}
+    >
       <div className='passflow-error-container'>
         <div className='passflow-error-container-text-wrapper'>
           {error && <p className='passflow-error-container-text'>{error}</p>}

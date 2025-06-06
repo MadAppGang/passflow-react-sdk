@@ -15,8 +15,16 @@ type TWrapper = PropsWithChildren & {
   removeBranding?: boolean;
 };
 
-export const Wrapper: FC<TWrapper> = ({ iconId = 'logo', title = '', subtitle = '', className = '', children, customCss, customLogo, removeBranding = false }) => {
-
+export const Wrapper: FC<TWrapper> = ({
+  iconId = 'logo',
+  title = '',
+  subtitle = '',
+  className = '',
+  children,
+  customCss,
+  customLogo,
+  removeBranding = false,
+}) => {
   return (
     <HelmetProvider>
       <Helmet>

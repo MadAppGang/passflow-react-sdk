@@ -1,10 +1,9 @@
-import type { AppSettings, Passflow, PassflowPasskeySettings, PassflowPasswordPolicySettings } from '@passflow/passflow-js-sdk';
+import type { AppSettings, Passflow, PassflowPasswordPolicySettings } from '@passflow/passflow-js-sdk';
 import { type Dispatch, createContext } from 'react';
 
 export type PassflowState = {
   appSettings: AppSettings | null;
   passwordPolicy: PassflowPasswordPolicySettings | null;
-  passkeyProvider: PassflowPasskeySettings | null;
   url?: string;
   appId?: string;
   scopes?: string[];
@@ -23,7 +22,6 @@ export type PassflowContextType = {
 export const initialState: PassflowState = {
   appSettings: null,
   passwordPolicy: null,
-  passkeyProvider: null,
   url: undefined,
   appId: undefined,
   scopes: undefined,

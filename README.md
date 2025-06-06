@@ -182,7 +182,6 @@ export const App = () => (
       <PassflowFlow
         federatedDisplayMode='redirect'
         successAuthRedirect='https://jwt.io'
-        federatedCallbackUrl='https://jwt.io'
         pathPrefix='/web'
       />
     </PassflowProviderWrapper>
@@ -194,7 +193,6 @@ export const App = () => (
 | Prop | Type | Description |
 |------|------|-------------|
 | successAuthRedirect | string | URL to redirect after successful authentication |
-| federatedCallbackUrl | string | URL to redirect after successful federated authentication |
 | federatedDisplayMode | "popup" \| "redirect" | Federated authentication display mode |
 | pathPrefix | string | Prefix for all routes (optional) |
 
@@ -532,7 +530,6 @@ Component for user authentication.
 | forgotPasswordPath | string | Path to forgot password page (optional) | /forgot-password |
 | verifyMagicLinkPath | string | Path to verify magic link page (optional) | /verify-challenge-magic-link |
 | verifyOTPPath | string | Path to verify OTP page (optional) | /verify-challenge-otp |
-| federatedCallbackUrl | string | URL for federated authentication callback (optional) | window.location.origin |
 | federatedDisplayMode | "popup" \| "redirect" | Display mode for federated authentication (optional) | "popup" |
 
 ### SignUp
@@ -545,7 +542,6 @@ Component for user registration.
 | signInPath | string | Path to sign in page (optional) | /signin |
 | verifyMagicLinkPath | string | Path to verify magic link page (optional) | /verify-challenge-magic-link |
 | verifyOTPPath | string | Path to verify OTP page (optional) | /verify-challenge-otp |
-| federatedCallbackUrl | string | URL for federated authentication callback (optional) | window.location.origin |
 | federatedDisplayMode | "popup" \| "redirect" | Display mode for federated authentication (optional) | "popup" |
 
 ### ForgotPassword
@@ -753,7 +749,7 @@ const { data, createUserPasskey, editUserPasskey, deleteUserPasskey } = useUserP
 Hook for retrieving application settings and password policies.
 
 ```typescript
-const { appSettings, passwordPolicy, passkeyProvider } = useAppSettings();
+const { appSettings, passwordPolicy } = useAppSettings();
 ```
 
 **Returns:**
@@ -762,7 +758,6 @@ const { appSettings, passwordPolicy, passkeyProvider } = useAppSettings();
 |----------|------|-------------|
 | appSettings | `AppSettings \| null` | Application settings |
 | passwordPolicy | `PassflowPasswordPolicySettings \| null` | Password policy settings |
-| passkeyProvider | `PassflowPasskeySettings \| null` | Passkey provider settings |
 | isLoading | `boolean` | Loading state |
 | isError | `boolean` | Error state |
 | error | `string` | Error message |
