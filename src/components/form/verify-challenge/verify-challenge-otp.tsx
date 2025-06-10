@@ -10,11 +10,10 @@ import '@/styles/index.css';
 import { useUrlParams } from '@/utils';
 
 type TVerifyChallengeOTP = {
-  successAuthRedirect: SuccessAuthRedirect;
   numInputs: number;
   shouldAutoFocus: boolean;
   signUpPath: string;
-  createTenant?: boolean;
+  successAuthRedirect?: SuccessAuthRedirect;
 };
 
 const redirectSearchParamsVerifyChallengeOtpSchema = Yup.object().shape({
@@ -36,7 +35,6 @@ export const VerifyChallengeOTP: FC<TVerifyChallengeOTP> = ({
   numInputs,
   shouldAutoFocus,
   signUpPath,
-  createTenant = false,
 }) => {
   const { get } = useUrlParams({
     otp: '',
@@ -93,7 +91,6 @@ export const VerifyChallengeOTP: FC<TVerifyChallengeOTP> = ({
       challengeType={challengeType}
       challengeId={challengeId}
       type={type as 'passwordless' | 'passkey'}
-      createTenant={createTenant}
       numInputs={numInputs}
       shouldAutoFocus={shouldAutoFocus}
       signUpPath={signUpPath}

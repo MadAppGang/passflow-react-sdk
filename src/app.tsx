@@ -15,8 +15,8 @@ export const PassflowProviderWrapper: FC<PropsWithChildren> = ({ children }) => 
     <PassflowProvider
       url={passflowConfig.url}
       appId={passflowConfig.appId}
-      createTenantForNewUser={passflowConfig.createTenantForNewUser}
-      scopes={passflowConfig.scopes}
+      // createTenantForNewUser={passflowConfig.createTenantForNewUser}
+      // scopes={passflowConfig.scopes}
       router='react-router'
     >
       {children}
@@ -26,7 +26,7 @@ export const PassflowProviderWrapper: FC<PropsWithChildren> = ({ children }) => 
 
 export const App = () => (
   <PassflowProviderWrapper>
-    <PassflowFlow successAuthRedirect='https://jwt.io' pathPrefix='/web' />
+    <PassflowFlow pathPrefix='/web' />
   </PassflowProviderWrapper>
 );
 

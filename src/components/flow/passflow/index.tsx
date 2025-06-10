@@ -19,7 +19,7 @@ import { getUrlErrors } from '@/utils';
 import { BrowserRouter, HashRouter, MemoryRouter, Navigate, Route, Routes, useNavigate } from 'react-router-dom';
 
 export type PassflowProps = {
-  successAuthRedirect: SuccessAuthRedirect;
+  successAuthRedirect?: SuccessAuthRedirect;
   federatedDisplayMode?: 'modal' | 'redirect';
   error?: string;
   relyingPartyId?: string;

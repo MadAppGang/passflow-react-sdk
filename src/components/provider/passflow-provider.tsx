@@ -37,6 +37,7 @@ export const PassflowProvider: FC<PassflowProviderProps> = ({
   });
 
   const passflow = useMemo(() => new Passflow(state), [state]);
+
   const passflowValue = useMemo(() => ({ state, dispatch, passflow }), [state, passflow]);
 
   const handleSetNavigate = useCallback((newNavigate: NavigateFunction | null) => {

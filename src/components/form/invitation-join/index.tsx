@@ -25,7 +25,7 @@ const InvitationJoinFlow: FC<TInvitationJoinFlow> = ({
   signUpPath = routes.signup.path,
   successAuthRedirect,
 }) => {
-  const { currentStyles, loginAppTheme } = useAppSettings();
+  const { appSettings, currentStyles, loginAppTheme } = useAppSettings();
   const { navigate } = useNavigation();
   const { get } = useUrlParams();
   const passflow = usePassflow();
@@ -96,7 +96,8 @@ const InvitationJoinFlow: FC<TInvitationJoinFlow> = ({
             type='button'
             variant='primary'
             className='passflow-button-invitation-join'
-            onClick={() => void onClickAcceptInvitationHandler(redirectUrl ?? successAuthRedirect)}
+            // biome-ignore lint/style/noNonNullAssertion: <explanation>
+            onClick={() => void onClickAcceptInvitationHandler(redirectUrl ?? successAuthRedirect ?? appSettings!.defaults.redirect)}
             disabled={isInvitationJoinLoading}
           >
             Accept invitation

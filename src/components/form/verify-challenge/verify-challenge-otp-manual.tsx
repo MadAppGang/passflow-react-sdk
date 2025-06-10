@@ -26,8 +26,7 @@ type VerifyChallengeOTPManualProps = {
   numInputs: number;
   shouldAutoFocus: boolean;
   signUpPath: string;
-  successAuthRedirect: string;
-  createTenant?: boolean;
+  successAuthRedirect?: string;
 };
 
 const challengeTypeFullString = {
@@ -38,7 +37,6 @@ const challengeTypeFullString = {
 export const VerifyChallengeOTPManual: FC<VerifyChallengeOTPManualProps> = ({
   identity,
   identityValue,
-  createTenant,
   challengeType,
   challengeId,
   type,
@@ -48,7 +46,7 @@ export const VerifyChallengeOTPManual: FC<VerifyChallengeOTPManualProps> = ({
   signUpPath,
 }) => {
   const passflow = usePassflow();
-  const { currentStyles, loginAppTheme } = useAppSettings();
+  const { appSettings, createTenantForNewUser, currentStyles, loginAppTheme } = useAppSettings();
   const { navigate } = useNavigation();
   const { fetch: refetch } = useSignIn();
   const { fetch: fetchPasswordlessComplete, isError, error } = usePasswordlessComplete();
@@ -62,9 +60,10 @@ export const VerifyChallengeOTPManual: FC<VerifyChallengeOTPManualProps> = ({
   const onClickResendHandler = async () => {
     if (type && identity && identityValue && challengeType) {
       const payload: PassflowPasswordlessSignInPayload = {
-        create_tenant: createTenant ?? false,
+        create_tenant: createTenantForNewUser,
         challenge_type: challengeType as InternalStrategyChallenge,
-        redirect_url: successAuthRedirect,
+        // biome-ignore lint/style/noNonNullAssertion: <explanation>
+        redirect_url: successAuthRedirect ?? appSettings!.defaults.redirect,
         ...(identity === 'email' ? { email: identityValue } : { phone: identityValue }),
       };
 

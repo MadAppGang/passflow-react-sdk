@@ -25,7 +25,7 @@ export const initialState: PassflowState = {
   url: undefined,
   appId: undefined,
   scopes: undefined,
-  createTenantForNewUser: false,
+  createTenantForNewUser: undefined,
   parseQueryParams: true,
 };
 

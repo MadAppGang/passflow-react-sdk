@@ -22,7 +22,7 @@ const searchParamsResetPasswordSchema = Yup.object().shape({
 });
 
 type TResetPassword = {
-  successAuthRedirect: SuccessAuthRedirect;
+  successAuthRedirect?: SuccessAuthRedirect;
 };
 
 type ResetToken = Token & {
@@ -43,6 +43,7 @@ export const ResetPassword: FC<TResetPassword> = ({ successAuthRedirect }) => {
   });
 
   const passflow = usePassflow();
+  const { appSettings } = useAppSettings();
   const { fetch, error, isError, isLoading } = useResetPassword();
   const { navigate } = useNavigation();
   const { get } = useUrlParams();
@@ -69,9 +70,12 @@ export const ResetPassword: FC<TResetPassword> = ({ successAuthRedirect }) => {
     const resetTokenType = resetTokenData as ResetToken;
     const status = await fetch(values.password);
     if (status) {
-      if (!isValidUrl(resetTokenType?.redirect_url ?? successAuthRedirect))
-        navigate({ to: resetTokenType?.redirect_url ?? successAuthRedirect });
-      else window.location.href = await getUrlWithTokens(passflow, resetTokenType?.redirect_url ?? successAuthRedirect);
+      // biome-ignore lint/style/noNonNullAssertion: <explanation>
+      if (!isValidUrl(resetTokenType?.redirect_url ?? successAuthRedirect ?? appSettings!.defaults.redirect))
+        // biome-ignore lint/style/noNonNullAssertion: <explanation>
+        navigate({ to: resetTokenType?.redirect_url ?? successAuthRedirect ?? appSettings!.defaults.redirect });
+      // biome-ignore lint/style/noNonNullAssertion: <explanation>
+      else window.location.href = await getUrlWithTokens(passflow, resetTokenType?.redirect_url ?? successAuthRedirect ?? appSettings!.defaults.redirect);
     }
   };
 

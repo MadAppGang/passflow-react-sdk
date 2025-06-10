@@ -5,7 +5,7 @@ import type {
   LoginWebAppTheme,
   PassflowPasswordPolicySettings,
 } from '@passflow/passflow-js-sdk';
-import { isEmpty, some } from 'lodash';
+import { isEmpty, isUndefined, some } from 'lodash';
 import { useContext, useLayoutEffect, useState } from 'react';
 import { usePassflow } from './use-passflow';
 
@@ -18,6 +18,8 @@ export type UseAppSettingsProps = () => {
   reset: () => void;
   currentTheme: string;
   currentStyles: LoginWebAppStyle | null;
+  scopes: string[];
+  createTenantForNewUser: boolean;
   loginAppTheme?: LoginWebAppTheme;
 };
 
@@ -47,6 +49,9 @@ export const useAppSettings: UseAppSettingsProps = () => {
           if (passflow.appId) {
             appSettings = await passflow.getAppSettings();
           }
+
+          if(!state.scopes) state.scopes = appSettings.defaults.scopes;
+          if(isUndefined(state.createTenantForNewUser)) state.createTenantForNewUser = appSettings.defaults.create_tenant_for_new_user;
 
           let passwordPolicy = null;
           if (appSettings.auth_strategies && hasPasswordStrategy(appSettings.auth_strategies)) {
@@ -130,6 +135,8 @@ export const useAppSettings: UseAppSettingsProps = () => {
 
   return {
     appSettings: state.appSettings,
+    scopes: state.scopes ?? [],
+    createTenantForNewUser: state.createTenantForNewUser ?? false,
     loginAppTheme: state.appSettings?.login_app_theme,
     passwordPolicy: state.passwordPolicy,
     currentStyles: selectedStyle,

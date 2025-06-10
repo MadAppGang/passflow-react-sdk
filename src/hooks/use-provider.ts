@@ -4,15 +4,15 @@ import type { PassflowFederatedAuthPayload, Providers } from '@passflow/passflow
 import { useContext } from 'react';
 import { usePassflow } from './use-passflow';
 
-const getFullRedirectUrl = (redirectUrl: string): string => {
-  if (isValidUrl(redirectUrl)) {
+const getFullRedirectUrl = (redirectUrl?: string): string => {
+  if (redirectUrl && isValidUrl(redirectUrl)) {
     return redirectUrl;
   }
-  return `${window.location.origin}${redirectUrl.startsWith('/') ? '' : '/'}${redirectUrl}`;
+  return redirectUrl ? `${window.location.origin}${redirectUrl.startsWith('/') ? '' : '/'}${redirectUrl}` : "";
 };
 
 export type UseProviderProps = (
-  redirectUrl: string,
+  redirectUrl?: string,
   createTenant?: boolean,
 ) => {
   federatedWithPopup: (provider: Providers, inviteToken?: string) => void;
@@ -26,7 +26,7 @@ export const useProvider: UseProviderProps = (redirectUrl, createTenant) => {
   const payload = {
     redirect_url: getFullRedirectUrl(redirectUrl),
     scopes: context?.state.scopes,
-    create_tenant: context?.state.createTenantForNewUser ?? createTenant,
+    create_tenant: createTenant,
   };
 
   const federatedWithPopup = (provider: Providers, inviteToken?: string) =>

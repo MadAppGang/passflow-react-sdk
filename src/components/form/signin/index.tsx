@@ -38,11 +38,10 @@ const initialValues = {
 };
 
 export type TSignIn = {
-  successAuthRedirect: SuccessAuthRedirect;
+  successAuthRedirect?: SuccessAuthRedirect;
   relyingPartyId?: string;
   federatedDisplayMode?: 'modal' | 'redirect';
   signUpPath?: string;
-  createTenant?: boolean;
   verifyOTPPath?: string;
   verifyMagicLinkPath?: string;
   forgotPasswordPath?: string;
@@ -52,7 +51,6 @@ export const SignInForm: FC<TSignIn> = ({
   successAuthRedirect,
   relyingPartyId = window.location.hostname,
   signUpPath = routes.signup.path,
-  createTenant = false,
   verifyOTPPath = routes.verify_otp.path,
   verifyMagicLinkPath = routes.verify_magic_link.path,
   forgotPasswordPath = routes.forgot_password.path,
@@ -70,8 +68,8 @@ export const SignInForm: FC<TSignIn> = ({
   });
   const passflow = usePassflow();
   const { navigate } = useNavigation();
-  const { appSettings, passwordPolicy, currentStyles, isError: isErrorApp, error: errorApp, loginAppTheme } = useAppSettings();
-  const { federatedWithRedirect } = useProvider(successAuthRedirect, createTenant);
+  const { appSettings, scopes, createTenantForNewUser, passwordPolicy, currentStyles, isError: isErrorApp, error: errorApp, loginAppTheme } = useAppSettings();
+  const { federatedWithRedirect } = useProvider(successAuthRedirect, createTenantForNewUser);
 
   if (isErrorApp) throw new Error(errorApp);
 
@@ -148,8 +146,10 @@ export const SignInForm: FC<TSignIn> = ({
     const status = await fetch(payload, 'password');
 
     if (status) {
-      if (!isValidUrl(successAuthRedirect)) navigate({ to: successAuthRedirect });
-      else window.location.href = await getUrlWithTokens(passflow, successAuthRedirect);
+      // biome-ignore lint/style/noNonNullAssertion: <explanation>
+      if (!isValidUrl(successAuthRedirect ?? appSettings!.defaults.redirect)) navigate({ to: successAuthRedirect ?? appSettings!.defaults.redirect });
+      // biome-ignore lint/style/noNonNullAssertion: <explanation>
+      else window.location.href = await getUrlWithTokens(passflow, successAuthRedirect ?? appSettings!.defaults.redirect);
     }
   };
 
@@ -162,8 +162,10 @@ export const SignInForm: FC<TSignIn> = ({
     const response = await fetch(payload, 'passkey');
 
     if (response) {
-      if (!isValidUrl(successAuthRedirect)) navigate({ to: successAuthRedirect });
-      else window.location.href = await getUrlWithTokens(passflow, successAuthRedirect);
+      // biome-ignore lint/style/noNonNullAssertion: <explanation>
+      if (!isValidUrl(successAuthRedirect ?? appSettings!.defaults.redirect)) navigate({ to: successAuthRedirect ?? appSettings!.defaults.redirect });
+      // biome-ignore lint/style/noNonNullAssertion: <explanation>
+      else window.location.href = await getUrlWithTokens(passflow, successAuthRedirect ?? appSettings!.defaults.redirect);
     }
   };
 
@@ -173,8 +175,9 @@ export const SignInForm: FC<TSignIn> = ({
     const payload = {
       ...userPayload,
       challenge_type: getPasswordlessData(authMethods, defaultMethod)?.challengeType,
-      create_tenant: createTenant,
-      redirect_url: successAuthRedirect,
+      create_tenant: createTenantForNewUser,
+      // biome-ignore lint/style/noNonNullAssertion: <explanation>
+      redirect_url: successAuthRedirect ?? appSettings!.defaults.redirect,
       ...(!isEmpty(inviteToken) && { invite_token: inviteToken }),
     } as PassflowPasswordlessSignInPayload;
 
@@ -186,7 +189,7 @@ export const SignInForm: FC<TSignIn> = ({
       ...response,
       type: 'passwordless',
       challenge_type: currentChallegeType,
-      create_tenant: createTenant,
+      create_tenant: createTenantForNewUser,
     };
     const newParams = queryString.stringify({
       ...Object.fromEntries(params.entries()),
@@ -223,6 +226,7 @@ export const SignInForm: FC<TSignIn> = ({
       const payload = {
         ...(isEmail && { email: values.email_or_username }),
         ...(isPhone && { phone: validatedPhone.phoneNumber }),
+        scopes,
       };
 
       await onSubmitHandler(payload, 'passwordless');
@@ -240,6 +244,7 @@ export const SignInForm: FC<TSignIn> = ({
       ...(isEmail && { email: values.email_or_username }),
       ...(isUsername && { username: values.email_or_username }),
       ...(isPhone && { phone: validatedPhone.phoneNumber }),
+      scopes,
       password: values.password,
     };
 
@@ -249,6 +254,7 @@ export const SignInForm: FC<TSignIn> = ({
   const validateSignInPasskey = async () => {
     const payload = {
       relying_party_id: relyingPartyId,
+      scopes
     };
 
     await onSubmitHandler(payload, 'passkey');

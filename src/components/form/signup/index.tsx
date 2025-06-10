@@ -43,9 +43,8 @@ const initialValues = {
 };
 
 export type TSignUp = {
-  successAuthRedirect: SuccessAuthRedirect;
+  successAuthRedirect?: SuccessAuthRedirect;
   relyingPartyId?: string;
-  createTenant?: boolean;
   federatedDisplayMode?: 'modal' | 'redirect';
   signInPath?: string;
   verifyOTPPath?: string;
@@ -55,7 +54,6 @@ export type TSignUp = {
 export const SignUpForm: FC<TSignUp> = ({
   successAuthRedirect,
   relyingPartyId = window.location.hostname,
-  createTenant = false,
   signInPath = routes.signin.path,
   verifyOTPPath = routes.verify_otp.path,
   verifyMagicLinkPath = routes.verify_magic_link.path,
@@ -74,11 +72,11 @@ export const SignUpForm: FC<TSignUp> = ({
   });
   const passflow = usePassflow();
   const { navigate } = useNavigation();
-  const { appSettings, passwordPolicy, currentStyles, isError: isErrorApp, error: errorApp, loginAppTheme } = useAppSettings();
+  const { appSettings, scopes, createTenantForNewUser, passwordPolicy, currentStyles, isError: isErrorApp, error: errorApp, loginAppTheme } = useAppSettings();
 
   if (isErrorApp) throw new Error(errorApp);
 
-  const { federatedWithRedirect } = useProvider(successAuthRedirect, createTenant);
+  const { federatedWithRedirect } = useProvider(successAuthRedirect, createTenantForNewUser);
 
   const authMethods = useMemo(() => getAuthMethods(appSettings?.auth_strategies), [appSettings]);
 
@@ -148,31 +146,37 @@ export const SignUpForm: FC<TSignUp> = ({
   const onSubmitPasswordHandler = async (userPayload: PassflowUserPayload) => {
     const payload = {
       user: userPayload,
-      create_tenant: createTenant,
+      create_tenant: createTenantForNewUser,
       ...(!isEmpty(inviteToken) && { invite_token: inviteToken }),
     } as PassflowSignUpPayload;
 
     const status = await fetch(payload, 'password');
 
     if (status) {
-      if (!isValidUrl(successAuthRedirect)) navigate({ to: successAuthRedirect });
-      else window.location.href = await getUrlWithTokens(passflow, successAuthRedirect);
+      // biome-ignore lint/style/noNonNullAssertion: <explanation>
+      if (!isValidUrl(successAuthRedirect ?? appSettings!.defaults.redirect)) navigate({ to: successAuthRedirect ?? appSettings!.defaults.redirect });
+      // biome-ignore lint/style/noNonNullAssertion: <explanation>
+      else window.location.href = await getUrlWithTokens(passflow, successAuthRedirect ?? appSettings!.defaults.redirect);
     }
   };
 
   const onSubmitPasskeyHandler = async () => {
     const payload = {
       relying_party_id: relyingPartyId,
-      create_tenant: createTenant,
-      redirect_url: successAuthRedirect,
+      create_tenant: createTenantForNewUser,
+      // biome-ignore lint/style/noNonNullAssertion: <explanation>
+      redirect_url: successAuthRedirect ?? appSettings!.defaults.redirect,
       ...(!isEmpty(inviteToken) && { invite_token: inviteToken }),
+      scopes
     } as PassflowPasskeyRegisterStartPayload;
 
     const response = await fetch(payload, 'passkey');
 
     if (response) {
-      if (!isValidUrl(successAuthRedirect)) navigate({ to: successAuthRedirect });
-      else window.location.href = await getUrlWithTokens(passflow, successAuthRedirect);
+      // biome-ignore lint/style/noNonNullAssertion: <explanation>
+      if (!isValidUrl(successAuthRedirect ?? appSettings!.defaults.redirect)) navigate({ to: successAuthRedirect ?? appSettings!.defaults.redirect });
+      // biome-ignore lint/style/noNonNullAssertion: <explanation>
+      else window.location.href = await getUrlWithTokens(passflow, successAuthRedirect ?? appSettings!.defaults.redirect);
     }
   };
 
@@ -182,8 +186,9 @@ export const SignUpForm: FC<TSignUp> = ({
     const payload = {
       ...userPayload,
       challenge_type: currentChallegeType,
-      create_tenant: createTenant,
-      redirect_url: successAuthRedirect,
+      create_tenant: createTenantForNewUser,
+      // biome-ignore lint/style/noNonNullAssertion: <explanation>
+      redirect_url: successAuthRedirect ?? appSettings!.defaults.redirect,
       ...(!isEmpty(inviteToken) && { invite_token: inviteToken }),
     } as PassflowPasswordlessSignInPayload;
 
@@ -195,7 +200,7 @@ export const SignUpForm: FC<TSignUp> = ({
       ...response,
       type: 'passwordless',
       challenge_type: currentChallegeType,
-      create_tenant: createTenant,
+      create_tenant: createTenantForNewUser,
     };
     const newParams = queryString.stringify({
       ...Object.fromEntries(params.entries()),
@@ -229,6 +234,7 @@ export const SignUpForm: FC<TSignUp> = ({
       const payload = {
         ...(isEmail && { email: values.email_or_username }),
         ...(isPhone && { phone: validatedPhone.phoneNumber }),
+        scopes
       };
 
       await onSubmitHandler(payload, 'passwordless');
@@ -249,6 +255,7 @@ export const SignUpForm: FC<TSignUp> = ({
       ...(isUsername && { username: values.email_or_username }),
       ...(isPhone && { phone_number: validatedPhone.phoneNumber }),
       password: values.password,
+      scopes
     };
 
     await onSubmitHandler(payload, 'password');
