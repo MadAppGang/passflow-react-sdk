@@ -6,7 +6,7 @@ import type {
   PassflowPasswordlessResponse,
   PassflowPasswordlessSignInCompletePayload,
   PassflowPasswordlessSignInPayload,
-} from '@passflow/passflow-js-sdk';
+} from '@passflow/core';
 /* eslint-disable no-void */
 /* eslint-disable complexity */
 import React, { type FC, useEffect, useState } from 'react';

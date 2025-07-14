@@ -61,7 +61,7 @@ pnpm build
 For local development and testing with a local version of the Passflow JS SDK, you need to:
 
 1. Clone the Passflow JS SDK repository in a sibling directory to this project.
-2. remove current dependecy `pnpm remove @passflow/passflow-js-sdk`
+2. remove current dependecy `pnpm remove @passflow/core`
 3. Link folder with:
 
 ```sh
@@ -78,9 +78,9 @@ pnpm watch
 After all done, we need to unlink and return all to the original state
 
 ```sh
-pnpm remove @passflow/passflow-js-sdk
-pnpm unlink @passflow/passflow-js-sdk
-pnpm install @passflow/passflow-js-sdk
+pnpm remove @passflow/core
+pnpm unlink @passflow/core
+pnpm install @passflow/core
 ```
 
 ## Test writing Environment Setup

@@ -1,4 +1,4 @@
-import type { AppSettings, Passflow, PassflowPasswordPolicySettings } from '@passflow/passflow-js-sdk';
+import type { AppSettings, Passflow, PassflowPasswordPolicySettings } from '@passflow/core';
 import { type Dispatch, createContext } from 'react';
 
 export type PassflowState = {

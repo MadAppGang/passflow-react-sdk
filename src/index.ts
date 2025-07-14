@@ -6,4 +6,4 @@ export * from './components/form';
 export * from './components/ui';
 export { PassflowProvider } from './components/provider';
 export * from './hooks';
-export * from '@passflow/passflow-js-sdk';
+export * from '@passflow/core';

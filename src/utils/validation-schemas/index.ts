@@ -1,6 +1,6 @@
 /* eslint-disable complexity */
 /* eslint-disable max-len */
-import type { PassflowPasswordPolicySettings } from '@passflow/passflow-js-sdk';
+import type { PassflowPasswordPolicySettings } from '@passflow/core';
 import { size } from 'lodash';
 import * as Yup from 'yup';
 

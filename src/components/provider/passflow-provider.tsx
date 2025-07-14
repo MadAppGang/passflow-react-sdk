@@ -8,7 +8,7 @@ import {
   initialState,
   passflowReducer,
 } from '@/context';
-import { Passflow, type PassflowConfig } from '@passflow/passflow-js-sdk';
+import { Passflow, type PassflowConfig } from '@passflow/core';
 import React, { type FC, type ReactNode, useCallback, useMemo, useReducer, useState } from 'react';
 import '@/styles/index.css';
 

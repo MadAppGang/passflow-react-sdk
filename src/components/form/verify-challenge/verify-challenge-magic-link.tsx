@@ -1,7 +1,7 @@
 import { Button } from '@/components/ui';
 import { useAppSettings, useSignIn } from '@/hooks';
 /* eslint-disable no-nested-ternary */
-import type { PassflowPasswordlessSignInPayload } from '@passflow/passflow-js-sdk';
+import type { PassflowPasswordlessSignInPayload } from '@passflow/core';
 import { Wrapper } from '../wrapper';
 import '@/styles/index.css';
 import { useUrlParams } from '@/utils';

@@ -1,4 +1,4 @@
-import type { Passflow } from '@passflow/passflow-js-sdk';
+import type { Passflow } from '@passflow/core';
 
 export const getUrlWithTokens = async (passflow: Passflow, url: string): Promise<string> => {
   const tokens = await passflow.getTokens(false);

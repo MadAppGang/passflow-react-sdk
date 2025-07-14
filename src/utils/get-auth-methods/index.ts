@@ -1,4 +1,4 @@
-import type { AuthStrategies, FimStrategy, InternalStrategy, Providers } from '@passflow/passflow-js-sdk';
+import type { AuthStrategies, FimStrategy, InternalStrategy, Providers } from '@passflow/core';
 import { eq } from 'lodash';
 
 export type AuthMethods = {

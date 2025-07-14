@@ -3,7 +3,7 @@ import { type InputHTMLAttributes, forwardRef, useState } from 'react';
 import { Button, Icon } from '..';
 import '@/styles/index.css';
 import { cn } from '@/utils';
-import type { PassflowPasswordPolicySettings } from '@passflow/passflow-js-sdk';
+import type { PassflowPasswordPolicySettings } from '@passflow/core';
 import { intersection, size } from 'lodash';
 
 type TFieldPassword = InputHTMLAttributes<HTMLInputElement> & {
