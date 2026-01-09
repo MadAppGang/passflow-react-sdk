@@ -9,8 +9,8 @@ importers:
   .:
     dependencies:
       '@passflow/core':
-        specifier: ^0.0.1
-        version: 0.0.1
+        specifier: file:../passflow-js-sdk
+        version: file:../passflow-js-sdk
       '@radix-ui/react-dialog':
         specifier: ^1.1.14
         version: 1.1.14(@types/react-dom@18.3.7(@types/react@18.3.22))(@types/react@18.3.22)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -531,8 +531,8 @@ packages:
     resolution: {integrity: sha512-oGB+UxlgWcgQkgwo8GcEGwemoTFt3FIO9ababBmaGwXIoBKZ+GTy0pP185beGg7Llih/NSHSV2XAs1lnznocSg==}
     engines: {node: '>= 8'}
 
-  '@passflow/core@0.0.1':
-    resolution: {integrity: sha512-g5y07Ac/Ok3nytNY1X9slNJEMevZ3YG+YuPtZ+Kd3P5QwdB5vZ+gpoK5w1gZB9A4FUIINZofoP43F1XfduaAQA==}
+  '@passflow/core@file:../passflow-js-sdk':
+    resolution: {directory: ../passflow-js-sdk, type: directory}
 
   '@pkgjs/parseargs@0.11.0':
     resolution: {integrity: sha512-+1VkjdD0QBLPodGrJUeqarH8VAIvQODIbwh9XpP5Syisf7YoQgsJKPNFoqqLQlu+VQ/tVSshMR6loPMn8U+dPg==}
@@ -917,6 +917,7 @@ packages:
 
   '@simplewebauthn/types@12.0.0':
     resolution: {integrity: sha512-q6y8MkoV8V8jB4zzp18Uyj2I7oFp2/ONL8c3j8uT06AOWu3cIChc1au71QYHrP2b+xDapkGTiv+9lX7xkTlAsA==}
+    deprecated: Package no longer supported. Contact Support at https://www.npmjs.com/support for more info.
 
   '@sinclair/typebox@0.27.8':
     resolution: {integrity: sha512-+Fj43pSMwJs4KRrH/938Uf+uAELIgVBmQzg/q1YG10djyfA3TnrU8N8XzqCh/okZdszqBQTZf96idMfE5lnwTA==}
@@ -3178,7 +3179,7 @@ snapshots:
       '@nodelib/fs.scandir': 2.1.5
       fastq: 1.19.1
 
-  '@passflow/core@0.0.1':
+  '@passflow/core@file:../passflow-js-sdk':
     dependencies:
       '@simplewebauthn/browser': 13.1.2
       '@simplewebauthn/types': 12.0.0

@@ -29,6 +29,6 @@ function subscriber(onStoreChange: () => void): PassflowSubscriber {
 
 function getSnapshot(passflow: Passflow): () => Tokens | undefined {
   return () => {
-    return passflow.getTokensCache();
+    return passflow.getCachedTokens();
   };
 }

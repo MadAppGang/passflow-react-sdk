@@ -66,7 +66,7 @@ const InvitationJoinFlow: FC<TInvitationJoinFlow> = ({
       redirect_url: redirectUrl,
     } = invitationTokenData as InvitationToken;
 
-    const parsedTokenCache = passflow.getParsedTokenCache();
+    const parsedTokenCache = passflow.getParsedTokens();
 
     const onClickNavigateToSignInHandler = () => navigate({ to: signInPath, search: window.location.search });
     const onClickNavigateToSignUpHandler = () => navigate({ to: signUpPath, search: window.location.search });

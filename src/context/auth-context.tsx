@@ -23,7 +23,7 @@ export const AuthProvider: FC<PropsWithChildren> = ({ children }) => {
 
       try {
         const tokens = await passflow.getTokens(doRefresh);
-        const parsedTokens = tokens ? passflow.getParsedTokenCache() : undefined;
+        const parsedTokens = tokens ? passflow.getParsedTokens() : undefined;
 
         return {
           tokens,

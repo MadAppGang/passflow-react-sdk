@@ -5,3 +5,6 @@ export * from './verify-challenge';
 export * from './forgot-password';
 export * from './reset-password';
 export * from './invitation-join';
+// Two-Factor Authentication forms
+export * from './two-factor-verify';
+export * from './two-factor-setup';

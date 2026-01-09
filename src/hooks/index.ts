@@ -13,3 +13,8 @@ export { useAuthCloudRedirect } from './use-auth-cloud-redirect';
 export { useJoinInvite } from './use-join-invite';
 export { useOutsideClick } from './use-outsideclick';
 export { useNavigation } from './use-navigation';
+// Two-Factor Authentication hooks
+export { useTwoFactorStatus, type UseTwoFactorStatusProps } from './use-two-factor-status';
+export { useTwoFactorSetup, type UseTwoFactorSetupProps, type TwoFactorSetupStep } from './use-two-factor-setup';
+export { useTwoFactorVerify, type UseTwoFactorVerifyProps } from './use-two-factor-verify';
+export { useTwoFactorManage, type UseTwoFactorManageProps } from './use-two-factor-manage';
