@@ -53,34 +53,34 @@ export const TwoFactorVerifyForm: FC<TwoFactorVerifyFormProps> = ({
   };
 
   return (
-    <Wrapper title={title} subtitle={subtitle} className="passflow-2fa-verify">
-      <form onSubmit={handleSubmit} className="passflow-2fa-verify-form">
-        <div id="otp-wrapper" className="passflow-verify-otp-wrapper">
+    <Wrapper title={title} subtitle={subtitle} className='passflow-2fa-verify'>
+      <form onSubmit={handleSubmit} className='passflow-2fa-verify-form'>
+        <div id='otp-wrapper' className='passflow-verify-otp-wrapper'>
           <OtpInput
             value={code}
             onChange={handleOtpChange}
             numInputs={numInputs}
             shouldAutoFocus={shouldAutoFocus}
             skipDefaultStyles
-            containerStyle="passflow-verify-otp-inputs"
+            containerStyle='passflow-verify-otp-inputs'
             inputStyle={cn('passflow-field-otp passflow-field-otp--focused', isError && 'passflow-field-otp--error')}
-            inputType="text"
+            inputType='text'
             renderInput={(props) => <input {...props} />}
           />
           {isError && (
-            <div className="passflow-verify-otp-error">
-              <Icon size="small" id="warning" type="general" className="icon-warning" />
-              <span className="passflow-verify-otp-error-text">{error}</span>
+            <div className='passflow-verify-otp-error'>
+              <Icon size='small' id='warning' type='general' className='icon-warning' />
+              <span className='passflow-verify-otp-error-text'>{error}</span>
             </div>
           )}
         </div>
 
-        <Button size="big" type="submit" variant="primary" disabled={code.length !== numInputs || isLoading}>
+        <Button size='big' type='submit' variant='primary' disabled={code.length !== numInputs || isLoading}>
           {isLoading ? 'Verifying...' : 'Verify'}
         </Button>
 
         {onUseRecovery && (
-          <button type="button" className="passflow-link-button" onClick={onUseRecovery}>
+          <button type='button' className='passflow-link-button' onClick={onUseRecovery}>
             Use recovery code instead
           </button>
         )}

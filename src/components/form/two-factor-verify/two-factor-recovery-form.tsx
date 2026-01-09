@@ -38,32 +38,32 @@ export const TwoFactorRecoveryForm: FC<TwoFactorRecoveryFormProps> = ({
   };
 
   return (
-    <Wrapper title={title} subtitle={subtitle} className="passflow-2fa-recovery">
-      <form onSubmit={handleSubmit} className="passflow-2fa-recovery-form">
-        <div className="passflow-field-wrapper">
+    <Wrapper title={title} subtitle={subtitle} className='passflow-2fa-recovery'>
+      <form onSubmit={handleSubmit} className='passflow-2fa-recovery-form'>
+        <div className='passflow-field-wrapper'>
           <input
-            type="text"
+            type='text'
             value={code}
             onChange={handleChange}
-            placeholder="XXXX-XXXX"
+            placeholder='XXXX-XXXX'
             className={cn('passflow-field passflow-field--text', isError && 'passflow-field--error')}
             autoFocus
-            autoComplete="off"
+            autoComplete='off'
           />
           {isError && (
-            <div className="passflow-field-error">
-              <Icon size="small" id="warning" type="general" className="icon-warning" />
-              <span className="passflow-field-error-text">{error}</span>
+            <div className='passflow-field-error'>
+              <Icon size='small' id='warning' type='general' className='icon-warning' />
+              <span className='passflow-field-error-text'>{error}</span>
             </div>
           )}
         </div>
 
-        <Button size="big" type="submit" variant="primary" disabled={code.length < 8 || isLoading}>
+        <Button size='big' type='submit' variant='primary' disabled={code.length < 8 || isLoading}>
           {isLoading ? 'Verifying...' : 'Verify'}
         </Button>
 
         {onBack && (
-          <button type="button" className="passflow-link-button" onClick={onBack}>
+          <button type='button' className='passflow-link-button' onClick={onBack}>
             Use authenticator code instead
           </button>
         )}

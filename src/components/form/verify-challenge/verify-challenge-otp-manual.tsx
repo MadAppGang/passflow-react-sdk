@@ -13,7 +13,7 @@ import React, { type FC, useEffect, useState } from 'react';
 import OtpInput from 'react-otp-input';
 import { Wrapper } from '../wrapper';
 import { TimerButton } from './timer-button';
-import { VerifyChallengeSuccess } from './varify-challenge-success';
+import { VerifyChallengeSuccess } from './verify-challenge-success';
 
 import '@/styles/index.css';
 

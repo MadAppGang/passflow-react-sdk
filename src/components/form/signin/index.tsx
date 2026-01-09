@@ -68,7 +68,16 @@ export const SignInForm: FC<TSignIn> = ({
   });
   const passflow = usePassflow();
   const { navigate } = useNavigation();
-  const { appSettings, scopes, createTenantForNewUser, passwordPolicy, currentStyles, isError: isErrorApp, error: errorApp, loginAppTheme } = useAppSettings();
+  const {
+    appSettings,
+    scopes,
+    createTenantForNewUser,
+    passwordPolicy,
+    currentStyles,
+    isError: isErrorApp,
+    error: errorApp,
+    loginAppTheme,
+  } = useAppSettings();
   const { federatedWithRedirect } = useProvider(successAuthRedirect, createTenantForNewUser);
 
   if (isErrorApp) throw new Error(errorApp);
@@ -147,7 +156,8 @@ export const SignInForm: FC<TSignIn> = ({
 
     if (status) {
       // biome-ignore lint/style/noNonNullAssertion: <explanation>
-      if (!isValidUrl(successAuthRedirect ?? appSettings!.defaults.redirect)) navigate({ to: successAuthRedirect ?? appSettings!.defaults.redirect });
+      if (!isValidUrl(successAuthRedirect ?? appSettings!.defaults.redirect))
+        navigate({ to: successAuthRedirect ?? appSettings!.defaults.redirect });
       // biome-ignore lint/style/noNonNullAssertion: <explanation>
       else window.location.href = await getUrlWithTokens(passflow, successAuthRedirect ?? appSettings!.defaults.redirect);
     }
@@ -163,7 +173,8 @@ export const SignInForm: FC<TSignIn> = ({
 
     if (response) {
       // biome-ignore lint/style/noNonNullAssertion: <explanation>
-      if (!isValidUrl(successAuthRedirect ?? appSettings!.defaults.redirect)) navigate({ to: successAuthRedirect ?? appSettings!.defaults.redirect });
+      if (!isValidUrl(successAuthRedirect ?? appSettings!.defaults.redirect))
+        navigate({ to: successAuthRedirect ?? appSettings!.defaults.redirect });
       // biome-ignore lint/style/noNonNullAssertion: <explanation>
       else window.location.href = await getUrlWithTokens(passflow, successAuthRedirect ?? appSettings!.defaults.redirect);
     }
@@ -254,7 +265,7 @@ export const SignInForm: FC<TSignIn> = ({
   const validateSignInPasskey = async () => {
     const payload = {
       relying_party_id: relyingPartyId,
-      scopes
+      scopes,
     };
 
     await onSubmitHandler(payload, 'passkey');

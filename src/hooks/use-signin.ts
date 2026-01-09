@@ -38,17 +38,13 @@ export const useSignIn: UseSignInProps = () => {
         else if (type === 'passkey') {
           await passflow.passkeyAuthenticate(payload as PassflowPasskeyAuthenticateStartPayload);
         } else {
-          const passwordlessResponse = await passflow.passwordlessSignIn(payload as PassflowPasswordlessSignInPayload);
-          cleanup();
-          return passwordlessResponse;
+          return await passflow.passwordlessSignIn(payload as PassflowPasswordlessSignInPayload);
         }
-        cleanup();
         return true;
       } catch (e) {
         setIsError(true);
         const error = e as Error;
         setErrorMessage(error.message);
-        cleanup();
         return false;
       } finally {
         cleanup();

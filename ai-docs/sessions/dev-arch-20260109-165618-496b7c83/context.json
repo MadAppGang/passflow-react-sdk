@@ -1,0 +1,62 @@
+{
+  "session_id": "dev-arch-20260109-165618-496b7c83",
+  "project": "passflow-react-sdk",
+  "description": "Passflow React UI Kit - Authentication SDK",
+  "stack": {
+    "type": "frontend",
+    "language": "TypeScript",
+    "framework": "React",
+    "build_tool": "Vite",
+    "package_manager": "pnpm",
+    "testing": "Playwright (E2E)",
+    "linting": "Biome",
+    "styling": "Tailwind CSS",
+    "forms": ["Formik", "React Hook Form"],
+    "ui_libraries": ["Radix UI"]
+  },
+  "current_structure": {
+    "src/": {
+      "components/": "UI and form components",
+      "context/": "React context providers",
+      "hooks/": "Custom React hooks",
+      "utils/": "Utility functions",
+      "types/": "TypeScript types",
+      "constants/": "Application constants",
+      "hocs/": "Higher-order components"
+    },
+    "playwright/": "E2E tests"
+  },
+  "identified_issues": {
+    "naming": [
+      "Typo: 'varify-challenge-success.tsx' should be 'verify-challenge-success.tsx'",
+      "Typo: 'varify-challenge-otp-redirect.tsx' should be 'verify-challenge-otp-redirect.tsx'",
+      "Inconsistent naming: some files use kebab-case, component names use PascalCase"
+    ],
+    "structure": [
+      "Utils organized in single-file subdirectories (e.g., utils/cn/index.ts)",
+      "Multiple form libraries (Formik + React Hook Form) - should consolidate",
+      "Similar utilities (classnames + clsx + tailwind-merge) - redundant",
+      "No unit tests - only E2E tests with Playwright",
+      "Context mixed with provider logic",
+      "Types scattered across files rather than centralized"
+    ],
+    "testing": [
+      "No unit tests for hooks",
+      "No unit tests for utilities",
+      "No unit tests for components",
+      "Only E2E integration tests exist"
+    ],
+    "maintainability": [
+      "Barrel files (index.ts) everywhere - can cause circular dependencies",
+      "Some hooks have redundant state management patterns",
+      "cleanup() called multiple times in useSignIn hook (line 42, 45, 54)"
+    ]
+  },
+  "models_available": [
+    "internal (Claude)",
+    "mm/minimax-m2.1",
+    "glm/glm-4.7",
+    "google/gemini-3-pro-preview",
+    "openai/gpt-5.2"
+  ]
+}

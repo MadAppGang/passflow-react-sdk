@@ -1,10 +1,5 @@
 import { PassflowContext } from '@/context';
-import type {
-  AppSettings,
-  LoginWebAppStyle,
-  LoginWebAppTheme,
-  PassflowPasswordPolicySettings,
-} from '@passflow/core';
+import type { AppSettings, LoginWebAppStyle, LoginWebAppTheme, PassflowPasswordPolicySettings } from '@passflow/core';
 import { isEmpty, isUndefined, some } from 'lodash';
 import { useContext, useLayoutEffect, useState } from 'react';
 import { usePassflow } from './use-passflow';
@@ -50,8 +45,9 @@ export const useAppSettings: UseAppSettingsProps = () => {
             appSettings = await passflow.getAppSettings();
           }
 
-          if(!state.scopes) state.scopes = appSettings.defaults.scopes;
-          if(isUndefined(state.createTenantForNewUser)) state.createTenantForNewUser = appSettings.defaults.create_tenant_for_new_user;
+          if (!state.scopes) state.scopes = appSettings.defaults.scopes;
+          if (isUndefined(state.createTenantForNewUser))
+            state.createTenantForNewUser = appSettings.defaults.create_tenant_for_new_user;
 
           let passwordPolicy = null;
           if (appSettings.auth_strategies && hasPasswordStrategy(appSettings.auth_strategies)) {

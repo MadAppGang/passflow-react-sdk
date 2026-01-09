@@ -8,7 +8,7 @@ const getFullRedirectUrl = (redirectUrl?: string): string => {
   if (redirectUrl && isValidUrl(redirectUrl)) {
     return redirectUrl;
   }
-  return redirectUrl ? `${window.location.origin}${redirectUrl.startsWith('/') ? '' : '/'}${redirectUrl}` : "";
+  return redirectUrl ? `${window.location.origin}${redirectUrl.startsWith('/') ? '' : '/'}${redirectUrl}` : '';
 };
 
 export type UseProviderProps = (

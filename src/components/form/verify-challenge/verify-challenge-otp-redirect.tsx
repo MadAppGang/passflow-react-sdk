@@ -1,7 +1,7 @@
 import { useNavigation, usePassflow, usePasswordlessComplete } from '@/hooks';
 import { getUrlWithTokens, isValidUrl } from '@/utils';
 import React, { useEffect, useState } from 'react';
-import { VerifyChallengeSuccess } from './varify-challenge-success';
+import { VerifyChallengeSuccess } from './verify-challenge-success';
 
 type VerifyChallengeOTPRedirectProps = {
   appId: string | null;

@@ -72,7 +72,16 @@ export const SignUpForm: FC<TSignUp> = ({
   });
   const passflow = usePassflow();
   const { navigate } = useNavigation();
-  const { appSettings, scopes, createTenantForNewUser, passwordPolicy, currentStyles, isError: isErrorApp, error: errorApp, loginAppTheme } = useAppSettings();
+  const {
+    appSettings,
+    scopes,
+    createTenantForNewUser,
+    passwordPolicy,
+    currentStyles,
+    isError: isErrorApp,
+    error: errorApp,
+    loginAppTheme,
+  } = useAppSettings();
 
   if (isErrorApp) throw new Error(errorApp);
 
@@ -154,7 +163,8 @@ export const SignUpForm: FC<TSignUp> = ({
 
     if (status) {
       // biome-ignore lint/style/noNonNullAssertion: <explanation>
-      if (!isValidUrl(successAuthRedirect ?? appSettings!.defaults.redirect)) navigate({ to: successAuthRedirect ?? appSettings!.defaults.redirect });
+      if (!isValidUrl(successAuthRedirect ?? appSettings!.defaults.redirect))
+        navigate({ to: successAuthRedirect ?? appSettings!.defaults.redirect });
       // biome-ignore lint/style/noNonNullAssertion: <explanation>
       else window.location.href = await getUrlWithTokens(passflow, successAuthRedirect ?? appSettings!.defaults.redirect);
     }
@@ -167,14 +177,15 @@ export const SignUpForm: FC<TSignUp> = ({
       // biome-ignore lint/style/noNonNullAssertion: <explanation>
       redirect_url: successAuthRedirect ?? appSettings!.defaults.redirect,
       ...(!isEmpty(inviteToken) && { invite_token: inviteToken }),
-      scopes
+      scopes,
     } as PassflowPasskeyRegisterStartPayload;
 
     const response = await fetch(payload, 'passkey');
 
     if (response) {
       // biome-ignore lint/style/noNonNullAssertion: <explanation>
-      if (!isValidUrl(successAuthRedirect ?? appSettings!.defaults.redirect)) navigate({ to: successAuthRedirect ?? appSettings!.defaults.redirect });
+      if (!isValidUrl(successAuthRedirect ?? appSettings!.defaults.redirect))
+        navigate({ to: successAuthRedirect ?? appSettings!.defaults.redirect });
       // biome-ignore lint/style/noNonNullAssertion: <explanation>
       else window.location.href = await getUrlWithTokens(passflow, successAuthRedirect ?? appSettings!.defaults.redirect);
     }
@@ -234,7 +245,7 @@ export const SignUpForm: FC<TSignUp> = ({
       const payload = {
         ...(isEmail && { email: values.email_or_username }),
         ...(isPhone && { phone: validatedPhone.phoneNumber }),
-        scopes
+        scopes,
       };
 
       await onSubmitHandler(payload, 'passwordless');
@@ -255,7 +266,7 @@ export const SignUpForm: FC<TSignUp> = ({
       ...(isUsername && { username: values.email_or_username }),
       ...(isPhone && { phone_number: validatedPhone.phoneNumber }),
       password: values.password,
-      scopes
+      scopes,
     };
 
     await onSubmitHandler(payload, 'password');

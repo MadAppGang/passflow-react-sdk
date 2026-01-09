@@ -3,8 +3,8 @@ import type { SuccessAuthRedirect } from '@/types';
 /* eslint-disable no-nested-ternary */
 import type { FC } from 'react';
 import * as Yup from 'yup';
-import { VerifyChallengeOTPRedirect } from './varify-challenge-otp-redirect';
 import { VerifyChallengeOTPManual } from './verify-challenge-otp-manual';
+import { VerifyChallengeOTPRedirect } from './verify-challenge-otp-redirect';
 
 import '@/styles/index.css';
 import { useUrlParams } from '@/utils';

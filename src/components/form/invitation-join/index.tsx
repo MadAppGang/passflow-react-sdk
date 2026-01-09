@@ -97,7 +97,9 @@ const InvitationJoinFlow: FC<TInvitationJoinFlow> = ({
             variant='primary'
             className='passflow-button-invitation-join'
             // biome-ignore lint/style/noNonNullAssertion: <explanation>
-            onClick={() => void onClickAcceptInvitationHandler(redirectUrl ?? successAuthRedirect ?? appSettings!.defaults.redirect)}
+            onClick={() =>
+              void onClickAcceptInvitationHandler(redirectUrl ?? successAuthRedirect ?? appSettings!.defaults.redirect)
+            }
             disabled={isInvitationJoinLoading}
           >
             Accept invitation
