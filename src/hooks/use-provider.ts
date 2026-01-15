@@ -1,6 +1,6 @@
 import { PassflowContext } from '@/context';
 import { isValidUrl } from '@/utils';
-import type { PassflowFederatedAuthPayload, Providers } from '@passflow/core';
+import type { PassflowFederatedAuthPayload, Providers } from '@passflow/passflow-js-sdk';
 import { useContext } from 'react';
 import { usePassflow } from './use-passflow';
 

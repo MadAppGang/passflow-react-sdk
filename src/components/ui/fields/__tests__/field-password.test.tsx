@@ -1,11 +1,14 @@
-import { describe, it, expect, vi } from 'vitest';
+import type { PassflowPasswordPolicySettings } from '@passflow/passflow-js-sdk';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { describe, expect, it, vi } from 'vitest';
 import { FieldPassword } from '../field-password';
-import type { PassflowPasswordPolicySettings } from '@passflow/core';
 
 const defaultPasswordPolicy: PassflowPasswordPolicySettings = {
+  restrict_min_password_length: true,
   min_password_length: 8,
+  reject_compromised: false,
+  enforce_password_strength: 'none',
   require_lowercase: true,
   require_uppercase: true,
   require_number: true,
@@ -14,24 +17,24 @@ const defaultPasswordPolicy: PassflowPasswordPolicySettings = {
 
 describe('FieldPassword', () => {
   it('renders correctly with password policy', () => {
-    render(<FieldPassword id="test-password" value="" passwordPolicy={defaultPasswordPolicy} onChange={vi.fn()} />);
+    render(<FieldPassword id='test-password' value='' passwordPolicy={defaultPasswordPolicy} onChange={vi.fn()} />);
     const input = document.getElementById('test-password');
     expect(input).toBeInTheDocument();
   });
 
   it('returns null when passwordPolicy is null', () => {
-    const { container } = render(<FieldPassword id="test-password" value="" passwordPolicy={null} />);
+    const { container } = render(<FieldPassword id='test-password' value='' passwordPolicy={null} />);
     expect(container.firstChild).toBeNull();
   });
 
   it('renders with correct id', () => {
-    render(<FieldPassword id="custom-id" value="" passwordPolicy={defaultPasswordPolicy} onChange={vi.fn()} />);
+    render(<FieldPassword id='custom-id' value='' passwordPolicy={defaultPasswordPolicy} onChange={vi.fn()} />);
     const input = document.getElementById('custom-id');
     expect(input).toHaveAttribute('id', 'custom-id');
   });
 
   it('starts with password type (hidden)', () => {
-    render(<FieldPassword id="test-password" value="" passwordPolicy={defaultPasswordPolicy} onChange={vi.fn()} />);
+    render(<FieldPassword id='test-password' value='' passwordPolicy={defaultPasswordPolicy} onChange={vi.fn()} />);
     const input = document.getElementById('test-password');
     expect(input).toHaveAttribute('type', 'password');
   });
@@ -39,7 +42,7 @@ describe('FieldPassword', () => {
   it('toggles password visibility on button click', async () => {
     const user = userEvent.setup();
 
-    render(<FieldPassword id="test-password" value="" passwordPolicy={defaultPasswordPolicy} onChange={vi.fn()} />);
+    render(<FieldPassword id='test-password' value='' passwordPolicy={defaultPasswordPolicy} onChange={vi.fn()} />);
 
     const input = document.getElementById('test-password');
     expect(input).toHaveAttribute('type', 'password');
@@ -56,14 +59,18 @@ describe('FieldPassword', () => {
   });
 
   it('renders eye-off icon when password is hidden', () => {
-    const { container } = render(<FieldPassword id="test-password" value="" passwordPolicy={defaultPasswordPolicy} onChange={vi.fn()} />);
+    const { container } = render(
+      <FieldPassword id='test-password' value='' passwordPolicy={defaultPasswordPolicy} onChange={vi.fn()} />,
+    );
     const eyeOffIcon = container.querySelector('img[alt="eye-off"]');
     expect(eyeOffIcon).toBeInTheDocument();
   });
 
   it('renders eye-on icon when password is visible', async () => {
     const user = userEvent.setup();
-    const { container } = render(<FieldPassword id="test-password" value="" passwordPolicy={defaultPasswordPolicy} onChange={vi.fn()} />);
+    const { container } = render(
+      <FieldPassword id='test-password' value='' passwordPolicy={defaultPasswordPolicy} onChange={vi.fn()} />,
+    );
 
     const toggleButton = screen.getByRole('button');
     await user.click(toggleButton);
@@ -73,7 +80,7 @@ describe('FieldPassword', () => {
   });
 
   it('renders with default classes', () => {
-    render(<FieldPassword id="test-password" value="" passwordPolicy={defaultPasswordPolicy} onChange={vi.fn()} />);
+    render(<FieldPassword id='test-password' value='' passwordPolicy={defaultPasswordPolicy} onChange={vi.fn()} />);
     const input = document.getElementById('test-password');
     expect(input).toHaveClass('passflow-field-input');
     expect(input).toHaveClass('passflow-field--focused');
@@ -81,25 +88,37 @@ describe('FieldPassword', () => {
   });
 
   it('applies custom className', () => {
-    render(<FieldPassword id="test-password" value="" passwordPolicy={defaultPasswordPolicy} className="custom-class" onChange={vi.fn()} />);
+    render(
+      <FieldPassword
+        id='test-password'
+        value=''
+        passwordPolicy={defaultPasswordPolicy}
+        className='custom-class'
+        onChange={vi.fn()}
+      />,
+    );
     const input = document.getElementById('test-password');
     expect(input).toHaveClass('custom-class');
   });
 
   it('applies error class when isError is true', () => {
-    render(<FieldPassword id="test-password" value="" passwordPolicy={defaultPasswordPolicy} isError={true} onChange={vi.fn()} />);
+    render(
+      <FieldPassword id='test-password' value='' passwordPolicy={defaultPasswordPolicy} isError={true} onChange={vi.fn()} />,
+    );
     const input = document.getElementById('test-password');
     expect(input).toHaveClass('passflow-field--error');
   });
 
   it('handles disabled state', () => {
-    render(<FieldPassword id="test-password" value="" passwordPolicy={defaultPasswordPolicy} disabled={true} onChange={vi.fn()} />);
+    render(
+      <FieldPassword id='test-password' value='' passwordPolicy={defaultPasswordPolicy} disabled={true} onChange={vi.fn()} />,
+    );
     const input = document.getElementById('test-password');
     expect(input).toBeDisabled();
   });
 
   it('renders with value', () => {
-    render(<FieldPassword id="test-password" value="test123" passwordPolicy={defaultPasswordPolicy} onChange={vi.fn()} />);
+    render(<FieldPassword id='test-password' value='test123' passwordPolicy={defaultPasswordPolicy} onChange={vi.fn()} />);
     const input = document.getElementById('test-password');
     expect(input).toHaveValue('test123');
   });
@@ -108,9 +127,9 @@ describe('FieldPassword', () => {
     const handleChange = vi.fn();
     const user = userEvent.setup();
 
-    render(<FieldPassword id="test-password" value="" passwordPolicy={defaultPasswordPolicy} onChange={handleChange} />);
+    render(<FieldPassword id='test-password' value='' passwordPolicy={defaultPasswordPolicy} onChange={handleChange} />);
 
-    const input = document.getElementById('test-password');
+    const input = document.getElementById('test-password')!;
     await user.type(input, 'P');
 
     expect(handleChange).toHaveBeenCalled();
@@ -118,7 +137,13 @@ describe('FieldPassword', () => {
 
   it('displays validation messages when withMessages is true', () => {
     render(
-      <FieldPassword id="test-password" value="" passwordPolicy={defaultPasswordPolicy} withMessages={true} onChange={vi.fn()} />
+      <FieldPassword
+        id='test-password'
+        value=''
+        passwordPolicy={defaultPasswordPolicy}
+        withMessages={true}
+        onChange={vi.fn()}
+      />,
     );
 
     expect(screen.getByText(/At least 8 characters/i)).toBeInTheDocument();
@@ -126,7 +151,13 @@ describe('FieldPassword', () => {
 
   it('does not display validation messages when withMessages is false', () => {
     render(
-      <FieldPassword id="test-password" value="" passwordPolicy={defaultPasswordPolicy} withMessages={false} onChange={vi.fn()} />
+      <FieldPassword
+        id='test-password'
+        value=''
+        passwordPolicy={defaultPasswordPolicy}
+        withMessages={false}
+        onChange={vi.fn()}
+      />,
     );
 
     expect(screen.queryByText(/At least 8 characters/i)).not.toBeInTheDocument();
@@ -134,16 +165,20 @@ describe('FieldPassword', () => {
 
   it('displays minimum password length from policy', () => {
     const customPolicy = { ...defaultPasswordPolicy, min_password_length: 12 };
-    render(
-      <FieldPassword id="test-password" value="" passwordPolicy={customPolicy} withMessages={true} onChange={vi.fn()} />
-    );
+    render(<FieldPassword id='test-password' value='' passwordPolicy={customPolicy} withMessages={true} onChange={vi.fn()} />);
 
     expect(screen.getByText(/At least 12 characters/i)).toBeInTheDocument();
   });
 
   it('displays validation message for character requirements', () => {
     render(
-      <FieldPassword id="test-password" value="" passwordPolicy={defaultPasswordPolicy} withMessages={true} onChange={vi.fn()} />
+      <FieldPassword
+        id='test-password'
+        value=''
+        passwordPolicy={defaultPasswordPolicy}
+        withMessages={true}
+        onChange={vi.fn()}
+      />,
     );
 
     expect(screen.getByText(/Contain a number, symbol, lowercase letter, and uppercase letter/i)).toBeInTheDocument();
@@ -152,16 +187,16 @@ describe('FieldPassword', () => {
   it('shows success icon for length when valid', () => {
     const { container } = render(
       <FieldPassword
-        id="test-password"
-        value="12345678"
+        id='test-password'
+        value='12345678'
         passwordPolicy={defaultPasswordPolicy}
         withMessages={true}
         validationErrors={['uppercase', 'lowercase', 'number', 'symbol']}
-      />
+      />,
     );
 
     const validationItems = container.querySelectorAll('.passflow-password-validation-item');
-    const lengthItem = validationItems[0];
+    const lengthItem = validationItems[0]!;
     const checkIcon = lengthItem.querySelector('img[alt="check"]');
     expect(checkIcon).toBeInTheDocument();
   });
@@ -169,16 +204,16 @@ describe('FieldPassword', () => {
   it('shows close icon for length when invalid', () => {
     const { container } = render(
       <FieldPassword
-        id="test-password"
-        value="123"
+        id='test-password'
+        value='123'
         passwordPolicy={defaultPasswordPolicy}
         withMessages={true}
         validationErrors={['length', 'uppercase', 'lowercase', 'number', 'symbol']}
-      />
+      />,
     );
 
     const validationItems = container.querySelectorAll('.passflow-password-validation-item');
-    const lengthItem = validationItems[0];
+    const lengthItem = validationItems[0]!;
     const closeIcon = lengthItem.querySelector('img[alt="close"]');
     expect(closeIcon).toBeInTheDocument();
   });
@@ -186,12 +221,12 @@ describe('FieldPassword', () => {
   it('applies success class when validation passes', () => {
     const { container } = render(
       <FieldPassword
-        id="test-password"
-        value="12345678"
+        id='test-password'
+        value='12345678'
         passwordPolicy={defaultPasswordPolicy}
         withMessages={true}
         validationErrors={['uppercase', 'lowercase', 'number', 'symbol']}
-      />
+      />,
     );
 
     const validationItems = container.querySelectorAll('.passflow-password-validation-item');
@@ -200,13 +235,13 @@ describe('FieldPassword', () => {
   });
 
   it('renders toggle button with clean variant', () => {
-    const { container } = render(<FieldPassword id="test-password" value="" passwordPolicy={defaultPasswordPolicy} />);
+    const { container } = render(<FieldPassword id='test-password' value='' passwordPolicy={defaultPasswordPolicy} />);
     const toggleButton = container.querySelector('.passflow-button--clean');
     expect(toggleButton).toBeInTheDocument();
   });
 
   it('renders toggle button with asIcon and withIcon props', () => {
-    const { container } = render(<FieldPassword id="test-password" value="" passwordPolicy={defaultPasswordPolicy} />);
+    const { container } = render(<FieldPassword id='test-password' value='' passwordPolicy={defaultPasswordPolicy} />);
     const toggleButton = container.querySelector('.passflow-button--as-icon');
     expect(toggleButton).toBeInTheDocument();
     expect(toggleButton).toHaveClass('passflow-button--with-icon');
@@ -215,12 +250,12 @@ describe('FieldPassword', () => {
   it('forwards additional HTML attributes', () => {
     render(
       <FieldPassword
-        id="test-password"
-        value=""
+        id='test-password'
+        value=''
         passwordPolicy={defaultPasswordPolicy}
-        data-testid="custom-password"
-        aria-label="Custom Password"
-      />
+        data-testid='custom-password'
+        aria-label='Custom Password'
+      />,
     );
 
     const input = screen.getByTestId('custom-password');
@@ -229,45 +264,47 @@ describe('FieldPassword', () => {
 
   it('supports ref forwarding', () => {
     const ref = vi.fn();
-    render(<FieldPassword id="test-password" value="" passwordPolicy={defaultPasswordPolicy} ref={ref} />);
+    render(<FieldPassword id='test-password' value='' passwordPolicy={defaultPasswordPolicy} ref={ref} />);
 
     expect(ref).toHaveBeenCalledWith(expect.any(HTMLInputElement));
   });
 
   it('generates correct message for partial requirements', () => {
     const partialPolicy: PassflowPasswordPolicySettings = {
+      restrict_min_password_length: true,
       min_password_length: 8,
+      reject_compromised: false,
+      enforce_password_strength: 'none',
       require_lowercase: true,
       require_uppercase: false,
       require_number: true,
       require_symbol: false,
     };
 
-    render(
-      <FieldPassword id="test-password" value="" passwordPolicy={partialPolicy} withMessages={true} />
-    );
+    render(<FieldPassword id='test-password' value='' passwordPolicy={partialPolicy} withMessages={true} />);
 
     expect(screen.getByText(/Contain a number and lowercase letter/i)).toBeInTheDocument();
   });
 
   it('generates correct message for single requirement', () => {
     const singleReqPolicy: PassflowPasswordPolicySettings = {
+      restrict_min_password_length: true,
       min_password_length: 8,
+      reject_compromised: false,
+      enforce_password_strength: 'none',
       require_lowercase: false,
       require_uppercase: false,
       require_number: true,
       require_symbol: false,
     };
 
-    render(
-      <FieldPassword id="test-password" value="" passwordPolicy={singleReqPolicy} withMessages={true} />
-    );
+    render(<FieldPassword id='test-password' value='' passwordPolicy={singleReqPolicy} withMessages={true} />);
 
     expect(screen.getByText(/Contain a number/i)).toBeInTheDocument();
   });
 
   it('renders field wrapper with correct class', () => {
-    const { container } = render(<FieldPassword id="test-password" value="" passwordPolicy={defaultPasswordPolicy} />);
+    const { container } = render(<FieldPassword id='test-password' value='' passwordPolicy={defaultPasswordPolicy} />);
     const wrapper = container.querySelector('.passflow-field-wrapper');
     expect(wrapper).toBeInTheDocument();
   });
@@ -275,12 +312,12 @@ describe('FieldPassword', () => {
   it('does not show success styling when value is empty', () => {
     const { container } = render(
       <FieldPassword
-        id="test-password"
-        value=""
+        id='test-password'
+        value=''
         passwordPolicy={defaultPasswordPolicy}
         withMessages={true}
         validationErrors={[]}
-      />
+      />,
     );
 
     const successItems = container.querySelectorAll('.passflow-password-validation-item--success');
@@ -288,13 +325,21 @@ describe('FieldPassword', () => {
   });
 
   it('accepts placeholder attribute', () => {
-    render(<FieldPassword id="test-password" value="" passwordPolicy={defaultPasswordPolicy} placeholder="Enter password" onChange={vi.fn()} />);
+    render(
+      <FieldPassword
+        id='test-password'
+        value=''
+        passwordPolicy={defaultPasswordPolicy}
+        placeholder='Enter password'
+        onChange={vi.fn()}
+      />,
+    );
     const input = document.getElementById('test-password');
     expect(input).toHaveAttribute('placeholder', 'Enter password');
   });
 
   it('toggle button does not submit form', () => {
-    const { container } = render(<FieldPassword id="test-password" value="" passwordPolicy={defaultPasswordPolicy} />);
+    render(<FieldPassword id='test-password' value='' passwordPolicy={defaultPasswordPolicy} />);
     const toggleButton = screen.getByRole('button');
     expect(toggleButton).toHaveAttribute('type', 'button');
   });

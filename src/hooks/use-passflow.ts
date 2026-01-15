@@ -1,5 +1,5 @@
 import { PassflowContext } from '@/context';
-import type { Passflow } from '@passflow/core';
+import type { Passflow } from '@passflow/passflow-js-sdk';
 import { useContext } from 'react';
 
 export const usePassflow = (): Passflow => {

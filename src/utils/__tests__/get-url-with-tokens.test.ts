@@ -1,5 +1,5 @@
-import { describe, it, expect, vi } from 'vitest';
-import type { Passflow } from '@passflow/core';
+import type { Passflow } from '@passflow/passflow-js-sdk';
+import { describe, expect, it, vi } from 'vitest';
 import { getUrlWithTokens } from '../get-url-with-tokens';
 
 describe('getUrlWithTokens', () => {

@@ -21,7 +21,7 @@ import type {
   PassflowSignUpPayload,
   PassflowUserPayload,
   Providers,
-} from '@passflow/core';
+} from '@passflow/passflow-js-sdk';
 import { eq, has, isEmpty, size } from 'lodash';
 import { phone } from 'phone';
 import queryString from 'query-string';

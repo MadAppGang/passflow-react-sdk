@@ -6,7 +6,7 @@ import * as Yup from 'yup';
 import { Wrapper } from '../wrapper';
 import '@/styles/index.css';
 import { useUrlParams } from '@/utils';
-import type { PassflowSendPasswordResetEmailPayload } from '@passflow/core';
+import type { PassflowSendPasswordResetEmailPayload } from '@passflow/passflow-js-sdk';
 import { eq } from 'lodash';
 
 const searchParamsForgotPasswordSuccessSchema = Yup.object().shape({

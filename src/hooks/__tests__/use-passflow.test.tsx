@@ -1,7 +1,7 @@
 import { renderHook } from '@testing-library/react';
 import type { FC, PropsWithChildren } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { PassflowContext, initialState, type PassflowContextType } from '../../context/passflow-context';
+import { PassflowContext, type PassflowContextType, initialState } from '../../context/passflow-context';
 import { usePassflow } from '../use-passflow';
 
 describe('usePassflow', () => {
@@ -12,7 +12,7 @@ describe('usePassflow', () => {
     isAuthenticated: vi.fn().mockReturnValue(false),
     getTokens: vi.fn(),
     getParsedTokens: vi.fn(),
-    forgotPassword: vi.fn(),
+    sendPasswordResetEmail: vi.fn(),
     resetPassword: vi.fn(),
     passwordlessSignIn: vi.fn(),
     passkeyAuthenticate: vi.fn(),
@@ -60,7 +60,7 @@ describe('usePassflow', () => {
         wrapper: createWrapper(mockContext),
       });
 
-      result.current.signUp({ email: 'test@example.com', password: 'password' });
+      result.current.signUp({ email: 'test@example.com', password: 'password' } as any);
       expect(mockPassflow.signUp).toHaveBeenCalled();
     });
 
@@ -92,13 +92,13 @@ describe('usePassflow', () => {
       expect(mockPassflow.getTokens).toHaveBeenCalledWith(true);
     });
 
-    it('provides forgotPassword method', () => {
+    it('provides sendPasswordResetEmail method', () => {
       const { result } = renderHook(() => usePassflow(), {
         wrapper: createWrapper(mockContext),
       });
 
-      result.current.forgotPassword({ email: 'test@example.com' });
-      expect(mockPassflow.forgotPassword).toHaveBeenCalledWith({
+      result.current.sendPasswordResetEmail({ email: 'test@example.com' } as any);
+      expect(mockPassflow.sendPasswordResetEmail).toHaveBeenCalledWith({
         email: 'test@example.com',
       });
     });
@@ -108,7 +108,7 @@ describe('usePassflow', () => {
         wrapper: createWrapper(mockContext),
       });
 
-      result.current.resetPassword({ token: 'reset-token', password: 'new-password' });
+      result.current.resetPassword({ token: 'reset-token', password: 'new-password' } as any);
       expect(mockPassflow.resetPassword).toHaveBeenCalled();
     });
 
@@ -117,7 +117,7 @@ describe('usePassflow', () => {
         wrapper: createWrapper(mockContext),
       });
 
-      result.current.passwordlessSignIn({ email: 'test@example.com' });
+      result.current.passwordlessSignIn({ email: 'test@example.com' } as any);
       expect(mockPassflow.passwordlessSignIn).toHaveBeenCalled();
     });
 
@@ -126,7 +126,7 @@ describe('usePassflow', () => {
         wrapper: createWrapper(mockContext),
       });
 
-      result.current.passkeyAuthenticate({});
+      result.current.passkeyAuthenticate({} as any);
       expect(mockPassflow.passkeyAuthenticate).toHaveBeenCalled();
     });
   });

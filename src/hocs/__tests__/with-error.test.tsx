@@ -1,23 +1,21 @@
 import { render, screen } from '@testing-library/react';
 import type { FC } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { PassflowContext, initialState, type PassflowContextType } from '../../context/passflow-context';
+import { PassflowContext, type PassflowContextType, initialState } from '../../context/passflow-context';
 import { withError } from '../with-error';
 
 // Mock component to wrap
 const MockComponent: FC<{ successAuthRedirect?: string }> = () => <div>Mock Component Content</div>;
 
 // Mock error component
-const MockErrorComponent: FC<{ goBackRedirectTo: string; error: string }> = ({ goBackRedirectTo, error }) => (
-  <div data-testid="error-component">
+const MockErrorComponent: FC<{ goBackRedirectTo: string; error?: string }> = ({ goBackRedirectTo, error }) => (
+  <div data-testid='error-component'>
     <p>Error: {error}</p>
     <p>Redirect to: {goBackRedirectTo}</p>
   </div>
 );
 
 describe('withError HOC', () => {
-  const originalLocation = window.location;
-
   beforeEach(() => {
     // Mock window.location
     Object.defineProperty(window, 'location', {
@@ -36,10 +34,6 @@ describe('withError HOC', () => {
     dispatch: vi.fn(),
     passflow: {} as any,
   });
-
-  const createWrapper =
-    (context: PassflowContextType | undefined): FC<{ children: React.ReactNode }> =>
-    ({ children }) => <PassflowContext.Provider value={context}>{children}</PassflowContext.Provider>;
 
   describe('when context is valid', () => {
     it('renders the wrapped component when appId and url are present', () => {
@@ -70,7 +64,7 @@ describe('withError HOC', () => {
 
       render(
         <PassflowContext.Provider value={mockContext}>
-          <WrappedComponent customProp="test value" />
+          <WrappedComponent customProp='test value' />
         </PassflowContext.Provider>,
       );
 
@@ -140,7 +134,7 @@ describe('withError HOC', () => {
 
       render(
         <PassflowContext.Provider value={mockContext}>
-          <WrappedComponent successAuthRedirect="/dashboard" />
+          <WrappedComponent successAuthRedirect='/dashboard' />
         </PassflowContext.Provider>,
       );
 
@@ -226,7 +220,7 @@ describe('withError HOC', () => {
 
       render(
         <PassflowContext.Provider value={mockContext}>
-          <WrappedComponent successAuthRedirect="/home" />
+          <WrappedComponent successAuthRedirect='/home' />
         </PassflowContext.Provider>,
       );
 

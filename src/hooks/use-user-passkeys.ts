@@ -1,4 +1,4 @@
-import type { PassflowUserPasskey } from '@passflow/core';
+import type { PassflowUserPasskey } from '@passflow/passflow-js-sdk';
 import { useLayoutEffect, useState } from 'react';
 import { usePassflow } from './use-passflow';
 

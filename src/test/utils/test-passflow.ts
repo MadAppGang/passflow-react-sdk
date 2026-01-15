@@ -1,6 +1,8 @@
-import { vi } from 'vitest';
+import { type Mock, vi } from 'vitest';
 
-export const createMockPassflow = () => ({
+type MockFn = Mock<(...args: any[]) => any>;
+
+export const createMockPassflow = (): Record<string, MockFn> => ({
   signIn: vi.fn(),
   signUp: vi.fn(),
   passwordlessSignIn: vi.fn(),

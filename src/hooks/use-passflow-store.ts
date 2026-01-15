@@ -1,4 +1,4 @@
-import type { Passflow, PassflowEvent, PassflowSubscriber, Tokens } from '@passflow/core';
+import type { Passflow, PassflowEvent, PassflowEventPayload, PassflowSubscriber, Tokens } from '@passflow/passflow-js-sdk';
 import { useSyncExternalStore } from 'react';
 import { usePassflow } from './use-passflow';
 
@@ -21,7 +21,7 @@ function subscribe(passflow: Passflow, event?: PassflowEvent[]): (onStoreChange:
 
 function subscriber(onStoreChange: () => void): PassflowSubscriber {
   return {
-    onAuthChange: () => {
+    onAuthChange: <E extends PassflowEvent>(_eventType: E, _payload?: PassflowEventPayload[E]) => {
       onStoreChange();
     },
   };

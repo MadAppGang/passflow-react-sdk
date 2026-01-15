@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { initialState, passflowReducer, type PassflowState } from '../passflow-context';
+import { type PassflowState, initialState, passflowReducer } from '../passflow-context';
 
 describe('passflowReducer', () => {
   describe('initialState', () => {
@@ -12,6 +12,8 @@ describe('passflowReducer', () => {
         scopes: undefined,
         createTenantForNewUser: undefined,
         parseQueryParams: true,
+        isDiscoveringAppId: false,
+        hasSettingsError: false,
       });
     });
 
@@ -98,6 +100,15 @@ describe('passflowReducer', () => {
       });
 
       expect(result.parseQueryParams).toBe(false);
+    });
+
+    it('can set hasSettingsError', () => {
+      const result = passflowReducer(initialState, {
+        type: 'SET_PASSFLOW_STATE',
+        payload: { ...initialState, hasSettingsError: true },
+      });
+
+      expect(result.hasSettingsError).toBe(true);
     });
 
     it('preserves existing values when partially updating', () => {

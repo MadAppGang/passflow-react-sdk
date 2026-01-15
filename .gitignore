@@ -52,3 +52,7 @@ vite.config.ts.*
 
 *storybook.log
 test-results
+
+# AI session files
+.claudemem/
+ai-docs/

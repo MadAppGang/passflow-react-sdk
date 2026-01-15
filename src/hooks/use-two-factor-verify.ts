@@ -1,4 +1,4 @@
-import type { TwoFactorRecoveryResponse, TwoFactorVerifyResponse } from '@passflow/core';
+import type { TwoFactorRecoveryResponse, TwoFactorVerifyResponse } from '@passflow/passflow-js-sdk';
 import { useCallback, useState } from 'react';
 import { usePassflow } from './use-passflow';
 

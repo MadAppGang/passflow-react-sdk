@@ -1,12 +1,7 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { renderHook, waitFor, act } from '@testing-library/react';
+import type { PassflowPasswordlessResponse } from '@passflow/passflow-js-sdk';
+import { act, renderHook, waitFor } from '@testing-library/react';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { useSignUp } from '../use-signup';
-import type {
-  PassflowSignUpPayload,
-  PassflowPasskeyRegisterStartPayload,
-  PassflowPasswordlessSignInPayload,
-  PassflowPasswordlessResponse,
-} from '@passflow/core';
 
 // Mock the usePassflow hook
 vi.mock('../use-passflow', () => ({
@@ -36,12 +31,12 @@ describe('useSignUp', () => {
       expect(result.current.isLoading).toBe(false);
       expect(result.current.isError).toBe(false);
 
-      const payload: PassflowSignUpPayload = {
+      const payload = {
         email: 'test@example.com',
         password: 'password123',
-      };
+      } as any;
 
-      let signUpResult: boolean | PassflowPasswordlessResponse = false;
+      let signUpResult: boolean | string | PassflowPasswordlessResponse = false;
 
       await act(async () => {
         signUpResult = await result.current.fetch(payload, 'password');
@@ -60,12 +55,12 @@ describe('useSignUp', () => {
 
       const { result } = renderHook(() => useSignUp());
 
-      const payload: PassflowSignUpPayload = {
+      const payload = {
         email: 'test@example.com',
         password: 'password123',
-      };
+      } as any;
 
-      let signUpResult: boolean | PassflowPasswordlessResponse = true;
+      let signUpResult: boolean | string | PassflowPasswordlessResponse = true;
 
       await act(async () => {
         signUpResult = await result.current.fetch(payload, 'password');
@@ -86,12 +81,12 @@ describe('useSignUp', () => {
 
       const { result } = renderHook(() => useSignUp());
 
-      const payload: PassflowSignUpPayload = {
+      const payload = {
         email: 'test@example.com',
         password: 'password123',
-      };
+      } as any;
 
-      let fetchPromise: Promise<boolean | PassflowPasswordlessResponse>;
+      let fetchPromise: Promise<boolean | string | PassflowPasswordlessResponse>;
 
       act(() => {
         fetchPromise = result.current.fetch(payload, 'password');
@@ -121,13 +116,13 @@ describe('useSignUp', () => {
 
       const { result } = renderHook(() => useSignUp());
 
-      const payload: PassflowPasskeyRegisterStartPayload = {
+      const payload = {
         email: 'test@example.com',
         firstName: 'John',
         lastName: 'Doe',
-      };
+      } as any;
 
-      let registerResult: boolean | PassflowPasswordlessResponse = false;
+      let registerResult: boolean | string | PassflowPasswordlessResponse = false;
 
       await act(async () => {
         registerResult = await result.current.fetch(payload, 'passkey');
@@ -145,13 +140,13 @@ describe('useSignUp', () => {
 
       const { result } = renderHook(() => useSignUp());
 
-      const payload: PassflowPasskeyRegisterStartPayload = {
+      const payload = {
         email: 'test@example.com',
         firstName: 'John',
         lastName: 'Doe',
-      };
+      } as any;
 
-      let registerResult: boolean | PassflowPasswordlessResponse = true;
+      let registerResult: boolean | string | PassflowPasswordlessResponse = true;
 
       await act(async () => {
         registerResult = await result.current.fetch(payload, 'passkey');
@@ -165,18 +160,18 @@ describe('useSignUp', () => {
 
   describe('passwordless sign up', () => {
     it('should successfully sign up with passwordless', async () => {
-      const mockResponse: PassflowPasswordlessResponse = {
+      const mockResponse = {
         message: 'Code sent',
-      };
+      } as any;
       mockPassflow.passwordlessSignIn.mockResolvedValue(mockResponse);
 
       const { result } = renderHook(() => useSignUp());
 
-      const payload: PassflowPasswordlessSignInPayload = {
+      const payload = {
         email: 'test@example.com',
-      };
+      } as any;
 
-      let signUpResult: boolean | PassflowPasswordlessResponse = false;
+      let signUpResult: boolean | string | PassflowPasswordlessResponse = false;
 
       await act(async () => {
         signUpResult = await result.current.fetch(payload, 'passwordless');
@@ -194,11 +189,11 @@ describe('useSignUp', () => {
 
       const { result } = renderHook(() => useSignUp());
 
-      const payload: PassflowPasswordlessSignInPayload = {
+      const payload = {
         email: 'test@example.com',
-      };
+      } as any;
 
-      let signUpResult: boolean | PassflowPasswordlessResponse = true;
+      let signUpResult: boolean | string | PassflowPasswordlessResponse = true;
 
       await act(async () => {
         signUpResult = await result.current.fetch(payload, 'passwordless');
@@ -219,7 +214,7 @@ describe('useSignUp', () => {
 
       // Trigger an error
       await act(async () => {
-        await result.current.fetch({ email: 'test@example.com', password: 'test' }, 'password');
+        await result.current.fetch({ email: 'test@example.com', password: 'test' } as any, 'password');
       });
 
       expect(result.current.isError).toBe(true);

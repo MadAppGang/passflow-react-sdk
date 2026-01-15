@@ -1,5 +1,5 @@
-import { describe, it, expect } from 'vitest';
-import type { AuthStrategies } from '@passflow/core';
+import type { AuthStrategies } from '@passflow/passflow-js-sdk';
+import { describe, expect, it } from 'vitest';
 import { getAuthMethods } from '../get-auth-methods';
 
 describe('getAuthMethods', () => {
@@ -47,7 +47,7 @@ describe('getAuthMethods', () => {
     const strategies: AuthStrategies[] = [
       {
         type: 'internal',
-        strategy: { identity: 'email', challenge: 'password' },
+        strategy: { identity: 'email', challenge: 'password', transport: 'none' },
       },
     ];
 
@@ -62,7 +62,7 @@ describe('getAuthMethods', () => {
     const strategies: AuthStrategies[] = [
       {
         type: 'internal',
-        strategy: { identity: 'email', challenge: 'otp' },
+        strategy: { identity: 'email', challenge: 'otp', transport: 'email' },
       },
     ];
 
@@ -77,7 +77,7 @@ describe('getAuthMethods', () => {
     const strategies: AuthStrategies[] = [
       {
         type: 'internal',
-        strategy: { identity: 'email', challenge: 'magic_link' },
+        strategy: { identity: 'email', challenge: 'magic_link', transport: 'email' },
       },
     ];
 
@@ -92,7 +92,7 @@ describe('getAuthMethods', () => {
     const strategies: AuthStrategies[] = [
       {
         type: 'internal',
-        strategy: { identity: 'phone', challenge: 'password' },
+        strategy: { identity: 'phone', challenge: 'password', transport: 'none' },
       },
     ];
 
@@ -107,7 +107,7 @@ describe('getAuthMethods', () => {
     const strategies: AuthStrategies[] = [
       {
         type: 'internal',
-        strategy: { identity: 'phone', challenge: 'otp' },
+        strategy: { identity: 'phone', challenge: 'otp', transport: 'sms' },
       },
     ];
 
@@ -122,7 +122,7 @@ describe('getAuthMethods', () => {
     const strategies: AuthStrategies[] = [
       {
         type: 'internal',
-        strategy: { identity: 'phone', challenge: 'magic_link' },
+        strategy: { identity: 'phone', challenge: 'magic_link', transport: 'sms' },
       },
     ];
 
@@ -137,7 +137,7 @@ describe('getAuthMethods', () => {
     const strategies: AuthStrategies[] = [
       {
         type: 'internal',
-        strategy: { identity: 'username', challenge: 'password' },
+        strategy: { identity: 'username', challenge: 'password', transport: 'none' },
       },
     ];
 
@@ -165,11 +165,11 @@ describe('getAuthMethods', () => {
     const strategies: AuthStrategies[] = [
       {
         type: 'fim',
-        strategy: { fim_type: 'google' },
+        strategy: { fim_type: 'google' as any },
       },
       {
         type: 'fim',
-        strategy: { fim_type: 'github' },
+        strategy: { fim_type: 'github' as any },
       },
     ];
 
@@ -182,15 +182,15 @@ describe('getAuthMethods', () => {
     const strategies: AuthStrategies[] = [
       {
         type: 'internal',
-        strategy: { identity: 'email', challenge: 'password' },
+        strategy: { identity: 'email', challenge: 'password', transport: 'none' },
       },
       {
         type: 'internal',
-        strategy: { identity: 'email', challenge: 'otp' },
+        strategy: { identity: 'email', challenge: 'otp', transport: 'email' },
       },
       {
         type: 'internal',
-        strategy: { identity: 'username', challenge: 'password' },
+        strategy: { identity: 'username', challenge: 'password', transport: 'none' },
       },
       {
         type: 'passkey',
@@ -198,7 +198,7 @@ describe('getAuthMethods', () => {
       },
       {
         type: 'fim',
-        strategy: { fim_type: 'google' },
+        strategy: { fim_type: 'google' as any },
       },
     ];
 
@@ -219,7 +219,7 @@ describe('getAuthMethods', () => {
     const strategies: AuthStrategies[] = [
       {
         type: 'internal',
-        strategy: { identity: 'invalid' as any, challenge: 'password' },
+        strategy: { identity: 'invalid' as any, challenge: 'password', transport: 'none' },
       },
     ];
 
@@ -241,15 +241,15 @@ describe('getAuthMethods', () => {
     const strategies: AuthStrategies[] = [
       {
         type: 'internal',
-        strategy: { identity: 'email', challenge: 'password' },
+        strategy: { identity: 'email', challenge: 'password', transport: 'none' },
       },
       {
         type: 'internal',
-        strategy: { identity: 'email', challenge: 'otp' },
+        strategy: { identity: 'email', challenge: 'otp', transport: 'email' },
       },
       {
         type: 'internal',
-        strategy: { identity: 'email', challenge: 'magic_link' },
+        strategy: { identity: 'email', challenge: 'magic_link', transport: 'email' },
       },
     ];
 
@@ -266,15 +266,15 @@ describe('getAuthMethods', () => {
     const strategies: AuthStrategies[] = [
       {
         type: 'internal',
-        strategy: { identity: 'phone', challenge: 'password' },
+        strategy: { identity: 'phone', challenge: 'password', transport: 'none' },
       },
       {
         type: 'internal',
-        strategy: { identity: 'phone', challenge: 'otp' },
+        strategy: { identity: 'phone', challenge: 'otp', transport: 'sms' },
       },
       {
         type: 'internal',
-        strategy: { identity: 'phone', challenge: 'magic_link' },
+        strategy: { identity: 'phone', challenge: 'magic_link', transport: 'sms' },
       },
     ];
 

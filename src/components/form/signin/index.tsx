@@ -21,7 +21,7 @@ import type {
   PassflowPasswordlessSignInPayload,
   PassflowSignInPayload,
   Providers,
-} from '@passflow/core';
+} from '@passflow/passflow-js-sdk';
 import { eq, has, isEmpty, size } from 'lodash';
 import { phone } from 'phone';
 import queryString from 'query-string';
@@ -45,6 +45,7 @@ export type TSignIn = {
   verifyOTPPath?: string;
   verifyMagicLinkPath?: string;
   forgotPasswordPath?: string;
+  twoFactorVerifyPath?: string;
 };
 
 export const SignInForm: FC<TSignIn> = ({
@@ -54,6 +55,7 @@ export const SignInForm: FC<TSignIn> = ({
   verifyOTPPath = routes.verify_otp.path,
   verifyMagicLinkPath = routes.verify_magic_link.path,
   forgotPasswordPath = routes.forgot_password.path,
+  twoFactorVerifyPath = routes.two_factor_verify.path,
 }) => {
   const {
     getValues,
@@ -155,6 +157,11 @@ export const SignInForm: FC<TSignIn> = ({
     const status = await fetch(payload, 'password');
 
     if (status) {
+      // Check if 2FA verification is required
+      if (passflow.isTwoFactorVerificationRequired()) {
+        navigate({ to: twoFactorVerifyPath ?? routes.two_factor_verify.path });
+        return;
+      }
       // biome-ignore lint/style/noNonNullAssertion: <explanation>
       if (!isValidUrl(successAuthRedirect ?? appSettings!.defaults.redirect))
         navigate({ to: successAuthRedirect ?? appSettings!.defaults.redirect });
@@ -172,6 +179,11 @@ export const SignInForm: FC<TSignIn> = ({
     const response = await fetch(payload, 'passkey');
 
     if (response) {
+      // Check if 2FA verification is required
+      if (passflow.isTwoFactorVerificationRequired()) {
+        navigate({ to: twoFactorVerifyPath ?? routes.two_factor_verify.path });
+        return;
+      }
       // biome-ignore lint/style/noNonNullAssertion: <explanation>
       if (!isValidUrl(successAuthRedirect ?? appSettings!.defaults.redirect))
         navigate({ to: successAuthRedirect ?? appSettings!.defaults.redirect });

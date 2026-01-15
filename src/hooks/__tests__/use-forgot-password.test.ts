@@ -1,7 +1,7 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { renderHook, waitFor, act } from '@testing-library/react';
+import type { PassflowSendPasswordResetEmailPayload } from '@passflow/passflow-js-sdk';
+import { act, renderHook, waitFor } from '@testing-library/react';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { useForgotPassword } from '../use-forgot-password';
-import type { PassflowSendPasswordResetEmailPayload } from '@passflow/core';
 
 // Mock the usePassflow hook
 vi.mock('../use-passflow', () => ({

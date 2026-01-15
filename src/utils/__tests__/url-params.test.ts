@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { useUrlParams } from '../url-params';
 
 describe('useUrlParams', () => {
@@ -8,18 +8,18 @@ describe('useUrlParams', () => {
   beforeEach(() => {
     // Mock window.location
     delete (window as any).location;
-    window.location = {
+    (window as any).location = {
       pathname: '/test',
       search: '',
       hash: '',
-    } as Location;
+    };
 
     // Mock window.history
     delete (window as any).history;
-    window.history = {
+    (window as any).history = {
       pushState: vi.fn(),
       replaceState: vi.fn(),
-    } as any;
+    };
 
     // Mock DOMParser
     global.DOMParser = class DOMParser {
@@ -34,8 +34,8 @@ describe('useUrlParams', () => {
   });
 
   afterEach(() => {
-    window.location = originalLocation;
-    window.history = originalHistory;
+    (window as any).location = originalLocation;
+    (window as any).history = originalHistory;
   });
 
   describe('getAll', () => {

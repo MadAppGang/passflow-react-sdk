@@ -15,7 +15,7 @@ describe('Wrapper', () => {
     });
 
     it('renders with title', () => {
-      render(<Wrapper title="Sign In">Content</Wrapper>);
+      render(<Wrapper title='Sign In'>Content</Wrapper>);
 
       expect(screen.getByText('Sign In')).toBeInTheDocument();
       expect(screen.getByRole('heading', { name: 'Sign In' })).toBeInTheDocument();
@@ -23,7 +23,7 @@ describe('Wrapper', () => {
 
     it('renders with title and subtitle', () => {
       render(
-        <Wrapper title="Welcome" subtitle="Please sign in to continue">
+        <Wrapper title='Welcome' subtitle='Please sign in to continue'>
           Content
         </Wrapper>,
       );
@@ -33,7 +33,7 @@ describe('Wrapper', () => {
     });
 
     it('does not render subtitle when only title is provided', () => {
-      render(<Wrapper title="Title Only">Content</Wrapper>);
+      render(<Wrapper title='Title Only'>Content</Wrapper>);
 
       expect(screen.getByText('Title Only')).toBeInTheDocument();
       expect(screen.queryByText('Please sign in to continue')).not.toBeInTheDocument();
@@ -58,7 +58,7 @@ describe('Wrapper', () => {
     });
 
     it('renders custom logo image when customLogo provided', () => {
-      render(<Wrapper customLogo="https://example.com/logo.png">Content</Wrapper>);
+      render(<Wrapper customLogo='https://example.com/logo.png'>Content</Wrapper>);
 
       const logo = screen.getByAltText('custom logo');
       expect(logo).toBeInTheDocument();
@@ -66,11 +66,8 @@ describe('Wrapper', () => {
     });
 
     it('uses custom iconId', () => {
-      render(<Wrapper iconId="custom-icon">Content</Wrapper>);
+      render(<Wrapper iconId='custom-icon'>Content</Wrapper>);
 
-      // Should attempt to render with custom icon
-      const useElements = document.querySelectorAll('use');
-      const hasCustomIcon = Array.from(useElements).some((el) => el.getAttribute('href')?.includes('custom-icon'));
       // Icon component is used with the custom iconId
       expect(document.querySelector('#passflow-wrapper')).toBeInTheDocument();
     });
@@ -108,7 +105,7 @@ describe('Wrapper', () => {
     });
 
     it('applies custom className', () => {
-      render(<Wrapper className="custom-class">Content</Wrapper>);
+      render(<Wrapper className='custom-class'>Content</Wrapper>);
 
       const wrapper = document.querySelector('.passflow-form-main-wrapper');
       expect(wrapper).toHaveClass('custom-class');
@@ -149,14 +146,10 @@ describe('Wrapper', () => {
   describe('complete rendering scenarios', () => {
     it('renders a complete sign-in wrapper', () => {
       render(
-        <Wrapper
-          title="Sign In"
-          subtitle="Enter your credentials"
-          className="passflow-signin-wrapper"
-        >
+        <Wrapper title='Sign In' subtitle='Enter your credentials' className='passflow-signin-wrapper'>
           <form>
-            <input type="email" placeholder="Email" />
-            <button type="submit">Submit</button>
+            <input type='email' placeholder='Email' />
+            <button type='submit'>Submit</button>
           </form>
         </Wrapper>,
       );
@@ -169,11 +162,7 @@ describe('Wrapper', () => {
 
     it('renders a branded signup wrapper', () => {
       render(
-        <Wrapper
-          title="Create Account"
-          customLogo="https://myapp.com/logo.png"
-          removeBranding={false}
-        >
+        <Wrapper title='Create Account' customLogo='https://myapp.com/logo.png' removeBranding={false}>
           <form>Sign up form</form>
         </Wrapper>,
       );
@@ -186,10 +175,10 @@ describe('Wrapper', () => {
     it('renders a white-labeled wrapper', () => {
       render(
         <Wrapper
-          title="Login"
-          customLogo="https://client.com/logo.png"
+          title='Login'
+          customLogo='https://client.com/logo.png'
           removeBranding
-          customCss=".passflow-wrapper { background: white; }"
+          customCss='.passflow-wrapper { background: white; }'
         >
           <form>Login form</form>
         </Wrapper>,

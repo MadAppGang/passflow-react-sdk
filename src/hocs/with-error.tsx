@@ -23,7 +23,27 @@ export const withError =
     const { successAuthRedirect } = props;
     const { pathname } = window.location;
 
-    if ((!context?.state.appId || !context.state.url) && !excludeRoutes.some((route) => pathname.includes(route))) {
+    // Allow excluded routes to render without checking appId
+    if (excludeRoutes.some((route) => pathname.includes(route))) {
+      return (
+        <ErrorBoundary
+          // eslint-disable-next-line react/no-unstable-nested-components
+          FallbackComponent={({ error }: TFallbackComponentProps) => (
+            <ErrorComponent goBackRedirectTo={successAuthRedirect ?? '/'} error={error.message} />
+          )}
+        >
+          <Component {...props} />
+        </ErrorBoundary>
+      );
+    }
+
+    // If we're still discovering the appId, don't show error yet
+    if (context?.state.isDiscoveringAppId) {
+      return null; // Or render a loading spinner if desired
+    }
+
+    // After discovery is complete, check if we have the required config
+    if (!context?.state.appId || !context.state.url) {
       const errorMessage = 'Missing appId or url';
       return <ErrorComponent goBackRedirectTo={successAuthRedirect ?? '/'} error={errorMessage} />;
     }

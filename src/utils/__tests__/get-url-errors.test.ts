@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { getUrlErrors } from '../get-url-errors';
 
 describe('getUrlErrors', () => {
@@ -7,11 +7,11 @@ describe('getUrlErrors', () => {
   beforeEach(() => {
     // Mock window.location
     delete (window as any).location;
-    window.location = { search: '' } as Location;
+    (window as any).location = { search: '' };
   });
 
   afterEach(() => {
-    window.location = originalLocation;
+    (window as any).location = originalLocation;
   });
 
   it('should extract error and message from URL search params', () => {

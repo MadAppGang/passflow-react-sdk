@@ -1,23 +1,23 @@
-import { describe, it, expect, vi } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { describe, expect, it, vi } from 'vitest';
 import { Button } from '../index';
 
 describe('Button', () => {
   it('renders correctly with children', () => {
     render(
-      <Button size="medium" variant="primary" type="button">
+      <Button size='medium' variant='primary' type='button'>
         Click me
-      </Button>
+      </Button>,
     );
     expect(screen.getByText('Click me')).toBeInTheDocument();
   });
 
   it('renders with primary variant', () => {
     render(
-      <Button size="medium" variant="primary" type="button">
+      <Button size='medium' variant='primary' type='button'>
         Primary Button
-      </Button>
+      </Button>,
     );
     const button = screen.getByText('Primary Button');
     expect(button).toHaveClass('passflow-button--primary');
@@ -25,9 +25,9 @@ describe('Button', () => {
 
   it('renders with outlined variant', () => {
     render(
-      <Button size="medium" variant="outlined" type="button">
+      <Button size='medium' variant='outlined' type='button'>
         Outlined Button
-      </Button>
+      </Button>,
     );
     const button = screen.getByText('Outlined Button');
     expect(button).toHaveClass('passflow-button--outlined');
@@ -35,9 +35,9 @@ describe('Button', () => {
 
   it('renders with dark variant', () => {
     render(
-      <Button size="medium" variant="dark" type="button">
+      <Button size='medium' variant='dark' type='button'>
         Dark Button
-      </Button>
+      </Button>,
     );
     const button = screen.getByText('Dark Button');
     expect(button).toHaveClass('passflow-button--dark');
@@ -45,9 +45,9 @@ describe('Button', () => {
 
   it('renders with clean variant', () => {
     render(
-      <Button size="medium" variant="clean" type="button">
+      <Button size='medium' variant='clean' type='button'>
         Clean Button
-      </Button>
+      </Button>,
     );
     const button = screen.getByText('Clean Button');
     expect(button).toHaveClass('passflow-button--clean');
@@ -55,9 +55,9 @@ describe('Button', () => {
 
   it('renders with secondary variant', () => {
     render(
-      <Button size="medium" variant="secondary" type="button">
+      <Button size='medium' variant='secondary' type='button'>
         Secondary Button
-      </Button>
+      </Button>,
     );
     const button = screen.getByText('Secondary Button');
     expect(button).toHaveClass('passflow-button--secondary');
@@ -65,9 +65,9 @@ describe('Button', () => {
 
   it('renders with warning variant', () => {
     render(
-      <Button size="medium" variant="warning" type="button">
+      <Button size='medium' variant='warning' type='button'>
         Warning Button
-      </Button>
+      </Button>,
     );
     const button = screen.getByText('Warning Button');
     expect(button).toHaveClass('passflow-button--warning');
@@ -75,9 +75,9 @@ describe('Button', () => {
 
   it('renders with provider variant', () => {
     render(
-      <Button size="medium" variant="provider" type="button">
+      <Button size='medium' variant='provider' type='button'>
         Provider Button
-      </Button>
+      </Button>,
     );
     const button = screen.getByText('Provider Button');
     expect(button).toHaveClass('passflow-button--provider');
@@ -85,9 +85,9 @@ describe('Button', () => {
 
   it('renders with small size', () => {
     render(
-      <Button size="small" variant="primary" type="button">
+      <Button size='small' variant='primary' type='button'>
         Small Button
-      </Button>
+      </Button>,
     );
     const button = screen.getByText('Small Button');
     expect(button).toHaveClass('passflow-button--small');
@@ -95,9 +95,9 @@ describe('Button', () => {
 
   it('renders with medium size', () => {
     render(
-      <Button size="medium" variant="primary" type="button">
+      <Button size='medium' variant='primary' type='button'>
         Medium Button
-      </Button>
+      </Button>,
     );
     const button = screen.getByText('Medium Button');
     expect(button).toHaveClass('passflow-button--medium');
@@ -105,9 +105,9 @@ describe('Button', () => {
 
   it('renders with big size', () => {
     render(
-      <Button size="big" variant="primary" type="button">
+      <Button size='big' variant='primary' type='button'>
         Big Button
-      </Button>
+      </Button>,
     );
     const button = screen.getByText('Big Button');
     expect(button).toHaveClass('passflow-button--big');
@@ -115,9 +115,9 @@ describe('Button', () => {
 
   it('applies withIcon class when withIcon is true', () => {
     render(
-      <Button size="medium" variant="primary" type="button" withIcon>
+      <Button size='medium' variant='primary' type='button' withIcon>
         With Icon
-      </Button>
+      </Button>,
     );
     const button = screen.getByText('With Icon');
     expect(button).toHaveClass('passflow-button--with-icon');
@@ -125,9 +125,9 @@ describe('Button', () => {
 
   it('applies asIcon class when asIcon is true', () => {
     render(
-      <Button size="medium" variant="primary" type="button" asIcon>
+      <Button size='medium' variant='primary' type='button' asIcon>
         As Icon
-      </Button>
+      </Button>,
     );
     const button = screen.getByText('As Icon');
     expect(button).toHaveClass('passflow-button--as-icon');
@@ -135,9 +135,9 @@ describe('Button', () => {
 
   it('applies custom className', () => {
     render(
-      <Button size="medium" variant="primary" type="button" className="custom-class">
+      <Button size='medium' variant='primary' type='button' className='custom-class'>
         Custom Class
-      </Button>
+      </Button>,
     );
     const button = screen.getByText('Custom Class');
     expect(button).toHaveClass('custom-class');
@@ -148,9 +148,9 @@ describe('Button', () => {
     const user = userEvent.setup();
 
     render(
-      <Button size="medium" variant="primary" type="button" onClick={handleClick}>
+      <Button size='medium' variant='primary' type='button' onClick={handleClick}>
         Click me
-      </Button>
+      </Button>,
     );
 
     await user.click(screen.getByText('Click me'));
@@ -160,9 +160,9 @@ describe('Button', () => {
   it('respects disabled state', () => {
     const handleClick = vi.fn();
     render(
-      <Button size="medium" variant="primary" type="button" onClick={handleClick} disabled>
+      <Button size='medium' variant='primary' type='button' onClick={handleClick} disabled>
         Disabled Button
-      </Button>
+      </Button>,
     );
 
     const button = screen.getByText('Disabled Button');
@@ -171,9 +171,9 @@ describe('Button', () => {
 
   it('renders ripple container when withRipple is true (default)', () => {
     render(
-      <Button size="medium" variant="primary" type="button">
+      <Button size='medium' variant='primary' type='button'>
         Ripple Button
-      </Button>
+      </Button>,
     );
 
     const button = screen.getByText('Ripple Button');
@@ -183,9 +183,9 @@ describe('Button', () => {
 
   it('does not render ripple container when withRipple is false', () => {
     render(
-      <Button size="medium" variant="primary" type="button" withRipple={false}>
+      <Button size='medium' variant='primary' type='button' withRipple={false}>
         No Ripple Button
-      </Button>
+      </Button>,
     );
 
     const button = screen.getByText('No Ripple Button');
@@ -197,9 +197,9 @@ describe('Button', () => {
     const user = userEvent.setup();
 
     render(
-      <Button size="medium" variant="primary" type="button">
+      <Button size='medium' variant='primary' type='button'>
         Ripple Test
-      </Button>
+      </Button>,
     );
 
     const button = screen.getByText('Ripple Test');
@@ -217,9 +217,9 @@ describe('Button', () => {
     const user = userEvent.setup();
 
     render(
-      <Button size="medium" variant="primary" type="button">
+      <Button size='medium' variant='primary' type='button'>
         Ripple Timeout Test
-      </Button>
+      </Button>,
     );
 
     const button = screen.getByText('Ripple Timeout Test');
@@ -236,38 +236,38 @@ describe('Button', () => {
       () => {
         expect(rippleContainer?.querySelector('.passflow-ripple')).not.toBeInTheDocument();
       },
-      { timeout: 1500 }
+      { timeout: 1500 },
     );
   });
 
   it('renders with correct button type', () => {
     const { rerender } = render(
-      <Button size="medium" variant="primary" type="button">
+      <Button size='medium' variant='primary' type='button'>
         Button Type
-      </Button>
+      </Button>,
     );
     expect(screen.getByText('Button Type')).toHaveAttribute('type', 'button');
 
     rerender(
-      <Button size="medium" variant="primary" type="submit">
+      <Button size='medium' variant='primary' type='submit'>
         Button Type
-      </Button>
+      </Button>,
     );
     expect(screen.getByText('Button Type')).toHaveAttribute('type', 'submit');
 
     rerender(
-      <Button size="medium" variant="primary" type="reset">
+      <Button size='medium' variant='primary' type='reset'>
         Button Type
-      </Button>
+      </Button>,
     );
     expect(screen.getByText('Button Type')).toHaveAttribute('type', 'reset');
   });
 
   it('forwards additional HTML attributes', () => {
     render(
-      <Button size="medium" variant="primary" type="button" data-testid="custom-button" aria-label="Custom Button">
+      <Button size='medium' variant='primary' type='button' data-testid='custom-button' aria-label='Custom Button'>
         Custom Attributes
-      </Button>
+      </Button>,
     );
 
     const button = screen.getByTestId('custom-button');

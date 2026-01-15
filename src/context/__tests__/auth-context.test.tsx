@@ -3,7 +3,7 @@ import type { FC, PropsWithChildren } from 'react';
 import { useContext } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { AuthContext, AuthProvider } from '../auth-context';
-import { PassflowContext, initialState, type PassflowContextType } from '../passflow-context';
+import { PassflowContext, type PassflowContextType, initialState } from '../passflow-context';
 
 // Create a mock passflow instance
 const createMockPassflow = () => ({

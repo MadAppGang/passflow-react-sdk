@@ -1,4 +1,4 @@
-import type { AppSettings, Passflow, PassflowPasswordPolicySettings } from '@passflow/core';
+import type { AppSettings, Passflow, PassflowPasswordPolicySettings } from '@passflow/passflow-js-sdk';
 import { type Dispatch, createContext } from 'react';
 
 export type PassflowState = {
@@ -9,6 +9,8 @@ export type PassflowState = {
   scopes?: string[];
   createTenantForNewUser?: boolean;
   parseQueryParams?: boolean;
+  isDiscoveringAppId?: boolean;
+  hasSettingsError?: boolean;
 };
 
 export type PassflowAction = { type: 'SET_PASSFLOW_STATE'; payload: PassflowState };
@@ -27,6 +29,8 @@ export const initialState: PassflowState = {
   scopes: undefined,
   createTenantForNewUser: undefined,
   parseQueryParams: true,
+  isDiscoveringAppId: false,
+  hasSettingsError: false,
 };
 
 export const PassflowContext = createContext<PassflowContextType | undefined>(undefined);

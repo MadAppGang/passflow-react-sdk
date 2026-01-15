@@ -34,7 +34,7 @@
     "noUncheckedIndexedAccess": true
   },
   "include": ["src", "playwright"],
-  "exclude": ["node_modules", "dist", "scripts", "playwright/tests-examples", "vite.config.ts"],
+  "exclude": ["node_modules", "dist", "scripts", "playwright/tests-examples", "vite.config.ts", "**/__tests__/**", "**/*.test.ts", "**/*.test.tsx"],
   "references": [
     {
       "path": "./tsconfig.node.json"

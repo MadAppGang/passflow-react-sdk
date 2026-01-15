@@ -26,4 +26,10 @@ export const routes = {
   passkey: {
     path: '/passkeysss',
   },
+  two_factor_verify: {
+    path: '/two-factor-verify',
+  },
+  two_factor_recovery: {
+    path: '/two-factor-recovery',
+  },
 };

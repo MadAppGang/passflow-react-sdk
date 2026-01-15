@@ -1,4 +1,4 @@
-import type { ParsedTokens, Tokens } from '@passflow/core';
+import type { ParsedTokens, Tokens } from '@passflow/passflow-js-sdk';
 import React, { type FC, type PropsWithChildren, createContext, useCallback, useState } from 'react';
 import { usePassflow } from '../hooks/use-passflow';
 

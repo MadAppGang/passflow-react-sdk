@@ -1,6 +1,12 @@
-import type { Passflow } from '@passflow/core';
+import type { Passflow } from '@passflow/passflow-js-sdk';
 
-export const getUrlWithTokens = async (passflow: Passflow, url: string): Promise<string> => {
+export type TokenUrlFormat = 'query' | 'hash';
+
+export const getUrlWithTokens = async (
+  passflow: Passflow,
+  url: string,
+  format: TokenUrlFormat = 'hash',
+): Promise<string> => {
   const tokens = await passflow.getTokens(false);
 
   if (tokens) {
@@ -11,6 +17,11 @@ export const getUrlWithTokens = async (passflow: Passflow, url: string): Promise
       .map(([key, value]) => `${key}=${encodeURIComponent(value as string)}`)
       .join('&');
 
+    if (format === 'hash') {
+      // Use hash fragment (more secure - not sent to server)
+      return `${url}#${tokenParams}`;
+    }
+    // Use query parameters
     return `${url}?${tokenParams}`;
   }
   return url;

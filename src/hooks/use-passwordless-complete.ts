@@ -1,4 +1,4 @@
-import type { PassflowPasswordlessSignInCompletePayload, PassflowValidationResponse } from '@passflow/core';
+import type { PassflowPasswordlessSignInCompletePayload, PassflowValidationResponse } from '@passflow/passflow-js-sdk';
 import { useCallback, useState } from 'react';
 import { usePassflow } from './use-passflow';
 

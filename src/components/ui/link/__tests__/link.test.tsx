@@ -1,6 +1,6 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { Link } from '../index';
 
 // Mock the useNavigation hook
@@ -17,30 +17,42 @@ describe('Link', () => {
   });
 
   it('renders correctly with children', () => {
-    render(<Link to="/test">Click here</Link>);
+    render(<Link to='/test'>Click here</Link>);
     expect(screen.getByText('Click here')).toBeInTheDocument();
   });
 
   it('renders with correct href', () => {
-    render(<Link to="/test">Test Link</Link>);
+    render(<Link to='/test'>Test Link</Link>);
     const link = screen.getByText('Test Link');
     expect(link).toHaveAttribute('href', '/test');
   });
 
   it('renders with href and search params', () => {
-    render(<Link to="/test" search="?foo=bar">Test Link</Link>);
+    render(
+      <Link to='/test' search='?foo=bar'>
+        Test Link
+      </Link>,
+    );
     const link = screen.getByText('Test Link');
     expect(link).toHaveAttribute('href', '/test?foo=bar');
   });
 
   it('renders with search params without question mark', () => {
-    render(<Link to="/test" search="foo=bar">Test Link</Link>);
+    render(
+      <Link to='/test' search='foo=bar'>
+        Test Link
+      </Link>,
+    );
     const link = screen.getByText('Test Link');
     expect(link).toHaveAttribute('href', '/test?foo=bar');
   });
 
   it('handles search params that already start with question mark', () => {
-    render(<Link to="/test" search="?key=value">Test Link</Link>);
+    render(
+      <Link to='/test' search='?key=value'>
+        Test Link
+      </Link>,
+    );
     const link = screen.getByText('Test Link');
     expect(link).toHaveAttribute('href', '/test?key=value');
   });
@@ -48,7 +60,7 @@ describe('Link', () => {
   it('handles click events and prevents default', async () => {
     const user = userEvent.setup();
 
-    render(<Link to="/test">Test Link</Link>);
+    render(<Link to='/test'>Test Link</Link>);
 
     await user.click(screen.getByText('Test Link'));
 
@@ -65,9 +77,9 @@ describe('Link', () => {
     const user = userEvent.setup();
 
     render(
-      <Link to="/test" onClick={handleClick}>
+      <Link to='/test' onClick={handleClick}>
         Test Link
-      </Link>
+      </Link>,
     );
 
     await user.click(screen.getByText('Test Link'));
@@ -80,9 +92,9 @@ describe('Link', () => {
     const user = userEvent.setup();
 
     render(
-      <Link to="/test" replace>
+      <Link to='/test' replace>
         Test Link
-      </Link>
+      </Link>,
     );
 
     await user.click(screen.getByText('Test Link'));
@@ -98,9 +110,9 @@ describe('Link', () => {
     const user = userEvent.setup();
 
     render(
-      <Link to="/test" search="?query=value" replace>
+      <Link to='/test' search='?query=value' replace>
         Test Link
-      </Link>
+      </Link>,
     );
 
     await user.click(screen.getByText('Test Link'));
@@ -114,9 +126,9 @@ describe('Link', () => {
 
   it('applies custom className', () => {
     render(
-      <Link to="/test" className="custom-link-class">
+      <Link to='/test' className='custom-link-class'>
         Custom Link
-      </Link>
+      </Link>,
     );
     const link = screen.getByText('Custom Link');
     expect(link).toHaveClass('custom-link-class');
@@ -124,9 +136,9 @@ describe('Link', () => {
 
   it('forwards additional HTML attributes', () => {
     render(
-      <Link to="/test" data-testid="custom-link" aria-label="Custom Link">
+      <Link to='/test' data-testid='custom-link' aria-label='Custom Link'>
         Test Link
-      </Link>
+      </Link>,
     );
 
     const link = screen.getByTestId('custom-link');
@@ -134,7 +146,7 @@ describe('Link', () => {
   });
 
   it('renders as an anchor tag', () => {
-    render(<Link to="/test">Test Link</Link>);
+    render(<Link to='/test'>Test Link</Link>);
     const link = screen.getByText('Test Link');
     expect(link.tagName).toBe('A');
   });
@@ -142,7 +154,7 @@ describe('Link', () => {
   it('handles complex paths', async () => {
     const user = userEvent.setup();
 
-    render(<Link to="/users/123/profile">User Profile</Link>);
+    render(<Link to='/users/123/profile'>User Profile</Link>);
 
     await user.click(screen.getByText('User Profile'));
 
@@ -157,9 +169,9 @@ describe('Link', () => {
     const user = userEvent.setup();
 
     render(
-      <Link to="/test" search="">
+      <Link to='/test' search=''>
         Test Link
-      </Link>
+      </Link>,
     );
 
     await user.click(screen.getByText('Test Link'));

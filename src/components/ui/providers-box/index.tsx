@@ -3,7 +3,7 @@ import { Button } from '../button';
 import { Icon } from '../icon';
 import '@/styles/index.css';
 import { cn } from '@/utils';
-import type { Providers } from '@passflow/core';
+import type { Providers } from '@passflow/passflow-js-sdk';
 
 type TProvidersBox = {
   providers: Providers[];

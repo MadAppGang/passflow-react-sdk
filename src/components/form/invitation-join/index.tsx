@@ -1,7 +1,7 @@
 import { ErrorComponent } from '@/components/error';
 import { Button } from '@/components/ui';
 import { useAppSettings, useJoinInvite, useNavigation, usePassflow } from '@/hooks';
-import { type InvitationToken, parseToken } from '@passflow/core';
+import { type InvitationToken, parseToken } from '@passflow/passflow-js-sdk';
 import React, { type FC } from 'react';
 import * as Yup from 'yup';
 import { Wrapper } from '../wrapper';

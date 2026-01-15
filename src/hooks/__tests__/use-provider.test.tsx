@@ -1,7 +1,7 @@
 import { renderHook } from '@testing-library/react';
 import type { FC, PropsWithChildren } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { PassflowContext, initialState, type PassflowContextType } from '../../context/passflow-context';
+import { PassflowContext, type PassflowContextType, initialState } from '../../context/passflow-context';
 import { useProvider } from '../use-provider';
 
 // Mock window.location.origin
@@ -45,7 +45,7 @@ describe('useProvider', () => {
         wrapper: createWrapper(mockContext),
       });
 
-      result.current.federatedWithPopup('google');
+      result.current.federatedWithPopup('google' as any);
 
       expect(mockPassflow.federatedAuthWithPopup).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -59,7 +59,7 @@ describe('useProvider', () => {
         wrapper: createWrapper(mockContext),
       });
 
-      result.current.federatedWithPopup('google');
+      result.current.federatedWithPopup('google' as any);
 
       expect(mockPassflow.federatedAuthWithPopup).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -73,7 +73,7 @@ describe('useProvider', () => {
         wrapper: createWrapper(mockContext),
       });
 
-      result.current.federatedWithPopup('google');
+      result.current.federatedWithPopup('google' as any);
 
       expect(mockPassflow.federatedAuthWithPopup).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -87,7 +87,7 @@ describe('useProvider', () => {
         wrapper: createWrapper(mockContext),
       });
 
-      result.current.federatedWithPopup('google');
+      result.current.federatedWithPopup('google' as any);
 
       expect(mockPassflow.federatedAuthWithPopup).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -101,7 +101,7 @@ describe('useProvider', () => {
         wrapper: createWrapper(mockContext),
       });
 
-      result.current.federatedWithPopup('google', 'invite-123');
+      result.current.federatedWithPopup('google' as any, 'invite-123');
 
       expect(mockPassflow.federatedAuthWithPopup).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -115,7 +115,7 @@ describe('useProvider', () => {
         wrapper: createWrapper(mockContext),
       });
 
-      result.current.federatedWithPopup('google');
+      result.current.federatedWithPopup('google' as any);
 
       expect(mockPassflow.federatedAuthWithPopup).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -129,7 +129,7 @@ describe('useProvider', () => {
         wrapper: createWrapper(mockContext),
       });
 
-      result.current.federatedWithPopup('github');
+      result.current.federatedWithPopup('github' as any);
 
       expect(mockPassflow.federatedAuthWithPopup).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -159,7 +159,7 @@ describe('useProvider', () => {
         wrapper: createWrapper(mockContext),
       });
 
-      result.current.federatedWithRedirect('google');
+      result.current.federatedWithRedirect('google' as any);
 
       expect(mockPassflow.federatedAuthWithRedirect).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -173,7 +173,7 @@ describe('useProvider', () => {
         wrapper: createWrapper(mockContext),
       });
 
-      result.current.federatedWithRedirect('github');
+      result.current.federatedWithRedirect('github' as any);
 
       expect(mockPassflow.federatedAuthWithRedirect).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -187,7 +187,7 @@ describe('useProvider', () => {
         wrapper: createWrapper(mockContext),
       });
 
-      result.current.federatedWithRedirect('microsoft', 'invite-456');
+      result.current.federatedWithRedirect('microsoft' as any, 'invite-456');
 
       expect(mockPassflow.federatedAuthWithRedirect).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -201,7 +201,7 @@ describe('useProvider', () => {
         wrapper: createWrapper(mockContext),
       });
 
-      result.current.federatedWithRedirect('apple');
+      result.current.federatedWithRedirect('apple' as any);
 
       expect(mockPassflow.federatedAuthWithRedirect).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -217,7 +217,7 @@ describe('useProvider', () => {
         wrapper: createWrapper(mockContext),
       });
 
-      result.current.federatedWithPopup('google');
+      result.current.federatedWithPopup('google' as any);
 
       expect(mockPassflow.federatedAuthWithPopup).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -236,7 +236,7 @@ describe('useProvider', () => {
         wrapper: createWrapper(contextWithoutScopes),
       });
 
-      result.current.federatedWithPopup('google');
+      result.current.federatedWithPopup('google' as any);
 
       expect(mockPassflow.federatedAuthWithPopup).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -250,7 +250,7 @@ describe('useProvider', () => {
         wrapper: createWrapper(mockContext),
       });
 
-      result.current.federatedWithPopup('google', undefined);
+      result.current.federatedWithPopup('google' as any, undefined);
 
       expect(mockPassflow.federatedAuthWithPopup).toHaveBeenCalledWith(
         expect.objectContaining({

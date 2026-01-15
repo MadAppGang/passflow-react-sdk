@@ -1,12 +1,7 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { renderHook, waitFor, act } from '@testing-library/react';
+import type { PassflowPasswordlessResponse, PassflowSignInPayload } from '@passflow/passflow-js-sdk';
+import { act, renderHook, waitFor } from '@testing-library/react';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { useSignIn } from '../use-signin';
-import type {
-  PassflowSignInPayload,
-  PassflowPasskeyAuthenticateStartPayload,
-  PassflowPasswordlessSignInPayload,
-  PassflowPasswordlessResponse,
-} from '@passflow/core';
 
 // Mock the usePassflow hook
 vi.mock('../use-passflow', () => ({
@@ -121,9 +116,9 @@ describe('useSignIn', () => {
 
       const { result } = renderHook(() => useSignIn());
 
-      const payload: PassflowPasskeyAuthenticateStartPayload = {
+      const payload = {
         email: 'test@example.com',
-      };
+      } as any;
 
       let authResult: boolean | string | PassflowPasswordlessResponse = false;
 
@@ -143,9 +138,9 @@ describe('useSignIn', () => {
 
       const { result } = renderHook(() => useSignIn());
 
-      const payload: PassflowPasskeyAuthenticateStartPayload = {
+      const payload = {
         email: 'test@example.com',
-      };
+      } as any;
 
       let authResult: boolean | string | PassflowPasswordlessResponse = true;
 
@@ -161,16 +156,16 @@ describe('useSignIn', () => {
 
   describe('passwordless sign in', () => {
     it('should successfully sign in with passwordless', async () => {
-      const mockResponse: PassflowPasswordlessResponse = {
+      const mockResponse = {
         message: 'Code sent',
-      };
+      } as any;
       mockPassflow.passwordlessSignIn.mockResolvedValue(mockResponse);
 
       const { result } = renderHook(() => useSignIn());
 
-      const payload: PassflowPasswordlessSignInPayload = {
+      const payload = {
         email: 'test@example.com',
-      };
+      } as any;
 
       let signInResult: boolean | string | PassflowPasswordlessResponse = false;
 
@@ -190,9 +185,9 @@ describe('useSignIn', () => {
 
       const { result } = renderHook(() => useSignIn());
 
-      const payload: PassflowPasswordlessSignInPayload = {
+      const payload = {
         email: 'test@example.com',
-      };
+      } as any;
 
       let signInResult: boolean | string | PassflowPasswordlessResponse = true;
 

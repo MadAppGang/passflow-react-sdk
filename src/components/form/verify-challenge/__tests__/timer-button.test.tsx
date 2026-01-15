@@ -35,7 +35,7 @@ describe('TimerButton', () => {
 
     it('applies custom className', () => {
       const onClick = vi.fn();
-      render(<TimerButton totalSecond={10} onClick={onClick} className="custom-timer" />);
+      render(<TimerButton totalSecond={10} onClick={onClick} className='custom-timer' />);
 
       expect(screen.getByRole('button')).toHaveClass('custom-timer');
     });
