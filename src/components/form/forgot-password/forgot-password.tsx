@@ -2,7 +2,7 @@ import { Button, FieldPhone, FieldText, Icon, Link } from '@/components/ui';
 import { routes } from '@/context';
 import { useAppSettings, useForgotPassword, useNavigation } from '@/hooks';
 import { cn, emailRegex, getAuthMethods, getIdentityLabel, useUrlParams } from '@/utils';
-import type { PassflowSendPasswordResetEmailPayload } from '@passflow/passflow-js-sdk';
+import type { PassflowSendPasswordResetEmailPayload } from '@passflow/core';
 import { eq, has, size } from 'lodash';
 import { phone } from 'phone';
 /* eslint-disable max-len */

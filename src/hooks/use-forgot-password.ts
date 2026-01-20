@@ -1,4 +1,4 @@
-import type { PassflowSendPasswordResetEmailPayload } from '@passflow/passflow-js-sdk';
+import type { PassflowSendPasswordResetEmailPayload } from '@passflow/core';
 import { useCallback, useState } from 'react';
 import { usePassflow } from './use-passflow';
 

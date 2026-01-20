@@ -1,4 +1,4 @@
-import type { TwoFactorStatusResponse } from '@passflow/passflow-js-sdk';
+import type { TwoFactorStatusResponse } from '@passflow/core';
 import { useCallback, useLayoutEffect, useState } from 'react';
 import { usePassflow } from './use-passflow';
 

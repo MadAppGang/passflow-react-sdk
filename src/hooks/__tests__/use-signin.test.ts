@@ -1,4 +1,4 @@
-import type { PassflowPasswordlessResponse, PassflowSignInPayload } from '@passflow/passflow-js-sdk';
+import type { PassflowPasswordlessResponse, PassflowSignInPayload } from '@passflow/core';
 import { act, renderHook, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { useSignIn } from '../use-signin';

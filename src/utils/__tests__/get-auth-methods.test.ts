@@ -1,4 +1,4 @@
-import type { AuthStrategies } from '@passflow/passflow-js-sdk';
+import type { AuthStrategies } from '@passflow/core';
 import { describe, expect, it } from 'vitest';
 import { getAuthMethods } from '../get-auth-methods';
 

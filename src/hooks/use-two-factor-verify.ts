@@ -1,6 +1,6 @@
 import type { TwoFactorError, TwoFactorErrorType } from '@/types/two-factor-errors';
 import { classifyTwoFactorError } from '@/utils/classify-two-factor-error';
-import type { TwoFactorRecoveryResponse, TwoFactorVerifyResponse } from '@passflow/passflow-js-sdk';
+import type { TwoFactorRecoveryResponse, TwoFactorVerifyResponse } from '@passflow/core';
 import { useCallback, useState } from 'react';
 import { usePassflow } from './use-passflow';
 

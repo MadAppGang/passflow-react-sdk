@@ -1,4 +1,4 @@
-import type { Passflow, PassflowEvent, PassflowEventPayload, PassflowSubscriber, Tokens } from '@passflow/passflow-js-sdk';
+import type { Passflow, PassflowEvent, PassflowEventPayload, PassflowSubscriber, Tokens } from '@passflow/core';
 import { useSyncExternalStore } from 'react';
 import { usePassflow } from './use-passflow';
 

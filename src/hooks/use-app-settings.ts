@@ -4,7 +4,7 @@ import type {
   LoginWebAppStyle,
   LoginWebAppTheme,
   PassflowPasswordPolicySettings,
-} from '@passflow/passflow-js-sdk';
+} from '@passflow/core';
 import { isEmpty, isUndefined, some } from 'lodash';
 import { useContext, useLayoutEffect, useRef, useState } from 'react';
 import { usePassflow } from './use-passflow';

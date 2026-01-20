@@ -1,5 +1,5 @@
 import type { DefaultMethod } from '@/types';
-import type { InternalStrategyChallenge } from '@passflow/passflow-js-sdk';
+import type { InternalStrategyChallenge } from '@passflow/core';
 /* eslint-disable complexity */
 import { eq } from 'lodash';
 import type { AuthMethods } from './get-auth-methods';

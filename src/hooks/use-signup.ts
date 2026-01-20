@@ -3,7 +3,7 @@ import type {
   PassflowPasswordlessResponse,
   PassflowPasswordlessSignInPayload,
   PassflowSignUpPayload,
-} from '@passflow/passflow-js-sdk';
+} from '@passflow/core';
 import { useCallback, useState } from 'react';
 import { usePassflow } from './use-passflow';
 

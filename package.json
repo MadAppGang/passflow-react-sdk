@@ -1,5 +1,5 @@
 {
-  "name": "@passflow/passflow-react-sdk",
+  "name": "@passflow/react",
   "description": "Passflow React UI Kit",
   "version": "0.1.42",
   "type": "module",
@@ -43,7 +43,7 @@
     "react-dom": "^18.0.0 || ^19.0.0"
   },
   "dependencies": {
-    "@passflow/passflow-js-sdk": "workspace:*",
+    "@passflow/core": "workspace:*",
     "@radix-ui/react-dialog": "^1.1.15",
     "@radix-ui/react-popover": "^1.1.15",
     "clsx": "^2.1.1",

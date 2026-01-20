@@ -1,4 +1,4 @@
-import type { Passflow } from '@passflow/passflow-js-sdk';
+import type { Passflow } from '@passflow/core';
 
 export type TokenUrlFormat = 'query' | 'hash';
 
