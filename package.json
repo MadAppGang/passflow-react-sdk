@@ -1,7 +1,7 @@
 {
   "name": "@passflow/react",
   "description": "Passflow React UI Kit",
-  "version": "0.2.3",
+  "version": "0.2.4",
   "type": "module",
   "files": [
     "dist"
@@ -43,7 +43,7 @@
     "react-dom": "^18.0.0 || ^19.0.0"
   },
   "dependencies": {
-    "@passflow/core": "workspace:*",
+    "@passflow/core": "^0.2.0",
     "@radix-ui/react-dialog": "^1.1.15",
     "@radix-ui/react-popover": "^1.1.15",
     "clsx": "^2.1.1",
