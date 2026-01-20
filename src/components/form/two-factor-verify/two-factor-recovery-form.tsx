@@ -134,7 +134,6 @@ export const TwoFactorRecoveryForm: FC<TwoFactorRecoveryFormProps> = ({
                 isError && 'passflow-field--error',
                 isInputDisabled && 'passflow-field--disabled',
               )}
-              autoFocus={!isInputDisabled}
               autoComplete='off'
               disabled={isInputDisabled}
             />

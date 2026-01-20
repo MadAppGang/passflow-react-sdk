@@ -72,7 +72,7 @@ describe('Switch', () => {
     );
 
     // Verify the event has the expected structure
-    const callArg = handleChange.mock.calls[0]![0];
+    const callArg = handleChange.mock.calls[0]?.[0];
     expect(callArg.target.type).toBe('checkbox');
   });
 

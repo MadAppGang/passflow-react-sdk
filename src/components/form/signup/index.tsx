@@ -162,20 +162,18 @@ export const SignUpForm: FC<TSignUp> = ({
     const status = await fetch(payload, 'password');
 
     if (status) {
-      // biome-ignore lint/style/noNonNullAssertion: <explanation>
-      if (!isValidUrl(successAuthRedirect ?? appSettings!.defaults.redirect))
-        navigate({ to: successAuthRedirect ?? appSettings!.defaults.redirect });
-      // biome-ignore lint/style/noNonNullAssertion: <explanation>
-      else window.location.href = await getUrlWithTokens(passflow, successAuthRedirect ?? appSettings!.defaults.redirect);
+      const redirectUrl = successAuthRedirect ?? appSettings?.defaults.redirect ?? '';
+      if (!isValidUrl(redirectUrl)) navigate({ to: redirectUrl });
+      else window.location.href = await getUrlWithTokens(passflow, redirectUrl);
     }
   };
 
   const onSubmitPasskeyHandler = async () => {
+    const redirectUrl = successAuthRedirect ?? appSettings?.defaults.redirect ?? '';
     const payload = {
       relying_party_id: relyingPartyId,
       create_tenant: createTenantForNewUser,
-      // biome-ignore lint/style/noNonNullAssertion: <explanation>
-      redirect_url: successAuthRedirect ?? appSettings!.defaults.redirect,
+      redirect_url: redirectUrl,
       ...(!isEmpty(inviteToken) && { invite_token: inviteToken }),
       scopes,
     } as PassflowPasskeyRegisterStartPayload;
@@ -183,11 +181,8 @@ export const SignUpForm: FC<TSignUp> = ({
     const response = await fetch(payload, 'passkey');
 
     if (response) {
-      // biome-ignore lint/style/noNonNullAssertion: <explanation>
-      if (!isValidUrl(successAuthRedirect ?? appSettings!.defaults.redirect))
-        navigate({ to: successAuthRedirect ?? appSettings!.defaults.redirect });
-      // biome-ignore lint/style/noNonNullAssertion: <explanation>
-      else window.location.href = await getUrlWithTokens(passflow, successAuthRedirect ?? appSettings!.defaults.redirect);
+      if (!isValidUrl(redirectUrl)) navigate({ to: redirectUrl });
+      else window.location.href = await getUrlWithTokens(passflow, redirectUrl);
     }
   };
 
@@ -198,8 +193,7 @@ export const SignUpForm: FC<TSignUp> = ({
       ...userPayload,
       challenge_type: currentChallegeType,
       create_tenant: createTenantForNewUser,
-      // biome-ignore lint/style/noNonNullAssertion: <explanation>
-      redirect_url: successAuthRedirect ?? appSettings!.defaults.redirect,
+      redirect_url: successAuthRedirect ?? appSettings?.defaults.redirect,
       ...(!isEmpty(inviteToken) && { invite_token: inviteToken }),
     } as PassflowPasswordlessSignInPayload;
 

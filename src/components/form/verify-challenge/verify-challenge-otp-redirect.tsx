@@ -16,7 +16,7 @@ export const VerifyChallengeOTPRedirect = ({ otp, challengeId, appId }: VerifyCh
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
   const { fetch, isError, error, isLoading } = usePasswordlessComplete();
 
-  // biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
+  // Run once on mount - intentionally empty dependency array
   useEffect(() => {
     const fetchData = async () => {
       if (!appId) {

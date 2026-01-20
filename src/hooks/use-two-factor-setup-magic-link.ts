@@ -136,8 +136,11 @@ export const useTwoFactorSetupMagicLink = (token: string): UseTwoFactorSetupMagi
 
       try {
         // Call JS SDK validation method
-        // Cast to any to support cases where React SDK builds before JS SDK types are updated
-        const response = (await (passflow as any).validateTwoFactorSetupMagicLink(token)) as ValidationResponse;
+        // Cast to unknown to support cases where React SDK builds before JS SDK types are updated
+        const passflowWithMagicLink = passflow as unknown as {
+          validateTwoFactorSetupMagicLink: (token: string) => Promise<ValidationResponse>;
+        };
+        const response = await passflowWithMagicLink.validateTwoFactorSetupMagicLink(token);
 
         if (response.success && response.sessionToken && response.userId) {
           // Success - store session details
@@ -224,7 +227,8 @@ export const useTwoFactorSetupMagicLink = (token: string): UseTwoFactorSetupMagi
       // Only clear magic link session if validation failed or wasn't validated
       // If isValidated=true, let the form handle session clearing after confirm
       if (shouldClearOnUnmount.current) {
-        (passflow as any).clearMagicLinkSession?.();
+        const passflowWithSession = passflow as unknown as { clearMagicLinkSession?: () => void };
+        passflowWithSession.clearMagicLinkSession?.();
       }
     };
   }, [passflow]);

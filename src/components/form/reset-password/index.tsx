@@ -70,15 +70,12 @@ export const ResetPassword: FC<TResetPassword> = ({ successAuthRedirect }) => {
     const resetTokenType = resetTokenData as ResetToken;
     const status = await fetch(values.password);
     if (status) {
-      // biome-ignore lint/style/noNonNullAssertion: <explanation>
-      if (!isValidUrl(resetTokenType?.redirect_url ?? successAuthRedirect ?? appSettings!.defaults.redirect))
-        // biome-ignore lint/style/noNonNullAssertion: <explanation>
-        navigate({ to: resetTokenType?.redirect_url ?? successAuthRedirect ?? appSettings!.defaults.redirect });
-      // biome-ignore lint/style/noNonNullAssertion: <explanation>
+      if (!isValidUrl(resetTokenType?.redirect_url ?? successAuthRedirect ?? appSettings?.defaults.redirect))
+        navigate({ to: resetTokenType?.redirect_url ?? successAuthRedirect ?? appSettings?.defaults.redirect });
       else
         window.location.href = await getUrlWithTokens(
           passflow,
-          resetTokenType?.redirect_url ?? successAuthRedirect ?? appSettings!.defaults.redirect,
+          resetTokenType?.redirect_url ?? successAuthRedirect ?? appSettings?.defaults.redirect,
         );
     }
   };

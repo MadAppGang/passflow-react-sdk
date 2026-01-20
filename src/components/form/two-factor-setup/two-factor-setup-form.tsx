@@ -137,8 +137,8 @@ export const TwoFactorSetupForm: FC<TwoFactorSetupFormProps> = ({ onComplete, on
           </div>
 
           <div className='passflow-2fa-recovery-codes'>
-            {recoveryCodes.map((recoveryCode, index) => (
-              <code key={index} className='passflow-2fa-recovery-code'>
+            {recoveryCodes.map((recoveryCode) => (
+              <code key={recoveryCode} className='passflow-2fa-recovery-code'>
                 {recoveryCode}
               </code>
             ))}

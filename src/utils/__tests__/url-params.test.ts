@@ -7,7 +7,7 @@ describe('useUrlParams', () => {
 
   beforeEach(() => {
     // Mock window.location
-    delete (window as any).location;
+    (window as any).location = undefined;
     (window as any).location = {
       pathname: '/test',
       search: '',
@@ -15,7 +15,7 @@ describe('useUrlParams', () => {
     };
 
     // Mock window.history
-    delete (window as any).history;
+    (window as any).history = undefined;
     (window as any).history = {
       pushState: vi.fn(),
       replaceState: vi.fn(),

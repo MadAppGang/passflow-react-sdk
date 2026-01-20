@@ -6,9 +6,43 @@
   "linter": {
     "enabled": true,
     "rules": {
-      "recommended": true
+      "recommended": true,
+      "suspicious": {
+        "noExplicitAny": "warn",
+        "noArrayIndexKey": "warn"
+      },
+      "style": {
+        "noNonNullAssertion": "warn",
+        "noUselessElse": "warn"
+      },
+      "correctness": {
+        "noUnnecessaryContinue": "warn",
+        "useExhaustiveDependencies": "off"
+      },
+      "complexity": {
+        "noForEach": "warn"
+      },
+      "a11y": {
+        "noAutofocus": "off",
+        "useSemanticElements": "off"
+      }
     }
   },
+  "overrides": [
+    {
+      "include": ["**/__tests__/**/*.ts", "**/__tests__/**/*.tsx", "**/*.test.ts", "**/*.test.tsx", "**/test/**/*.ts", "**/test/**/*.tsx"],
+      "linter": {
+        "rules": {
+          "suspicious": {
+            "noExplicitAny": "off"
+          },
+          "style": {
+            "noNonNullAssertion": "off"
+          }
+        }
+      }
+    }
+  ],
   "files": {
     "ignore": ["**/*.d.ts"]
   },

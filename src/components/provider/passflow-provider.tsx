@@ -82,10 +82,7 @@ export const PassflowProvider: FC<PassflowProviderProps> = ({
                 return;
               }
             }
-          } catch (error) {
-            // Try next URL
-            continue;
-          }
+          } catch (error) {}
         }
 
         // All URLs failed

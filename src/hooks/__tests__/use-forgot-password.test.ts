@@ -94,7 +94,7 @@ describe('useForgotPassword', () => {
 
     // Resolve the reset
     act(() => {
-      resolveReset!();
+      resolveReset?.();
     });
 
     await act(async () => {

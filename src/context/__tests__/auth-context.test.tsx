@@ -111,7 +111,7 @@ describe('AuthProvider', () => {
 
       let tokenPromise: Promise<any>;
       act(() => {
-        tokenPromise = result.current!.getTokens(false);
+        tokenPromise = result.current?.getTokens(false);
       });
 
       await waitFor(() => {
@@ -119,7 +119,7 @@ describe('AuthProvider', () => {
       });
 
       await act(async () => {
-        resolveGetTokens!({ access_token: 'test' });
+        resolveGetTokens?.({ access_token: 'test' });
         await tokenPromise;
       });
 

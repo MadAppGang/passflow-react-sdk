@@ -81,8 +81,7 @@ export const ForgotPassword: FC<TForgotPassword> = ({
       ...(isEmail && { email: values.email_or_username }),
       ...(isUsername && { username: values.email_or_username }),
       ...(isPhone && { phone: validatedPhone.phoneNumber }),
-      // biome-ignore lint/style/noNonNullAssertion: <explanation>
-      redirect_url: successResetRedirect ?? appSettings!.defaults.redirect,
+      redirect_url: successResetRedirect ?? appSettings?.defaults.redirect,
     } as PassflowSendPasswordResetEmailPayload;
 
     const status = await fetch(payload);

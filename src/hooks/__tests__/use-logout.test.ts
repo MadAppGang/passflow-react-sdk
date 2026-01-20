@@ -81,7 +81,7 @@ describe('useLogout', () => {
 
     // Resolve the logout
     act(() => {
-      resolveLogout!();
+      resolveLogout?.();
     });
 
     await act(async () => {

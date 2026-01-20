@@ -68,7 +68,6 @@ export function getUserFriendlyErrorMessage(error: TwoFactorError): string {
       return 'Two-factor authentication is not enabled for your account. Please contact your administrator to enable 2FA.';
     case 'invalid_code':
       return 'Invalid code. Please check your authenticator app and try again.';
-    case 'generic':
     default:
       return error.message;
   }

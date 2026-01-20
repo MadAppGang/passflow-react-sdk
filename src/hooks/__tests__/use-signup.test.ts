@@ -99,7 +99,7 @@ describe('useSignUp', () => {
 
       // Resolve the sign up
       act(() => {
-        resolveSignUp!();
+        resolveSignUp?.();
       });
 
       await act(async () => {

@@ -6,7 +6,7 @@ describe('getUrlErrors', () => {
 
   beforeEach(() => {
     // Mock window.location
-    delete (window as any).location;
+    (window as any).location = undefined;
     (window as any).location = { search: '' };
   });
 

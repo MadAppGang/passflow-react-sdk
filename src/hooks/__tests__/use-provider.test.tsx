@@ -145,9 +145,9 @@ describe('useProvider', () => {
         wrapper: createWrapper(mockContext),
       });
 
-      providers.forEach((provider) => {
-        result.current.federatedWithPopup(provider as any);
-      });
+      for (const provider of providers) {
+        result.current.federatedWithPopup(provider as unknown as FederatedProviderType);
+      }
 
       expect(mockPassflow.federatedAuthWithPopup).toHaveBeenCalledTimes(4);
     });

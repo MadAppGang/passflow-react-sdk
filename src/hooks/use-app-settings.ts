@@ -1,10 +1,5 @@
 import { PassflowContext } from '@/context';
-import type {
-  AppSettings,
-  LoginWebAppStyle,
-  LoginWebAppTheme,
-  PassflowPasswordPolicySettings,
-} from '@passflow/core';
+import type { AppSettings, LoginWebAppStyle, LoginWebAppTheme, PassflowPasswordPolicySettings } from '@passflow/core';
 import { isEmpty, isUndefined, some } from 'lodash';
 import { useContext, useLayoutEffect, useRef, useState } from 'react';
 import { usePassflow } from './use-passflow';
@@ -73,12 +68,10 @@ export const useAppSettings: UseAppSettingsProps = () => {
                     response = r;
                     break;
                   }
-                } catch {
-                  continue;
-                }
+                } catch {}
               }
 
-              if (response && response.ok) {
+              if (response?.ok) {
                 const settings = await response.json();
 
                 // Support both response formats:
