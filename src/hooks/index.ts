@@ -18,3 +18,4 @@ export { useTwoFactorStatus, type UseTwoFactorStatusProps } from './use-two-fact
 export { useTwoFactorSetup, type UseTwoFactorSetupProps, type TwoFactorSetupStep } from './use-two-factor-setup';
 export { useTwoFactorVerify, type UseTwoFactorVerifyProps } from './use-two-factor-verify';
 export { useTwoFactorManage, type UseTwoFactorManageProps } from './use-two-factor-manage';
+export { useTwoFactorSetupMagicLink, type UseTwoFactorSetupMagicLinkReturn } from './use-two-factor-setup-magic-link';

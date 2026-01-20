@@ -87,10 +87,11 @@ describe('withError HOC', () => {
       );
 
       expect(screen.getByTestId('error-component')).toBeInTheDocument();
-      expect(screen.getByText('Error: Missing appId or url')).toBeInTheDocument();
+      expect(screen.getByText('Error: Missing appId')).toBeInTheDocument();
     });
 
-    it('renders error component when url is missing', () => {
+    it('renders wrapped component when url is missing but appId is present', () => {
+      // URL defaults to current origin if not provided, so only appId is required
       const WrappedComponent = withError(MockComponent, MockErrorComponent);
       const mockContext = createMockContext({
         appId: 'test-app',
@@ -103,8 +104,8 @@ describe('withError HOC', () => {
         </PassflowContext.Provider>,
       );
 
-      expect(screen.getByTestId('error-component')).toBeInTheDocument();
-      expect(screen.getByText('Error: Missing appId or url')).toBeInTheDocument();
+      // With appId present, component should render (url defaults to origin)
+      expect(screen.getByText('Mock Component Content')).toBeInTheDocument();
     });
 
     it('renders error component when both appId and url are missing', () => {

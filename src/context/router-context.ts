@@ -32,4 +32,10 @@ export const routes = {
   two_factor_recovery: {
     path: '/two-factor-recovery',
   },
+  two_factor_setup: {
+    path: '/two-factor-setup',
+  },
+  two_factor_setup_magic_link: {
+    path: '/two-factor-setup-magic-link/:token',
+  },
 };

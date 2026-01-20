@@ -1,3 +1,5 @@
+import { TwoFactorSetupFlow } from '@/components/flow/two-factor-setup';
+import { TwoFactorVerifyFlow } from '@/components/flow/two-factor-verify';
 import {
   ForgotPassword,
   ForgotPasswordSuccess,
@@ -8,7 +10,6 @@ import {
   VerifyChallengeMagicLink,
   VerifyChallengeOTP,
 } from '@/components/form';
-import { TwoFactorVerifyFlow } from '@/components/flow/two-factor-verify';
 import { routes } from '@/context';
 import { type FC, type ReactNode, useEffect, useMemo, useState } from 'react';
 import '@/styles/index.css';
@@ -185,7 +186,21 @@ const PassflowWrapper: FC<PassflowProps> = ({
           <Route
             path={routesWithPrefix.two_factor_verify}
             element={
-              <TwoFactorVerifyFlow successAuthRedirect={successAuthRedirect} />
+              <TwoFactorVerifyFlow
+                successAuthRedirect={successAuthRedirect}
+                signInPath={routesWithPrefix.signin}
+                twoFactorSetupPath={routesWithPrefix.two_factor_setup}
+              />
+            }
+          />
+          <Route
+            path={routesWithPrefix.two_factor_setup}
+            element={
+              <TwoFactorSetupFlow
+                successAuthRedirect={successAuthRedirect}
+                twoFactorVerifyPath={routesWithPrefix.two_factor_verify}
+                signInPath={routesWithPrefix.signin}
+              />
             }
           />
           <Route

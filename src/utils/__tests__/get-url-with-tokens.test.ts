@@ -92,8 +92,8 @@ describe('getUrlWithTokens', () => {
     const url = 'https://example.com/callback?existing=param';
     const result = await getUrlWithTokens(mockPassflow, url);
 
-    // The function adds tokens with ? regardless of existing params
-    expect(result).toBe('https://example.com/callback?existing=param?access_token=access123');
+    // Default format is 'hash' - tokens are added as URL fragment
+    expect(result).toBe('https://example.com/callback?existing=param#access_token=access123');
   });
 
   it('should handle empty token object', async () => {
@@ -106,6 +106,7 @@ describe('getUrlWithTokens', () => {
     const url = 'https://example.com/callback';
     const result = await getUrlWithTokens(mockPassflow, url);
 
-    expect(result).toBe('https://example.com/callback?');
+    // Default format is 'hash' - empty hash fragment is added
+    expect(result).toBe('https://example.com/callback#');
   });
 });

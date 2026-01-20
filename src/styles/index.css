@@ -1439,3 +1439,97 @@ body {
   object-fit: cover;
   object-position: center;
 }
+
+/* 2FA ERROR STATES */
+.passflow-form-error--critical,
+.passflow-form-error--persistent {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  background-color: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 12px;
+  padding: 20px 24px;
+  margin-top: 16px;
+  gap: 12px;
+}
+
+.passflow-form-error--critical .icon-warning,
+.passflow-form-error--persistent .icon-warning {
+  width: 32px;
+  height: 32px;
+  color: #dc2626;
+  flex-shrink: 0;
+}
+
+.passflow-form-error-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+}
+
+.passflow-form-error--critical .passflow-form-error-text,
+.passflow-form-error--persistent .passflow-form-error-text {
+  font-size: 14px;
+  line-height: 1.5;
+  color: #991b1b;
+  margin: 0;
+}
+
+.passflow-form-error-actions {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+}
+
+.passflow-button-setup-2fa {
+  min-width: 140px;
+  white-space: nowrap;
+}
+
+.passflow-form-info {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  background-color: #eff6ff;
+  border: 1px solid #bfdbfe;
+  border-radius: 12px;
+  padding: 16px;
+  margin-top: 16px;
+}
+
+.passflow-form-info .icon-info {
+  width: 20px;
+  height: 20px;
+  color: #2563eb;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.passflow-form-info-text {
+  color: #1e40af;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.passflow-field-otp--disabled,
+.passflow-field--disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.passflow-button-back-to-signin {
+  min-width: 140px;
+  white-space: nowrap;
+}
+
+.icon-info {
+  color: #2563eb;
+}

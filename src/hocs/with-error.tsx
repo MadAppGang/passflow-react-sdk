@@ -14,7 +14,7 @@ type TFallbackComponentProps = {
   resetErrorBoundary: (...args: unknown[]) => void;
 };
 
-const excludeRoutes = ['verify-challenge-otp', 'password/reset'];
+const excludeRoutes = ['verify-challenge-otp', 'password/reset', 'two-factor-verify', 'two-factor-recovery'];
 
 export const withError =
   <P extends UnionType>(Component: ComponentType<P>, ErrorComponent: ComponentType<TError>) =>
@@ -43,8 +43,9 @@ export const withError =
     }
 
     // After discovery is complete, check if we have the required config
-    if (!context?.state.appId || !context.state.url) {
-      const errorMessage = 'Missing appId or url';
+    // Only appId is required - URL defaults to current origin if not provided
+    if (!context?.state.appId) {
+      const errorMessage = 'Missing appId';
       return <ErrorComponent goBackRedirectTo={successAuthRedirect ?? '/'} error={errorMessage} />;
     }
 

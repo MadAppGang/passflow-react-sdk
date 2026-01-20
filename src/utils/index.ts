@@ -8,3 +8,5 @@ export { getAuthMethods, type AuthMethods } from './get-auth-methods';
 export { getIdentityLabel, getPasswordlessData, getValidationErrorsLabel } from './get-form-labels';
 export { useUrlParams } from './url-params';
 export { getUrlErrors } from './get-url-errors';
+export { classifyTwoFactorError, getUserFriendlyErrorMessage } from './classify-two-factor-error';
+export { TwoFactorLoopPrevention } from './two-factor-loop-prevention';

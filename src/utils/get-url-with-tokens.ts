@@ -2,11 +2,7 @@ import type { Passflow } from '@passflow/passflow-js-sdk';
 
 export type TokenUrlFormat = 'query' | 'hash';
 
-export const getUrlWithTokens = async (
-  passflow: Passflow,
-  url: string,
-  format: TokenUrlFormat = 'hash',
-): Promise<string> => {
+export const getUrlWithTokens = async (passflow: Passflow, url: string, format: TokenUrlFormat = 'hash'): Promise<string> => {
   const tokens = await passflow.getTokens(false);
 
   if (tokens) {

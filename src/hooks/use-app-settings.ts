@@ -1,5 +1,10 @@
 import { PassflowContext } from '@/context';
-import type { AppSettings, LoginWebAppStyle, LoginWebAppTheme, PassflowPasswordPolicySettings } from '@passflow/passflow-js-sdk';
+import type {
+  AppSettings,
+  LoginWebAppStyle,
+  LoginWebAppTheme,
+  PassflowPasswordPolicySettings,
+} from '@passflow/passflow-js-sdk';
 import { isEmpty, isUndefined, some } from 'lodash';
 import { useContext, useLayoutEffect, useRef, useState } from 'react';
 import { usePassflow } from './use-passflow';
@@ -53,11 +58,27 @@ export const useAppSettings: UseAppSettingsProps = () => {
             });
 
             try {
-              // Fetch the root /settings endpoint to get default appId
-              // Use passflow.url if defined, otherwise fall back to window.location.origin
-              const settingsBaseUrl = passflow.url || window.location.origin;
-              const response = await fetch(`${settingsBaseUrl}/settings`);
-              if (response.ok) {
+              // Try relative path first (works with dev server proxy and same-origin production)
+              // Then fall back to absolute URL if configured
+              const urlsToTry = ['/settings'];
+              if (passflow.url) {
+                urlsToTry.push(`${passflow.url}/settings`);
+              }
+
+              let response: Response | null = null;
+              for (const url of urlsToTry) {
+                try {
+                  const r = await fetch(url);
+                  if (r.ok) {
+                    response = r;
+                    break;
+                  }
+                } catch {
+                  continue;
+                }
+              }
+
+              if (response && response.ok) {
                 const settings = await response.json();
 
                 // Support both response formats:

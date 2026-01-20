@@ -11,12 +11,16 @@ import '@/styles/index.css';
 type TwoFactorSetupFormProps = {
   onComplete?: (recoveryCodes: string[]) => void;
   onCancel?: () => void;
+  numInputs?: number;
 };
 
-export const TwoFactorSetupForm: FC<TwoFactorSetupFormProps> = ({ onComplete, onCancel }) => {
+export const TwoFactorSetupForm: FC<TwoFactorSetupFormProps> = ({ onComplete, onCancel, numInputs }) => {
   const [code, setCode] = useState('');
   const [showSecret, setShowSecret] = useState(false);
   const { setupData, recoveryCodes, step, beginSetup, confirmSetup, reset, isLoading, isError, error } = useTwoFactorSetup();
+
+  // Get TOTP digits (defaults to 6 if not provided)
+  const totpDigits = numInputs ?? 6;
 
   const handleCodeChange = (value: string) => {
     setCode(value);
@@ -88,12 +92,12 @@ export const TwoFactorSetupForm: FC<TwoFactorSetupFormProps> = ({ onComplete, on
           </div>
 
           <div className='passflow-2fa-confirm-section'>
-            <p className='passflow-2fa-confirm-label'>Enter the 6-digit code from your app to confirm:</p>
+            <p className='passflow-2fa-confirm-label'>Enter the {totpDigits}-digit code from your app to confirm:</p>
             <div id='otp-wrapper' className='passflow-verify-otp-wrapper'>
               <OtpInput
                 value={code}
                 onChange={handleCodeChange}
-                numInputs={6}
+                numInputs={totpDigits}
                 shouldAutoFocus
                 skipDefaultStyles
                 containerStyle='passflow-verify-otp-inputs'
@@ -110,7 +114,7 @@ export const TwoFactorSetupForm: FC<TwoFactorSetupFormProps> = ({ onComplete, on
             </div>
           </div>
 
-          <Button size='big' type='submit' variant='primary' disabled={code.length !== 6 || isLoading}>
+          <Button size='big' type='submit' variant='primary' disabled={code.length !== totpDigits || isLoading}>
             {isLoading ? 'Confirming...' : 'Confirm & Enable'}
           </Button>
         </form>
