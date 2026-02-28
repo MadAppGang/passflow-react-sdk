@@ -1,0 +1,92 @@
+/* Modern CSS Reset */
+[class*="passflow-"] {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  font: inherit;
+  vertical-align: baseline;
+}
+
+/* HTML5 display-role reset for older browsers */
+.passflow-article,
+.passflow-aside,
+.passflow-details,
+.passflow-figcaption,
+.passflow-figure,
+.passflow-footer,
+.passflow-header,
+.passflow-hgroup,
+.passflow-menu,
+.passflow-nav,
+.passflow-section {
+  display: block;
+}
+
+html {
+  font-size: 16px;
+  scroll-behavior: smooth;
+}
+
+body {
+  min-height: 100vh;
+  text-rendering: optimizeSpeed;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Remove list styles */
+.passflow-list {
+  list-style: none;
+}
+
+/* Remove default styles from links */
+.passflow-link {
+  text-decoration: none;
+  color: inherit;
+}
+
+/* Make images easier to work with */
+.passflow-image,
+.passflow-picture,
+.passflow-video,
+.passflow-canvas,
+.passflow-svg {
+  display: block;
+  max-width: 100%;
+}
+
+/* Remove default button styles */
+.passflow-button {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  font: inherit;
+  color: inherit;
+}
+
+/* Remove default input styles */
+.passflow-input,
+.passflow-textarea,
+.passflow-select {
+  font: inherit;
+  color: inherit;
+}
+
+/* Remove default table styles */
+.passflow-table {
+  border-collapse: collapse;
+  border-spacing: 0;
+}
+
+/* Remove all animations and transitions for people that prefer not to see them */
+@media (prefers-reduced-motion: reduce) {
+  [class*="passflow-"] {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

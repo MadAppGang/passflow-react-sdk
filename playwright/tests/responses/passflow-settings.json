@@ -1,0 +1,25 @@
+{
+  "password_policy": {
+    "restrict_min_password_length": true,
+    "min_password_length": 8,
+    "reject_compromised": true,
+    "enforce_password_strength": "average",
+    "require_lowercase": true,
+    "require_uppercase": true,
+    "require_number": true,
+    "require_symbol": true
+  },
+  "passkey_provider": {
+    "name": "aooth.com",
+    "display_name": "Aooth server",
+    "id_field": "email",
+    "validation": "none",
+    "registration": {
+      "user_verification": "discouraged",
+      "authenticator_attachment": "any",
+      "discoverable_key": "preferred",
+      "attestation_metadata": "preferred",
+      "extensions": null
+    }
+  }
+}
