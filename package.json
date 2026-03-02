@@ -107,8 +107,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/MadAppGang/passflow-react-sdk.git",
-    "directory": "packages/passflow-react-sdk"
+    "url": "git+https://github.com/MadAppGang/passflow-react-sdk.git"
   },
   "publishConfig": {
     "access": "public"
