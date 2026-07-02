@@ -1,4 +1,5 @@
 import { ErrorComponent } from '@/components/error';
+import { readParentChallengeIdFromURL } from '@/components/provider/passflow-provider';
 import { Button, FieldPassword, FieldPhone, FieldText, Icon, Link, ProvidersBox, Switch } from '@/components/ui';
 import { routes } from '@/context';
 import { withError } from '@/hocs';
@@ -148,6 +149,22 @@ export const SignInForm: FC<TSignIn> = ({
     resetFormStates();
   };
 
+  // The OIDC AuthFlow layer (PassflowProvider's interceptor) consumes
+  // logins that carry parent_challenge_id via the server's redirect_url
+  // dispatch, so OIDC flows never reach the legacy redirect branches
+  // below. Reaching one anyway means the interceptor did not engage and
+  // the RP callback will never happen — say so loudly instead of
+  // silently issuing first-party tokens (observed intermittently in
+  // OIDF conformance runs, where the operator was stranded on the
+  // login page with no error).
+  const warnIfOIDCFlowLeaked = () => {
+    if (readParentChallengeIdFromURL()) {
+      console.error(
+        '[passflow] login took the legacy token path while parent_challenge_id is present on the URL — the OIDC interceptor did not engage and the RP redirect will not happen',
+      );
+    }
+  };
+
   const onSubmitPasswordHandler = async (userPayload: PassflowSignInPayload) => {
     const payload = {
       ...userPayload,
@@ -162,7 +179,8 @@ export const SignInForm: FC<TSignIn> = ({
         navigate({ to: twoFactorVerifyPath ?? routes.two_factor_verify.path });
         return;
       }
-      const redirectUrl = successAuthRedirect ?? appSettings?.defaults.redirect ?? '';
+      warnIfOIDCFlowLeaked();
+      const redirectUrl = successAuthRedirect ?? appSettings?.defaults?.redirect ?? '';
       if (!isValidUrl(redirectUrl)) navigate({ to: redirectUrl });
       else window.location.href = await getUrlWithTokens(passflow, redirectUrl);
     }
@@ -182,7 +200,8 @@ export const SignInForm: FC<TSignIn> = ({
         navigate({ to: twoFactorVerifyPath ?? routes.two_factor_verify.path });
         return;
       }
-      const redirectUrl = successAuthRedirect ?? appSettings?.defaults.redirect ?? '';
+      warnIfOIDCFlowLeaked();
+      const redirectUrl = successAuthRedirect ?? appSettings?.defaults?.redirect ?? '';
       if (!isValidUrl(redirectUrl)) navigate({ to: redirectUrl });
       else window.location.href = await getUrlWithTokens(passflow, redirectUrl);
     }
@@ -195,7 +214,7 @@ export const SignInForm: FC<TSignIn> = ({
       ...userPayload,
       challenge_type: getPasswordlessData(authMethods, defaultMethod)?.challengeType,
       create_tenant: createTenantForNewUser,
-      redirect_url: successAuthRedirect ?? appSettings?.defaults.redirect,
+      redirect_url: successAuthRedirect ?? appSettings?.defaults?.redirect,
       ...(!isEmpty(inviteToken) && { invite_token: inviteToken }),
     } as PassflowPasswordlessSignInPayload;
 

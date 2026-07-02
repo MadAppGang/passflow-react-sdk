@@ -50,7 +50,7 @@ const AUTH_ENDPOINT_PATTERN =
  * case like `appId=...`. The lowercase-keys treatment mirrors what
  * the bundled login-app was doing pre-SDK-migration.)
  */
-const readParentChallengeIdFromURL = (): string | undefined => {
+export const readParentChallengeIdFromURL = (): string | undefined => {
   if (typeof window === 'undefined') return undefined;
   const raw = new URLSearchParams(window.location.search);
   // Lowercase only keys, preserve values (values are often
@@ -61,6 +61,16 @@ const readParentChallengeIdFromURL = (): string | undefined => {
   const value = lower.get('parent_challenge_id');
   return value || undefined;
 };
+
+// Captured at module evaluation — before React mounts and before any
+// consumer-side router can rewrite the URL. The provider's mount-time
+// read stays primary (a consumer could mount the SDK long after boot,
+// on a different URL); this is the fallback that makes the OIDC opt-in
+// immune to mount-vs-navigation timing. Observed in the field: the
+// OIDF conformance login intermittently proceeded as a plain
+// first-party login (tokens in the response, no redirect_url) because
+// the whole OIDC layer keyed off a single mount-time read.
+const bootParentChallengeId = readParentChallengeIdFromURL();
 
 /**
  * Install the global OIDC AuthFlow interceptor on `fetch` and
@@ -509,7 +519,10 @@ export const PassflowProvider: FC<PassflowProviderProps> = ({
   // parent_challenge_id on outbound auth POSTs + follows
   // server-returned redirect_url; the exchange-on-mount probe decides
   // whether to render login form vs auto-exchange. See ADR-2.
-  const parentChallengeId = useMemo(readParentChallengeIdFromURL, []);
+  const parentChallengeId = useMemo(
+    () => readParentChallengeIdFromURL() ?? bootParentChallengeId,
+    [],
+  );
   useOIDCInterceptor(parentChallengeId);
   const { exchangeState, parentMeta } = useSessionExchangeOnMount(
     parentChallengeId,

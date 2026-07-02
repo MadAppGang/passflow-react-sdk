@@ -62,7 +62,7 @@ export const VerifyChallengeOTPManual: FC<VerifyChallengeOTPManualProps> = ({
       const payload: PassflowPasswordlessSignInPayload = {
         create_tenant: createTenantForNewUser,
         challenge_type: challengeType as InternalStrategyChallenge,
-        redirect_url: successAuthRedirect ?? appSettings?.defaults.redirect ?? '',
+        redirect_url: successAuthRedirect ?? appSettings?.defaults?.redirect ?? '',
         ...(identity === 'email' ? { email: identityValue } : { phone: identityValue }),
       };
 

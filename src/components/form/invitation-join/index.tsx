@@ -97,7 +97,7 @@ const InvitationJoinFlow: FC<TInvitationJoinFlow> = ({
             variant='primary'
             className='passflow-button-invitation-join'
             onClick={() =>
-              void onClickAcceptInvitationHandler(redirectUrl ?? successAuthRedirect ?? appSettings?.defaults.redirect)
+              void onClickAcceptInvitationHandler(redirectUrl ?? successAuthRedirect ?? appSettings?.defaults?.redirect)
             }
             disabled={isInvitationJoinLoading}
           >
