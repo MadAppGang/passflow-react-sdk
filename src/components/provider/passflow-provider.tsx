@@ -36,8 +36,7 @@ type PassflowProviderProps = PassflowConfig & {
  *                                        (ADR-2; activated on Leg 2 of
  *                                        OIDC two-step flows)
  */
-const AUTH_ENDPOINT_PATTERN =
-  /\/auth\/(login|passwordless|passkey|2fa|session\/exchange)\b|\/auth\/federated\/start\b/;
+const AUTH_ENDPOINT_PATTERN = /\/auth\/(login|passwordless|passkey|2fa|session\/exchange)\b|\/auth\/federated\/start\b/;
 
 /**
  * Read `parent_challenge_id` from the current URL's query string.
@@ -55,9 +54,7 @@ export const readParentChallengeIdFromURL = (): string | undefined => {
   const raw = new URLSearchParams(window.location.search);
   // Lowercase only keys, preserve values (values are often
   // case-sensitive — KSUIDs, JWTs, OIDC state, etc.).
-  const lower = new URLSearchParams(
-    Array.from(raw, ([key, value]) => [key.toLowerCase(), value]),
-  );
+  const lower = new URLSearchParams(Array.from(raw, ([key, value]) => [key.toLowerCase(), value]));
   const value = lower.get('parent_challenge_id');
   return value || undefined;
 };
@@ -189,20 +186,17 @@ const useOIDCInterceptor = (parentChallengeId: string | undefined): void => {
         }
       });
       // @ts-expect-error spread into open's varargs signature
-      return OriginalXHROpen.call(this, method, url, ...rest);
+      OriginalXHROpen.call(this, method, url, ...rest);
     };
 
-    XMLHttpRequest.prototype.send = function (
-      this: XMLHttpRequest,
-      body?: Document | XMLHttpRequestBodyInit | null,
-    ): void {
+    XMLHttpRequest.prototype.send = function (this: XMLHttpRequest, body?: Document | XMLHttpRequestBodyInit | null): void {
       const meta = tracker.get(this);
       let outBody: Document | XMLHttpRequestBodyInit | null | undefined = body;
       if (meta?.isAuth && meta.method === 'POST' && typeof body === 'string') {
         const rewritten = injectParentChallenge(body);
         if (rewritten !== undefined) outBody = rewritten;
       }
-      return OriginalXHRSend.call(this, outBody as Document | XMLHttpRequestBodyInit | null);
+      OriginalXHRSend.call(this, outBody as Document | XMLHttpRequestBodyInit | null);
     };
 
     return () => {
@@ -246,8 +240,9 @@ type ParentChallengeMeta = {
  *
  * Today the response branches are:
  *
- *   - 200 { redirect_url } → existing interceptor's redirect
- *     navigation fires (XHR `load` listener above).
+ *   - 200 { redirect_url } → the interceptor's fetch wrapper follows
+ *     the redirect (sole owner of redirect_url navigation; this hook
+ *     must never navigate on OK responses — see the res.ok branch).
  *   - 403 { error: "upgrade_required", ... } → SDK falls through to
  *     `setUpgradeRequired(true)` so the consumer renders the
  *     upgrade-required placeholder + login form. Code path is
@@ -316,12 +311,8 @@ const useSessionExchangeOnMount = (
       // demands re-auth.
       if (meta?.max_age && meta.max_age > 0) {
         const parsed = passflow.getParsedTokens?.();
-        const accessPayload = parsed?.access_token?.payload as
-          | { auth_time?: number }
-          | undefined;
-        const idPayload = parsed?.id_token?.payload as
-          | { auth_time?: number }
-          | undefined;
+        const accessPayload = parsed?.access_token?.payload as { auth_time?: number } | undefined;
+        const idPayload = parsed?.id_token?.payload as { auth_time?: number } | undefined;
         const authTime = accessPayload?.auth_time ?? idPayload?.auth_time;
         if (authTime && typeof authTime === 'number') {
           const ageSeconds = Math.floor(Date.now() / 1000) - authTime;
@@ -371,13 +362,21 @@ const useSessionExchangeOnMount = (
           body: JSON.stringify({ parent_challenge_id: parentChallengeId }),
         });
         if (res.ok) {
-          // The fetch interceptor above handles redirect_url
-          // navigation. As insurance, do it here too in case the
-          // interceptor's pattern misses some future endpoint rename.
+          // Redirect-following for OK auth responses is owned SOLELY
+          // by useOIDCInterceptor's fetch wrapper (this request
+          // matches AUTH_ENDPOINT_PATTERN, and the wrapper follows
+          // redirect_url before handing the response back to us).
+          // Do NOT navigate here as well: window.location.assign()
+          // doesn't halt script, so a second assign races the first
+          // and re-presents the single-use authorization code to the
+          // RP — observed as duplicate callback hits in OIDF
+          // conformance (oidcc-id-token-hint INTERRUPTED).
+          // We parse the body only to decide the no-redirect branch.
           try {
             const body = (await res.json()) as { redirect_url?: string };
             if (body.redirect_url) {
-              window.location.assign(body.redirect_url);
+              // Interceptor navigation is already scheduled; stay in
+              // 'exchanging' so no login UI flashes while we leave.
               return;
             }
           } catch {
@@ -410,10 +409,7 @@ const useSessionExchangeOnMount = (
           if (meta?.oidc_prompt_none && meta.redirect_uri) {
             const dest = new URL(meta.redirect_uri);
             dest.searchParams.set('error', 'login_required');
-            dest.searchParams.set(
-              'error_description',
-              'user is not authenticated',
-            );
+            dest.searchParams.set('error_description', 'user is not authenticated');
             if (meta.state) dest.searchParams.set('state', meta.state);
             window.location.assign(dest.toString());
             return;
@@ -519,17 +515,9 @@ export const PassflowProvider: FC<PassflowProviderProps> = ({
   // parent_challenge_id on outbound auth POSTs + follows
   // server-returned redirect_url; the exchange-on-mount probe decides
   // whether to render login form vs auto-exchange. See ADR-2.
-  const parentChallengeId = useMemo(
-    () => readParentChallengeIdFromURL() ?? bootParentChallengeId,
-    [],
-  );
+  const parentChallengeId = useMemo(() => readParentChallengeIdFromURL() ?? bootParentChallengeId, []);
   useOIDCInterceptor(parentChallengeId);
-  const { exchangeState, parentMeta } = useSessionExchangeOnMount(
-    parentChallengeId,
-    passflow,
-    config.url,
-    state.appId,
-  );
+  const { exchangeState, parentMeta } = useSessionExchangeOnMount(parentChallengeId, passflow, config.url, state.appId);
 
   // Auto-discover appId from /settings endpoint if not provided
   const discoveryAttemptedRef = useRef(false);
