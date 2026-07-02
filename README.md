@@ -188,6 +188,48 @@ export const App = () => (
   </BrowserRouter>
 );
 ```
+
+### Built-in OIDC RP integration
+
+`<PassflowProvider>` is also a full OIDC relying-party SDK out of the
+box. When a `parent_challenge_id` query parameter is present on the
+host page's URL (typical of a Passflow OP redirect to the login UI),
+the provider:
+
+1. **Installs an interceptor** on `window.fetch` and
+   `XMLHttpRequest.prototype.{open,send}` that injects
+   `parent_challenge_id` on every outbound Passflow auth POST body
+   and follows server-returned `{redirect_url}` JSON responses with
+   `window.location.assign`. Covers `/auth/login`,
+   `/auth/passwordless/*`, `/auth/passkey/*`, `/auth/2fa/*`,
+   `/auth/federated/start`, and `/auth/session/exchange`.
+
+2. **Runs an exchange-on-mount probe.** If the SDK has existing
+   tokens AND the parent challenge allows it (`prompt=login` not
+   set, `max_age` not exceeded), the provider POSTs
+   `/auth/session/exchange` with the current access token and
+   navigates the browser when the server returns a redirect URL.
+   This satisfies OIDC Core §3.1.2.1 / §3.1.2.4 (`prompt=none`,
+   `max_age`, `id_token_hint`) without re-prompting an
+   already-authenticated user.
+
+3. **Renders a placeholder during exchange** (theme via the
+   `continuingToAppPlaceholder` prop on PassflowFlow — TODO once
+   the prop is wired through; today the default placeholder
+   appears).
+
+4. **Falls through to the login form** when exchange is impossible
+   or returns `403 upgrade_required`. The login form gets an
+   explanatory banner (also themeable).
+
+Consumer code remains a single line of plumbing — mount
+`<PassflowProvider>`, render `<PassflowFlow>` inside, done. No
+manual interceptor wiring required.
+
+See the project's `docs/adr/0002-session-exchange-endpoint.md` for
+the server contract and `docs/adr/0003-amr-acr-claims.md` for the
+authentication-context claims those tokens carry.
+
 ### PassflowFlow
 
 | Prop | Type | Description |
