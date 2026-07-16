@@ -12,3 +12,5 @@ export * from './two-factor-challenge';
 // CLI Authentication forms
 export * from './cli-browser-auth';
 export * from './cli-qr-auth';
+// RFC 8628 device / QR verification forms
+export * from './device-verify';

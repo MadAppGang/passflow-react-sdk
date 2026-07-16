@@ -1533,3 +1533,136 @@ body {
 .icon-info {
   color: #2563eb;
 }
+
+/* ── RFC 8628 DEVICE / QR VERIFICATION ──────────────────────────────────────
+ *
+ * The device verification screens (@passflow/react's DeviceVerifyFlow) are built
+ * from the same Wrapper, Button, Icon and passflow-form-* primitives as the sign
+ * in screen, so almost everything they need already exists above. What follows is
+ * only what is genuinely NEW to them, and every rule below resolves to a
+ * --passflow-* token: a device screen must never own a colour, a radius or a
+ * font, or it will drift from the login screen the moment either one is themed.
+ *
+ * These live in the SDK rather than in a consumer for the same reason: this is a
+ * Passflow product surface, so every consumer gets it, and a change to it happens
+ * in one place.
+ */
+
+/* The success tint for an <img> icon. Icons are <img src="data:..."> (see
+ * components/ui/icon), which CSS cannot recolour with `color` or `fill` — the
+ * established technique here is a filter, matching .icon-warning above. This
+ * filter resolves black to #4cb782, i.e. --passflow-success. It is stated
+ * literally because a filter cannot reference a custom property; if the success
+ * token ever changes, this must be re-solved with it. */
+.icon-success {
+  filter: brightness(0) saturate(100%) invert(15%) sepia(44%) saturate(671%) hue-rotate(98deg) brightness(419%) contrast(56%);
+}
+
+.passflow-device-wrapper .passflow-form-container {
+  align-items: center;
+}
+
+/* The RFC 8628 §5.4 code. Big, monospaced and letter-spaced because its entire
+ * job is to be read character-by-character against a terminal on another screen;
+ * user-select: all so a code that turns out to be wrong is trivial to copy. */
+.passflow-device-code {
+  width: 100%;
+  padding: var(--passflow-spacing-4);
+  border-radius: 6px;
+  background-color: var(--passflow-input-background-color);
+  color: var(--passflow-text-color);
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+  font-size: var(--passflow-h1);
+  font-weight: var(--passflow-bold);
+  letter-spacing: 0.12em;
+  text-align: center;
+  user-select: all;
+}
+
+/* Same treatment for the typed code, so what you enter looks like what you were
+ * shown. text-transform is cosmetic only: RFC 8628 §6.1 normalization is the
+ * SERVER's job, and the input must never reject what the server would accept. */
+.passflow-device-code-input {
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+  font-size: var(--passflow-body-1);
+  letter-spacing: 0.12em;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.passflow-device-text {
+  font-size: var(--passflow-body-2);
+  font-weight: var(--passflow-normal);
+  color: var(--passflow-text-color);
+  line-height: 1.5;
+}
+
+.passflow-device-centered-text {
+  text-align: center;
+}
+
+.passflow-device-centered {
+  align-items: center;
+  text-align: center;
+}
+
+.passflow-device-hint {
+  font-size: var(--passflow-caption);
+  font-weight: var(--passflow-medium);
+  color: var(--passflow-secondary-text-color);
+  text-align: center;
+  line-height: 1.5;
+}
+
+/* The name of the CLI that asked. Emphasised because it is half of the §5.4
+ * check — the other half being the code above it. */
+.passflow-device-app-name {
+  font-weight: var(--passflow-semibold);
+  color: var(--passflow-text-color);
+}
+
+.passflow-device-success {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--passflow-spacing-1);
+}
+
+.passflow-device-success-text {
+  font-size: var(--passflow-caption);
+  font-weight: var(--passflow-medium);
+  color: var(--passflow-success);
+}
+
+.passflow-device-spinner {
+  width: 26px;
+  height: 26px;
+  border: 3px solid var(--passflow-grey-three);
+  border-top-color: var(--passflow-primary-color);
+  border-radius: 50%;
+  animation: passflow-device-spin 0.8s linear infinite;
+}
+
+@keyframes passflow-device-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Someone reaching this screen has just been handed a spinner they did not ask
+ * for, on a phone, mid-sign-in. Respect the setting. */
+@media (prefers-reduced-motion: reduce) {
+  .passflow-device-spinner {
+    animation-duration: 3s;
+  }
+}
+
+/* The Mode 3 waiting state: spinner + the sentence that is the actual status.
+ * A column so the spinner sits above its own label. */
+.passflow-device-status {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--passflow-spacing-3);
+  width: 100%;
+}
