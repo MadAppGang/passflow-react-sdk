@@ -1,7 +1,7 @@
 import { Icon } from '@/components/ui';
 import { cn } from '@/utils';
 /* eslint-disable max-len */
-import type { FC, PropsWithChildren } from 'react';
+import type { FC, PropsWithChildren, ReactNode } from 'react';
 import '@/styles/index.css';
 import { Helmet, HelmetProvider } from 'react-helmet-async';
 
@@ -13,6 +13,13 @@ type TWrapper = PropsWithChildren & {
   customCss?: string;
   customLogo?: string;
   removeBranding?: boolean;
+  /**
+   * An optional node rendered between the logo/title block and the form body.
+   * Additive slot every auth screen shares — the device verification page passes
+   * its RFC 8628 §5.4 code banner here so it sits inside the SAME login card
+   * instead of a forked one. Nothing renders when it is absent.
+   */
+  header?: ReactNode;
 };
 
 export const Wrapper: FC<TWrapper> = ({
@@ -24,6 +31,7 @@ export const Wrapper: FC<TWrapper> = ({
   customCss,
   customLogo,
   removeBranding = false,
+  header,
 }) => {
   return (
     <HelmetProvider>
@@ -45,6 +53,7 @@ export const Wrapper: FC<TWrapper> = ({
               </div>
             )}
           </div>
+          {header}
           {children}
         </div>
         {!removeBranding && (

@@ -70,6 +70,18 @@ export const readParentChallengeIdFromURL = (): string | undefined => {
 const bootParentChallengeId = readParentChallengeIdFromURL();
 
 /**
+ * The RFC 8628 device verification page (`/oidc/device`) is the ONE auth surface
+ * that must never silently exchange an existing session. A device grant is
+ * approved only through the explicit authenticate → user_code confirmation →
+ * approve path (see `useDeviceVerify` + src/web/oidc/device_verify.go). Letting
+ * the exchange-on-mount probe solve a device parent would approve a grant with
+ * no §5.4 code check — the STORM-2372 device-code phishing attack. The server
+ * now refuses this at `/auth/session/exchange` too; this is the client half of
+ * the same guard, so the probe never even fires here.
+ */
+const isDeviceVerificationURL = (): boolean => typeof window !== 'undefined' && window.location.pathname === '/oidc/device';
+
+/**
  * Install the global OIDC AuthFlow interceptor on `fetch` and
  * `XMLHttpRequest`. The interceptor:
  *
@@ -268,6 +280,11 @@ const useSessionExchangeOnMount = (
 
   useEffect(() => {
     if (!parentChallengeId || attemptedRef.current) {
+      return;
+    }
+    // Never auto-exchange on the device verification page — that would approve
+    // a device grant with no user_code check (see isDeviceVerificationURL).
+    if (isDeviceVerificationURL()) {
       return;
     }
     // Wait until appId has been discovered before attempting the

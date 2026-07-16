@@ -1562,6 +1562,16 @@ body {
   align-items: center;
 }
 
+/* The §5.4 banner rendered in SignIn's header slot on the device page: the code
+ * to compare + the app that asked, stacked above the ordinary login form. */
+.passflow-device-banner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+}
+
 /* The RFC 8628 §5.4 code. Big, monospaced and letter-spaced because its entire
  * job is to be read character-by-character against a terminal on another screen;
  * user-select: all so a code that turns out to be wrong is trivial to copy. */

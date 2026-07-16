@@ -26,7 +26,7 @@ import type {
 import { eq, has, isEmpty, size } from 'lodash';
 import { phone } from 'phone';
 import queryString from 'query-string';
-import React, { type ChangeEvent, type FC, useEffect, useMemo, useState } from 'react';
+import React, { type ChangeEvent, type FC, type ReactNode, useEffect, useMemo, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { Wrapper } from '../wrapper';
 
@@ -38,6 +38,37 @@ const initialValues = {
   phone: '',
 };
 
+/**
+ * Device-approval integration for the RFC 8628 verification page.
+ *
+ * When present, SignInForm renders its ORDINARY login card — same logo, fields,
+ * black passkey button and layout — but its credential submit does NOT issue
+ * tokens or redirect. Instead it hands the verified intent to the device flow's
+ * authenticate → approve back-channel (`useDeviceVerify`), which keeps the
+ * §5.4 split the device grant depends on. Providers, passwordless and the
+ * sign-up link are hidden: the device back-channel supports only password +
+ * passkey, so offering anything else would be a dead control on this surface.
+ *
+ * This is the single additive seam that lets the device page BE the login page
+ * rather than a copy of it.
+ */
+export type SignInDeviceApprove = {
+  /** Prove identity with a password. Does NOT redirect. */
+  onPassword: (email: string, password: string) => void;
+  /** Prove identity with a passkey. Does NOT redirect. */
+  onPasskey: () => void;
+  /** Busy state, owned by the device hook (a call is in flight). */
+  busy?: boolean;
+  /** The device flow's classified, human-facing error, if any. */
+  error?: string | null;
+  /** Label for the primary password button ('Approve' for consent, 'Sign In' for full login). */
+  primaryLabel: string;
+  /** testid for the primary password button (e.g. the §5.4 `device-confirm` control). */
+  primaryTestId?: string;
+  /** Extra controls rendered inside the card after the form (e.g. a separate Approve). */
+  afterForm?: ReactNode;
+};
+
 export type TSignIn = {
   successAuthRedirect?: SuccessAuthRedirect;
   relyingPartyId?: string;
@@ -47,6 +78,10 @@ export type TSignIn = {
   verifyMagicLinkPath?: string;
   forgotPasswordPath?: string;
   twoFactorVerifyPath?: string;
+  /** A node rendered above the form, inside the same card (e.g. the device banner). */
+  header?: ReactNode;
+  /** When set, SignInForm drives the RFC 8628 device approval flow — see the type. */
+  deviceApprove?: SignInDeviceApprove;
 };
 
 export const SignInForm: FC<TSignIn> = ({
@@ -57,6 +92,8 @@ export const SignInForm: FC<TSignIn> = ({
   verifyMagicLinkPath = routes.verify_magic_link.path,
   forgotPasswordPath = routes.forgot_password.path,
   twoFactorVerifyPath = routes.two_factor_verify.path,
+  header,
+  deviceApprove,
 }) => {
   const {
     getValues,
@@ -141,6 +178,17 @@ export const SignInForm: FC<TSignIn> = ({
     (eq(defaultMethod, 'email_or_username') && (authMethods.internal.email.otp || authMethods.internal.email.magicLink));
 
   const hasPasskey = authMethods.passkey;
+
+  // ── Device-approval mode (RFC 8628 verification page) ──────────────────────
+  // When `deviceApprove` is set the card renders identically to the login but
+  // its state and submit are the device flow's, not useSignIn's.
+  const deviceMode = !!deviceApprove;
+  const displayError = deviceMode ? (deviceApprove?.error ?? null) : error;
+  const displayIsError = deviceMode ? Boolean(deviceApprove?.error) : isError;
+  const submitting = deviceMode ? Boolean(deviceApprove?.busy) : isLoading;
+  // No passwordless transport exists on the device page, so always show the
+  // identifier + method surface — never the passkey-only forced view.
+  const effectiveForcePasswordless = deviceMode ? false : forcePasswordless;
 
   const onChangePasswordlessExperience = (e: ChangeEvent<HTMLInputElement>) => {
     const { checked } = e.target;
@@ -272,6 +320,14 @@ export const SignInForm: FC<TSignIn> = ({
 
   const validateSingIn = async () => {
     const values = getValues();
+
+    // Device mode: hand the credentials to the verification flow's
+    // authenticate → approve back-channel; issue NO tokens here.
+    if (deviceApprove) {
+      deviceApprove.onPassword(values.email_or_username, values.password);
+      return;
+    }
+
     const isEmail = values.email_or_username.match(emailRegex);
     const isUsername = !isEmail && size(values.email_or_username) > 0;
     const validatedPhone = phone(values.phone);
@@ -289,6 +345,13 @@ export const SignInForm: FC<TSignIn> = ({
   };
 
   const validateSignInPasskey = async () => {
+    // Device mode: reuse the login's passkey action, routed to the device
+    // ceremony instead of the token path.
+    if (deviceApprove) {
+      deviceApprove.onPasskey();
+      return;
+    }
+
     const payload = {
       relying_party_id: relyingPartyId,
       scopes,
@@ -307,8 +370,9 @@ export const SignInForm: FC<TSignIn> = ({
       customCss={currentStyles?.custom_css}
       customLogo={currentStyles?.logo_url}
       removeBranding={loginAppTheme?.remove_passflow_logo}
+      header={header}
     >
-      {hasPasskey && (hasPasswordless || hasPassword) && (
+      {!deviceMode && hasPasskey && (hasPasswordless || hasPassword) && (
         <div className='passflow-form-switch'>
           <Switch label='Passwordless experience' checked={forcePasswordless} onChange={onChangePasswordlessExperience} />
         </div>
@@ -316,23 +380,23 @@ export const SignInForm: FC<TSignIn> = ({
       <form
         onSubmit={(e) => {
           e.preventDefault();
-          if (!forcePasswordless) {
+          if (!effectiveForcePasswordless) {
             if (hasPassword) void validateSingIn();
             if (!hasPassword && hasPasswordless) void validateSignInPasswordless();
           }
         }}
         className='passflow-form'
       >
-        {!forcePasswordless && defaultMethod ? (
+        {!effectiveForcePasswordless && defaultMethod ? (
           <>
             <div className='passflow-form-container'>
               {eq(defaultMethod, 'email_or_username') && (
                 <div className='passflow-form-field'>
                   <div className='passflow-form-field__header'>
                     <label
-                      htmlFor='identity'
+                      htmlFor='email_or_username'
                       className={cn('passflow-field-label', {
-                        'passflow-field-label--error': isError || has(errors, 'email_or_username'),
+                        'passflow-field-label--error': displayIsError || has(errors, 'email_or_username'),
                       })}
                     >
                       {getIdentityLabel(authMethods, 'label')}
@@ -357,7 +421,7 @@ export const SignInForm: FC<TSignIn> = ({
                       <FieldText
                         {...field}
                         {...register('email_or_username')}
-                        isError={isError || has(errors, 'email_or_username')}
+                        isError={displayIsError || has(errors, 'email_or_username')}
                         id='email_or_username'
                         type='text'
                         name='email_or_username'
@@ -377,7 +441,9 @@ export const SignInForm: FC<TSignIn> = ({
                   <div className='passflow-form-field__header'>
                     <label
                       htmlFor='phone'
-                      className={cn('passflow-field-label', { 'passflow-field-label--error': isError || has(errors, 'phone') })}
+                      className={cn('passflow-field-label', {
+                        'passflow-field-label--error': displayIsError || has(errors, 'phone'),
+                      })}
                     >
                       Phone number
                     </label>
@@ -411,7 +477,7 @@ export const SignInForm: FC<TSignIn> = ({
                         onChange={(e) => field.onChange(e)}
                         id='phone'
                         name='phone'
-                        isError={isError || has(errors, 'phone')}
+                        isError={displayIsError || has(errors, 'phone')}
                       />
                     )}
                   />
@@ -429,7 +495,7 @@ export const SignInForm: FC<TSignIn> = ({
                     <label
                       htmlFor='password'
                       className={cn('passflow-field-label', {
-                        'passflow-field-label--error': isError || has(errors, 'password'),
+                        'passflow-field-label--error': displayIsError || has(errors, 'password'),
                       })}
                     >
                       Password
@@ -453,7 +519,7 @@ export const SignInForm: FC<TSignIn> = ({
                       <FieldPassword
                         {...field}
                         {...register('password')}
-                        isError={isError || has(errors, 'password')}
+                        isError={displayIsError || has(errors, 'password')}
                         passwordPolicy={passwordPolicy}
                         id='password'
                         name='password'
@@ -468,10 +534,10 @@ export const SignInForm: FC<TSignIn> = ({
                   )}
                 </div>
               ) : null}
-              {isError && (
+              {displayIsError && (
                 <div className='passflow-form-error'>
                   <Icon size='small' id='warning' type='general' className='icon-warning' />
-                  <span className='passflow-form-error-text'>{error}</span>
+                  <span className='passflow-form-error-text'>{displayError}</span>
                 </div>
               )}
             </div>
@@ -480,13 +546,14 @@ export const SignInForm: FC<TSignIn> = ({
                 size='big'
                 variant='primary'
                 type='submit'
-                disabled={!isDirty || !isValid || isLoading}
+                disabled={deviceMode ? submitting : !isDirty || !isValid || isLoading}
                 className='passflow-button-signin'
+                data-testid={deviceApprove?.primaryTestId}
               >
-                Sign In
+                {deviceApprove ? deviceApprove.primaryLabel : 'Sign In'}
               </Button>
             ) : null}
-            {hasPasswordless && (
+            {!deviceMode && hasPasswordless && (
               <Button
                 size='big'
                 variant={hasPassword ? 'outlined' : 'primary'}
@@ -513,15 +580,17 @@ export const SignInForm: FC<TSignIn> = ({
                 className={cn('passflow-button-passkey')}
                 style={hasPassword || hasPasswordless ? { marginTop: '-16px' } : {}}
                 withIcon
+                disabled={deviceMode ? submitting : false}
                 onClick={validateSignInPasskey}
               >
                 <Icon id='key' size='small' type='general' className='icon-white passflow-button-passkey-icon' />
                 Sign In with a Passkey
               </Button>
             ) : null}
+            {deviceApprove?.afterForm}
           </>
         ) : null}
-        {forcePasswordless && hasPasskey ? (
+        {effectiveForcePasswordless && hasPasskey ? (
           <>
             {isError && (
               <div className='passflow-form-error'>
@@ -542,15 +611,17 @@ export const SignInForm: FC<TSignIn> = ({
             </Button>
           </>
         ) : null}
-        <div className={cn('passflow-form-actions', { 'passflow-form-actions--top-space': hasPassword || hasPasskey })}>
-          <p className='passflow-dont-have-account'>
-            Don&apos;t have an account?{' '}
-            <Link to={signUpPath ?? routes.signup.path} search={window.location.search} className='passflow-link'>
-              Sign Up
-            </Link>
-          </p>
-        </div>
-        {size(authMethods.fim.providers) > 0 && (
+        {!deviceMode && (
+          <div className={cn('passflow-form-actions', { 'passflow-form-actions--top-space': hasPassword || hasPasskey })}>
+            <p className='passflow-dont-have-account'>
+              Don&apos;t have an account?{' '}
+              <Link to={signUpPath ?? routes.signup.path} search={window.location.search} className='passflow-link'>
+                Sign Up
+              </Link>
+            </p>
+          </div>
+        )}
+        {!deviceMode && size(authMethods.fim.providers) > 0 && (
           <div className='passflow-form-providers'>
             {hasPassword || hasPasswordless || hasPasskey ? (
               <div className='passflow-form-divider'>

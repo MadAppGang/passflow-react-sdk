@@ -1,9 +1,8 @@
 import {
   DeviceCodeEntryForm,
-  DeviceConsentForm,
   DeviceDone,
   DeviceFailed,
-  DeviceFullLoginForm,
+  DeviceLoginApprove,
   DeviceModeDisabled,
   DevicePasskeyForm,
 } from '@/components/form/device-verify';
@@ -75,10 +74,10 @@ export const DeviceVerifyFlow: FC = () => {
     case 'passkey':
       return <DevicePasskeyForm device={device} />;
     case 'full_login':
-      return <DeviceFullLoginForm device={device} />;
+      return <DeviceLoginApprove device={device} variant='full_login' />;
     default:
       // `consent`, and anything the server ever adds that this build does not
       // know: degrade toward the screen with the code check, never away from it.
-      return <DeviceConsentForm device={device} />;
+      return <DeviceLoginApprove device={device} variant='consent' />;
   }
 };
