@@ -1,3 +1,4 @@
+import { hasFollowedOIDCRedirect } from '@/components/provider/passflow-provider';
 import { Button, FieldPassword, FieldPhone, FieldText, Icon, Link, ProvidersBox, Switch } from '@/components/ui';
 import { routes } from '@/context';
 import { useAppSettings, useNavigation, usePassflow, useProvider, useSignUp } from '@/hooks';
@@ -181,6 +182,11 @@ export const SignUpForm: FC<TSignUp> = ({
     const response = await fetch(payload, 'passkey');
 
     if (response) {
+      // Registering a passkey posts to `/auth/passkey/*`, which the OIDC
+      // interceptor matches — so in an OIDC flow the dispatch back to the RP is
+      // already under way. Navigating again would cancel it; see
+      // `hasFollowedOIDCRedirect`.
+      if (hasFollowedOIDCRedirect()) return;
       if (!isValidUrl(redirectUrl)) navigate({ to: redirectUrl });
       else window.location.href = await getUrlWithTokens(passflow, redirectUrl);
     }

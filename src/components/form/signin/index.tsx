@@ -1,5 +1,5 @@
 import { ErrorComponent } from '@/components/error';
-import { readParentChallengeIdFromURL } from '@/components/provider/passflow-provider';
+import { hasFollowedOIDCRedirect, readParentChallengeIdFromURL } from '@/components/provider/passflow-provider';
 import { Button, FieldPassword, FieldPhone, FieldText, Icon, Link, ProvidersBox, Switch } from '@/components/ui';
 import { routes } from '@/context';
 import { withError } from '@/hocs';
@@ -197,20 +197,32 @@ export const SignInForm: FC<TSignIn> = ({
     resetFormStates();
   };
 
-  // The OIDC AuthFlow layer (PassflowProvider's interceptor) consumes
-  // logins that carry parent_challenge_id via the server's redirect_url
-  // dispatch, so OIDC flows never reach the legacy redirect branches
-  // below. Reaching one anyway means the interceptor did not engage and
-  // the RP callback will never happen — say so loudly instead of
-  // silently issuing first-party tokens (observed intermittently in
-  // OIDF conformance runs, where the operator was stranded on the
-  // login page with no error).
-  const warnIfOIDCFlowLeaked = () => {
+  // Who owns the navigation after a successful login?
+  //
+  // The OIDC AuthFlow layer (PassflowProvider's interceptor) consumes logins
+  // that carry parent_challenge_id via the server's redirect_url dispatch, and
+  // that navigation is the one that completes the flow — it carries the
+  // authorization code back to the RP. When it has fired, the legacy redirect
+  // branches below MUST NOT run: `window.location.assign` does not stop script
+  // execution, so a second navigation here does not queue behind the first, it
+  // CANCELS it. The RP then never receives its code. (See
+  // `hasFollowedOIDCRedirect` — this was aborting real CLI loopback sign-ins
+  // about a third of the time, leaving the CLI waiting on a callback the
+  // browser had already dropped.)
+  //
+  // Reaching a legacy branch while parent_challenge_id is on the URL and the
+  // interceptor did NOT fire is the genuinely broken case: the RP callback will
+  // never happen, so say so loudly instead of silently issuing first-party
+  // tokens (observed in OIDF conformance runs, where the operator was stranded
+  // on the login page with no error).
+  const oidcLayerOwnsRedirect = (): boolean => {
+    if (hasFollowedOIDCRedirect()) return true;
     if (readParentChallengeIdFromURL()) {
       console.error(
         '[passflow] login took the legacy token path while parent_challenge_id is present on the URL — the OIDC interceptor did not engage and the RP redirect will not happen',
       );
     }
+    return false;
   };
 
   const onSubmitPasswordHandler = async (userPayload: PassflowSignInPayload) => {
@@ -227,7 +239,7 @@ export const SignInForm: FC<TSignIn> = ({
         navigate({ to: twoFactorVerifyPath ?? routes.two_factor_verify.path });
         return;
       }
-      warnIfOIDCFlowLeaked();
+      if (oidcLayerOwnsRedirect()) return;
       const redirectUrl = successAuthRedirect ?? appSettings?.defaults?.redirect ?? '';
       if (!isValidUrl(redirectUrl)) navigate({ to: redirectUrl });
       else window.location.href = await getUrlWithTokens(passflow, redirectUrl);
@@ -248,7 +260,7 @@ export const SignInForm: FC<TSignIn> = ({
         navigate({ to: twoFactorVerifyPath ?? routes.two_factor_verify.path });
         return;
       }
-      warnIfOIDCFlowLeaked();
+      if (oidcLayerOwnsRedirect()) return;
       const redirectUrl = successAuthRedirect ?? appSettings?.defaults?.redirect ?? '';
       if (!isValidUrl(redirectUrl)) navigate({ to: redirectUrl });
       else window.location.href = await getUrlWithTokens(passflow, redirectUrl);
