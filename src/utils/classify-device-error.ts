@@ -43,7 +43,7 @@ const DEVICE_ERROR_COPY: Record<DeviceErrorType, string> = {
   passkey_failed:
     "We couldn't confirm your passkey. You may have cancelled it, waited too long, or there may be no passkey for this site on this device.",
   passkey_unsupported:
-    "This device can't use a passkey to sign in here. Try another way to sign in, or use a device you've set up a passkey on.",
+    "This device can't use a passkey to sign in here. Use a device you've set up a passkey on, or return to the app that asked you to sign in and start again.",
   offline: "We couldn't reach the server. Check your connection and try again.",
   generic: 'Something went wrong on our end. Refresh the page and try again.',
 };

@@ -31,7 +31,7 @@ const generateMessage = (
     requirements.map((requirement) => requiresString[requirement as keyof typeof requiresString]),
   );
 
-  return `Contain a ${requirementsString}`;
+  return `Must contain a ${requirementsString}`;
 };
 
 export const FieldPassword = forwardRef<HTMLInputElement, TFieldPassword>(
@@ -68,15 +68,11 @@ export const FieldPassword = forwardRef<HTMLInputElement, TFieldPassword>(
 
     const handleShowPassword = () => setIsShowPassword((prev) => !prev);
 
-    if (passwordPolicy === null) return null;
-
-    const {
-      min_password_length: minPasswordLength,
-      require_lowercase: requireLowerCase,
-      require_number: requireNumber,
-      require_symbol: requireSymbol,
-      require_uppercase: requireUpperCase,
-    } = passwordPolicy;
+    const minPasswordLength = passwordPolicy?.min_password_length ?? 0;
+    const requireLowerCase = passwordPolicy?.require_lowercase ?? false;
+    const requireNumber = passwordPolicy?.require_number ?? false;
+    const requireSymbol = passwordPolicy?.require_symbol ?? false;
+    const requireUpperCase = passwordPolicy?.require_uppercase ?? false;
 
     return (
       <>
@@ -98,9 +94,11 @@ export const FieldPassword = forwardRef<HTMLInputElement, TFieldPassword>(
               variant='clean'
               asIcon
               withIcon
+              disabled={disabled}
+              aria-label='Hide password'
               onClick={handleShowPassword}
             >
-              <Icon size='small' type='general' id='eye-on' />
+              <Icon size='small' type='general' id='eye-on' decorative />
             </Button>
           ) : (
             <Button
@@ -110,13 +108,15 @@ export const FieldPassword = forwardRef<HTMLInputElement, TFieldPassword>(
               variant='clean'
               asIcon
               withIcon
+              disabled={disabled}
+              aria-label='Show password'
               onClick={handleShowPassword}
             >
-              <Icon size='small' type='general' id='eye-off' />
+              <Icon size='small' type='general' id='eye-off' decorative />
             </Button>
           )}
         </div>
-        {withMessages && (
+        {withMessages && passwordPolicy && (
           <div className='passflow-password-validation'>
             <p className={cn('passflow-password-validation-item', errorStyles(['length']))}>
               <Icon size='small' id={changeIcon(['length'])} type='general' className={cn(errorStyles(['length']))} />

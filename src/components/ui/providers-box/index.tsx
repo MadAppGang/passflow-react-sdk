@@ -28,7 +28,7 @@ export const ProvidersBox: FC<TProvidersBox> = ({ providers, onClick, className 
           withIcon
           className='passflow-provider-item'
         >
-          <Icon size='small' type='providers' id={provider} />
+          <Icon size='small' type='providers' id={provider} decorative={providers.length <= 2} />
           {providers.length <= 2 && <p className='passflow-provider-text'>{provider}</p>}
         </Button>
       ))}

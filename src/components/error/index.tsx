@@ -1,9 +1,8 @@
+import { LoginScreen } from '@/components/ui';
 import { useAppSettings, useNavigation } from '@/hooks';
 import { isValidUrl } from '@/utils';
 import type { FC } from 'react';
 import React from 'react';
-import { Wrapper } from '../form';
-import { Button } from '../ui';
 
 export type TError = {
   goBackRedirectTo: string;
@@ -16,28 +15,25 @@ export const ErrorComponent: FC<TError> = ({ error = defaultErrorMessage, goBack
   const { navigate } = useNavigation();
   const { currentStyles, loginAppTheme } = useAppSettings();
 
-  const onGoBackHandler = () => {
+  const handleGoBack = () => {
     if (!isValidUrl(goBackRedirectTo)) navigate({ to: goBackRedirectTo });
     else window.location.href = goBackRedirectTo;
   };
 
   return (
-    <Wrapper
-      iconId='logo-red'
-      className='passflow-error-wrapper'
-      customCss={currentStyles?.custom_css}
-      customLogo={currentStyles?.logo_url}
-      removeBranding={loginAppTheme?.remove_passflow_logo}
-    >
-      <div className='passflow-error-container'>
-        <div className='passflow-error-container-text-wrapper'>
-          {error && <p className='passflow-error-container-text'>{error}</p>}
-          <p className='passflow-error-container-text-secondary'>Please go back or try again later</p>
-        </div>
-        <Button size='big' type='button' variant='primary' onClick={onGoBackHandler} className='passflow-button-go-back-error'>
-          Go back
-        </Button>
-      </div>
-    </Wrapper>
+    <LoginScreen
+      chrome={{
+        title: '',
+        customCss: currentStyles?.custom_css,
+        customLogo: currentStyles?.logo_url,
+        customLogoAlt: `${loginAppTheme?.application_name ?? 'Application'} logo`,
+        removeBranding: loginAppTheme?.remove_passflow_logo,
+      }}
+      state={{
+        kind: 'general-error',
+        message: error,
+        onAction: handleGoBack,
+      }}
+    />
   );
 };

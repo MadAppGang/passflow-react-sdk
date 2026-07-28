@@ -1,0 +1,22 @@
+.passflow-country-flag {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 18px;
+  overflow: hidden;
+  color: var(--passflow-secondary-text-color);
+  font-size: 9px;
+  font-weight: var(--passflow-bold);
+  line-height: 1;
+  text-transform: uppercase;
+  background-repeat: no-repeat;
+  background-size: 408px 384px;
+  border-radius: 2px;
+}
+
+.passflow-country-flag--fallback {
+  background-color: var(--passflow-input-background-color);
+  outline: 1px solid var(--passflow-input-border-color);
+}

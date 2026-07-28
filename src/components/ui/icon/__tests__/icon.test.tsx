@@ -225,6 +225,22 @@ describe('Icon', () => {
     });
   });
 
+  describe('Text-colored icons', () => {
+    it('uses the icon asset as a mask so it inherits the surrounding text color', () => {
+      render(<Icon type='general' id='key' size='small' matchTextColor />);
+
+      const icon = screen.getByRole('img', { name: 'key' });
+      expect(icon).toHaveClass('passflow-icon--match-text');
+      expect(icon.style.getPropertyValue('--passflow-icon-mask')).toContain('url(');
+    });
+
+    it('keeps decorative text-colored icons hidden from assistive technology', () => {
+      const { container } = render(<Icon type='general' id='key' size='small' decorative matchTextColor />);
+
+      expect(container.querySelector('.passflow-icon--match-text')).toHaveAttribute('aria-hidden', 'true');
+    });
+  });
+
   describe('Flag icons', () => {
     it('renders flag icon correctly', () => {
       const { container } = render(<Icon type='flags' id='US' size='medium' />);
@@ -232,17 +248,17 @@ describe('Icon', () => {
       expect(iconWrapper).toBeInTheDocument();
     });
 
-    it('renders flag with correct class', () => {
+    it('renders flag with local sprite geometry', () => {
       const { container } = render(<Icon type='flags' id='US' size='medium' />);
-      const flag = container.querySelector('.passflow-flag');
+      const flag = container.querySelector('.passflow-country-flag');
       expect(flag).toBeInTheDocument();
-      expect(flag).toHaveClass('us');
+      expect(flag).toHaveAttribute('data-country-flag', 'us');
+      expect(flag).toHaveStyle({ backgroundImage: expect.stringContaining('url(') });
     });
 
-    it('converts flag id to lowercase', () => {
+    it('normalizes flag ids to lowercase', () => {
       const { container } = render(<Icon type='flags' id='GB' size='medium' />);
-      const flag = container.querySelector('.passflow-flag');
-      expect(flag).toHaveClass('gb');
+      expect(container.querySelector('.passflow-country-flag')).toHaveAttribute('data-country-flag', 'gb');
     });
 
     it('applies size class to flag wrapper', () => {
@@ -255,12 +271,6 @@ describe('Icon', () => {
       const { container } = render(<Icon type='flags' id='US' size='medium' className='custom-flag-class' />);
       const iconWrapper = container.querySelector('.passflow-icon');
       expect(iconWrapper).toHaveClass('custom-flag-class');
-    });
-
-    it('sets background image style on flag', () => {
-      const { container } = render(<Icon type='flags' id='US' size='medium' />);
-      const flag = container.querySelector('.passflow-flag');
-      expect(flag).toHaveStyle({ backgroundImage: expect.stringContaining('url(') });
     });
   });
 });

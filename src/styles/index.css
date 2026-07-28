@@ -17,18 +17,18 @@ body {
   /* Colors */
   --passflow-primary: #0c59dd;
   --passflow-primary-dark: #0a47b1;
-  --passflow-warning: #d85d5d;
-  --passflow-warning-dark: #b14d4d;
+  --passflow-warning: #b42318;
+  --passflow-warning-dark: #8f1f17;
   --passflow-dark: #1e1e1e;
   --passflow-dark-two: #2e2e2e;
   --passflow-dark-three: #3e3e3e;
   --passflow-white: #ffffff;
-  --passflow-grey-one: #7f7f7f;
+  --passflow-grey-one: #5f6368;
   --passflow-grey-two: #bfbfbf;
   --passflow-grey-three: #e9eaf0;
   --passflow-grey-four: #f3f5f7;
   --passflow-background: #f8f9fb;
-  --passflow-success: #4cb782;
+  --passflow-success: #067647;
 
   /* Theme Colors */
   --passflow-primary-color: var(--passflow-primary);
@@ -38,6 +38,7 @@ body {
   --passflow-background-color: var(--passflow-white);
   --passflow-background-image: url("");
   --passflow-card-color: var(--passflow-white);
+  --passflow-branding-background-color: var(--passflow-background);
   --passflow-input-background-color: var(--passflow-grey-four);
   --passflow-input-border-color: var(--passflow-grey-four);
   --passflow-passkey-button-text-color: var(--passflow-white);
@@ -45,6 +46,8 @@ body {
   --passflow-divider-color: var(--passflow-grey-three);
   --passflow-federated_button_background_color: var(--passflow-background);
   --passflow-federated_button_text_color: var(--passflow-dark);
+  --passflow-focus-color: var(--passflow-primary-color);
+  --passflow-link-color: var(--passflow-primary-color);
 
   /* Typography */
   --passflow-h1: 2rem;
@@ -65,28 +68,6 @@ body {
   --passflow-spacing-4: 16px;
   --passflow-spacing-5: 20px;
   --passflow-spacing-6: 24px;
-}
-
-/* LAYOUT */
-#passflow-wrapper {
-  font-family: "Inter", sans-serif;
-  width: 100%;
-  min-height: 100vh;
-  -webkit-font-smoothing: antialiased;
-  overflow-x: hidden;
-  box-sizing: border-box;
-}
-
-.passflow-wrapper {
-  width: 100vw;
-  height: 100vh;
-  position: relative;
-  background-color: var(--passflow-background-color);
-  color: var(--passflow-text-color);
-  background-image: var(--passflow-background-image);
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
 }
 
 /* TYPOGRAPHY */
@@ -129,7 +110,8 @@ body {
 }
 
 .passflow-button:focus-visible {
-  outline: none;
+  outline: 2px solid var(--passflow-focus-color);
+  outline-offset: 2px;
 }
 
 .passflow-button--primary {
@@ -269,9 +251,6 @@ body {
 .passflow-button-send-reset-password,
 .passflow-button-resend-reset-password,
 .passflow-button-resend-magic-link,
-.passflow-button-invitation-join,
-.passflow-button-invitation-join-switch,
-.passflow-button-invitation-join-register,
 .passflow-button-reset-password,
 .passflow-button-go-back-error {
   margin: 0 auto;
@@ -295,9 +274,10 @@ body {
 }
 
 .passflow-button-show-country {
-  min-width: 41px;
-  width: 41px;
-  margin-left: 12px;
+  min-width: 56px;
+  width: 56px;
+  margin-left: 8px;
+  padding: 12px 4px;
   border-radius: 4px;
   gap: 4px;
   background-color: var(--passflow-input-background-color);
@@ -314,9 +294,14 @@ body {
 }
 
 .passflow-button-resend-reset-password,
-.passflow-button-resend-magic-link,
-.passflow-button-go-back-error {
+.passflow-button-resend-magic-link {
   max-width: 196px;
+  font-weight: var(--passflow-medium);
+}
+
+.passflow-button-go-back-error {
+  width: 196px;
+  max-width: 100%;
   font-weight: var(--passflow-medium);
 }
 
@@ -339,10 +324,6 @@ body {
 
 .passflow-button-timer--inactive {
   color: var(--passflow-primary-color);
-}
-
-.passflow-button-invitation-join {
-  margin-top: 32px;
 }
 
 /* INPUTS */
@@ -408,6 +389,13 @@ body {
   }
 }
 
+@media (prefers-reduced-motion: reduce) {
+  .passflow-ripple {
+    display: none;
+    animation: none;
+  }
+}
+
 /* CONTAINERS */
 .passflow-container {
   width: 100%;
@@ -450,80 +438,6 @@ body {
   gap: var(--passflow-spacing-4);
 }
 
-/* BRANDING */
-.passflow-branding {
-  position: absolute;
-  right: 24px;
-  bottom: 24px;
-  background-color: var(--passflow-background);
-  border-radius: 4px;
-  padding: 7px 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 4px;
-}
-
-.passflow-branding-text {
-  font-size: 11px;
-  line-height: 18px;
-  font-weight: var(--passflow-bold);
-  color: var(--passflow-secondary-text-color);
-}
-
-.passflow-branding-text-secondary {
-  font-weight: var(--passflow-normal);
-}
-
-/* CUSTOM CSS FROM SETTINGS */
-
-/* WRAPPER COMPONENT */
-.passflow-form-main-wrapper {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 32px;
-  justify-content: center;
-  padding: 24px;
-  width: 100%;
-  height: 100%;
-  border-radius: 6px;
-}
-
-.passflow-form-main-container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 24px;
-  max-width: 384px;
-  width: 100%;
-  margin: 0 auto;
-}
-
-.passflow-form-header {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  text-align: center;
-}
-
-.passflow-form-title {
-  color: var(--passflow-text-color);
-  font-size: var(--passflow-h2);
-  font-weight: var(--passflow-bold);
-}
-
-.passflow-form-subtitle {
-  font-size: var(--passflow-body-2);
-  font-weight: var(--passflow-medium);
-  color: var(--passflow-secondary-text-color);
-  text-align: center;
-}
-
 .passflow-form-subscriptions {
   font-size: var(--passflow-body-2);
   font-weight: var(--passflow-medium);
@@ -561,7 +475,7 @@ body {
 
 .passflow-field-label-button {
   text-decoration: none;
-  color: var(--passflow-primary-color);
+  color: var(--passflow-link-color);
   font-size: var(--passflow-caption);
   font-weight: var(--passflow-medium);
   line-height: 18px;
@@ -591,7 +505,11 @@ body {
   position: absolute;
   right: 0;
   top: 50%;
-  transform: translate(-12px, -50%);
+  min-width: 28px;
+  width: 28px;
+  height: 28px;
+  padding: 6px;
+  transform: translate(-8px, -50%);
 }
 
 .passflow-field-error {
@@ -851,6 +769,16 @@ body {
   transition: transform 0.2s;
 }
 
+.passflow-switch-input:focus-visible + .passflow-switch-track {
+  outline: 2px solid var(--passflow-focus-color);
+  outline-offset: 2px;
+}
+
+.passflow-switch-wrapper--disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
 .passflow-switch-input:checked + .passflow-switch-track {
   background-color: var(--passflow-primary-color);
 }
@@ -898,15 +826,6 @@ body {
 
 .passflow-icon--success {
   stroke: var(--passflow-primary-color);
-}
-
-/* FLAG ICONS */
-.passflow-flag {
-  width: 100%;
-  height: 100%;
-  background-repeat: no-repeat;
-  background-position: center;
-  background-size: contain;
 }
 
 /* VERIFY CHALLENGE OTP */
@@ -1135,7 +1054,7 @@ body {
 
 /* LINK */
 .passflow-link {
-  color: var(--passflow-primary-color);
+  color: var(--passflow-link-color);
   font-size: var(--passflow-body-2);
   line-height: 18px;
   font-weight: var(--passflow-semibold);
@@ -1160,7 +1079,7 @@ body {
   left: 0;
   transform: translateY(48px);
   z-index: 10;
-  max-height: 200px;
+  max-height: 181px;
   border-bottom-left-radius: 4px;
   border-bottom-right-radius: 4px;
   overflow-y: auto;
@@ -1233,8 +1152,8 @@ body {
 }
 
 .passflow-country-search-flag {
-  width: 21px;
-  height: 15px;
+  width: 24px;
+  height: 18px;
 }
 
 .passflow-country-search-name {
@@ -1365,30 +1284,6 @@ body {
   text-align: center;
 }
 
-/* INVITATION JOIN */
-.passflow-invitation-join-text {
-  display: block;
-  font-size: var(--passflow-body-2);
-  font-weight: var(--passflow-medium);
-  color: var(--passflow-secondary-text-color);
-  text-align: center;
-  margin-top: -8px;
-  max-width: 320px;
-}
-
-.passflow-invitation-join-text-strong {
-  font-weight: var(--passflow-bold);
-}
-
-.passflow-invitation-join-actions {
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: start;
-  gap: 16px;
-}
-
 /* RESET PASSWORD */
 .passflow-reset-password-text {
   display: block;
@@ -1397,47 +1292,6 @@ body {
   color: var(--passflow-secondary-text-color);
   text-align: center;
   margin-top: -32px;
-}
-
-/* ERROR HOC */
-.passflow-error-container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: start;
-  gap: 32px;
-  margin-top: -8px;
-}
-
-.passflow-error-container-text-wrapper {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: start;
-  gap: 8px;
-}
-
-.passflow-error-container-text {
-  font-size: var(--passflow-h2);
-  font-weight: var(--passflow-bold);
-  color: var(--passflow-warning);
-  text-align: center;
-}
-
-.passflow-error-container-text-secondary {
-  font-size: var(--passflow-body-2);
-  font-weight: var(--passflow-medium);
-  color: var(--passflow-secondary-text-color);
-  text-align: center;
-}
-
-/* CUSTOM LOGO */
-.passflow-form-main-container-logo {
-  border-radius: 8px;
-  width: 44px;
-  height: 44px;
-  object-fit: cover;
-  object-position: center;
 }
 
 /* 2FA ERROR STATES */
@@ -1532,147 +1386,4 @@ body {
 
 .icon-info {
   color: #2563eb;
-}
-
-/* ── RFC 8628 DEVICE / QR VERIFICATION ──────────────────────────────────────
- *
- * The device verification screens (@passflow/react's DeviceVerifyFlow) are built
- * from the same Wrapper, Button, Icon and passflow-form-* primitives as the sign
- * in screen, so almost everything they need already exists above. What follows is
- * only what is genuinely NEW to them, and every rule below resolves to a
- * --passflow-* token: a device screen must never own a colour, a radius or a
- * font, or it will drift from the login screen the moment either one is themed.
- *
- * These live in the SDK rather than in a consumer for the same reason: this is a
- * Passflow product surface, so every consumer gets it, and a change to it happens
- * in one place.
- */
-
-/* The success tint for an <img> icon. Icons are <img src="data:..."> (see
- * components/ui/icon), which CSS cannot recolour with `color` or `fill` — the
- * established technique here is a filter, matching .icon-warning above. This
- * filter resolves black to #4cb782, i.e. --passflow-success. It is stated
- * literally because a filter cannot reference a custom property; if the success
- * token ever changes, this must be re-solved with it. */
-.icon-success {
-  filter: brightness(0) saturate(100%) invert(15%) sepia(44%) saturate(671%) hue-rotate(98deg) brightness(419%) contrast(56%);
-}
-
-.passflow-device-wrapper .passflow-form-container {
-  align-items: center;
-}
-
-/* The §5.4 banner rendered in SignIn's header slot on the device page: the code
- * to compare + the app that asked, stacked above the ordinary login form. */
-.passflow-device-banner {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 12px;
-  width: 100%;
-}
-
-/* The RFC 8628 §5.4 code. Big, monospaced and letter-spaced because its entire
- * job is to be read character-by-character against a terminal on another screen;
- * user-select: all so a code that turns out to be wrong is trivial to copy. */
-.passflow-device-code {
-  width: 100%;
-  padding: var(--passflow-spacing-4);
-  border-radius: 6px;
-  background-color: var(--passflow-input-background-color);
-  color: var(--passflow-text-color);
-  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
-  font-size: var(--passflow-h1);
-  font-weight: var(--passflow-bold);
-  letter-spacing: 0.12em;
-  text-align: center;
-  user-select: all;
-}
-
-/* Same treatment for the typed code, so what you enter looks like what you were
- * shown. text-transform is cosmetic only: RFC 8628 §6.1 normalization is the
- * SERVER's job, and the input must never reject what the server would accept. */
-.passflow-device-code-input {
-  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
-  font-size: var(--passflow-body-1);
-  letter-spacing: 0.12em;
-  text-align: center;
-  text-transform: uppercase;
-}
-
-.passflow-device-text {
-  font-size: var(--passflow-body-2);
-  font-weight: var(--passflow-normal);
-  color: var(--passflow-text-color);
-  line-height: 1.5;
-}
-
-.passflow-device-centered-text {
-  text-align: center;
-}
-
-.passflow-device-centered {
-  align-items: center;
-  text-align: center;
-}
-
-.passflow-device-hint {
-  font-size: var(--passflow-caption);
-  font-weight: var(--passflow-medium);
-  color: var(--passflow-secondary-text-color);
-  text-align: center;
-  line-height: 1.5;
-}
-
-/* The name of the CLI that asked. Emphasised because it is half of the §5.4
- * check — the other half being the code above it. */
-.passflow-device-app-name {
-  font-weight: var(--passflow-semibold);
-  color: var(--passflow-text-color);
-}
-
-.passflow-device-success {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--passflow-spacing-1);
-}
-
-.passflow-device-success-text {
-  font-size: var(--passflow-caption);
-  font-weight: var(--passflow-medium);
-  color: var(--passflow-success);
-}
-
-.passflow-device-spinner {
-  width: 26px;
-  height: 26px;
-  border: 3px solid var(--passflow-grey-three);
-  border-top-color: var(--passflow-primary-color);
-  border-radius: 50%;
-  animation: passflow-device-spin 0.8s linear infinite;
-}
-
-@keyframes passflow-device-spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-/* Someone reaching this screen has just been handed a spinner they did not ask
- * for, on a phone, mid-sign-in. Respect the setting. */
-@media (prefers-reduced-motion: reduce) {
-  .passflow-device-spinner {
-    animation-duration: 3s;
-  }
-}
-
-/* The Mode 3 waiting state: spinner + the sentence that is the actual status.
- * A column so the spinner sits above its own label. */
-.passflow-device-status {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: var(--passflow-spacing-3);
-  width: 100%;
 }

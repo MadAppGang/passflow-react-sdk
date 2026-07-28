@@ -1,6 +1,14 @@
+import path from 'node:path';
 /* eslint-disable quotes */
 import { expect, test } from '../fixture';
-import path from 'node:path';
+
+const INVITE_TOKEN = [
+  Buffer.from(JSON.stringify({ alg: 'none', typ: 'JWT' })).toString('base64url'),
+  Buffer.from(JSON.stringify({ tenant_name: 'My Workspace', inviter_name: 'Alex Morgan', type: 'invite' })).toString(
+    'base64url',
+  ),
+  'signature',
+].join('.');
 
 test.describe('default passwordless experience', () => {
   test('has all elements of passwordless signup', async ({ page }) => {
@@ -13,11 +21,11 @@ test.describe('default passwordless experience', () => {
 
     await page.goto('http://localhost:5173/web/signup');
     await expect(page).toHaveTitle(/Passflow/);
-    await expect(page.getByRole('button', { name: 'key Sign up with a Passkey' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Sign Up with a Passkey' })).toBeVisible();
     await expect(page.getByText('Passwordless experience')).toBeVisible();
     await expect(page.locator('label div')).toBeChecked();
     await expect(page.getByRole('link', { name: 'Sign In' })).toBeVisible();
-    await expect(page.getByText("Already have an account? Sign In")).toBeVisible();
+    await expect(page.getByText('Already have an account? Sign In')).toBeVisible();
     await expect(page.getByRole('link', { name: 'Sign In' })).toHaveAttribute('href');
   });
 });
@@ -33,15 +41,15 @@ test.describe('default signup flow', () => {
 
     await page.goto('http://localhost:5173/web/signup');
     await expect(page).toHaveTitle(/Passflow/);
-    await expect(page.getByText('Create account to sign up', { exact: true })).toBeVisible();
+    await expect(page.getByText('Create your account', { exact: true })).toBeVisible();
     await expect(page.getByText('For Passflow by Madappgang', { exact: true })).toBeVisible();
     await page.locator('label div').click();
     await expect(page.locator('label div')).toBeVisible();
     await expect(page.locator('label div')).not.toBeChecked();
     await expect(page.getByRole('link', { name: 'Sign In' })).toBeVisible();
-    await expect(page.getByText("Already have an account? Sign In")).toBeVisible();
+    await expect(page.getByText('Already have an account? Sign In')).toBeVisible();
     await expect(page.getByRole('link', { name: 'Sign In' })).toHaveAttribute('href');
-});
+  });
 
   test('has all element of default signup settings', async ({ page }) => {
     await expect(page.locator('input#email_or_username')).toBeVisible();
@@ -49,12 +57,12 @@ test.describe('default signup flow', () => {
     await expect(page.locator('input#password')).toBeVisible();
     await expect(page.getByText('At least 8 characters', { exact: true })).toBeVisible();
     await expect(
-      page.getByText('Contain a number, symbol, lowercase letter, and uppercase letter', { exact: true }),
+      page.getByText('Must contain a number, symbol, lowercase letter, and uppercase letter', { exact: true }),
     ).toBeVisible();
     await expect(page.getByRole('button', { name: 'Sign Up', exact: true })).toBeVisible();
     await expect(page.getByRole('button', { name: 'Sign Up', exact: true })).toBeDisabled();
     await expect(page.getByRole('button', { name: 'Sign Up with email link' })).toBeVisible();
-    await expect(page.getByRole('button', { name: 'key Sign Up with a Passkey' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Sign Up with a Passkey' })).toBeVisible();
   });
 
   test('has all element of default signup settings with phone + password', async ({ page }) => {
@@ -67,7 +75,7 @@ test.describe('default signup flow', () => {
     await expect(page.getByRole('button', { name: 'Sign Up', exact: true })).toBeDisabled();
     await expect(page.getByRole('button', { name: 'Sign Up with SMS code' })).toBeVisible();
     await expect(page.getByRole('button', { name: 'Sign Up with email link' })).toBeHidden();
-    await expect(page.getByRole('button', { name: 'key Sign Up with a Passkey' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Sign Up with a Passkey' })).toBeVisible();
   });
 });
 
@@ -102,7 +110,7 @@ test.describe('default signup flow without passkey', () => {
 
   test('has all element of default signup settings without passkey', async ({ page }) => {
     await expect(page.getByText('Passwordless experience')).not.toBeVisible();
-    await expect(page.getByRole('button', { name: 'key Sign Up with a Passkey' })).not.toBeVisible();
+    await expect(page.getByRole('button', { name: 'Sign Up with a Passkey' })).not.toBeVisible();
     await expect(page.locator('input#email_or_username')).toBeVisible();
     await expect(page.getByRole('button', { name: 'Use phone' })).toBeVisible();
     await expect(page.locator('input#password')).toBeVisible();
@@ -127,7 +135,7 @@ test.describe('default signup flow with email and password', () => {
 
   test('has all element of default signup settings with email and password', async ({ page }) => {
     await expect(page.getByText('Passwordless experience')).not.toBeVisible();
-    await expect(page.getByRole('button', { name: 'key Sign Up with a Passkey' })).not.toBeVisible();
+    await expect(page.getByRole('button', { name: 'Sign Up with a Passkey' })).not.toBeVisible();
     await expect(page.locator('input#email_or_username')).toBeVisible();
     await expect(page.getByRole('button', { name: 'Use phone' })).not.toBeVisible();
     await expect(page.locator('input#password')).toBeVisible();
@@ -145,49 +153,53 @@ test.describe('signup flow with invite token', () => {
       await route.fulfill({ path: path.join(__dirname, './responses/app-settings-only-invite.json') });
     });
 
-    await page.goto('http://localhost:5173/web/signup?invite_token=test-token');
+    await page.goto(`http://localhost:5173/web/signup?invite_token=${INVITE_TOKEN}`);
+    await expect(page.getByRole('heading', { name: 'Create your account to join My Workspace.' })).toBeVisible();
+    await expect(
+      page.getByText("Alex Morgan invited you. After you create your account, you'll continue to the invitation."),
+    ).toBeVisible();
   });
 
   test('has all elements with invite token', async ({ page }) => {
     await expect(page).toHaveTitle(/Passflow/);
-    await expect(page.getByRole('button', { name: 'key Sign up with a Passkey' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Sign Up with a Passkey' })).toBeVisible();
     await expect(page.getByText('Passwordless experience')).toBeVisible();
     await expect(page.locator('label div')).toBeChecked();
     await expect(page.getByRole('link', { name: 'Sign In' })).toBeVisible();
-    await expect(page.getByText("Already have an account? Sign In")).toBeVisible();
+    await expect(page.getByText('Already have an account? Sign In')).toBeVisible();
     await expect(page.getByRole('link', { name: 'Sign In' })).toHaveAttribute('href');
     await page.locator('label div').click();
 
     await page.getByRole('button', { name: 'Use phone' }).click();
-    expect(page.url()).toContain('invite_token=test-token');
-    
+    expect(page.url()).toContain(`invite_token=${INVITE_TOKEN}`);
+
     await page.getByRole('button', { name: 'Use email' }).click();
-    expect(page.url()).toContain('invite_token=test-token');
+    expect(page.url()).toContain(`invite_token=${INVITE_TOKEN}`);
   });
 
   test('show error if registration is only available via invite token', async ({ page }) => {
     await expect(page).toHaveTitle(/Passflow/);
-    await expect(page.getByRole('button', { name: 'key Sign up with a Passkey' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Sign Up with a Passkey' })).toBeVisible();
     await expect(page.getByText('Passwordless experience')).toBeVisible();
     await expect(page.locator('label div')).toBeChecked();
     await expect(page.getByRole('link', { name: 'Sign In' })).toBeVisible();
-    await expect(page.getByText("Already have an account? Sign In")).toBeVisible();
+    await expect(page.getByText('Already have an account? Sign In')).toBeVisible();
     await expect(page.getByRole('link', { name: 'Sign In' })).toHaveAttribute('href');
     await page.locator('label div').click();
 
-    expect(page.url()).toContain('invite_token=test-token');
+    expect(page.url()).toContain(`invite_token=${INVITE_TOKEN}`);
   });
 });
 
 test.describe('signup flow without invite token', () => {
   const REGISTER_ONLY_VIA_INVITE_TOKEN_ERROR = {
     error: {
-      "id": "error.app.registration.by.invitation.only",
-      "message": "registration is allowed by invitation only",
-      "status": 403,
-      "location": "location",
-      time: "time"
-    }
+      id: 'error.app.registration.by.invitation.only',
+      message: 'registration is allowed by invitation only',
+      status: 403,
+      location: 'location',
+      time: 'time',
+    },
   };
 
   test.beforeEach(async ({ page }) => {
@@ -198,7 +210,7 @@ test.describe('signup flow without invite token', () => {
       await route.fulfill({ path: path.join(__dirname, './responses/app-settings-only-invite.json') });
     });
     await page.route('**/auth/register', async (route) => {
-      await route.fulfill({body: JSON.stringify(REGISTER_ONLY_VIA_INVITE_TOKEN_ERROR), status: 403});
+      await route.fulfill({ body: JSON.stringify(REGISTER_ONLY_VIA_INVITE_TOKEN_ERROR), status: 403 });
     });
 
     await page.goto('http://localhost:5173/web/signup');
@@ -206,11 +218,11 @@ test.describe('signup flow without invite token', () => {
 
   test('show error if registration is only available via invite token', async ({ page }) => {
     await expect(page).toHaveTitle(/Passflow/);
-    await expect(page.getByRole('button', { name: 'key Sign up with a Passkey' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Sign Up with a Passkey' })).toBeVisible();
     await expect(page.getByText('Passwordless experience')).toBeVisible();
     await expect(page.locator('label div')).toBeChecked();
     await expect(page.getByRole('link', { name: 'Sign In' })).toBeVisible();
-    await expect(page.getByText("Already have an account? Sign In")).toBeVisible();
+    await expect(page.getByText('Already have an account? Sign In')).toBeVisible();
     await expect(page.getByRole('link', { name: 'Sign In' })).toHaveAttribute('href');
     await page.locator('label div').click();
 
@@ -228,7 +240,12 @@ test.describe('signup flow without invite token', () => {
 
     await page.getByRole('button', { name: 'Sign Up', exact: true }).click();
 
-    await expect(page.getByText('registration is allowed by invitation only', { exact: true })).toBeVisible();
+    await expect(page.getByRole('alert')).toHaveText(
+      "We couldn't create your account. Check the information you entered and try again.",
+    );
+    await expect(page.getByText('registration is allowed by invitation only', { exact: true })).toHaveCount(0);
+    await expect(page.locator('input#email_or_username')).not.toHaveClass(/passflow-field--error/);
+    await expect(page.locator('input#password')).not.toHaveClass(/passflow-field--error/);
   });
 });
 
@@ -241,11 +258,18 @@ test.describe('default signup flow with error', () => {
       await route.fulfill({ path: path.join(__dirname, './responses/app-settings.json') });
     });
 
-    await page.goto('http://localhost:5173/web/signup?error=error.federated.app.redirect.not.allowed&message=The redirect URL provided is not allowed by the app.');
+    await page.goto(
+      'http://localhost:5173/web/signup?error=error.federated.app.redirect.not.allowed&message=The redirect URL provided is not allowed by the app.',
+    );
   });
 
   test('with error and message', async ({ page }) => {
-    await expect(page.getByText('The redirect URL provided is not allowed by the app.', { exact: true })).toBeVisible();
+    await expect(
+      page.getByText("We couldn't continue this authentication request. Return to the app and try again.", {
+        exact: true,
+      }),
+    ).toBeVisible();
+    await expect(page.getByText('The redirect URL provided is not allowed by the app.', { exact: true })).toHaveCount(0);
     await expect(page.getByRole('button', { name: 'Go back' })).toBeVisible();
   });
 });

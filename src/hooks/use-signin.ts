@@ -1,3 +1,5 @@
+import type { AuthOperation, AuthUiError } from '@/types';
+import { authErrorFor } from '@/utils';
 import type {
   PassflowPasskeyAuthenticateStartPayload,
   PassflowPasswordlessResponse,
@@ -10,26 +12,28 @@ import { usePassflow } from './use-passflow';
 export type UseSignInProps = () => {
   fetch: (
     payload: PassflowPasskeyAuthenticateStartPayload | PassflowSignInPayload | PassflowPasswordlessSignInPayload,
-    type: 'passkey' | 'password' | 'passwordless',
+    type: AuthOperation,
   ) => Promise<boolean | string | PassflowPasswordlessResponse>;
   isLoading: boolean;
   isError: boolean;
-  error: string;
+  error: AuthUiError | null;
   reset: () => void;
 };
 
 export const useSignIn: UseSignInProps = () => {
   const passflow = usePassflow();
-  const [errorMessage, setErrorMessage] = useState('');
+  const [error, setError] = useState<AuthUiError | null>(null);
   const [isError, setIsError] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
   const fetch = useCallback(
     async (
       payload: PassflowPasskeyAuthenticateStartPayload | PassflowSignInPayload | PassflowPasswordlessSignInPayload,
-      type: 'passkey' | 'password' | 'passwordless',
+      type: AuthOperation,
     ): Promise<boolean | string | PassflowPasswordlessResponse> => {
       setIsLoading(true);
+      setIsError(false);
+      setError(null);
       const cleanup = () => setIsLoading(false);
 
       // We'll make sure to call cleanup after the operation completes
@@ -41,10 +45,10 @@ export const useSignIn: UseSignInProps = () => {
           return await passflow.passwordlessSignIn(payload as PassflowPasswordlessSignInPayload);
         }
         return true;
-      } catch (e) {
+      } catch (error) {
+        console.error(`[passflow] ${type} sign-in failed`, error);
         setIsError(true);
-        const error = e as Error;
-        setErrorMessage(error.message);
+        setError(authErrorFor('sign-in', type));
         return false;
       } finally {
         cleanup();
@@ -55,9 +59,9 @@ export const useSignIn: UseSignInProps = () => {
 
   const reset = () => {
     setIsError(false);
-    setErrorMessage('');
+    setError(null);
     setIsLoading(false);
   };
 
-  return { fetch, isLoading, isError, error: errorMessage, reset } as const;
+  return { fetch, isLoading, isError, error, reset } as const;
 };

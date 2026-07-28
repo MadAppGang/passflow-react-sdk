@@ -1,36 +1,22 @@
 import type { StorybookConfig } from '@storybook/react-vite';
 
-import { join, dirname } from 'path';
-
-/**
- * This function is used to resolve the absolute path of a package.
- * It is needed in projects that use Yarn PnP or are set up within a monorepo.
- */
-function getAbsolutePath(value: string): any {
-  return dirname(require.resolve(join(value, 'package.json')));
-}
 const config: StorybookConfig = {
-  stories: ['../src/**/*.mdx', '../src/**/*.stories.@(js|jsx|mjs|ts|tsx)'],
-  addons: [
-    getAbsolutePath('@storybook/addon-onboarding'),
-    getAbsolutePath('@storybook/addon-links'),
-    getAbsolutePath('@storybook/addon-essentials'),
-    getAbsolutePath('@chromatic-com/storybook'),
-    getAbsolutePath('@storybook/addon-interactions'),
-    '@storybook/addon-webpack5-compiler-swc'
-  ],
-  swc: {},
+  stories: ['../src/**/*.stories.@(js|jsx|mjs|ts|tsx)'],
+  addons: ['@storybook/addon-docs', '@storybook/addon-a11y', '@storybook/addon-themes'],
   framework: {
-    name: getAbsolutePath('@storybook/react-vite'),
-    options: {
-      builder: getAbsolutePath('@storybook/builder-vite'),
-    },
+    name: '@storybook/react-vite',
+    options: {},
   },
   docs: {
     autodocs: 'tag',
   },
-  core: {
-    builder: '@storybook/builder-vite',
-  },
+  viteFinal: async (viteConfig) => ({
+    ...viteConfig,
+    plugins: viteConfig.plugins?.filter((plugin) => {
+      if (!plugin || Array.isArray(plugin) || typeof plugin === 'function') return true;
+      return !('name' in plugin) || plugin.name !== 'vite:dts';
+    }),
+  }),
 };
+
 export default config;

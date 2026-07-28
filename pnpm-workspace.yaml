@@ -1,0 +1,4 @@
+allowBuilds:
+  '@biomejs/biome': true
+  # Storybook 10 still installs esbuild even though Vite 8 no longer does.
+  esbuild: true

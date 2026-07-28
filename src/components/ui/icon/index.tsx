@@ -1,8 +1,9 @@
 import { cn } from '@/utils';
+import type { CSSProperties } from 'react';
+import { CountryFlag } from '../country-flag';
 import '@/styles/index.css';
 import './style.css';
 
-import flags from '@/assets/icons/flags.png';
 import apple from '@/assets/icons/providers/apple.svg';
 import atlassian from '@/assets/icons/providers/atlassian.svg';
 import bitbucket from '@/assets/icons/providers/bitbucket.svg';
@@ -14,7 +15,7 @@ import gitlab from '@/assets/icons/providers/gitlab.svg';
 import google from '@/assets/icons/providers/google.svg';
 import hubspot from '@/assets/icons/providers/hubspot.svg';
 import linear from '@/assets/icons/providers/linear.svg';
-import linledin from '@/assets/icons/providers/linkedin.svg';
+import linkedin from '@/assets/icons/providers/linkedin.svg';
 import microsoft from '@/assets/icons/providers/microsoft.svg';
 import notion from '@/assets/icons/providers/notion.svg';
 import slack from '@/assets/icons/providers/slack.svg';
@@ -48,9 +49,15 @@ type TIcon = {
   id: string;
   size: 'small' | 'medium' | 'big' | 'large';
   className?: string;
+  decorative?: boolean;
+  matchTextColor?: boolean;
 };
 
-export const Icon = ({ type, id, size, className = '' }: TIcon) => {
+type IconMaskStyle = CSSProperties & {
+  '--passflow-icon-mask': string;
+};
+
+export const Icon = ({ type, id, size, className = '', decorative = false, matchTextColor = false }: TIcon) => {
   const styles = {
     'passflow-icon--small': size === 'small',
     'passflow-icon--medium': size === 'medium',
@@ -92,7 +99,8 @@ export const Icon = ({ type, id, size, className = '' }: TIcon) => {
       github,
       hubspot,
       linear,
-      linledin,
+      linkedin,
+      linledin: linkedin,
       microsoft,
       notion,
       slack,
@@ -103,13 +111,29 @@ export const Icon = ({ type, id, size, className = '' }: TIcon) => {
     },
   };
 
+  if (matchTextColor && type === 'general') {
+    const style: IconMaskStyle = {
+      '--passflow-icon-mask': `url("${icons.general[id]}")`,
+    };
+
+    return (
+      <span
+        className={cn('passflow-icon passflow-icon--match-text', styles, className)}
+        style={style}
+        role={decorative ? undefined : 'img'}
+        aria-label={decorative ? undefined : id}
+        aria-hidden={decorative || undefined}
+      />
+    );
+  }
+
   if (type !== 'flags') {
-    return <img className={cn('passflow-icon', styles, className)} src={icons[type][id]} alt={id} />;
+    return <img className={cn('passflow-icon', styles, className)} src={icons[type][id]} alt={decorative ? '' : id} />;
   }
 
   return (
     <div className={cn('passflow-icon', styles, className)}>
-      <div className={cn('passflow-flag', id.toLowerCase())} style={{ backgroundImage: `url(${flags})` }} />
+      <CountryFlag iso2={id} />
     </div>
   );
 };

@@ -1,6 +1,6 @@
+import path from 'node:path';
 /* eslint-disable quotes */
 import { expect, test } from '../fixture';
-import path from 'node:path';
 
 test.describe('default passwordless experience', () => {
   test('has all elements of passwordless signin', async ({ page }) => {
@@ -13,7 +13,7 @@ test.describe('default passwordless experience', () => {
 
     await page.goto('http://localhost:5173/web/signin');
     await expect(page).toHaveTitle(/Passflow/);
-    await expect(page.getByRole('button', { name: 'key Sign In with a Passkey' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Sign In with a Passkey' })).toBeVisible();
     await expect(page.getByText('Passwordless experience')).toBeVisible();
     await expect(page.locator('label div')).toBeChecked();
     await expect(page.getByRole('link', { name: 'Sign Up' })).toBeVisible();
@@ -52,7 +52,7 @@ test.describe('default signin flow', () => {
     await expect(page.getByRole('button', { name: 'Sign In', exact: true })).toBeVisible();
     await expect(page.getByRole('button', { name: 'Sign In', exact: true })).toBeDisabled();
     await expect(page.getByRole('button', { name: 'Sign In with email link' })).toBeVisible();
-    await expect(page.getByRole('button', { name: 'key Sign In with a Passkey' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Sign In with a Passkey' })).toBeVisible();
   });
 
   test('has all element of default signin settings with phone + password', async ({ page }) => {
@@ -67,7 +67,26 @@ test.describe('default signin flow', () => {
     await expect(page.getByRole('button', { name: 'Sign In', exact: true })).toBeDisabled();
     await expect(page.getByRole('button', { name: 'Sign In with SMS code' })).toBeVisible();
     await expect(page.getByRole('button', { name: 'Sign In with email link' })).toBeHidden();
-    await expect(page.getByRole('button', { name: 'key Sign In with a Passkey' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Sign In with a Passkey' })).toBeVisible();
+  });
+
+  test('keeps the user on sign in when passwordless start fails', async ({ page }) => {
+    await page.route('**/auth/passwordless/start', async (route) => {
+      await route.fulfill({ status: 400, contentType: 'application/json', body: JSON.stringify({ error: 'unavailable' }) });
+    });
+
+    await page.locator('input#email_or_username').fill('jack@example.com');
+    const response = page.waitForResponse('**/auth/passwordless/start');
+    await page.getByRole('button', { name: 'Sign In with email link' }).click();
+    await response;
+
+    await expect(page).toHaveURL(/\/web\/signin$/);
+    await expect(page.getByRole('alert')).toHaveText(
+      "We couldn't start passwordless sign-in. Check your connection and try again.",
+    );
+    await expect(page.getByText(/Request failed with status code/i)).toHaveCount(0);
+    await expect(page.locator('input#email_or_username')).not.toHaveClass(/passflow-field--error/);
+    await expect(page.locator('input#password')).not.toHaveClass(/passflow-field--error/);
   });
 });
 
@@ -83,8 +102,16 @@ test.describe('default signin flow with providers', () => {
     await page.goto('http://localhost:5173/web/signin');
   });
 
-  test('has all element of default signin settings with google provider', async ({ page }) => {
-    await expect(page.getByRole('button', { name: 'google' })).toBeVisible();
+  test('preserves default colors with a legacy theme and google provider', async ({ page }) => {
+    const passkey = page.getByRole('button', { name: 'Sign In with a Passkey' });
+    const provider = page.getByRole('button', { name: 'google' });
+
+    await expect(provider).toBeVisible();
+    await expect(passkey).toHaveCSS('background-color', 'rgb(30, 30, 30)');
+    await expect(passkey).toHaveCSS('color', 'rgb(255, 255, 255)');
+    await expect(provider).toHaveCSS('background-color', 'rgb(248, 249, 251)');
+    await expect(page.locator('.passflow-provider-text')).toHaveCSS('color', 'rgb(30, 30, 30)');
+    await expect(page.locator('.passflow-form-divider__line-left')).toHaveCSS('background-color', 'rgb(233, 234, 240)');
   });
 });
 
@@ -102,7 +129,7 @@ test.describe('default signin flow without passkey', () => {
 
   test('has all element of default signin settings without passkey', async ({ page }) => {
     await expect(page.getByText('Passwordless experience')).not.toBeVisible();
-    await expect(page.getByRole('button', { name: 'key Sign In with a Passkey' })).not.toBeVisible();
+    await expect(page.getByRole('button', { name: 'Sign In with a Passkey' })).not.toBeVisible();
     await expect(page.locator('input#email_or_username')).toBeVisible();
     await expect(page.getByRole('button', { name: 'Use phone' })).toBeVisible();
     await expect(page.locator('input#password')).toBeVisible();
@@ -149,11 +176,18 @@ test.describe('default signin flow with error', () => {
       await route.fulfill({ path: path.join(__dirname, './responses/app-settings.json') });
     });
 
-    await page.goto('http://localhost:5173/web/signin?error=error.federated.app.redirect.not.allowed&message=The redirect URL provided is not allowed by the app.');
+    await page.goto(
+      'http://localhost:5173/web/signin?error=error.federated.app.redirect.not.allowed&message=The redirect URL provided is not allowed by the app.',
+    );
   });
 
   test('with error and message', async ({ page }) => {
-    await expect(page.getByText('The redirect URL provided is not allowed by the app.', { exact: true })).toBeVisible();
+    await expect(
+      page.getByText("We couldn't continue this authentication request. Return to the app and try again.", {
+        exact: true,
+      }),
+    ).toBeVisible();
+    await expect(page.getByText('The redirect URL provided is not allowed by the app.', { exact: true })).toHaveCount(0);
     await expect(page.getByRole('button', { name: 'Go back' })).toBeVisible();
   });
 });

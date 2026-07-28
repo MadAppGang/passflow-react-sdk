@@ -11,6 +11,7 @@ import { defineConfig, devices } from '@playwright/test';
  */
 export default defineConfig({
   testDir: './tests',
+  snapshotPathTemplate: '{testDir}/{testFilePath}-snapshots/{arg}{ext}',
   /* Run tests in files in parallel */
   fullyParallel: true,
   /* Fail the build on CI if you accidentally left test.only in the source code. */
@@ -68,10 +69,20 @@ export default defineConfig({
     // },
   ],
 
-  /* Run your local dev server before starting the tests */
-  webServer: {
-    command: 'pnpm dev',
-    url: 'http://localhost:5173',
-    reuseExistingServer: !process.env.CI,
-  },
+  /* Run the demo app and the component catalog for UI tests. */
+  webServer: [
+    {
+      command: 'pnpm dev',
+      cwd: process.cwd(),
+      url: 'http://localhost:5173',
+      reuseExistingServer: !process.env.CI,
+    },
+    {
+      command: 'pnpm storybook --ci --quiet',
+      cwd: process.cwd(),
+      url: 'http://localhost:6006',
+      reuseExistingServer: !process.env.CI,
+      timeout: 120_000,
+    },
+  ],
 });

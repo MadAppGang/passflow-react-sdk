@@ -19,7 +19,7 @@ import { ErrorComponent } from '@/components/error';
 import { withError } from '@/hocs';
 import { useNavigation } from '@/hooks';
 import type { SuccessAuthRedirect } from '@/types';
-import { getUrlErrors } from '@/utils';
+import { authRedirectErrorMessage, getUrlErrors } from '@/utils';
 import { BrowserRouter, HashRouter, MemoryRouter, Navigate, Route, Routes, useNavigate } from 'react-router-dom';
 
 export type PassflowProps = {
@@ -85,7 +85,13 @@ const PassflowWrapper: FC<PassflowProps> = ({
 
   const { error: errorUrlSuccess, message: messageUrlSuccess } = getUrlErrors(successAuthRedirect);
 
-  if (errorUrlSuccess && messageUrlSuccess) throw new Error(messageUrlSuccess);
+  if (errorUrlSuccess) {
+    console.error('[passflow] authentication redirect returned an error', {
+      error: errorUrlSuccess,
+      message: messageUrlSuccess,
+    });
+    throw new Error(authRedirectErrorMessage);
+  }
 
   const routesWithPrefix = useMemo(() => combineRoutesWithPrefix(pathPrefix), [pathPrefix]);
 

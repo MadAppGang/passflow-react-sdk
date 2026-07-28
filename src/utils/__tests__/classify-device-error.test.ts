@@ -34,7 +34,7 @@ describe('classifyDeviceError — WebAuthn failures', () => {
     expect(result.message).not.toContain('Resident credentials');
     expect(result.message).not.toContain('allowCredentials');
     expect(result.message).toBe(
-      "This device can't use a passkey to sign in here. Try another way to sign in, or use a device you've set up a passkey on.",
+      "This device can't use a passkey to sign in here. Use a device you've set up a passkey on, or return to the app that asked you to sign in and start again.",
     );
     // The detail is kept — for the console, not the screen.
     expect(result.detail).toContain(CHROME_RESIDENT_CREDENTIAL_ERROR);

@@ -1,3 +1,4 @@
+import { verificationRequestErrorMessage } from '@/utils';
 import type { PassflowPasswordlessSignInCompletePayload, PassflowValidationResponse } from '@passflow/core';
 import { useCallback, useState } from 'react';
 import { usePassflow } from './use-passflow';
@@ -18,16 +19,19 @@ export const usePasswordlessComplete: UsePasswordlessCompleteProps = () => {
 
   const fetch = useCallback(
     async (payload: PassflowPasswordlessSignInCompletePayload): Promise<PassflowValidationResponse | null> => {
+      setIsLoading(true);
+      setIsError(false);
+      setErrorMessage('');
+
       try {
-        setIsLoading(true);
-        const response = await passflow.passwordlessSignInComplete(payload);
-        setIsLoading(false);
-        return response;
-      } catch (e) {
+        return await passflow.passwordlessSignInComplete(payload);
+      } catch (error) {
+        console.error('[passflow] passwordless verification failed', error);
         setIsError(true);
-        const error = e as Error;
-        setErrorMessage(error.message);
+        setErrorMessage(verificationRequestErrorMessage);
         return null;
+      } finally {
+        setIsLoading(false);
       }
     },
     [passflow],

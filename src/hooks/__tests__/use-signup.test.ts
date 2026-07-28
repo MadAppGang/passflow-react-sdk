@@ -1,3 +1,4 @@
+import { authErrorFor } from '@/utils';
 import type { PassflowPasswordlessResponse } from '@passflow/core';
 import { act, renderHook, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
@@ -46,7 +47,7 @@ describe('useSignUp', () => {
       expect(mockPassflow.signUp).toHaveBeenCalledWith(payload);
       expect(result.current.isLoading).toBe(false);
       expect(result.current.isError).toBe(false);
-      expect(result.current.error).toBe('');
+      expect(result.current.error).toBeNull();
     });
 
     it('should handle password sign up error', async () => {
@@ -68,7 +69,7 @@ describe('useSignUp', () => {
 
       expect(signUpResult).toBe(false);
       expect(result.current.isError).toBe(true);
-      expect(result.current.error).toBe(errorMessage);
+      expect(result.current.error).toEqual(authErrorFor('sign-up', 'password'));
       expect(result.current.isLoading).toBe(false);
     });
 
@@ -154,7 +155,7 @@ describe('useSignUp', () => {
 
       expect(registerResult).toBe(false);
       expect(result.current.isError).toBe(true);
-      expect(result.current.error).toBe(errorMessage);
+      expect(result.current.error).toEqual(authErrorFor('sign-up', 'passkey'));
     });
   });
 
@@ -201,7 +202,7 @@ describe('useSignUp', () => {
 
       expect(signUpResult).toBe(false);
       expect(result.current.isError).toBe(true);
-      expect(result.current.error).toBe(errorMessage);
+      expect(result.current.error).toEqual(authErrorFor('sign-up', 'passwordless'));
     });
   });
 
@@ -218,7 +219,7 @@ describe('useSignUp', () => {
       });
 
       expect(result.current.isError).toBe(true);
-      expect(result.current.error).toBe(errorMessage);
+      expect(result.current.error).toEqual(authErrorFor('sign-up', 'password'));
 
       // Reset the state
       act(() => {
@@ -226,7 +227,7 @@ describe('useSignUp', () => {
       });
 
       expect(result.current.isError).toBe(false);
-      expect(result.current.error).toBe('');
+      expect(result.current.error).toBeNull();
       expect(result.current.isLoading).toBe(false);
     });
   });
