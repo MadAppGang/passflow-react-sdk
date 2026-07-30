@@ -80,7 +80,7 @@ export const LoginCredentials: FC<LoginCredentialsState> = (state) => {
   const errorScope = state.error?.scope;
   const hasIdentityError = errorScope === 'identity' || errorScope === 'credentials';
   const hasPasswordError = errorScope === 'password' || errorScope === 'credentials';
-  const isNewPassword = state.passwordPurpose === 'sign-up';
+  const isNewPassword = state.credentialPurpose === 'sign-up';
 
   const validatePassword = (value: string) => {
     if (!isNewPassword) return true;

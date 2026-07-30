@@ -221,7 +221,7 @@ export const SignUpForm: FC<TSignUp> = ({
         kind: 'credentials',
         methods: loginMethods,
         passwordPolicy,
-        passwordPurpose: 'sign-up',
+        credentialPurpose: 'sign-up',
         forcePasskey: Boolean(appSettings?.force_passwordless_login && authMethods.passkey),
         allowPasskeyToggle: true,
         busy: isLoading,

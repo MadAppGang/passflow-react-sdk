@@ -151,7 +151,7 @@ export const PhoneAndPassword: Story = {
 export const CreateAccount: Story = {
   args: story(
     credentials(methods({ emailPassword: true, emailMagicLink: true, phonePassword: true, phoneOtp: true, passkey: true }), {
-      passwordPurpose: 'sign-up',
+      credentialPurpose: 'sign-up',
       primaryLabel: 'Sign Up',
       passwordlessLabelPrefix: 'Sign Up with',
       passkeyLabel: 'Sign Up with a Passkey',
@@ -166,7 +166,7 @@ export const CreateAccount: Story = {
 export const PhoneSignUp: Story = {
   args: story(
     credentials(methods({ phonePassword: true }), {
-      passwordPurpose: 'sign-up',
+      credentialPurpose: 'sign-up',
       primaryLabel: 'Sign Up',
       forgotPassword: undefined,
       footer: { prompt: 'Already have an account?', label: 'Sign In', to: '/signin' },
@@ -307,7 +307,7 @@ export const InvitationSignIn: Story = {
 export const InvitationCreateAccount: Story = {
   args: story(
     credentials(methods({ emailPassword: true, emailMagicLink: true, passkey: true }), {
-      passwordPurpose: 'sign-up',
+      credentialPurpose: 'sign-up',
       primaryLabel: 'Sign Up',
       passwordlessLabelPrefix: 'Sign Up with',
       passkeyLabel: 'Sign Up with a Passkey',

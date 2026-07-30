@@ -10,7 +10,21 @@ const baseExternal = [...Object.keys(dependencies), ...Object.keys(peerDependenc
 
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [react(), dts(), EnvironmentPlugin('all')],
+  plugins: [
+    react(),
+    dts({
+      include: ['src'],
+      exclude: [
+        'src/app.tsx',
+        'src/main.tsx',
+        'src/test/**',
+        'src/**/__tests__/**',
+        'src/**/*.test.*',
+        'src/**/*.stories.*',
+      ],
+    }),
+    EnvironmentPlugin('all'),
+  ],
   resolve: { alias: { '@': path.resolve(__dirname, './src') } },
   build: {
     lib: {

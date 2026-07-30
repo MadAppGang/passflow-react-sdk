@@ -53,7 +53,7 @@ export type LoginCredentialsState = {
   kind: 'credentials';
   methods: LoginMethodConfig;
   passwordPolicy: PassflowPasswordPolicySettings | null;
-  passwordPurpose?: 'sign-in' | 'sign-up';
+  credentialPurpose?: 'sign-in' | 'sign-up';
   initialMethod?: DefaultMethod | null;
   forcePasskey?: boolean;
   allowPasskeyToggle?: boolean;
