@@ -218,6 +218,7 @@ export const FieldPhone: FC<TFieldPhone> = ({
         className={cn('passflow-country-search-wrapper', {
           'passflow-country-search-wrapper--show': show,
           'passflow-country-search-wrapper--hidden': !show,
+          'passflow-country-search-wrapper--without-preferred': !!filterValue || preferredCountries.length === 0,
         })}
       >
         {size(filteredCountries) > 0 ? (

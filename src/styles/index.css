@@ -1089,6 +1089,10 @@ body {
   scrollbar-color: var(--passflow-secondary-text-color) transparent;
 }
 
+.passflow-country-search-wrapper--without-preferred {
+  max-height: 170px;
+}
+
 .passflow-country-search-wrapper::-webkit-scrollbar {
   width: 6px;
 }
