@@ -1,4 +1,5 @@
 import { ErrorComponent } from '@/components/error';
+import { hasFollowedOIDCRedirect } from '@/components/provider/passflow-provider';
 import { type LoginCredentialsValues, type LoginMethodConfig, LoginScreen } from '@/components/ui';
 import { routes } from '@/context';
 import { withError } from '@/hocs';
@@ -141,7 +142,10 @@ export const SignUpForm: FC<TSignUp> = ({
       scopes,
     } as PassflowPasskeyRegisterStartPayload;
 
-    if (await fetch(payload, 'passkey')) await completeRegistration();
+    if (await fetch(payload, 'passkey')) {
+      if (hasFollowedOIDCRedirect()) return;
+      await completeRegistration();
+    }
   };
 
   const submitPasswordless = async (userPayload: Partial<PassflowPasswordlessSignInPayload>, method: DefaultMethod | null) => {

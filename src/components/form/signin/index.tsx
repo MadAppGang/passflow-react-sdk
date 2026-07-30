@@ -1,5 +1,5 @@
 import { ErrorComponent } from '@/components/error';
-import { readParentChallengeIdFromURL } from '@/components/provider/passflow-provider';
+import { hasFollowedOIDCRedirect, readParentChallengeIdFromURL } from '@/components/provider/passflow-provider';
 import { type LoginCredentialsValues, type LoginMethodConfig, LoginScreen } from '@/components/ui';
 import { routes } from '@/context';
 import { withError } from '@/hocs';
@@ -115,12 +115,14 @@ export const SignInForm: FC<TSignIn> = ({
   const invitationChrome = getInvitationAuthChrome(inviteToken, 'sign-in');
   const { fetch, isError, error, reset, isLoading } = useSignIn();
 
-  const warnIfOIDCFlowLeaked = () => {
+  const oidcLayerOwnsRedirect = (): boolean => {
+    if (hasFollowedOIDCRedirect()) return true;
     if (readParentChallengeIdFromURL()) {
       console.error(
         '[passflow] login took the legacy token path while parent_challenge_id is present on the URL — the OIDC interceptor did not engage and the RP redirect will not happen',
       );
     }
+    return false;
   };
 
   const completeAuthentication = async () => {
@@ -129,7 +131,7 @@ export const SignInForm: FC<TSignIn> = ({
       return;
     }
 
-    warnIfOIDCFlowLeaked();
+    if (oidcLayerOwnsRedirect()) return;
     const redirectUrl = successAuthRedirect ?? appSettings?.defaults?.redirect ?? '';
     if (!isValidUrl(redirectUrl)) navigate({ to: redirectUrl });
     else window.location.href = await getUrlWithTokens(passflow, redirectUrl);
