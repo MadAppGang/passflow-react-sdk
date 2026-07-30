@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import { Wrapper } from '../index';
 
@@ -54,13 +54,13 @@ describe('Wrapper', () => {
       const container = document.querySelector('.passflow-form-main-container');
       expect(container).toBeInTheDocument();
       // No custom logo image should be present
-      expect(screen.queryByAltText('custom logo')).not.toBeInTheDocument();
+      expect(screen.queryByAltText('Application logo')).not.toBeInTheDocument();
     });
 
     it('renders custom logo image when customLogo provided', () => {
       render(<Wrapper customLogo='https://example.com/logo.png'>Content</Wrapper>);
 
-      const logo = screen.getByAltText('custom logo');
+      const logo = screen.getByAltText('Application logo');
       expect(logo).toBeInTheDocument();
       expect(logo).toHaveAttribute('src', 'https://example.com/logo.png');
     });
@@ -113,13 +113,14 @@ describe('Wrapper', () => {
   });
 
   describe('customCss', () => {
-    it('injects custom CSS into the head via Helmet', () => {
+    it('injects custom CSS into the explicit override layer', async () => {
       const customCss = '.custom-style { color: red; }';
       render(<Wrapper customCss={customCss}>Content</Wrapper>);
 
-      // Helmet injects styles asynchronously, so we check for the style element
-      // The style is added to the document
-      expect(document.querySelector('#passflow-wrapper')).toBeInTheDocument();
+      await waitFor(() => {
+        const override = document.head.querySelector('style.psfw-custom-styles[data-passflow-style-layer="custom"]');
+        expect(override).toHaveTextContent(customCss);
+      });
     });
   });
 
@@ -168,7 +169,7 @@ describe('Wrapper', () => {
       );
 
       expect(screen.getByText('Create Account')).toBeInTheDocument();
-      expect(screen.getByAltText('custom logo')).toBeInTheDocument();
+      expect(screen.getByAltText('Application logo')).toBeInTheDocument();
       expect(screen.getByText('PASSFLOW')).toBeInTheDocument();
     });
 
@@ -185,7 +186,7 @@ describe('Wrapper', () => {
       );
 
       expect(screen.getByText('Login')).toBeInTheDocument();
-      expect(screen.getByAltText('custom logo')).toBeInTheDocument();
+      expect(screen.getByAltText('Application logo')).toBeInTheDocument();
       expect(screen.queryByText('PASSFLOW')).not.toBeInTheDocument();
     });
   });

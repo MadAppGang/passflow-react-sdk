@@ -1,6 +1,8 @@
 import { useCallback, useState } from 'react';
 import { usePassflow } from './use-passflow';
 
+const invitationJoinError = "We couldn't accept this invitation. Try again.";
+
 export type UseJoinInviteProps = () => {
   fetch: (token: string) => Promise<boolean>;
   isLoading: boolean;
@@ -16,16 +18,20 @@ export const useJoinInvite: UseJoinInviteProps = () => {
 
   const fetch = useCallback(
     async (token: string): Promise<boolean> => {
+      setIsLoading(true);
+      setIsError(false);
+      setErrorMessage('');
+
       try {
-        setIsLoading(true);
         await passflow.joinInvitation(token);
-        setIsLoading(false);
         return true;
-      } catch (e) {
+      } catch (error) {
+        console.error('[passflow] accepting invitation failed', error);
         setIsError(true);
-        const error = e as Error;
-        setErrorMessage(error.message);
+        setErrorMessage(invitationJoinError);
         return false;
+      } finally {
+        setIsLoading(false);
       }
     },
     [passflow.joinInvitation],

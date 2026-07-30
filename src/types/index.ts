@@ -7,6 +7,8 @@ export type PreferChallenge = 'passkey' | 'password' | 'otp' | 'magic_link';
 export type SuccessAuthRedirect = string;
 
 export type { TwoFactorErrorType, TwoFactorError } from './two-factor-errors';
+export type { DeviceErrorType, DeviceError } from './device-errors';
+export type { AuthErrorScope, AuthFlow, AuthOperation, AuthUiError } from './auth-errors';
 
 // Re-export 2FA types from @passflow/core
 export type {

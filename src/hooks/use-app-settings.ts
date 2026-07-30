@@ -1,6 +1,7 @@
 import { PassflowContext } from '@/context';
+import { type CompatibleLoginWebAppStyle, applyLoginThemeStyles } from '@/utils/login-theme';
 import type { AppSettings, LoginWebAppStyle, LoginWebAppTheme, PassflowPasswordPolicySettings } from '@passflow/core';
-import { isEmpty, isUndefined, some } from 'lodash';
+import { isUndefined, some } from 'lodash';
 import { useContext, useLayoutEffect, useRef, useState } from 'react';
 import { usePassflow } from './use-passflow';
 
@@ -198,26 +199,8 @@ export const useAppSettings: UseAppSettingsProps = () => {
     });
   };
 
-  const applyThemeStyles = (style: LoginWebAppStyle) => {
-    const root = document.documentElement;
-
-    root.style.setProperty('--passflow-primary-color', style.primary_color);
-    root.style.setProperty('--passflow-text-color', style.text_color);
-    root.style.setProperty('--passflow-secondary-text-color', style.secondary_text_color);
-    root.style.setProperty('--passflow-background-color', style.background_color);
-    root.style.setProperty(
-      '--passflow-background-image',
-      isEmpty(style.background_image) ? 'none' : `url(${style.background_image})`,
-    );
-    root.style.setProperty('--passflow-card-color', style.card_color);
-    root.style.setProperty('--passflow-input-background-color', style.input_background_color);
-    root.style.setProperty('--passflow-input-border-color', style.input_border_color);
-    root.style.setProperty('--passflow-button-text-color', style.button_text_color);
-    root.style.setProperty('--passflow-passkey-button-text-color', style.passkey_button_text_color);
-    root.style.setProperty('--passflow-passkey-button-background-color', style.passkey_button_background_color);
-    root.style.setProperty('--passflow-divider-color', style.divider_color);
-    root.style.setProperty('--passflow-federated_button_background_color', style.federated_button_background_color);
-    root.style.setProperty('--passflow-federated_button_text_color', style.federated_button_text_color);
+  const applyThemeStyles = (style: CompatibleLoginWebAppStyle) => {
+    applyLoginThemeStyles(document.documentElement, style);
 
     if (style.custom_css) {
       const customStylesElement = document.querySelector('.psfw-custom-styles');

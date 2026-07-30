@@ -22,9 +22,11 @@ describe('FieldPassword', () => {
     expect(input).toBeInTheDocument();
   });
 
-  it('returns null when passwordPolicy is null', () => {
-    const { container } = render(<FieldPassword id='test-password' value='' passwordPolicy={null} />);
-    expect(container.firstChild).toBeNull();
+  it('renders the input without policy messages when passwordPolicy is null', () => {
+    render(<FieldPassword id='test-password' value='' passwordPolicy={null} onChange={vi.fn()} withMessages />);
+
+    expect(document.getElementById('test-password')).toBeInTheDocument();
+    expect(screen.queryByText(/At least/i)).not.toBeInTheDocument();
   });
 
   it('renders with correct id', () => {
@@ -58,25 +60,25 @@ describe('FieldPassword', () => {
     expect(input).toHaveAttribute('type', 'password');
   });
 
-  it('renders eye-off icon when password is hidden', () => {
+  it('renders a decorative eye-off icon when password is hidden', () => {
     const { container } = render(
       <FieldPassword id='test-password' value='' passwordPolicy={defaultPasswordPolicy} onChange={vi.fn()} />,
     );
-    const eyeOffIcon = container.querySelector('img[alt="eye-off"]');
-    expect(eyeOffIcon).toBeInTheDocument();
+
+    expect(screen.getByRole('button', { name: 'Show password' })).toBeInTheDocument();
+    expect(container.querySelector('.passflow-button-display-password img.passflow-icon[alt=""]')).toBeInTheDocument();
   });
 
-  it('renders eye-on icon when password is visible', async () => {
+  it('renders a decorative eye-on icon when password is visible', async () => {
     const user = userEvent.setup();
     const { container } = render(
       <FieldPassword id='test-password' value='' passwordPolicy={defaultPasswordPolicy} onChange={vi.fn()} />,
     );
 
-    const toggleButton = screen.getByRole('button');
-    await user.click(toggleButton);
+    await user.click(screen.getByRole('button', { name: 'Show password' }));
 
-    const eyeOnIcon = container.querySelector('img[alt="eye-on"]');
-    expect(eyeOnIcon).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Hide password' })).toBeInTheDocument();
+    expect(container.querySelector('.passflow-button-display-password img.passflow-icon[alt=""]')).toBeInTheDocument();
   });
 
   it('renders with default classes', () => {
@@ -181,7 +183,7 @@ describe('FieldPassword', () => {
       />,
     );
 
-    expect(screen.getByText(/Contain a number, symbol, lowercase letter, and uppercase letter/i)).toBeInTheDocument();
+    expect(screen.getByText(/Must contain a number, symbol, lowercase letter, and uppercase letter/i)).toBeInTheDocument();
   });
 
   it('shows success icon for length when valid', () => {
@@ -283,7 +285,7 @@ describe('FieldPassword', () => {
 
     render(<FieldPassword id='test-password' value='' passwordPolicy={partialPolicy} withMessages={true} />);
 
-    expect(screen.getByText(/Contain a number and lowercase letter/i)).toBeInTheDocument();
+    expect(screen.getByText(/Must contain a number and lowercase letter/i)).toBeInTheDocument();
   });
 
   it('generates correct message for single requirement', () => {
@@ -300,7 +302,7 @@ describe('FieldPassword', () => {
 
     render(<FieldPassword id='test-password' value='' passwordPolicy={singleReqPolicy} withMessages={true} />);
 
-    expect(screen.getByText(/Contain a number/i)).toBeInTheDocument();
+    expect(screen.getByText(/Must contain a number/i)).toBeInTheDocument();
   });
 
   it('renders field wrapper with correct class', () => {

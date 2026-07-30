@@ -1,5 +1,6 @@
 import { TwoFactorChallenge } from '@/components/form/two-factor-challenge';
 import { TwoFactorRecoveryForm, TwoFactorVerifyForm } from '@/components/form/two-factor-verify';
+import { hasFollowedOIDCRedirect } from '@/components/provider/passflow-provider';
 import { routes } from '@/context';
 import { useNavigation, usePassflow, useTwoFactorVerify } from '@/hooks';
 import type { SuccessAuthRedirect } from '@/types';
@@ -66,6 +67,12 @@ export const TwoFactorVerifyFlow: FC<TwoFactorVerifyFlowProps> = ({
   const handleSuccess = async () => {
     // Reset loop prevention on successful auth
     TwoFactorLoopPrevention.reset();
+
+    // `/auth/2fa/*` is an interceptor-matched endpoint, so an OIDC login that
+    // required a second factor has already been dispatched back to the RP by
+    // the time this runs. Navigating again would cancel that in flight — see
+    // `hasFollowedOIDCRedirect`.
+    if (hasFollowedOIDCRedirect()) return;
 
     if (successAuthRedirect) {
       if (!isValidUrl(successAuthRedirect)) {

@@ -5,11 +5,25 @@ export const test = base.extend({
     // We have a few cases where we need our app to know it's running in Playwright.
     // This is inspired by Cypress that auto-injects window.Cypress.
     await page.addInitScript(() => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access
-      (window as any).Playwright = true;
+      (window as Window & { Playwright?: boolean }).Playwright = true;
     });
+    await page.emulateMedia({ reducedMotion: 'reduce' });
 
     // add all mock tests
+    await page.route('**/settings/password', async (route) => {
+      await route.fulfill({
+        json: {
+          restrict_min_password_length: true,
+          min_password_length: 8,
+          reject_compromised: true,
+          enforce_password_strength: 'average',
+          require_lowercase: true,
+          require_uppercase: true,
+          require_number: true,
+          require_symbol: true,
+        },
+      });
+    });
     await page.route('**/settings', async (route) => {
       await route.fulfill({ path: './tests/responses/aooth-settings.json' });
     });
@@ -17,7 +31,7 @@ export const test = base.extend({
       await route.fulfill({ path: './tests/responses/app-settings.json' });
     });
 
-    void use(page);
+    await use(page);
   },
 });
 export { expect } from '@playwright/test';

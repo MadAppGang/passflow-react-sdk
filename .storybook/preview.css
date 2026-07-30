@@ -1,0 +1,41 @@
+.storybook-passflow-light {
+  color-scheme: light;
+}
+
+.storybook-passflow-dark {
+  color-scheme: dark;
+  --passflow-primary-color: #3768c5;
+  --passflow-link-color: #8fb3ff;
+  --passflow-warning: #f97066;
+  --passflow-success: #47cd89;
+  --passflow-text-color: #f3f5f7;
+  --passflow-secondary-text-color: #b9c0cc;
+  --passflow-background-color: #101216;
+  --passflow-card-color: #1b1f26;
+  --passflow-branding-background-color: #1b1f26;
+  --passflow-input-background-color: #272c35;
+  --passflow-input-border-color: #343b47;
+  --passflow-button-text-color: #ffffff;
+  --passflow-passkey-button-text-color: #101216;
+  --passflow-passkey-button-background-color: #f3f5f7;
+  --passflow-divider-color: #3a414d;
+  --passflow-federated_button_background_color: #272c35;
+  --passflow-federated_button_text_color: #f3f5f7;
+}
+
+.storybook-passflow-brand {
+  --passflow-primary-color: #7447eb;
+  --passflow-text-color: #1d1530;
+  --passflow-secondary-text-color: #6d637d;
+  --passflow-background-color: #f4f0ff;
+  --passflow-card-color: #ffffff;
+  --passflow-branding-background-color: #ffffff;
+  --passflow-input-background-color: #f8f6ff;
+  --passflow-input-border-color: #d9ceff;
+  --passflow-button-text-color: #ffffff;
+  --passflow-passkey-button-text-color: #ffffff;
+  --passflow-passkey-button-background-color: #2b174f;
+  --passflow-divider-color: #d9ceff;
+  --passflow-federated_button_background_color: #ffffff;
+  --passflow-federated_button_text_color: #2b174f;
+}

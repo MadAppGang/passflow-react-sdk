@@ -1,4 +1,5 @@
-export * from './wrapper';
+// Login-like consumers use LoginScreen. The lower-level shell stays internal so
+// SDK clients cannot fork the canonical state composition through the root API.
 export * from './signin';
 export * from './signup';
 export * from './verify-challenge';

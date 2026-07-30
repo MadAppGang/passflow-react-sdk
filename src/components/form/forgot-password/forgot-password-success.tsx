@@ -5,7 +5,7 @@ import { useAppSettings, useForgotPassword } from '@/hooks';
 import * as Yup from 'yup';
 import { Wrapper } from '../wrapper';
 import '@/styles/index.css';
-import { useUrlParams } from '@/utils';
+import { useUrlParams, verificationLinkErrorMessage } from '@/utils';
 import type { PassflowSendPasswordResetEmailPayload } from '@passflow/core';
 import { eq } from 'lodash';
 
@@ -28,8 +28,9 @@ export const ForgotPasswordSuccess = () => {
 
   try {
     searchParamsForgotPasswordSuccessSchema.validateSync(params, { abortEarly: false });
-  } catch (err) {
-    throw new Error('Invalid search params');
+  } catch (error) {
+    console.error('[passflow] invalid password-reset confirmation link', error);
+    throw new Error(verificationLinkErrorMessage);
   }
 
   const onClickResendHandler = async () => {

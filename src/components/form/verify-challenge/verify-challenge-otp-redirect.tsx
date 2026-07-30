@@ -1,5 +1,5 @@
 import { useNavigation, usePassflow, usePasswordlessComplete } from '@/hooks';
-import { getUrlWithTokens, isValidUrl } from '@/utils';
+import { getUrlWithTokens, isValidUrl, verificationLinkErrorMessage, verificationRequestErrorMessage } from '@/utils';
 import React, { useEffect, useState } from 'react';
 import { VerifyChallengeSuccess } from './verify-challenge-success';
 
@@ -19,16 +19,10 @@ export const VerifyChallengeOTPRedirect = ({ otp, challengeId, appId }: VerifyCh
   // Run once on mount - intentionally empty dependency array
   useEffect(() => {
     const fetchData = async () => {
-      if (!appId) {
-        setParamsError('Missing required param: app_id');
-        return;
-      }
-      if (!otp) {
-        setParamsError('Missing required param: otp');
-        return;
-      }
-      if (!challengeId) {
-        setParamsError('Missing required param: challenge_id');
+      if (!appId || !otp || !challengeId) {
+        const missingParameters = [!appId && 'app_id', !otp && 'otp', !challengeId && 'challenge_id'].filter(Boolean);
+        console.error('[passflow] passwordless verification redirect is missing required parameters', missingParameters);
+        setParamsError(verificationLinkErrorMessage);
         return;
       }
 
@@ -43,7 +37,7 @@ export const VerifyChallengeOTPRedirect = ({ otp, challengeId, appId }: VerifyCh
             setShowSuccessMessage(true);
           }
         } else {
-          setParamsError('Something went wrong. Please try again later.');
+          setParamsError(verificationRequestErrorMessage);
         }
       }
     };

@@ -1,0 +1,15 @@
+---
+description: Keep all UI states in the Storybook-backed component library
+globs: src/**/*.{ts,tsx,css}
+alwaysApply: true
+---
+
+# Component-library boundary
+
+- `src/components/ui/**` is the only source of visual components and visual state implementations.
+- Flows, forms, providers, hooks, and routes may map data and callbacks, but must not create or style controls in place.
+- If a component or state is missing, first extend the owning UI component and add its Storybook story; then consume it from runtime code.
+- Do not add flow-local classes, inline layout styles, native interactive controls, or direct third-party UI primitives outside the UI library.
+- Use the established `passflow-*` classes and `--passflow-*` CSS variables. Do not introduce Tailwind as a second styling system.
+- Use typed semantic variants instead of arbitrary visual escape hatches.
+- Put UI behavior, interaction, accessibility, and Storybook state tests in `playwright/tests/**`; reserve Vitest for non-visual hooks, controllers, state mapping, and utilities.

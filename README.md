@@ -56,6 +56,22 @@ pnpm build
 
 ## Local Development
 
+### Component development with Storybook
+
+The visual source of truth lives in `src/components/ui` and is catalogued in Storybook.
+
+```sh
+pnpm storybook
+```
+
+Before reusing a new visual state in a flow, add it to the owning UI component and its co-located `*.stories.tsx` file. Verify the static catalog with:
+
+```sh
+pnpm build-storybook
+```
+
+Flows and form controllers should map domain state and callbacks into library components rather than creating or styling controls in place. See [`CLAUDE.md`](./CLAUDE.md) for the repository boundary.
+
 ### Using Local Passflow JS SDK
 
 For local development and testing with a local version of the Passflow JS SDK, you need to:
@@ -98,31 +114,25 @@ we are using pnpm. Please ansure you have it in the system.
 
 ## UI Testing
 
-We are using playwright to run UI tests.
+All UI behavior and Storybook state tests use Playwright. Install Chromium once:
 
-First, ensure you have all runtime binary enabled:
-
-```
-pnpm exec playwright install
+```sh
+pnpm exec playwright install chromium
 ```
 
-and then feel free to run the tests:
+Run the complete UI suite headlessly:
 
+```sh
+pnpm test
 ```
-pnpm run test:ui
+
+Or launch Playwright's interactive test UI:
+
+```sh
+pnpm test:ui
 ```
 
-### Writing your own ui tests.
-
-You can find a tests in the `./tests` frolder.
-
-Please create the new files using the current tests as a reference.
-
-To run the playwright in the design mode with ui, run the follwoing command:
-
-```
-pnpm playwright test --ui
-```
+Both scripts automatically start the demo app and Storybook. `pnpm test` uses the economical headless configuration, while `pnpm test:ui` retains traces and a final full-page screenshot for every successful test. Select a runnable leaf test in Playwright UI to inspect its action timeline, DOM snapshots, and screenshot attachment. Tests live in `playwright/tests`; component-state tests render the real Storybook stories rather than recreating components in a test-only harness. Vitest remains for non-visual hooks, controllers, and utility logic.
 
 ## Installation
 

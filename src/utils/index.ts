@@ -9,4 +9,13 @@ export { getIdentityLabel, getPasswordlessData, getValidationErrorsLabel } from 
 export { useUrlParams } from './url-params';
 export { getUrlErrors } from './get-url-errors';
 export { classifyTwoFactorError, getUserFriendlyErrorMessage } from './classify-two-factor-error';
+export { classifyDeviceError, deviceErrorOfType, DeviceApiError } from './classify-device-error';
+export {
+  authErrorFor,
+  authRedirectErrorMessage,
+  invitationLinkErrorMessage,
+  verificationLinkErrorMessage,
+  verificationRequestErrorMessage,
+} from './auth-error';
+export { getInvitationAuthChrome, type InvitationAuthIntent } from './invitation-auth-chrome';
 export { TwoFactorLoopPrevention } from './two-factor-loop-prevention';

@@ -1,16 +1,30 @@
-import { defineConfig } from 'vite';
+import path from 'node:path';
 import react from '@vitejs/plugin-react';
+import cssnano from 'cssnano';
+import { defineConfig } from 'vite';
 import dts from 'vite-plugin-dts';
 import EnvironmentPlugin from 'vite-plugin-environment';
-import path from 'node:path';
 import { dependencies, peerDependencies } from './package.json';
-import cssnano from 'cssnano';
 
 const baseExternal = [...Object.keys(dependencies), ...Object.keys(peerDependencies), 'react/jsx-runtime'];
 
-// https://vitejs.dev/config/
+// https://vite.dev/config/
 export default defineConfig({
-  plugins: [react(), dts(), EnvironmentPlugin('all')],
+  plugins: [
+    react(),
+    dts({
+      include: ['src'],
+      exclude: [
+        'src/app.tsx',
+        'src/main.tsx',
+        'src/test/**',
+        'src/**/__tests__/**',
+        'src/**/*.test.*',
+        'src/**/*.stories.*',
+      ],
+    }),
+    EnvironmentPlugin('all'),
+  ],
   resolve: { alias: { '@': path.resolve(__dirname, './src') } },
   build: {
     lib: {
@@ -18,7 +32,7 @@ export default defineConfig({
       formats: ['es', 'cjs'],
       fileName: (format, entryName) => `${entryName}.${format}.js`,
     },
-    rollupOptions: {
+    rolldownOptions: {
       external: (id) => {
         return baseExternal.includes(id);
       },

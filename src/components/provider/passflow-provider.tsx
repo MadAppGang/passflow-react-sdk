@@ -70,6 +70,50 @@ export const readParentChallengeIdFromURL = (): string | undefined => {
 const bootParentChallengeId = readParentChallengeIdFromURL();
 
 /**
+ * The RFC 8628 device verification page (`/oidc/device`) is the ONE auth surface
+ * that must never silently exchange an existing session. A device grant is
+ * approved only through the explicit authenticate → user_code confirmation →
+ * approve path (see `useDeviceVerify` + src/web/oidc/device_verify.go). Letting
+ * the exchange-on-mount probe solve a device parent would approve a grant with
+ * no §5.4 code check — the STORM-2372 device-code phishing attack. The server
+ * now refuses this at `/auth/session/exchange` too; this is the client half of
+ * the same guard, so the probe never even fires here.
+ */
+const isDeviceVerificationURL = (): boolean => typeof window !== 'undefined' && window.location.pathname === '/oidc/device';
+
+/**
+ * Set once the OIDC interceptor has started following a server-issued
+ * `redirect_url`. Module-level on purpose: it is read by the credential forms,
+ * which are siblings of the provider rather than children of a context it could
+ * publish through, and its lifetime is exactly one page — the navigation it
+ * records is what ends that page.
+ */
+let oidcRedirectFollowed = false;
+
+/**
+ * Has the OIDC interceptor already taken ownership of the post-login navigation?
+ *
+ * A credential form MUST NOT navigate after a successful login when this is
+ * true. Two navigations do not queue — the second cancels the first, and the
+ * first is the one that completes the OIDC flow:
+ *
+ *   1. The interceptor calls `window.location.assign(redirect_url)` to hand the
+ *      authorization code back to the RP (a CLI's `127.0.0.1:<port>/callback`,
+ *      a web RP's `redirect_uri`, …).
+ *   2. `window.location.assign` does not halt script execution, so the form's
+ *      success handler keeps running and sets `window.location.href` to the
+ *      app's default post-login page.
+ *   3. The browser drops the in-flight request from (1) and goes to (2).
+ *
+ * Whether (1) has already been delivered when (2) lands is pure scheduling, so
+ * this presents as a flake rather than a clean break. Measured against the CLI
+ * loopback flow (RFC 8252 §7.3): roughly a third of real browser sign-ins had
+ * the GET to the CLI's loopback port aborted mid-flight, and the CLI then sat
+ * waiting for a callback that had already been cancelled until it timed out.
+ */
+export const hasFollowedOIDCRedirect = (): boolean => oidcRedirectFollowed;
+
+/**
  * Install the global OIDC AuthFlow interceptor on `fetch` and
  * `XMLHttpRequest`. The interceptor:
  *
@@ -117,6 +161,11 @@ const useOIDCInterceptor = (parentChallengeId: string | undefined): void => {
       try {
         const obj = JSON.parse(raw) as { redirect_url?: unknown };
         if (typeof obj.redirect_url === 'string' && obj.redirect_url) {
+          // Claim the navigation BEFORE starting it. `assign` does not stop
+          // JavaScript: the credential form's own success handler runs right
+          // after this and would otherwise navigate on top of us. See
+          // `hasFollowedOIDCRedirect` for why that is fatal, not cosmetic.
+          oidcRedirectFollowed = true;
           window.location.assign(obj.redirect_url);
         }
       } catch {
@@ -268,6 +317,11 @@ const useSessionExchangeOnMount = (
 
   useEffect(() => {
     if (!parentChallengeId || attemptedRef.current) {
+      return;
+    }
+    // Never auto-exchange on the device verification page — that would approve
+    // a device grant with no user_code check (see isDeviceVerificationURL).
+    if (isDeviceVerificationURL()) {
       return;
     }
     // Wait until appId has been discovered before attempting the

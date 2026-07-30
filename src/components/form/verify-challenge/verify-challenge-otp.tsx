@@ -7,7 +7,7 @@ import { VerifyChallengeOTPManual } from './verify-challenge-otp-manual';
 import { VerifyChallengeOTPRedirect } from './verify-challenge-otp-redirect';
 
 import '@/styles/index.css';
-import { useUrlParams } from '@/utils';
+import { useUrlParams, verificationLinkErrorMessage } from '@/utils';
 
 type TVerifyChallengeOTP = {
   numInputs: number;
@@ -19,7 +19,7 @@ type TVerifyChallengeOTP = {
 const redirectSearchParamsVerifyChallengeOtpSchema = Yup.object().shape({
   appId: Yup.string().required(),
   challengeId: Yup.string().required(),
-  otp: Yup.string().optional(),
+  otp: Yup.string().required(),
 });
 
 const searchParamsVerifyChallengeOtpSchema = Yup.object().shape({
@@ -57,8 +57,9 @@ export const VerifyChallengeOTP: FC<TVerifyChallengeOTP> = ({
 
     try {
       redirectSearchParamsVerifyChallengeOtpSchema.validateSync(redirectParams, { abortEarly: false });
-    } catch (err) {
-      throw new Error('Invalid search params');
+    } catch (error) {
+      console.error('[passflow] invalid passwordless verification redirect', error);
+      throw new Error(verificationLinkErrorMessage);
     }
 
     const { appId, otp, challengeId } = redirectParams;
@@ -76,13 +77,17 @@ export const VerifyChallengeOTP: FC<TVerifyChallengeOTP> = ({
 
   try {
     searchParamsVerifyChallengeOtpSchema.validateSync(params, { abortEarly: false });
-  } catch (err) {
-    throw new Error('Invalid search params');
+  } catch (error) {
+    console.error('[passflow] invalid passwordless verification link', error);
+    throw new Error(verificationLinkErrorMessage);
   }
 
   const { challengeId, identity, identityValue, challengeType, type } = params;
 
-  if (!type) throw new Error('Invalid type params');
+  if (!type) {
+    console.error('[passflow] passwordless verification link is missing its flow type');
+    throw new Error(verificationLinkErrorMessage);
+  }
 
   return (
     <VerifyChallengeOTPManual
