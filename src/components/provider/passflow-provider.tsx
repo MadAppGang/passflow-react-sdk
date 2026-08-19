@@ -229,7 +229,7 @@ const useOIDCInterceptor = (parentChallengeId: string | undefined): void => {
         if (!meta?.isAuth) return;
         if (this.status >= 200 && this.status < 300) {
           // Server returns 200 + JSON body { redirect_url: "..." } when
-          // an AuthFlow parent (OIDC, federated, future step-up) needs
+          // an AuthFlow parent (OIDC, federated, future upgrade) needs
           // the SPA to navigate. See ADR-2.
           followRedirectURL(typeof this.responseText === 'string' ? this.responseText : null);
         }
