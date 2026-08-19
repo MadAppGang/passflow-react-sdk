@@ -2,6 +2,12 @@
 
 All notable changes to `@passflow/react` are documented in this file.
 
+## [0.8.2] - 2026-08-19
+
+### Fixed
+
+- `PassflowFlow` no longer gates its first render on a peer-dependency check that could never fail. The check dynamically imported `react-router-dom` to detect a missing install, but the same module is imported statically, so an absent dependency fails at module load and the handler was unreachable. Consumers previously rendered an empty first paint while the check resolved; that render is gone, along with the `INEFFECTIVE_DYNAMIC_IMPORT` build warning.
+
 ## [0.8.1] - 2026-07-28
 
 Version 0.8.1 is the first registry release after 0.7.1 and includes the previously unreleased 0.8.0 device-verification work.
@@ -28,4 +34,5 @@ Version 0.8.1 is the first registry release after 0.7.1 and includes the previou
 - Sign-in and sign-up user-facing errors no longer expose raw backend or redirect details.
 - Password, phone, icon, switch, provider, focus, loading, and validation states received accessibility and interaction fixes.
 
+[0.8.2]: https://github.com/MadAppGang/passflow-react-sdk/compare/v0.8.1...v0.8.2
 [0.8.1]: https://github.com/MadAppGang/passflow-react-sdk/compare/v0.7.1...v0.8.1
