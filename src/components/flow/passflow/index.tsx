@@ -1,8 +1,6 @@
 import { TwoFactorSetupFlow } from '@/components/flow/two-factor-setup';
 import { TwoFactorVerifyFlow } from '@/components/flow/two-factor-verify';
 import {
-  CLIBrowserAuth,
-  CLIQRAuth,
   ForgotPassword,
   ForgotPasswordSuccess,
   InvitationJoin,
@@ -182,8 +180,6 @@ const PassflowWrapper: FC<PassflowProps> = ({
               />
             }
           />
-          <Route path={routes.cli_browser.path} element={<CLIBrowserAuth />} />
-          <Route path={routes.cli_qr.path} element={<CLIQRAuth />} />
           <Route
             path='*'
             element={

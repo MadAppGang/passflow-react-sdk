@@ -10,6 +10,3 @@ export * from './invitation-join';
 export * from './two-factor-verify';
 export * from './two-factor-setup';
 export * from './two-factor-challenge';
-// CLI Authentication forms
-export * from './cli-browser-auth';
-export * from './cli-qr-auth';

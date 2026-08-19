@@ -38,10 +38,4 @@ export const routes = {
   two_factor_setup_magic_link: {
     path: '/two-factor-setup-magic-link/:token',
   },
-  cli_browser: {
-    path: '/cli/browser/:sessionId',
-  },
-  cli_qr: {
-    path: '/cli/auth/:sessionId',
-  },
 };

@@ -28,8 +28,6 @@ export {
   type UseSessionExpiredResult,
   type SessionExpiredReason,
 } from './use-session-expired';
-// CLI authentication hooks
-export { useCLIAuth, type UseCLIAuthProps, type CLIAuthState } from './use-cli-auth';
 // RFC 8628 device / QR verification
 export {
   useDeviceVerify,
