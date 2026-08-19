@@ -2,6 +2,12 @@
 
 All notable changes to `@passflow/react` are documented in this file.
 
+## [0.8.3] - 2026-08-19
+
+### Removed
+
+- The dead first-generation CLI authentication UI: the `cli-browser-auth`, `cli-qr-auth`, and `cli-auth` form components and the `useCLIAuth` hook, along with their exports and the `cli_browser` / `cli_qr` routes. They drove the server's superseded `/cli/auth` flow, whose completion endpoint was disabled server-side as a token-injection risk, so the UI could not complete a login. CLI authentication is served by the RFC 8628 device verification flow (`DeviceVerifyFlow` / `useDeviceVerify`), which is unaffected.
+
 ## [0.8.2] - 2026-08-19
 
 ### Fixed
