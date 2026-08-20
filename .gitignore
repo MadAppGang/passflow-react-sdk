@@ -58,3 +58,17 @@ test-results
 ai-docs/
 
 .mnemex/
+
+# Added by claudeup
+# Runtime lock files are local process state and should be regenerated locally.
+.claude/scheduled_tasks.lock
+# Claude cache contents are local generated data and can grow quickly.
+.claude/cache/
+# Statusline worktree markers are local runtime state.
+.claude/.statusline-worktree-*
+# A managed rule says this path should stay out of git.
+.claude/_profiles/
+# Local GTD session artifacts are personal workflow state.
+gtd/sessions/
+# Local agent workspaces and runtime artifacts should stay out of team history.
+.agents/
