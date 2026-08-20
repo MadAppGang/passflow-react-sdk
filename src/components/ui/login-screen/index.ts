@@ -13,6 +13,8 @@ export type {
   LoginDeviceApprovalState,
   LoginInvitationState,
   LoginGeneralErrorState,
+  LoginConsentState,
+  LoginConsentScope,
   LoginStatusState,
   LoginScreenNotice as LoginScreenNoticeProps,
   LoginScreenLink,

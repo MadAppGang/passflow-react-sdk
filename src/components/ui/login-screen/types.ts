@@ -144,6 +144,32 @@ export type LoginGeneralErrorState = {
   onAction: () => void;
 };
 
+export type LoginConsentScope = {
+  scope: string;
+  label: string;
+  description?: string;
+  granted: boolean;
+};
+
+export type LoginConsentState = {
+  kind: 'consent';
+  appName: string;
+  scopes: LoginConsentScope[];
+  prompt?: string;
+  busy?: boolean;
+  error?: string | null;
+  allowLabel?: string;
+  denyLabel?: string;
+  busyLabel?: string;
+  testId?: string;
+  allowTestId?: string;
+  denyTestId?: string;
+  appNameTestId?: string;
+  onToggleScope: (scope: string) => void;
+  onAllow: () => void;
+  onDeny: () => void;
+};
+
 export type LoginStatusState = {
   kind: 'status';
   tone: 'success' | 'error' | 'disabled';
@@ -166,6 +192,7 @@ export type LoginScreenState =
   | LoginDeviceApprovalState
   | LoginInvitationState
   | LoginGeneralErrorState
+  | LoginConsentState
   | LoginStatusState;
 
 export type LoginScreenProps = {

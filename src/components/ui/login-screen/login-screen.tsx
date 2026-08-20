@@ -1,5 +1,6 @@
 import type { FC } from 'react';
 import { LoginCodeEntry } from './code-entry';
+import { LoginConsent } from './consent';
 import { LoginCredentials } from './credentials';
 import { LoginDeviceApproval } from './device-approval';
 import { LoginGeneralError } from './general-error';
@@ -24,6 +25,8 @@ export const LoginScreen: FC<LoginScreenProps> = ({ chrome, state }) => {
         return <LoginInvitation {...state} />;
       case 'general-error':
         return <LoginGeneralError {...state} />;
+      case 'consent':
+        return <LoginConsent {...state} />;
       case 'status':
         return <LoginStatus {...state} />;
     }
