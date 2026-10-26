@@ -12,6 +12,8 @@ import type { LoginConsentState } from './types';
  * button submits the subset that is still on, so "Allow" never grants more than
  * what is visible on screen. Deny is a peer of Allow, not a hidden link: a
  * consent screen where refusing is harder than accepting is a dark pattern.
+ * For the same reason neither button takes initial focus: a bare Enter on a
+ * freshly loaded screen must not grant every requested scope.
  */
 export const LoginConsent: FC<LoginConsentState> = ({
   appName,
@@ -53,15 +55,7 @@ export const LoginConsent: FC<LoginConsentState> = ({
     {busy ? <LoginProgress message={busyLabel} /> : null}
 
     <div className='passflow-consent-actions'>
-      <Button
-        size='big'
-        variant='primary'
-        type='button'
-        autoFocus={!busy}
-        data-testid={allowTestId}
-        disabled={busy}
-        onClick={onAllow}
-      >
+      <Button size='big' variant='primary' type='button' data-testid={allowTestId} disabled={busy} onClick={onAllow}>
         {allowLabel}
       </Button>
       <Button size='big' variant='outlined' type='button' data-testid={denyTestId} disabled={busy} onClick={onDeny}>
