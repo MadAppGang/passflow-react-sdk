@@ -2,6 +2,12 @@
 
 All notable changes to `@passflow/react` are documented in this file.
 
+## [0.9.1] - 2026-10-26
+
+### Fixed
+
+- The consent screen no longer auto-focuses Allow. Pressing Enter on a freshly loaded `ConsentFlow` previously granted every requested scope; neither button takes initial focus now, so Deny stays a true peer of Allow.
+
 ## [0.9.0] - 2026-10-26
 
 ### Added
