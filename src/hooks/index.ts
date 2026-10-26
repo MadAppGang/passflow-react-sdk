@@ -36,3 +36,12 @@ export {
   type DeviceVerifyInfo,
   type DeviceUIMode,
 } from './use-device-verify';
+// OIDC consent screen
+export {
+  useConsent,
+  type UseConsentProps,
+  type ConsentStatus,
+  type ConsentInfo,
+  type ConsentError,
+  type ConsentScopeMetadata,
+} from './use-consent';
