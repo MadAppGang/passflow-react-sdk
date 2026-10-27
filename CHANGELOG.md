@@ -2,6 +2,24 @@
 
 All notable changes to `@passflow/react` are documented in this file.
 
+## [0.9.1] - 2026-10-26
+
+### Fixed
+
+- The consent screen no longer auto-focuses Allow. Pressing Enter on a freshly loaded `ConsentFlow` previously granted every requested scope; neither button takes initial focus now, so Deny stays a true peer of Allow.
+
+## [0.9.0] - 2026-10-26
+
+### Added
+
+- `ConsentFlow`, the OIDC consent screen as an SDK flow. Mount it on `/web/consent`; it composes the same `LoginScreen` as sign-in, so consent no longer drifts from the rest of the hosted pages. It is standalone and needs no `PassflowProvider`: the staged request is addressed by `parent_challenge_id` on the URL and read with a same-origin cookie.
+- `useConsent` and its types (`UseConsentProps`, `ConsentStatus`, `ConsentInfo`, `ConsentError`, `ConsentScopeMetadata`) for hosts that render their own consent UI. Decisions carry the server's CSRF token and honour both `query` and `form_post` response modes.
+- A `consent` state on `LoginScreen` (`LoginConsentState`, `LoginConsentScope`): per-scope switches that all start granted, with Allow and Deny as peer actions.
+
+### Fixed
+
+- `Switch` now generates a unique input id. Every instance previously used the id `switch`, so with more than one on a page each label resolved to the first input and clicking a later row toggled the first. Pass `id` to override.
+
 ## [0.8.3] - 2026-08-19
 
 ### Removed

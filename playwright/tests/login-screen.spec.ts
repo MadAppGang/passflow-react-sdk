@@ -372,3 +372,110 @@ test.describe('LoginScreen Storybook catalog', () => {
     await expect(page.getByRole('alert')).toContainText("That code isn't right");
   });
 });
+
+test.describe('Consent screen', () => {
+  const scopeLabels = ['Verify your identity', 'View your profile', 'View your email address', 'Stay signed in'];
+
+  test('names the requesting app and lists every scope as granted', async ({ page }) => {
+    await openStory(page, 'components-loginscreen--consent-default');
+
+    await expect(page.getByRole('heading', { name: 'Allow Acme Notes to access your account?' })).toBeVisible();
+    await expect(page.getByTestId('consent-app-name')).toHaveText('Acme Notes');
+    for (const label of scopeLabels) {
+      await expect(page.getByRole('checkbox', { name: label })).toBeChecked();
+    }
+    await expect(page.getByText('Your name and profile picture.')).toBeVisible();
+  });
+
+  test('Allow and Deny are peers and neither takes initial focus', async ({ page }) => {
+    for (const viewport of [
+      { width: 715, height: 786 },
+      { width: 390, height: 844 },
+    ]) {
+      await page.setViewportSize(viewport);
+      await openStory(page, 'components-loginscreen--consent-default');
+
+      const allow = page.getByRole('button', { name: 'Allow' });
+      const deny = page.getByRole('button', { name: 'Deny' });
+      await expect(allow).toBeEnabled();
+      await expect(deny).toBeEnabled();
+      await expect(allow).not.toBeFocused();
+      await expect(deny).not.toBeFocused();
+
+      const allowBox = await allow.boundingBox();
+      const denyBox = await deny.boundingBox();
+      expect(allowBox).not.toBeNull();
+      expect(denyBox).not.toBeNull();
+      if (!allowBox || !denyBox) throw new Error('expected Allow and Deny bounds');
+
+      expect(denyBox.height).toBe(allowBox.height);
+      expect(denyBox.width).toBe(allowBox.width);
+      expect(denyBox.y + denyBox.height).toBeLessThanOrEqual(viewport.height);
+    }
+  });
+
+  test('each label toggles its own scope and no other', async ({ page }) => {
+    await openStory(page, 'components-loginscreen--consent-interactive');
+
+    // The third row: with a shared input id every label resolved to the FIRST input.
+    await page.getByText('View your email address').click();
+    await expect(page.getByRole('checkbox', { name: 'View your email address' })).not.toBeChecked();
+    for (const label of ['Verify your identity', 'View your profile', 'Stay signed in']) {
+      await expect(page.getByRole('checkbox', { name: label })).toBeChecked();
+    }
+
+    await page.getByText('View your email address').click();
+    await expect(page.getByRole('checkbox', { name: 'View your email address' })).toBeChecked();
+  });
+
+  test('every scope switch has a distinct id', async ({ page }) => {
+    await openStory(page, 'components-loginscreen--consent-default');
+
+    const ids = await page.getByRole('checkbox').evaluateAll((inputs) => inputs.map((input) => input.id));
+    expect(ids).toHaveLength(scopeLabels.length);
+    expect(new Set(ids).size).toBe(ids.length);
+    expect(ids.every(Boolean)).toBe(true);
+  });
+
+  test('a scope that is switched off renders unchecked', async ({ page }) => {
+    await openStory(page, 'components-loginscreen--consent-scope-switched-off');
+
+    await expect(page.getByRole('checkbox', { name: 'View your profile' })).not.toBeChecked();
+    await expect(page.getByRole('checkbox', { name: 'Verify your identity' })).toBeChecked();
+  });
+
+  test('a request for no scopes says so and can still be decided', async ({ page }) => {
+    await openStory(page, 'components-loginscreen--consent-no-scopes');
+
+    await expect(page.getByText('This application is not requesting access to any of your data.')).toBeVisible();
+    await expect(page.getByRole('checkbox')).toHaveCount(0);
+    await expect(page.getByRole('button', { name: 'Allow' })).toBeEnabled();
+    await expect(page.getByRole('button', { name: 'Deny' })).toBeEnabled();
+  });
+
+  test('busy locks every control and announces progress', async ({ page }) => {
+    await openStory(page, 'components-loginscreen--consent-busy');
+
+    await expect(page.getByTestId('consent-screen')).toHaveAttribute('aria-busy', 'true');
+    await expect(page.getByRole('status').filter({ hasText: 'Submitting…' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Allow' })).toBeDisabled();
+    await expect(page.getByRole('button', { name: 'Deny' })).toBeDisabled();
+    for (const label of scopeLabels) {
+      await expect(page.getByRole('checkbox', { name: label })).toBeDisabled();
+    }
+  });
+
+  test('a failed decision is announced and the controls stay usable', async ({ page }) => {
+    await openStory(page, 'components-loginscreen--consent-error');
+
+    await expect(page.getByRole('alert')).toContainText('Could not submit your decision. Please try again.');
+    await expect(page.getByRole('button', { name: 'Allow' })).toBeEnabled();
+    await expect(page.getByRole('button', { name: 'Deny' })).toBeEnabled();
+  });
+
+  test("the app's own logo replaces the Passflow mark", async ({ page }) => {
+    await openStory(page, 'components-loginscreen--consent-app-logo');
+
+    await expect(page.getByRole('img', { name: 'Acme Notes logo' })).toBeVisible();
+  });
+});

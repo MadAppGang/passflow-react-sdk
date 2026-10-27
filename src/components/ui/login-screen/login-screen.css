@@ -275,3 +275,43 @@
   align-items: center;
   gap: var(--passflow-spacing-3);
 }
+
+.passflow-consent-scopes {
+  width: 100%;
+  max-width: 384px;
+  margin: 0 auto;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--passflow-spacing-2);
+}
+
+.passflow-consent-scope {
+  box-sizing: border-box;
+  padding: var(--passflow-spacing-3) var(--passflow-spacing-4);
+  border: 1px solid var(--passflow-divider-color);
+  border-radius: 6px;
+  background-color: var(--passflow-card-color);
+  display: flex;
+  flex-direction: column;
+  gap: var(--passflow-spacing-1);
+  text-align: left;
+}
+
+.passflow-consent-scope-description {
+  margin: 0;
+  color: var(--passflow-secondary-text-color);
+  font-size: var(--passflow-caption);
+  font-weight: var(--passflow-normal);
+  line-height: 1.5;
+}
+
+.passflow-consent-actions {
+  width: 100%;
+  max-width: 336px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--passflow-spacing-2);
+}

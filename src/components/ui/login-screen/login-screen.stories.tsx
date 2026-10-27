@@ -1,9 +1,10 @@
 import { deviceErrorOfType } from '@/utils';
 import { type PassflowPasswordPolicySettings, Providers } from '@passflow/core';
 import type { Meta, StoryObj } from '@storybook/react-vite';
+import { type FC, useState } from 'react';
 import { expect, fn, userEvent, within } from 'storybook/test';
 import { LoginScreen } from './login-screen';
-import type { LoginCredentialsState, LoginMethodConfig, LoginScreenProps } from './types';
+import type { LoginConsentState, LoginCredentialsState, LoginMethodConfig, LoginScreenProps } from './types';
 
 const passwordPolicy: PassflowPasswordPolicySettings = {
   restrict_min_password_length: true,
@@ -34,6 +35,9 @@ const handlers = {
   onCreateAccount: fn(),
   onCode: fn(),
   onRetry: fn(),
+  onToggleScope: fn(),
+  onAllow: fn(),
+  onDeny: fn(),
 };
 
 type MethodOptions = {
@@ -674,4 +678,92 @@ export const CLIAuthFailed: Story = {
     },
     { title: 'Authentication failed', subtitle: cliChrome.subtitle },
   ),
+};
+
+const consentChrome = {
+  title: 'Allow Acme Notes to access your account?',
+  subtitle: 'Choose what this application may use, then allow or deny.',
+};
+
+const consentScopes: LoginConsentState['scopes'] = [
+  {
+    scope: 'openid',
+    label: 'Verify your identity',
+    description: 'Confirm who you are using your Passflow account.',
+    granted: true,
+  },
+  { scope: 'profile', label: 'View your profile', description: 'Your name and profile picture.', granted: true },
+  { scope: 'email', label: 'View your email address', description: 'The email address on your account.', granted: true },
+  { scope: 'offline_access', label: 'Stay signed in', granted: true },
+];
+
+const consent = (overrides: Partial<LoginConsentState> = {}): LoginConsentState => ({
+  kind: 'consent',
+  appName: 'Acme Notes',
+  scopes: consentScopes,
+  testId: 'consent-screen',
+  allowTestId: 'consent-allow',
+  denyTestId: 'consent-deny',
+  appNameTestId: 'consent-app-name',
+  onToggleScope: handlers.onToggleScope,
+  onAllow: handlers.onAllow,
+  onDeny: handlers.onDeny,
+  ...overrides,
+});
+
+// A 64px brand-coloured square: stands in for an application's own logo without a network request.
+const consentLogo =
+  "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='64'%3E%3Crect width='64' height='64' rx='14' fill='%232563eb'/%3E%3C/svg%3E";
+
+export const ConsentDefault: Story = {
+  args: story(consent(), consentChrome),
+};
+
+export const ConsentScopeSwitchedOff: Story = {
+  args: story(
+    consent({ scopes: consentScopes.map((item) => ({ ...item, granted: item.scope !== 'profile' })) }),
+    consentChrome,
+  ),
+};
+
+export const ConsentNoScopes: Story = {
+  args: story(consent({ scopes: [] }), consentChrome),
+};
+
+export const ConsentBusy: Story = {
+  args: story(consent({ busy: true }), consentChrome),
+};
+
+export const ConsentError: Story = {
+  args: story(consent({ error: 'Could not submit your decision. Please try again.' }), consentChrome),
+};
+
+export const ConsentAppLogo: Story = {
+  args: story(consent(), { ...consentChrome, customLogo: consentLogo, customLogoAlt: 'Acme Notes logo' }),
+};
+
+// The static stories above fix `granted`; this one owns it, so the switches can actually be driven.
+const ConsentPlayground: FC = () => {
+  const [granted, setGranted] = useState(() => new Set(consentScopes.map((item) => item.scope)));
+
+  return (
+    <LoginScreen
+      chrome={consentChrome}
+      state={consent({
+        scopes: consentScopes.map((item) => ({ ...item, granted: granted.has(item.scope) })),
+        onToggleScope: (scope) =>
+          setGranted((previous) => {
+            const next = new Set(previous);
+            if (next.has(scope)) next.delete(scope);
+            else next.add(scope);
+            return next;
+          }),
+      })}
+    />
+  );
+};
+
+export const ConsentInteractive: Story = {
+  args: story(consent(), consentChrome),
+  render: () => <ConsentPlayground />,
 };

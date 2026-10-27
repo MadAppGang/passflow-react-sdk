@@ -20,12 +20,33 @@ describe('Switch', () => {
     expect(checkbox).toHaveAttribute('type', 'checkbox');
   });
 
-  it('renders with correct id', () => {
+  it('renders with an id', () => {
     const handleChange = vi.fn();
     render(<Switch label='Test Switch' checked={false} onChange={handleChange} />);
 
     const checkbox = screen.getByRole('checkbox');
-    expect(checkbox).toHaveAttribute('id', 'switch');
+    expect(checkbox.getAttribute('id')).toBeTruthy();
+  });
+
+  it('honours an explicit id', () => {
+    const handleChange = vi.fn();
+    render(<Switch label='Test Switch' checked={false} id='scope-profile' onChange={handleChange} />);
+
+    expect(screen.getByRole('checkbox')).toHaveAttribute('id', 'scope-profile');
+  });
+
+  it('gives each switch a unique id so labels do not collide', () => {
+    const handleChange = vi.fn();
+    render(
+      <>
+        <Switch label='First' checked={false} onChange={handleChange} />
+        <Switch label='Second' checked={false} onChange={handleChange} />
+      </>,
+    );
+
+    const [first, second] = screen.getAllByRole('checkbox');
+    expect(first.getAttribute('id')).toBeTruthy();
+    expect(first.getAttribute('id')).not.toBe(second.getAttribute('id'));
   });
 
   it('renders unchecked state correctly', () => {
@@ -142,7 +163,8 @@ describe('Switch', () => {
     const { container } = render(<Switch label='Test Switch' checked={false} onChange={handleChange} />);
 
     const label = container.querySelector('label');
-    expect(label).toHaveAttribute('for', 'switch');
+    const checkbox = screen.getByRole('checkbox');
+    expect(label).toHaveAttribute('for', checkbox.getAttribute('id'));
   });
 
   it('can be clicked via label', async () => {
