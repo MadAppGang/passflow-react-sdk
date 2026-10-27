@@ -2,6 +2,25 @@
 
 All notable changes to `@passflow/react` are documented in this file.
 
+## [0.10.0] - 2026-10-28
+
+### Added
+
+- `UpgradeDialog`, the UI for an assurance upgrade (step-up authentication). A request answered with an RFC 9470 challenge elevates the session and replays itself; this is what the user sees while that happens. It is a library component with a catalogued Storybook story per supported state, including the terminal ones: attempts exhausted, a session changed under the user, a retryable transport failure versus a final one, and an elevation that succeeded only to be challenged again.
+- `useUpgrade` and `UpgradeProvider`. The provider wires the dialog to a configured `Passflow` instance and requires `@passflow/core` 0.15.0 or later; the hook reads the context and installs nothing, so a host rendering its own prompt can use it alone. A cancelled prompt resolves `null` rather than throwing.
+- `Spinner`, with its own story.
+- A `description` prop on the `option` button variant, exposed as an accessible description rather than folded into the name.
+
+### Fixed
+
+- The `option` button folded its hint into the accessible name, which read `"Authenticator appEnter the code from your app"`. The name is now pinned to the label through `aria-labelledby`, with the hint exposed through a merged `aria-describedby`.
+- Eight Storybook accessibility audits were scoped to `#storybook-root`, which Radix's `Dialog.Portal` leaves empty and marks `aria-hidden`. They had been passing vacuously, auditing nothing at all. They now scope to `[role="dialog"]` and fail on an empty render.
+- `pnpm test` no longer fails with `browserType.launch: Executable doesn't exist` after a `@playwright/test` bump. The script installs its browser first, which costs under a second when one is already present.
+
+### Removed
+
+- `upgrade-required-placeholder.tsx`, the internal stand-in the real dialog replaces. It was never exported from the package entry.
+
 ## [0.9.1] - 2026-10-26
 
 ### Fixed
