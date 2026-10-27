@@ -1,0 +1,39 @@
+/*
+ * The spinner primitive owns its own geometry.
+ *
+ * A ring's diameter and stroke are computed geometry belonging to the
+ * primitive that draws it — they are not theme values, and they are not for a
+ * consuming component to restate. Colour comes from `--passflow-*` tokens; the
+ * two sizes are the only ones that exist, and each declares its diameter and
+ * stroke as local custom properties so the rule below stays single.
+ */
+
+.passflow-spinner {
+  --passflow-spinner-diameter: 26px;
+  --passflow-spinner-stroke: 3px;
+
+  flex: 0 0 auto;
+  width: var(--passflow-spinner-diameter);
+  height: var(--passflow-spinner-diameter);
+  border: var(--passflow-spinner-stroke) solid var(--passflow-grey-three);
+  border-top-color: var(--passflow-primary-color);
+  border-radius: 50%;
+  animation: passflow-spinner-spin 0.8s linear infinite;
+}
+
+.passflow-spinner--small {
+  --passflow-spinner-diameter: 18px;
+  --passflow-spinner-stroke: 2px;
+}
+
+@keyframes passflow-spinner-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .passflow-spinner {
+    animation-duration: 3s;
+  }
+}

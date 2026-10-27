@@ -1,0 +1,158 @@
+/*
+ * Canonical composition for UpgradeDialog.
+ *
+ * The dialog chrome (overlay, positioning, header, title, description) is owned
+ * by `.passflow-dialog-*` in src/styles/index.css; everything here is the
+ * upgrade dialog's own surface and content. Colour, typography, spacing and
+ * surfaces resolve through `--passflow-*` tokens only.
+ */
+
+.passflow-upgrade-dialog {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: var(--passflow-spacing-6);
+  width: min(var(--passflow-surface-width), calc(100vw - var(--passflow-spacing-6) * 2));
+  max-height: calc(100dvh - var(--passflow-spacing-6) * 2);
+  overflow-y: auto;
+  padding: var(--passflow-spacing-6);
+  color: var(--passflow-text-color);
+  background-color: var(--passflow-card-color);
+  border-radius: var(--passflow-radius);
+  font-family: var(--passflow-font-family);
+  /*
+   * No elevation shadow: the dim dialog overlay already separates the modal
+   * from the page, and a raw colour literal here would be a second source of
+   * truth for surfaces. If elevation is ever wanted, it arrives as a
+   * `--passflow-dialog-shadow` theme token, not as a value in this file.
+   */
+}
+
+.passflow-upgrade-dialog__header {
+  display: flex;
+  flex-direction: column;
+  gap: var(--passflow-spacing-2);
+  text-align: left;
+}
+
+.passflow-upgrade-dialog__form,
+.passflow-upgrade-dialog__status {
+  display: flex;
+  flex-direction: column;
+  gap: var(--passflow-spacing-4);
+  width: 100%;
+}
+
+.passflow-upgrade-dialog__factor {
+  display: flex;
+  flex-direction: column;
+  gap: var(--passflow-spacing-1);
+  padding: var(--passflow-spacing-3);
+  background-color: var(--passflow-input-background-color);
+  border-radius: var(--passflow-radius);
+}
+
+.passflow-upgrade-dialog__factor-label {
+  font-size: var(--passflow-body-1);
+  font-weight: var(--passflow-semibold);
+  color: var(--passflow-text-color);
+}
+
+.passflow-upgrade-dialog__factor-hint,
+.passflow-upgrade-dialog__status-detail {
+  font-size: var(--passflow-caption);
+  font-weight: var(--passflow-normal);
+  color: var(--passflow-secondary-text-color);
+  margin: 0;
+}
+
+.passflow-upgrade-dialog__field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--passflow-spacing-2);
+  width: 100%;
+}
+
+.passflow-upgrade-dialog__actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--passflow-spacing-2);
+  width: 100%;
+}
+
+.passflow-upgrade-dialog__alternatives {
+  display: flex;
+  flex-direction: column;
+  gap: var(--passflow-spacing-2);
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.passflow-upgrade-dialog__alternative {
+  width: 100%;
+}
+
+/*
+ * An alternative row is `Button variant='option'`: its multi-line geometry,
+ * its typography and its pressed state live in the button library
+ * (`.passflow-button--option` in src/styles/index.css). Nothing about a
+ * button's appearance is described here.
+ */
+
+.passflow-upgrade-dialog__status-head {
+  display: flex;
+  align-items: center;
+  gap: var(--passflow-spacing-2);
+}
+
+.passflow-upgrade-dialog__status-message {
+  font-size: var(--passflow-body-1);
+  font-weight: var(--passflow-medium);
+}
+
+.passflow-upgrade-dialog__status-head--success .passflow-upgrade-dialog__status-message {
+  color: var(--passflow-success);
+}
+
+.passflow-upgrade-dialog__status-head--problem .passflow-upgrade-dialog__status-message {
+  color: var(--passflow-warning);
+}
+
+.passflow-upgrade-dialog__status-head--neutral .passflow-upgrade-dialog__status-message,
+.passflow-upgrade-dialog__status-head--working .passflow-upgrade-dialog__status-message {
+  color: var(--passflow-text-color);
+}
+
+.passflow-upgrade-dialog__bars {
+  display: flex;
+  flex-direction: column;
+  gap: var(--passflow-spacing-1);
+  padding: var(--passflow-spacing-3);
+  background-color: var(--passflow-input-background-color);
+  border-radius: var(--passflow-radius);
+}
+
+.passflow-upgrade-dialog__bar {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--passflow-spacing-3);
+  font-size: var(--passflow-caption);
+}
+
+.passflow-upgrade-dialog__bar-term {
+  color: var(--passflow-secondary-text-color);
+  font-weight: var(--passflow-medium);
+}
+
+.passflow-upgrade-dialog__bar-value {
+  color: var(--passflow-text-color);
+  font-weight: var(--passflow-semibold);
+}
+
+/*
+ * The working state's activity ring is `Spinner size='small'`: its diameter,
+ * its stroke and its animation live in the spinner primitive that owns them
+ * (`src/components/ui/spinner`). No geometry for it is described here.
+ */

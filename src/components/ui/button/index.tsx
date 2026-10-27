@@ -9,6 +9,7 @@ import {
   type MouseEvent,
   type PropsWithChildren,
   useEffect,
+  useId,
   useState,
 } from 'react';
 import '@/styles/index.css';
@@ -33,12 +34,23 @@ export const Ripple: FC<RippleProps> = ({ size, x, y }) => {
 type TButton = PropsWithChildren &
   ButtonHTMLAttributes<HTMLButtonElement> & {
     size: 'small' | 'medium' | 'big';
-    variant: 'primary' | 'secondary' | 'outlined' | 'warning' | 'clean' | 'provider' | 'dark';
+    variant: 'primary' | 'secondary' | 'outlined' | 'warning' | 'clean' | 'provider' | 'dark' | 'option';
     type: 'button' | 'submit' | 'reset';
     withIcon?: boolean;
     asIcon?: boolean;
     className?: string;
     withRipple?: boolean;
+    /**
+     * The `option` variant's second line — the hint under the label. Rendered
+     * only by that variant, which owns the two-line geometry.
+     */
+    description?: string;
+    /**
+     * Toggle state for the `option` variant: mirrored to `aria-pressed` and
+     * styled by the variant itself, so no call site has to describe what
+     * "selected" looks like.
+     */
+    pressed?: boolean;
   };
 
 export const Button: FC<TButton> = ({
@@ -51,9 +63,20 @@ export const Button: FC<TButton> = ({
   className = '',
   children,
   withRipple = true,
+  description,
+  pressed,
+  'aria-describedby': ariaDescribedBy,
   ...rest
 }) => {
   const [ripples, setRipples] = useState<JSX.Element[]>();
+  // The `option` variant renders two lines inside one button. Without this, the
+  // computed accessible name is "label + hint": the hint is a DESCRIPTION, so
+  // the name is pinned to the label span and the hint is referenced instead.
+  const optionId = useId();
+  const optionLabelId = `${optionId}-label`;
+  const optionHintId = `${optionId}-hint`;
+  const isDescribedOption = variant === 'option' && Boolean(description);
+  const describedBy = [isDescribedOption ? optionHintId : undefined, ariaDescribedBy].filter(Boolean).join(' ') || undefined;
 
   const styles = {
     'passflow-button passflow-button--big': size === 'big',
@@ -66,6 +89,7 @@ export const Button: FC<TButton> = ({
     'passflow-button--clean': variant === 'clean',
     'passflow-button--provider': variant === 'provider',
     'passflow-button--dark': variant === 'dark',
+    'passflow-button--option': variant === 'option',
     'passflow-button--with-icon': withIcon,
     'passflow-button--as-icon': asIcon,
   };
@@ -94,8 +118,29 @@ export const Button: FC<TButton> = ({
   }, [ripples]);
 
   return (
-    <button className={cn(styles, className)} type={type} onClick={handleClick} {...rest}>
-      {children}
+    <button
+      className={cn(styles, className)}
+      type={type}
+      aria-pressed={pressed}
+      aria-labelledby={isDescribedOption ? optionLabelId : undefined}
+      aria-describedby={describedBy}
+      onClick={handleClick}
+      {...rest}
+    >
+      {variant === 'option' ? (
+        <>
+          <span id={isDescribedOption ? optionLabelId : undefined} className='passflow-button__option-label'>
+            {children}
+          </span>
+          {description ? (
+            <span id={optionHintId} className='passflow-button__option-hint'>
+              {description}
+            </span>
+          ) : null}
+        </>
+      ) : (
+        children
+      )}
       {withRipple && (
         <div aria-hidden className='passflow-ripple-container'>
           {ripples}

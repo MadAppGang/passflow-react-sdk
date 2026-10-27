@@ -1,14 +1,28 @@
 {
   "enabledPlugins": {
-    "code-analysis@mag-claude-plugins": true,
-    "orchestration@mag-claude-plugins": true,
-    "dev@mag-claude-plugins": true,
-    "frontend-design@claude-plugins-official": true
+    "code-analysis@magus": true,
+    "dev@magus": true,
+    "frontend-design@claude-plugins-official": true,
+    "mnemex@magus": true,
+    "claudish@magus": true,
+    "multimodel@magus": true,
+    "go@magus": true,
+    "setup@magus": true,
+    "browser-use@magus": true,
+    "terminal@magus": true,
+    "gopls-lsp@claude-plugins-official": true,
+    "serena@claude-plugins-official": true
   },
   "installedPluginVersions": {
-    "code-analysis@mag-claude-plugins": "3.0.0",
-    "orchestration@mag-claude-plugins": "0.10.0",
-    "dev@mag-claude-plugins": "1.20.0",
-    "frontend-design@claude-plugins-official": "0.0.0"
+    "code-analysis@magus": "5.4.1",
+    "dev@magus": "4.3.0",
+    "frontend-design@claude-plugins-official": "0.0.0",
+    "multimodel@magus": "3.8.0",
+    "go@magus": "0.1.1",
+    "setup@magus": "1.0.0",
+    "browser-use@magus": "1.4.1",
+    "terminal@magus": "4.1.6",
+    "gopls-lsp@claude-plugins-official": "1.0.0",
+    "serena@claude-plugins-official": "0.0.0"
   }
 }

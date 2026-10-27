@@ -45,3 +45,5 @@ export {
   type ConsentError,
   type ConsentScopeMetadata,
 } from './use-consent';
+// Assurance upgrade (step-up) — reads UpgradeContext, installs nothing
+export { useUpgrade, type UseUpgradeResult } from './use-upgrade';

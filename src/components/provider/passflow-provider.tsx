@@ -1,3 +1,4 @@
+import { UpgradeProvider, type UpgradeProviderProps } from '@/components/provider/upgrade-provider';
 import {
   AuthProvider,
   type NavigateFunction,
@@ -8,14 +9,43 @@ import {
   initialState,
   passflowReducer,
 } from '@/context';
-import { Passflow, type PassflowConfig } from '@passflow/core';
+import { FETCH_PRIORITY_OIDC, Passflow, type PassflowConfig, registerFetchMiddleware } from '@passflow/core';
 import React, { type FC, type ReactNode, useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react';
 import '@/styles/index.css';
+
+/**
+ * The assurance-upgrade options a consumer may set on `PassflowProvider`.
+ *
+ * `children`, `enabled` and `backend` are owned by `PassflowProvider` itself:
+ * `backend` is a top-level prop (§13.5 — "where your API is" is the headline
+ * act, not a nested detail) and `enabled` is derived from `upgrade`/`backend`
+ * below, so there is exactly one source for each.
+ */
+export type PassflowUpgradeOptions = Omit<UpgradeProviderProps, 'children' | 'enabled' | 'backend'>;
 
 type PassflowProviderProps = PassflowConfig & {
   children: ReactNode;
   navigate?: NavigateFunction;
   router?: RouterType;
+  /**
+   * Where the customer's own API is — domain 2 of §13.5's two-domain
+   * interception model. Nothing outside this and Passflow's own API is ever
+   * observed, and there is no allow-all opt-in. `string | string[]`, an origin
+   * or a same-origin path prefix (`'/api'`).
+   */
+  backend?: string | string[];
+  /**
+   * Automatic assurance upgrade (step-up). `undefined` ⇒ **off**, so no
+   * existing consumer changes behaviour on upgrade. `true` ⇒ on with
+   * defaults; an object ⇒ on with those options; `false` ⇒ off even when
+   * `backend` is declared.
+   *
+   * Declaring `backend` also turns it on: naming where your API is has no
+   * other meaning, and §13.5's acceptance configuration is `backend` plus one
+   * attached client. The global `window.fetch` patch is a separate, explicit
+   * act (`upgrade={{ interceptFetch: true }}`) and stays off by default.
+   */
+  upgrade?: boolean | PassflowUpgradeOptions;
 };
 
 /**
@@ -174,34 +204,51 @@ const useOIDCInterceptor = (parentChallengeId: string | undefined): void => {
     };
 
     // fetch() interceptor (covers code paths that use the platform fetch API).
-    const originalFetch = window.fetch;
-    window.fetch = async (input, init) => {
-      let url = '';
-      if (typeof input === 'string') url = input;
-      else if (input instanceof URL) url = input.toString();
-      else if (input instanceof Request) url = input.url;
+    //
+    // Installed through the core's fetch registry rather than by assigning
+    // `window.fetch` here. Two features that each capture and restore the
+    // global compose as `A(B(native))`, and whichever cleanup runs first
+    // restores a fetch that predates the other patch — so one interceptor
+    // disappears non-deterministically (architecture §13.5, "the OIDC
+    // collision: 'untouched' is withdrawn"). The registry owns the single
+    // patch, reference-counts it, and never restores over a foreign patch.
+    //
+    // Priority matters behaviourally: OIDC is the OUTER layer
+    // (`FETCH_PRIORITY_OIDC` = 10, outside `FETCH_PRIORITY_UPGRADE` = 20) so it
+    // still observes the response the caller actually receives — including a
+    // replayed one — which is what it reads `redirect_url` from. The logic
+    // below is unchanged from the hand-rolled patch: `next` stands exactly
+    // where the captured `originalFetch` stood.
+    const unregisterFetchMiddleware = registerFetchMiddleware(
+      async (next, input, init) => {
+        let url = '';
+        if (typeof input === 'string') url = input;
+        else if (input instanceof URL) url = input.toString();
+        else if (input instanceof Request) url = input.url;
 
-      const method = init?.method?.toUpperCase() ?? 'GET';
-      let outInit = init;
-      if (method === 'POST' && isAuthURL(url) && typeof init?.body === 'string') {
-        const rewritten = injectParentChallenge(init.body);
-        if (rewritten !== undefined) outInit = { ...init, body: rewritten };
-      }
-
-      const response = await originalFetch(input, outInit);
-
-      if (response.ok && isAuthURL(url)) {
-        try {
-          const cloned = response.clone();
-          const text = await cloned.text();
-          followRedirectURL(text);
-        } catch {
-          // ignore
+        const method = init?.method?.toUpperCase() ?? 'GET';
+        let outInit = init;
+        if (method === 'POST' && isAuthURL(url) && typeof init?.body === 'string') {
+          const rewritten = injectParentChallenge(init.body);
+          if (rewritten !== undefined) outInit = { ...init, body: rewritten };
         }
-      }
 
-      return response;
-    };
+        const response = await next(input, outInit);
+
+        if (response.ok && isAuthURL(url)) {
+          try {
+            const cloned = response.clone();
+            const text = await cloned.text();
+            followRedirectURL(text);
+          } catch {
+            // ignore
+          }
+        }
+
+        return response;
+      },
+      { priority: FETCH_PRIORITY_OIDC, name: 'passflow-oidc-authflow' },
+    );
 
     // XMLHttpRequest interceptor — `@passflow/core` uses axios, which in
     // the browser uses XHR under the hood. The fetch interceptor above
@@ -249,7 +296,10 @@ const useOIDCInterceptor = (parentChallengeId: string | undefined): void => {
     };
 
     return () => {
-      window.fetch = originalFetch;
+      // Fetch teardown is the registry's: it removes the one patch on the last
+      // registration's removal and declines to restore over a stranger's patch.
+      // Nothing here captures or restores `window.fetch`.
+      unregisterFetchMiddleware();
       XMLHttpRequest.prototype.open = OriginalXHROpen;
       XMLHttpRequest.prototype.send = OriginalXHRSend;
     };
@@ -292,16 +342,21 @@ type ParentChallengeMeta = {
  *   - 200 { redirect_url } → the interceptor's fetch wrapper follows
  *     the redirect (sole owner of redirect_url navigation; this hook
  *     must never navigate on OK responses — see the res.ok branch).
- *   - 403 { error: "upgrade_required", ... } → SDK falls through to
- *     `setUpgradeRequired(true)` so the consumer renders the
- *     upgrade-required placeholder + login form. Code path is
- *     UNREACHABLE today (server's EvaluatePolicy is a no-op
- *     scaffold); activates when Subtask E lands.
+ *   - 403 { error: "upgrade_required", ... } → falls through to the
+ *     login form. Factor elevation on an existing session is
+ *     `UpgradeProvider`'s flow, not this probe's.
  *   - 401 → clear stale tokens, fall through to login form.
  *
  * On any decision-point that ends with "render login form," the
  * SDK consumer's existing PassflowFlow render path picks up
  * naturally.
+ */
+/**
+ * `'upgrade_required'` is vestigial and kept deliberately (§8.4): it is
+ * unreachable today — the 403 branch below sets `'fallback_to_login'` — and
+ * removing a member from an exported union would be a type-level breaking
+ * change for anyone reading `OIDCExchangeContextValue`. Assurance elevation is
+ * now `UpgradeProvider`'s job, not a placeholder's.
  */
 type ExchangeState = 'idle' | 'exchanging' | 'upgrade_required' | 'fallback_to_login';
 
@@ -443,10 +498,9 @@ const useSessionExchangeOnMount = (
         if (res.status === 403) {
           // upgrade_required. The server's MaxAge enforcement (Subtask D
           // partial) triggers this on max_age-exceeded sessions; the SDK
-          // should render the login form to let the user re-auth. The
-          // dedicated upgrade-required placeholder is reserved for the
-          // future factor-elevation flow (Subtask E in
-          // docs/roadmap/auth-level-enforcement.md).
+          // should render the login form to let the user re-auth. Factor
+          // elevation on a live session is handled by `UpgradeProvider`
+          // (architecture §13), which replaced the old placeholder.
           setExchangeState('fallback_to_login');
           return;
         }
@@ -505,28 +559,6 @@ const DefaultContinuingPlaceholder: FC<{ appName?: string }> = ({ appName }) => 
 );
 
 /**
- * Default upgrade-required placeholder. Code path is currently
- * unreachable (server `EvaluatePolicy` returns Satisfied=true for
- * every valid token); shipped now so it's already in place when
- * Subtask E activates the augmented `/auth/refresh` flow.
- */
-const DefaultUpgradeRequiredPlaceholder: FC = () => (
-  <div
-    style={{
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      padding: '1rem',
-      fontFamily: 'system-ui, sans-serif',
-      fontSize: '0.95rem',
-      color: '#666',
-    }}
-  >
-    Additional authentication required (not yet implemented — please log in again).
-  </div>
-);
-
-/**
  * Context surface exposed to children so the SDK's own components
  * (or consumer code) can read the OIDC parent-challenge state.
  */
@@ -544,6 +576,11 @@ export const PassflowProvider: FC<PassflowProviderProps> = ({
   children,
   navigate: initialNavigate,
   router = 'default',
+  backend,
+  upgrade,
+  // `backend` and `upgrade` are destructured out on purpose: they are
+  // interception policy, not client-wide configuration, and §13.5 keeps them
+  // off `PassflowConfig` — which is what `config` is spread into below.
   ...config
 }) => {
   // If appId is not provided, set isDiscoveringAppId to true to signal
@@ -650,25 +687,29 @@ export const PassflowProvider: FC<PassflowProviderProps> = ({
     [parentChallengeId, parentMeta, exchangeState],
   );
 
+  // `undefined` ⇒ off, so no existing consumer changes behaviour. `false`
+  // forces it off even when a `backend` is declared; declaring a `backend` is
+  // itself an opt-in, since naming where your API is has no other meaning.
+  const upgradeEnabled = upgrade === false ? false : upgrade !== undefined || backend !== undefined;
+  const upgradeOptions = useMemo<PassflowUpgradeOptions>(
+    () => (typeof upgrade === 'object' && upgrade !== null ? upgrade : {}),
+    [upgrade],
+  );
+
   // Render the placeholder while exchange is in flight. Once it
   // resolves (either via navigation or by falling through), children
-  // mount as normal. The `upgrade_required` path still renders
-  // children so the login form below the placeholder can be used.
+  // mount as normal. The `upgrade_required` path renders children alone:
+  // assurance elevation is `UpgradeProvider`'s job now (§8.4).
   return (
     <PassflowContext.Provider value={passflowValue}>
       <NavigationContext.Provider value={navigationValue}>
         <OIDCExchangeContext.Provider value={oidcExchangeValue}>
           <AuthProvider>
-            {exchangeState === 'exchanging' ? (
-              <DefaultContinuingPlaceholder appName={parentMeta?.app_name} />
-            ) : exchangeState === 'upgrade_required' ? (
-              <>
-                <DefaultUpgradeRequiredPlaceholder />
-                {children}
-              </>
-            ) : (
-              children
-            )}
+            {/* Mounted outside the exchange branch so a state change does not
+                tear down and reinstall the upgrade interceptors. */}
+            <UpgradeProvider {...upgradeOptions} enabled={upgradeEnabled} backend={backend}>
+              {exchangeState === 'exchanging' ? <DefaultContinuingPlaceholder appName={parentMeta?.app_name} /> : children}
+            </UpgradeProvider>
           </AuthProvider>
         </OIDCExchangeContext.Provider>
       </NavigationContext.Provider>

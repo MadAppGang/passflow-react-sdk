@@ -78,9 +78,13 @@ export default defineConfig({
       reuseExistingServer: !process.env.CI,
     },
     {
-      command: 'pnpm storybook --ci --quiet',
+      // Never 6006 or 6007: another project on this machine (meroku) serves its
+      // own Storybook on those ports, and `reuseExistingServer` would silently
+      // point this suite at that catalog — the failures then look like our
+      // stories rendering the wrong app. 6107 belongs to this package alone.
+      command: 'pnpm exec storybook dev -p 6107 --ci --quiet',
       cwd: process.cwd(),
-      url: 'http://localhost:6006',
+      url: 'http://localhost:6107',
       reuseExistingServer: !process.env.CI,
       timeout: 120_000,
     },
