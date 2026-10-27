@@ -2,7 +2,7 @@ import AxeBuilder from '@axe-core/playwright';
 import type { Page } from '@playwright/test';
 import { expect, test } from '../fixture';
 
-const storybookUrl = 'http://localhost:6006';
+const storybookUrl = 'http://localhost:6107';
 const storyTitle = 'Components/LoginScreen';
 
 type StoryIndex = {

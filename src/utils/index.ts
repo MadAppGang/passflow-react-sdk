@@ -19,3 +19,10 @@ export {
 } from './auth-error';
 export { getInvitationAuthChrome, type InvitationAuthIntent } from './invitation-auth-chrome';
 export { TwoFactorLoopPrevention } from './two-factor-loop-prevention';
+export {
+  withAuth,
+  attachAuth,
+  registerUpgradeAuthInstance,
+  releaseUpgradeAuthInstance,
+  upgradeAuthInstance,
+} from './upgrade-auth';

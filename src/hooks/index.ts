@@ -36,3 +36,5 @@ export {
   type DeviceVerifyInfo,
   type DeviceUIMode,
 } from './use-device-verify';
+// Assurance upgrade (step-up) — reads UpgradeContext, installs nothing
+export { useUpgrade, type UseUpgradeResult } from './use-upgrade';

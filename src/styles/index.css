@@ -50,6 +50,11 @@ body {
   --passflow-link-color: var(--passflow-primary-color);
 
   /* Typography */
+  /*
+   * The UI font. One source of truth for the family the `@import` above loads:
+   * a component that hard-codes `"Inter", sans-serif` is a second one.
+   */
+  --passflow-font-family: "Inter", sans-serif;
   --passflow-h1: 2rem;
   --passflow-h2: 1.5rem;
   --passflow-body-1: 1rem;
@@ -68,6 +73,17 @@ body {
   --passflow-spacing-4: 16px;
   --passflow-spacing-5: 20px;
   --passflow-spacing-6: 24px;
+
+  /*
+   * Radius. One step, deliberately: 4px is the radius buttons, inputs, fields
+   * and panels already use throughout this stylesheet, and a second step would
+   * be a second scale for the next component to pick from at random.
+   */
+  --passflow-radius: 4px;
+
+  /* Surfaces */
+  /* The canonical width of a centred card or modal surface. */
+  --passflow-surface-width: 384px;
 }
 
 /* TYPOGRAPHY */
@@ -242,6 +258,63 @@ body {
   width: max-content;
   height: max-content;
   padding: 0;
+}
+
+/*
+ * `option` — a selectable, two-line choice inside a list of choices (the
+ * upgrade dialog's "use another way" factors are the first consumer).
+ *
+ * It is declared after the size rules on purpose: an option carries a label and
+ * a hint, so it opts out of the fixed single-line height and the capped width
+ * the shared sizes impose. Both the multi-line geometry and the pressed state
+ * live here, because "which option is chosen" is a state of this component and
+ * not of the screen that lists it. Colour, type and spacing stay on the same
+ * `--passflow-*` tokens the other variants use.
+ */
+.passflow-button--option {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--passflow-spacing-1);
+  width: 100%;
+  max-width: none;
+  height: auto;
+  padding: var(--passflow-spacing-3);
+  text-align: left;
+  background-color: var(--passflow-white);
+  border: 1px solid var(--passflow-grey-four);
+  color: var(--passflow-text-color);
+}
+
+.passflow-button--option:hover,
+.passflow-button--option:focus-visible {
+  background-color: var(--passflow-grey-four);
+}
+
+.passflow-button--option[aria-pressed="true"] {
+  border-color: var(--passflow-primary-color);
+}
+
+.passflow-button--option:disabled {
+  cursor: not-allowed;
+  background-color: var(--passflow-white);
+  border-color: var(--passflow-grey-four);
+}
+
+.passflow-button__option-label {
+  font-size: var(--passflow-body-2);
+  font-weight: var(--passflow-medium);
+  color: var(--passflow-text-color);
+}
+
+.passflow-button__option-hint {
+  font-size: var(--passflow-caption);
+  font-weight: var(--passflow-normal);
+  color: var(--passflow-secondary-text-color);
+}
+
+.passflow-button--option:disabled .passflow-button__option-label,
+.passflow-button--option:disabled .passflow-button__option-hint {
+  color: var(--passflow-grey-two);
 }
 
 .passflow-button-passkey,
