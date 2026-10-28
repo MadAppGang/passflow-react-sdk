@@ -2,6 +2,24 @@
 
 All notable changes to `@passflow/react` are documented in this file.
 
+## [0.11.0] - 2026-10-28
+
+### Changed
+
+- Requires `@passflow/core` 0.17.0 or later, up from 0.15.0. Nothing in this package's own code changed for it — `useUpgrade`, `UpgradeProvider` and `UpgradeDialog` behave exactly as in 0.10.0, and the one core symbol the provider imports as a value, `requiredAcrLevel`, is unaffected.
+
+### Removed
+
+- Twenty-eight names are no longer re-exported. `src/index.ts` carries `export * from '@passflow/core'`, so this package republishes core's entry surface; core withdrew these across 0.16.0 and 0.17.0, and they therefore leave this package's surface too. The published entry goes from 184 exported names to 156.
+
+  Sixteen upgrade assembly functions, none of which a consumer was meant to call — the step-up flow is driven through `passflow.upgrade` and this package's `useUpgrade`:
+  `attachUpgradeAuth`, `barOf`, `coreOutcomeToError`, `createUpgradeClient`, `createUpgradeFacade`, `handleChallenge`, `mergeChallenges`, `parseAcrToken`, `parseMaxAge`, `planReplay`, `readAcrValues`, `readUpgradeChallenge`, `settleAxiosOutcome`, `settleFetchOutcome`, `tagUpgradeOutcome`, `upgradeFetch`.
+
+  Twelve types that only those functions produced, so no public API could hand a consumer a value of any of them:
+  `ChallengeContext`, `ChallengeInput`, `ChallengeReadOptions`, `ChallengeReading`, `CoreOutcome`, `InterceptionScope`, `MaxAgeReading`, `ReplayHints`, `ReplayPlan`, `Settlement`, `UpgradeFacadeDeps`, `UpgradeInterceptorOptions`.
+
+  `ChallengeChannel` and `UpgradeSessionPin` were part of that second group until review found each is still exposed by a public signature — `UpgradeChallenge.channels` and `AuthService.readSessionPin()` — so both remain exported. Everything the step-up UI needs is unchanged: `classifyUpgradeError`, `requiredAcrLevel`, the `isUpgrade*` predicates, the error classes, `UpgradeChallenge`, `UpgradeFacade` and the factor types.
+
 ## [0.10.0] - 2026-10-28
 
 ### Added
