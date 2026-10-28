@@ -1,0 +1,43 @@
+{
+  "version": 2,
+  "profiles": {
+    "default": {
+      "name": "Default",
+      "marketplaces": {
+        "magus": {
+          "source": "github",
+          "repo": "MadAppGang/magus"
+        },
+        "claude-plugins-official": {
+          "source": "github",
+          "repo": "anthropics/claude-plugins-official"
+        }
+      },
+      "plugins": {
+        "dev@magus": "latest",
+        "frontend-design@claude-plugins-official": "latest",
+        "mnemex@magus": "latest",
+        "claudish@magus": "latest",
+        "multimodel@magus": "latest",
+        "go@magus": "latest",
+        "setup@magus": "latest",
+        "browser-use@magus": "latest",
+        "terminal@magus": "latest",
+        "gopls-lsp@claude-plugins-official": "latest",
+        "serena@claude-plugins-official": "latest"
+      },
+      "createdAt": "2026-10-23T14:41:30.499Z",
+      "updatedAt": "2026-10-23T14:41:48.218Z",
+      "mcpServers": {
+        "linear-mag": {
+          "type": "http",
+          "url": "https://mcp.linear.app/mcp",
+          "headers": {
+            "Authorization": "Bearer ${LINEAR_API_KEY_MAG}"
+          }
+        }
+      }
+    }
+  },
+  "default": "default"
+}
