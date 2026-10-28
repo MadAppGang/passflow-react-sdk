@@ -54,8 +54,10 @@ vite.config.ts.*
 storybook-static/
 test-results
 
-# AI session files
-ai-docs/
+# AI session files. `ai-docs/` itself is TRACKED: it holds the notes a future
+# session needs to work here, such as ticket context. Only the per-session
+# scratch below is machine-local.
+ai-docs/sessions/
 
 .mnemex/
 
@@ -72,3 +74,10 @@ ai-docs/
 gtd/sessions/
 # Local agent workspaces and runtime artifacts should stay out of team history.
 .agents/
+
+# magus: generated profile config (source of truth: .claude/profiles.json)
+.claude/profiles/
+.claude/.magus-backups/
+.claude/settings.json
+.claude/models.json
+.mcp.json
