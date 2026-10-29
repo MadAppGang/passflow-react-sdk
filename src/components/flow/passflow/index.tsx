@@ -92,6 +92,14 @@ const PassflowWrapper: FC<PassflowProps> = ({
 
   const routesWithPrefix = useMemo(() => combineRoutesWithPrefix(pathPrefix), [pathPrefix]);
 
+  // A landing that owes its second factor goes to this flow's own (prefixed)
+  // 2FA route; PassflowProvider does the navigation.
+  const { setTwoFactorVerifyPath } = useNavigation();
+  useEffect(() => {
+    setTwoFactorVerifyPath?.(routesWithPrefix.two_factor_verify);
+    return () => setTwoFactorVerifyPath?.(null);
+  }, [setTwoFactorVerifyPath, routesWithPrefix.two_factor_verify]);
+
   if (error) throw new Error(error);
 
   return (
@@ -123,6 +131,7 @@ const PassflowWrapper: FC<PassflowProps> = ({
                 signInPath={routesWithPrefix.signin}
                 verifyMagicLinkPath={routesWithPrefix.verify_magic_link}
                 verifyOTPPath={routesWithPrefix.verify_otp}
+                twoFactorVerifyPath={routesWithPrefix.two_factor_verify}
               />
             }
           />
@@ -134,6 +143,7 @@ const PassflowWrapper: FC<PassflowProps> = ({
                 numInputs={6}
                 shouldAutoFocus
                 signUpPath={routesWithPrefix.signup}
+                twoFactorVerifyPath={routesWithPrefix.two_factor_verify}
               />
             }
           />

@@ -16,6 +16,7 @@ import {
   getUrlErrors,
   getUrlWithTokens,
   isValidUrl,
+  routeToSecondFactor,
   useUrlParams,
 } from '@/utils';
 import type {
@@ -126,11 +127,7 @@ export const SignInForm: FC<TSignIn> = ({
   };
 
   const completeAuthentication = async () => {
-    if (passflow.isTwoFactorVerificationRequired()) {
-      navigate({ to: twoFactorVerifyPath ?? routes.two_factor_verify.path });
-      return;
-    }
-
+    if (routeToSecondFactor(passflow, navigate, twoFactorVerifyPath ?? routes.two_factor_verify.path)) return;
     if (oidcLayerOwnsRedirect()) return;
     const redirectUrl = successAuthRedirect ?? appSettings?.defaults?.redirect ?? '';
     if (!isValidUrl(redirectUrl)) navigate({ to: redirectUrl });

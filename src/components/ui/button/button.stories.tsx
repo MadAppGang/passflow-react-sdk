@@ -47,6 +47,28 @@ export const Clean: Story = {
   args: { variant: 'clean', children: 'Cancel' },
 };
 
+/**
+ * `link` — an action inside a sentence. The surrounding text is the story's
+ * own; the variant owns only the button.
+ */
+export const Link: Story = {
+  args: { variant: 'link', size: 'small', children: 'Use recovery code' },
+  render: (args) => (
+    <p>
+      Lost your device? <Button {...args} />
+    </p>
+  ),
+};
+
+export const LinkDisabled: Story = {
+  args: { variant: 'link', size: 'small', children: 'Use recovery code', disabled: true },
+  render: (args) => (
+    <p>
+      Lost your device? <Button {...args} />
+    </p>
+  ),
+};
+
 export const Dark: Story = {
   args: { variant: 'dark', children: 'Continue' },
 };

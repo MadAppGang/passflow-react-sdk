@@ -317,6 +317,35 @@ body {
   color: var(--passflow-grey-two);
 }
 
+/* `link` — an action set in running text ("Lost your device? Use recovery
+   code"). It drops every size's box geometry, so it sits on the text line. */
+.passflow-button--link {
+  display: inline;
+  width: auto;
+  max-width: none;
+  height: auto;
+  padding: 0;
+  border: none;
+  border-radius: 0;
+  background-color: transparent;
+  color: var(--passflow-link-color);
+  font-size: inherit;
+  font-weight: var(--passflow-semibold);
+  line-height: inherit;
+  overflow: visible;
+}
+
+.passflow-button--link:hover,
+.passflow-button--link:focus-visible {
+  text-decoration: underline;
+}
+
+.passflow-button--link:disabled {
+  cursor: not-allowed;
+  color: var(--passflow-grey-two);
+  text-decoration: none;
+}
+
 .passflow-button-passkey,
 .passflow-button-signin,
 .passflow-button-signup,

@@ -15,6 +15,7 @@ import {
   getUrlErrors,
   getUrlWithTokens,
   isValidUrl,
+  routeToSecondFactor,
   useUrlParams,
 } from '@/utils';
 import type {
@@ -77,6 +78,7 @@ export type TSignUp = {
   signInPath?: string;
   verifyOTPPath?: string;
   verifyMagicLinkPath?: string;
+  twoFactorVerifyPath?: string;
 };
 
 export const SignUpForm: FC<TSignUp> = ({
@@ -85,6 +87,7 @@ export const SignUpForm: FC<TSignUp> = ({
   signInPath = routes.signin.path,
   verifyOTPPath = routes.verify_otp.path,
   verifyMagicLinkPath = routes.verify_magic_link.path,
+  twoFactorVerifyPath = routes.two_factor_verify.path,
 }) => {
   const passflow = usePassflow();
   const { navigate } = useNavigation();
@@ -116,7 +119,11 @@ export const SignUpForm: FC<TSignUp> = ({
   const invitationChrome = getInvitationAuthChrome(inviteToken, 'sign-up');
   const { fetch, isError, error, reset, isLoading } = useSignUp();
 
-  const completeRegistration = async () => {
+  // The server can answer a sign-up with a 2FA token in place of tokens, as it
+  // does a sign-in, so the 2FA screen comes before any success redirect.
+  const completeRegistration = async ({ oidcMayOwnRedirect = false } = {}) => {
+    if (routeToSecondFactor(passflow, navigate, twoFactorVerifyPath ?? routes.two_factor_verify.path)) return;
+    if (oidcMayOwnRedirect && hasFollowedOIDCRedirect()) return;
     const redirectUrl = successAuthRedirect ?? appSettings?.defaults?.redirect ?? '';
     if (!isValidUrl(redirectUrl)) navigate({ to: redirectUrl });
     else window.location.href = await getUrlWithTokens(passflow, redirectUrl);
@@ -142,10 +149,7 @@ export const SignUpForm: FC<TSignUp> = ({
       scopes,
     } as PassflowPasskeyRegisterStartPayload;
 
-    if (await fetch(payload, 'passkey')) {
-      if (hasFollowedOIDCRedirect()) return;
-      await completeRegistration();
-    }
+    if (await fetch(payload, 'passkey')) await completeRegistration({ oidcMayOwnRedirect: true });
   };
 
   const submitPasswordless = async (userPayload: Partial<PassflowPasswordlessSignInPayload>, method: DefaultMethod | null) => {

@@ -21,6 +21,7 @@ export { useTwoFactorManage, type UseTwoFactorManageProps } from './use-two-fact
 export { useTwoFactorSetupMagicLink, type UseTwoFactorSetupMagicLinkReturn } from './use-two-factor-setup-magic-link';
 export { useTwoFactorChallenge, type UseTwoFactorChallengeReturn } from './use-two-factor-challenge';
 export { useTwoFactorMethods, type UseTwoFactorMethodsReturn } from './use-two-factor-methods';
+export { useTrustedDevices, type UseTrustedDevicesProps } from './use-trusted-devices';
 // Session management hooks
 export {
   useSessionExpired,

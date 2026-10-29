@@ -8,7 +8,9 @@ import {
   defaultNavigate,
   initialState,
   passflowReducer,
+  routes,
 } from '@/context';
+import { urlCarriesTwoFactorToken } from '@/utils/second-factor';
 import { FETCH_PRIORITY_OIDC, Passflow, type PassflowConfig, registerFetchMiddleware } from '@passflow/core';
 import React, { type FC, type ReactNode, useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react';
 import '@/styles/index.css';
@@ -46,6 +48,14 @@ type PassflowProviderProps = PassflowConfig & {
    * act (`upgrade={{ interceptFetch: true }}`) and stays off by default.
    */
   upgrade?: boolean | PassflowUpgradeOptions;
+  /**
+   * Where to send a sign-in that lands on this page owing its second factor:
+   * a federated redirect on a non-PKCE app comes back with `#tfa_token=` and
+   * no tokens. A mounted `PassflowFlow` registers its own (prefixed) route,
+   * which wins; set this when the landing page renders no flow, or the flow
+   * is mounted elsewhere. Defaults to `routes.two_factor_verify.path`.
+   */
+  twoFactorVerifyPath?: string;
 };
 
 /**
@@ -568,6 +578,42 @@ export type OIDCExchangeContextValue = {
   exchangeState: ExchangeState;
 };
 
+/**
+ * Sends a landing that owes its second factor to the 2FA screen.
+ *
+ * A federated sign-in on a non-PKCE app comes back to its redirect URL with
+ * the 2FA token in the fragment and no tokens. Core adopts it as it is
+ * constructed (`parseQueryParams`, on by default) and strips the fragment;
+ * with that off, the token is adopted here through `handleTokensRedirect()`.
+ *
+ * The navigation runs one render after mount, not in the mount effect: the
+ * flow's router and its 2FA route register themselves in their own mount
+ * effects, which run before this one, and their state lands in the next
+ * render. Navigating at mount would go through the default full-page
+ * navigation to the unprefixed route.
+ */
+const useSecondFactorLanding = (
+  landedWithTwoFactorToken: boolean,
+  passflow: Passflow,
+  navigate: NavigateFunction,
+  twoFactorVerifyPath: string,
+) => {
+  const [pending, setPending] = useState(false);
+
+  // Once, on mount — the landing is a property of the page load.
+  useEffect(() => {
+    if (!landedWithTwoFactorToken) return;
+    if (!passflow.isTwoFactorVerificationRequired()) passflow.handleTokensRedirect();
+    if (passflow.isTwoFactorVerificationRequired()) setPending(true);
+  }, []);
+
+  useEffect(() => {
+    if (!pending) return;
+    setPending(false);
+    navigate({ to: twoFactorVerifyPath, replace: true });
+  }, [pending, navigate, twoFactorVerifyPath]);
+};
+
 export const OIDCExchangeContext = React.createContext<OIDCExchangeContextValue>({
   exchangeState: 'idle',
 });
@@ -578,6 +624,7 @@ export const PassflowProvider: FC<PassflowProviderProps> = ({
   router = 'default',
   backend,
   upgrade,
+  twoFactorVerifyPath,
   // `backend` and `upgrade` are destructured out on purpose: they are
   // interception policy, not client-wide configuration, and §13.5 keeps them
   // off `PassflowConfig` — which is what `config` is spread into below.
@@ -599,6 +646,9 @@ export const PassflowProvider: FC<PassflowProviderProps> = ({
     }
     return defaultNavigate;
   });
+
+  // Read before core is constructed: core adopts `#tfa_token=` and strips it.
+  const [landedWithTwoFactorToken] = useState(urlCarriesTwoFactorToken);
 
   const passflow = useMemo(() => new Passflow(state), [state]);
 
@@ -673,13 +723,19 @@ export const PassflowProvider: FC<PassflowProviderProps> = ({
     setNavigate(() => newNavigate || defaultNavigate);
   }, []);
 
+  const [flowTwoFactorVerifyPath, setFlowTwoFactorVerifyPath] = useState<string | null>(null);
+  const resolvedTwoFactorVerifyPath = flowTwoFactorVerifyPath ?? twoFactorVerifyPath ?? routes.two_factor_verify.path;
+  useSecondFactorLanding(landedWithTwoFactorToken, passflow, navigate, resolvedTwoFactorVerifyPath);
+
   const navigationValue = useMemo(
     () => ({
       navigate,
       setNavigate: handleSetNavigate,
       router,
+      twoFactorVerifyPath: resolvedTwoFactorVerifyPath,
+      setTwoFactorVerifyPath: setFlowTwoFactorVerifyPath,
     }),
-    [navigate, handleSetNavigate, router],
+    [navigate, handleSetNavigate, router, resolvedTwoFactorVerifyPath],
   );
 
   const oidcExchangeValue = useMemo<OIDCExchangeContextValue>(

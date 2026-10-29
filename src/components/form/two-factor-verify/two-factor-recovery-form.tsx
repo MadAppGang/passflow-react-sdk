@@ -1,4 +1,4 @@
-import { Button, Icon } from '@/components/ui';
+import { Button, Icon, Switch } from '@/components/ui';
 import { useTwoFactorVerify } from '@/hooks';
 import { TwoFactorLoopPrevention, cn, getUserFriendlyErrorMessage } from '@/utils';
 import type { ChangeEvent, FC, FormEvent } from 'react';
@@ -13,7 +13,12 @@ type TwoFactorRecoveryFormProps = {
   title?: string;
   subtitle?: string;
   signInPath?: string;
+  /** Label of the "trust this device" option, unticked by default. */
+  trustDeviceLabel?: string;
 };
+
+/** Only a ticked box asks for trust; an unticked one sends no option at all. */
+const completionOptions = (trustDevice: boolean) => (trustDevice ? { trustDevice: true } : undefined);
 
 export const TwoFactorRecoveryForm: FC<TwoFactorRecoveryFormProps> = ({
   onSuccess,
@@ -21,8 +26,10 @@ export const TwoFactorRecoveryForm: FC<TwoFactorRecoveryFormProps> = ({
   title = 'Use Recovery Code',
   subtitle = 'Enter one of your recovery codes',
   signInPath,
+  trustDeviceLabel = 'Trust this device',
 }) => {
   const [code, setCode] = useState('');
+  const [trustDevice, setTrustDevice] = useState(false);
   const { useRecoveryCode, isLoading, isError, errorDetails, reset } = useTwoFactorVerify();
 
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
@@ -33,7 +40,7 @@ export const TwoFactorRecoveryForm: FC<TwoFactorRecoveryFormProps> = ({
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    const result = await useRecoveryCode(code);
+    const result = await useRecoveryCode(code, completionOptions(trustDevice));
     if (result) {
       onSuccess?.();
     }
@@ -120,6 +127,14 @@ export const TwoFactorRecoveryForm: FC<TwoFactorRecoveryFormProps> = ({
       <form onSubmit={handleSubmit} className='passflow-form'>
         <div className='passflow-form-container'>
           <div className='passflow-form-field'>
+            <Switch
+              label={trustDeviceLabel}
+              checked={trustDevice}
+              disabled={isInputDisabled}
+              onChange={(event) => setTrustDevice(event.target.checked)}
+            />
+          </div>
+          <div className='passflow-form-field'>
             <label htmlFor='recovery-code' className={cn('passflow-field-label', isError && 'passflow-field-label--error')}>
               Recovery Code
             </label>
@@ -157,14 +172,9 @@ export const TwoFactorRecoveryForm: FC<TwoFactorRecoveryFormProps> = ({
           <div className='passflow-form-actions'>
             <p className='passflow-dont-have-account'>
               Have your device?{' '}
-              <button
-                type='button'
-                onClick={onBack}
-                className='passflow-link'
-                style={{ background: 'none', border: 'none', cursor: 'pointer' }}
-              >
+              <Button type='button' size='small' variant='link' onClick={onBack}>
                 Use authenticator code
-              </button>
+              </Button>
             </p>
           </div>
         )}

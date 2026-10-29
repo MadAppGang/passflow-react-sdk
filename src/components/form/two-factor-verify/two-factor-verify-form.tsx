@@ -1,4 +1,4 @@
-import { Button, Icon } from '@/components/ui';
+import { Button, Icon, Switch } from '@/components/ui';
 import { useTwoFactorVerify } from '@/hooks';
 import { TwoFactorLoopPrevention, cn, getUserFriendlyErrorMessage } from '@/utils';
 import type { FC, FormEvent } from 'react';
@@ -17,7 +17,12 @@ type TwoFactorVerifyFormProps = {
   shouldAutoFocus?: boolean;
   signInPath?: string;
   twoFactorSetupPath?: string;
+  /** Label of the "trust this device" option, unticked by default. */
+  trustDeviceLabel?: string;
 };
+
+/** Only a ticked box asks for trust; an unticked one sends no option at all. */
+const completionOptions = (trustDevice: boolean) => (trustDevice ? { trustDevice: true } : undefined);
 
 export const TwoFactorVerifyForm: FC<TwoFactorVerifyFormProps> = ({
   onSuccess,
@@ -28,8 +33,10 @@ export const TwoFactorVerifyForm: FC<TwoFactorVerifyFormProps> = ({
   shouldAutoFocus = true,
   signInPath,
   twoFactorSetupPath,
+  trustDeviceLabel = 'Trust this device',
 }) => {
   const [code, setCode] = useState('');
+  const [trustDevice, setTrustDevice] = useState(false);
   const { verify, isLoading, isError, errorDetails, reset } = useTwoFactorVerify();
 
   // Get TOTP digits (defaults to 6 if not provided)
@@ -45,7 +52,7 @@ export const TwoFactorVerifyForm: FC<TwoFactorVerifyFormProps> = ({
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    const result = await verify(code);
+    const result = await verify(code, completionOptions(trustDevice));
     if (result) {
       onSuccess?.();
     }
@@ -55,7 +62,7 @@ export const TwoFactorVerifyForm: FC<TwoFactorVerifyFormProps> = ({
   const handleOtpChange = async (value: string) => {
     handleChange(value);
     if (value.length === totpDigits) {
-      const result = await verify(value);
+      const result = await verify(value, completionOptions(trustDevice));
       if (result) {
         onSuccess?.();
       }
@@ -165,6 +172,15 @@ export const TwoFactorVerifyForm: FC<TwoFactorVerifyFormProps> = ({
     <Wrapper title={title} subtitle={computedSubtitle} className='passflow-2fa-verify'>
       <form onSubmit={handleSubmit} className='passflow-form'>
         <div className='passflow-form-container'>
+          {/* Above the code: the code submits itself on its last digit. */}
+          <div className='passflow-form-field'>
+            <Switch
+              label={trustDeviceLabel}
+              checked={trustDevice}
+              disabled={isInputDisabled}
+              onChange={(event) => setTrustDevice(event.target.checked)}
+            />
+          </div>
           <div className='passflow-verify-otp-wrapper'>
             <OtpInput
               value={code}
@@ -201,14 +217,9 @@ export const TwoFactorVerifyForm: FC<TwoFactorVerifyFormProps> = ({
           <div className='passflow-form-actions'>
             <p className='passflow-dont-have-account'>
               Lost your device?{' '}
-              <button
-                type='button'
-                onClick={onUseRecovery}
-                className='passflow-link'
-                style={{ background: 'none', border: 'none', cursor: 'pointer' }}
-              >
+              <Button type='button' size='small' variant='link' onClick={onUseRecovery}>
                 Use recovery code
-              </button>
+              </Button>
             </p>
           </div>
         )}

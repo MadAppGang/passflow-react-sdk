@@ -273,4 +273,16 @@ describe('Button', () => {
     const button = screen.getByTestId('custom-button');
     expect(button).toHaveAttribute('aria-label', 'Custom Button');
   });
+
+  it('renders the link variant as a text action, without a ripple', () => {
+    render(
+      <Button size='small' variant='link' type='button'>
+        Use recovery code
+      </Button>,
+    );
+
+    const button = screen.getByRole('button', { name: 'Use recovery code' });
+    expect(button).toHaveClass('passflow-button--link');
+    expect(button.querySelector('.passflow-ripple-container')).not.toBeInTheDocument();
+  });
 });

@@ -33,7 +33,7 @@ const parseSearch = (search: string): Record<string, string> => {
 };
 
 export const useNavigation = () => {
-  const { navigate, setNavigate, router } = useContext(NavigationContext);
+  const { navigate, setNavigate, router, twoFactorVerifyPath, setTwoFactorVerifyPath } = useContext(NavigationContext);
 
   const wrappedSetNavigate = useCallback(
     (
@@ -101,5 +101,7 @@ export const useNavigation = () => {
     navigate,
     setNavigate: wrappedSetNavigate,
     router,
+    twoFactorVerifyPath,
+    setTwoFactorVerifyPath,
   };
 };
