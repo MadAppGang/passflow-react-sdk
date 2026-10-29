@@ -23,6 +23,10 @@ import { useCallback, useEffect, useRef, useState } from 'react';
  * affordance and is fine, because the human still looked at the code first.
  * Mode 3 skips the tap entirely, which it earns by using an origin-bound
  * passkey; see the note on confirmWithPasskey.
+ *
+ * When the app requires a second factor, the first ticket cannot approve: the
+ * server refuses it. The page asks for the factor (`/oidc/device/second-factor`)
+ * and approves with the ticket that answers, which records both.
  */
 
 /** The UI the server resolved for this challenge. A closed set — the client does not choose. */
@@ -41,6 +45,9 @@ export type DeviceVerifyInfo = {
   };
 };
 
+/** A second factor the verification page can take. */
+export type DeviceSecondFactorMethod = 'totp' | 'recovery_codes';
+
 export type DeviceVerifyStatus =
   /** Asking the server what to render. */
   | 'loading'
@@ -50,6 +57,8 @@ export type DeviceVerifyStatus =
   | 'ready'
   /** A call is in flight. */
   | 'working'
+  /** A first factor proven; the app wants a second before anything can be approved. */
+  | 'second_factor'
   /** Identity proven, ticket held, not yet approved. */
   | 'signed_in'
   /** Approved. The terminal has its tokens. */
@@ -67,6 +76,10 @@ export type UseDeviceVerifyProps = {
   email: string | null;
   /** Whether an approval ticket is held. */
   isAuthenticated: boolean;
+  /** Whether a first-factor ticket is waiting for its second factor. */
+  isSecondFactorPending: boolean;
+  /** The second factors the server takes, once a sign-in owes one. */
+  secondFactorMethods: DeviceSecondFactorMethod[];
   /** Re-run the info lookup for a code typed by hand. */
   submitCode: (code: string) => void;
   /** Prove identity with a password. Does NOT approve. */
@@ -79,6 +92,11 @@ export type UseDeviceVerifyProps = {
   confirmWithPassword: (email: string, password: string) => Promise<void>;
   /** Passkey ceremony then approve, with no tap in between. */
   confirmWithPasskey: () => Promise<void>;
+  /**
+   * Prove the second factor. Approves too when the act that asked for it was
+   * an approval (consent's tap, the passkey mode); otherwise lands on signed_in.
+   */
+  submitSecondFactor: (method: DeviceSecondFactorMethod, code: string) => Promise<void>;
   /** Clear a recoverable error so the user can try again. */
   clearError: () => void;
 };
@@ -88,7 +106,27 @@ const DEVICE_ENDPOINTS = {
   authenticate: '/oidc/device/authenticate',
   approve: '/oidc/device/approve',
   passkeyStart: '/oidc/device/passkey/start',
+  secondFactor: '/oidc/device/second-factor',
 } as const;
+
+/** What /oidc/device/authenticate answers with. */
+type DeviceAuthenticateResponse = {
+  approval_ticket: string;
+  email?: string;
+  /** The app requires a second factor; this ticket cannot approve until one is given. */
+  second_factor_required?: boolean;
+  second_factor_methods?: string[];
+};
+
+const SECOND_FACTOR_METHODS: readonly DeviceSecondFactorMethod[] = ['totp', 'recovery_codes'];
+
+/** The factors the server offers that this page can take, in its order. */
+const toSecondFactorMethods = (methods: string[] | undefined): DeviceSecondFactorMethod[] => {
+  const known = (methods ?? []).filter((m): m is DeviceSecondFactorMethod =>
+    SECOND_FACTOR_METHODS.includes(m as DeviceSecondFactorMethod),
+  );
+  return known.length > 0 ? known : ['totp'];
+};
 
 /** Read `user_code` off the URL — the QR encodes verification_uri_complete. */
 const readUserCodeFromURL = (): string => new URLSearchParams(window.location.search).get('user_code') ?? '';
@@ -127,6 +165,16 @@ export const useDeviceVerify = (): UseDeviceVerifyProps => {
    * be refused for no reason a user could understand.
    */
   const ticketRef = useRef<string | null>(null);
+
+  /**
+   * The first-factor ticket, while the app still wants a second. Kept apart
+   * from ticketRef because it cannot approve, so isAuthenticated must not
+   * claim a sign-in the approval would refuse.
+   */
+  const firstFactorTicketRef = useRef<string | null>(null);
+  /** Whether the act that asked for the second factor was an approval. */
+  const approveAfterSecondFactorRef = useRef(false);
+  const [secondFactorMethods, setSecondFactorMethods] = useState<DeviceSecondFactorMethod[]>([]);
 
   /** Guards against setting state after unmount, and against double-fires. */
   const activeRef = useRef(true);
@@ -179,7 +227,15 @@ export const useDeviceVerify = (): UseDeviceVerifyProps => {
       setStatus(terminal);
       return;
     }
-    setStatus(classified.type === 'mode_disabled' ? 'refused' : ticketRef.current ? 'signed_in' : 'ready');
+    setStatus(
+      classified.type === 'mode_disabled'
+        ? 'refused'
+        : firstFactorTicketRef.current
+          ? 'second_factor'
+          : ticketRef.current
+            ? 'signed_in'
+            : 'ready',
+    );
   }, []);
 
   // ── Load what to render ───────────────────────────────────────────────────
@@ -231,21 +287,37 @@ export const useDeviceVerify = (): UseDeviceVerifyProps => {
   }, []);
 
   // ── Prove identity. Yields a ticket; approves nothing. ────────────────────
+  /**
+   * Hold the ticket an authentication earned. Returns true when the app wants
+   * a second factor first, in which case the ticket cannot approve yet.
+   */
+  const holdTicket = useCallback((res: DeviceAuthenticateResponse): boolean => {
+    if (res.second_factor_required) {
+      firstFactorTicketRef.current = res.approval_ticket;
+      ticketRef.current = null;
+      if (activeRef.current) setSecondFactorMethods(toSecondFactorMethods(res.second_factor_methods));
+      return true;
+    }
+    firstFactorTicketRef.current = null;
+    ticketRef.current = res.approval_ticket;
+    return false;
+  }, []);
+
   const authenticatePassword = useCallback(
-    async (emailValue: string, password: string): Promise<void> => {
-      const res = await post<{ approval_ticket: string; email?: string }>(DEVICE_ENDPOINTS.authenticate, {
+    async (emailValue: string, password: string): Promise<boolean> => {
+      const res = await post<DeviceAuthenticateResponse>(DEVICE_ENDPOINTS.authenticate, {
         method: 'password',
         email: emailValue,
         password,
       });
-      ticketRef.current = res.approval_ticket;
-      if (!activeRef.current) return;
-      setEmail(res.email ?? emailValue);
+      const owesSecondFactor = holdTicket(res);
+      if (activeRef.current) setEmail(res.email ?? emailValue);
+      return owesSecondFactor;
     },
-    [post],
+    [post, holdTicket],
   );
 
-  const authenticatePasskey = useCallback(async (): Promise<void> => {
+  const authenticatePasskey = useCallback(async (): Promise<boolean> => {
     // Thrown as a DOMException so it travels the same road as every real
     // WebAuthn failure and lands on the same classified copy — rather than
     // becoming a second, parallel way for this page to describe a passkey
@@ -261,15 +333,15 @@ export const useDeviceVerify = (): UseDeviceVerifyProps => {
     const { startAuthentication } = await import('@simplewebauthn/browser');
     const assertion = await startAuthentication({ optionsJSON: start.publicKey as never });
 
-    const res = await post<{ approval_ticket: string; email?: string }>(DEVICE_ENDPOINTS.authenticate, {
+    const res = await post<DeviceAuthenticateResponse>(DEVICE_ENDPOINTS.authenticate, {
       method: 'passkey',
       passkey_challenge_id: start.passkey_challenge_id,
       passkey_data: assertion,
     });
-    ticketRef.current = res.approval_ticket;
-    if (!activeRef.current) return;
-    setEmail(res.email ?? null);
-  }, [post]);
+    const owesSecondFactor = holdTicket(res);
+    if (activeRef.current) setEmail(res.email ?? null);
+    return owesSecondFactor;
+  }, [post, holdTicket]);
 
   // ── The act that releases tokens ──────────────────────────────────────────
   const approveWithTicket = useCallback(async (): Promise<void> => {
@@ -283,9 +355,10 @@ export const useDeviceVerify = (): UseDeviceVerifyProps => {
       setStatus('working');
       setError(null);
       try {
-        await authenticatePassword(emailValue, password);
+        const owesSecondFactor = await authenticatePassword(emailValue, password);
         if (!activeRef.current) return;
-        setStatus('signed_in');
+        approveAfterSecondFactorRef.current = false;
+        setStatus(owesSecondFactor ? 'second_factor' : 'signed_in');
       } catch (err) {
         fail(err);
       }
@@ -297,9 +370,10 @@ export const useDeviceVerify = (): UseDeviceVerifyProps => {
     setStatus('working');
     setError(null);
     try {
-      await authenticatePasskey();
+      const owesSecondFactor = await authenticatePasskey();
       if (!activeRef.current) return;
-      setStatus('signed_in');
+      approveAfterSecondFactorRef.current = false;
+      setStatus(owesSecondFactor ? 'second_factor' : 'signed_in');
     } catch (err) {
       fail(err);
     }
@@ -327,8 +401,10 @@ export const useDeviceVerify = (): UseDeviceVerifyProps => {
       setStatus('working');
       setError(null);
       try {
-        if (!ticketRef.current) {
-          await authenticatePassword(emailValue, password);
+        if (!ticketRef.current && (await authenticatePassword(emailValue, password))) {
+          approveAfterSecondFactorRef.current = true;
+          if (activeRef.current) setStatus('second_factor');
+          return;
         }
         await approveWithTicket();
       } catch (err) {
@@ -355,12 +431,48 @@ export const useDeviceVerify = (): UseDeviceVerifyProps => {
     setStatus('working');
     setError(null);
     try {
-      await authenticatePasskey();
+      if (await authenticatePasskey()) {
+        approveAfterSecondFactorRef.current = true;
+        if (activeRef.current) setStatus('second_factor');
+        return;
+      }
       await approveWithTicket();
     } catch (err) {
       fail(err);
     }
   }, [authenticatePasskey, approveWithTicket, fail]);
+
+  /**
+   * The second factor, for a sign-in whose app requires one. The server checks
+   * the code for the user the first ticket names and answers with a ticket
+   * recording both factors, which is the one that can approve.
+   *
+   * It approves straight away when the act that asked for the factor was
+   * itself an approval: consent's tap, or the passkey mode, which has none.
+   */
+  const submitSecondFactor = useCallback(
+    async (method: DeviceSecondFactorMethod, code: string) => {
+      setStatus('working');
+      setError(null);
+      try {
+        const res = await post<{ approval_ticket: string }>(DEVICE_ENDPOINTS.secondFactor, {
+          approval_ticket: firstFactorTicketRef.current,
+          method,
+          code,
+        });
+        ticketRef.current = res.approval_ticket;
+        firstFactorTicketRef.current = null;
+        if (approveAfterSecondFactorRef.current) {
+          await approveWithTicket();
+          return;
+        }
+        if (activeRef.current) setStatus('signed_in');
+      } catch (err) {
+        fail(err);
+      }
+    },
+    [post, approveWithTicket, fail],
+  );
 
   const clearError = useCallback(() => setError(null), []);
 
@@ -370,12 +482,15 @@ export const useDeviceVerify = (): UseDeviceVerifyProps => {
     error,
     email,
     isAuthenticated: ticketRef.current !== null,
+    isSecondFactorPending: firstFactorTicketRef.current !== null,
+    secondFactorMethods,
     submitCode,
     signInWithPassword,
     signInWithPasskey,
     approve,
     confirmWithPassword,
     confirmWithPasskey,
+    submitSecondFactor,
     clearError,
   };
 };

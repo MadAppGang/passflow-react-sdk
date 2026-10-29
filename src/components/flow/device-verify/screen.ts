@@ -110,6 +110,26 @@ export const getDeviceLoginScreenProps = (device: UseDeviceVerifyProps): LoginSc
 
   if (!device.info) return null;
 
+  // Every mode asks for the second factor the same way, before its approval.
+  if (device.status === 'second_factor' || (device.status === 'working' && device.isSecondFactorPending)) {
+    return {
+      chrome: {
+        title: 'Two-Factor Authentication',
+        subtitle: `One more step to approve ${device.info.app_name}.`,
+      },
+      state: {
+        kind: 'second-factor',
+        methods: device.secondFactorMethods,
+        identity: device.email,
+        busy: device.status === 'working',
+        error: device.error?.message,
+        testId: 'device-second-factor',
+        onSubmit: (method, code) => void device.submitSecondFactor(method, code),
+        onMethodChange: device.clearError,
+      },
+    };
+  }
+
   if (device.info.mode === 'passkey') {
     const working = (device.status === 'ready' || device.status === 'working') && !device.error;
     return {

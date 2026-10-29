@@ -15,12 +15,15 @@ const device = (overrides: Partial<UseDeviceVerifyProps> = {}): UseDeviceVerifyP
   error: null,
   email: null,
   isAuthenticated: false,
+  isSecondFactorPending: false,
+  secondFactorMethods: [],
   submitCode: vi.fn(),
   signInWithPassword: vi.fn().mockResolvedValue(undefined),
   signInWithPasskey: vi.fn().mockResolvedValue(undefined),
   approve: vi.fn().mockResolvedValue(undefined),
   confirmWithPassword: vi.fn().mockResolvedValue(undefined),
   confirmWithPasskey: vi.fn().mockResolvedValue(undefined),
+  submitSecondFactor: vi.fn().mockResolvedValue(undefined),
   clearError: vi.fn(),
   ...overrides,
 });
@@ -139,6 +142,43 @@ describe('getDeviceLoginScreenProps', () => {
     if (screen?.state.kind !== 'status') throw new Error('expected status state');
     expect(screen.state.recoverable).toBeUndefined();
     expect(screen.state.onRetry).toBeUndefined();
+  });
+
+  it('asks for the second factor before any approval, in every mode', () => {
+    for (const mode of ['consent', 'full_login', 'passkey'] as const) {
+      const value = device({
+        status: 'second_factor',
+        isSecondFactorPending: true,
+        secondFactorMethods: ['totp', 'recovery_codes'],
+        email: 'jack@example.com',
+        info: {
+          mode,
+          user_code: 'WDJB-MJHT',
+          app_name: 'Passflow CLI',
+          csrf_token: 'csrf-token',
+          methods: { password: true, passkey: true },
+        },
+      });
+      const screen = getDeviceLoginScreenProps(value);
+
+      expect(screen?.state).toMatchObject({
+        kind: 'second-factor',
+        methods: ['totp', 'recovery_codes'],
+        identity: 'jack@example.com',
+        busy: false,
+      });
+      if (screen?.state.kind !== 'second-factor') throw new Error('expected second-factor state');
+      screen.state.onSubmit('totp', '123456');
+      expect(value.submitSecondFactor).toHaveBeenCalledWith('totp', '123456');
+    }
+  });
+
+  it('keeps the second-factor screen while the code is checked', () => {
+    const screen = getDeviceLoginScreenProps(
+      device({ status: 'working', isSecondFactorPending: true, secondFactorMethods: ['totp'] }),
+    );
+
+    expect(screen?.state).toMatchObject({ kind: 'second-factor', busy: true });
   });
 
   it('returns no presentation while loading', () => {

@@ -11,6 +11,8 @@ export type {
   LoginCodeEntryState,
   LoginPasskeyProgressState,
   LoginDeviceApprovalState,
+  LoginSecondFactorMethod,
+  LoginSecondFactorState,
   LoginInvitationState,
   LoginGeneralErrorState,
   LoginConsentState,

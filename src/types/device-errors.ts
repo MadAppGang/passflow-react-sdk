@@ -56,6 +56,10 @@ export type DeviceErrorType =
   | 'bad_credentials'
   /** The form was submitted empty. */
   | 'missing_credentials'
+  /** The second-factor code is wrong. */
+  | 'second_factor_invalid'
+  /** The second-factor form was submitted empty. */
+  | 'missing_second_factor'
   /** The account is blocked. */
   | 'account_blocked'
   /** The passkey ceremony did not complete: cancelled, timed out, or none found. */

@@ -35,6 +35,8 @@ const DEVICE_ERROR_COPY: Record<DeviceErrorType, string> = {
   app_unavailable: 'The app that asked you to sign in is no longer available. Start again from your device.',
   bad_credentials: "That email or password isn't right.",
   missing_credentials: 'Enter your email and password to continue.',
+  second_factor_invalid: "That code isn't right. Check it and enter it again.",
+  missing_second_factor: 'Enter the code to continue.',
   account_blocked: 'This account has been blocked. Contact whoever manages it for help.',
   // The three-cause sentence is deliberate, not hedging: the browser reports
   // "cancelled", "timed out" and "no passkey here" identically (by design — it
@@ -54,6 +56,8 @@ const RECOVERABLE: ReadonlySet<DeviceErrorType> = new Set<DeviceErrorType>([
   'code_invalid',
   'bad_credentials',
   'missing_credentials',
+  'second_factor_invalid',
+  'missing_second_factor',
   'passkey_failed',
   'offline',
   'generic',
@@ -87,6 +91,8 @@ const REASON_TO_TYPE: Record<string, DeviceErrorType> = {
   unavailable: 'app_unavailable',
   bad_credentials: 'bad_credentials',
   missing_credentials: 'missing_credentials',
+  second_factor_invalid: 'second_factor_invalid',
+  missing_second_factor: 'missing_second_factor',
   blocked: 'account_blocked',
   passkey_failed: 'passkey_failed',
 };

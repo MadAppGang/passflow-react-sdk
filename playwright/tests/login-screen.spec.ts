@@ -293,6 +293,22 @@ test.describe('LoginScreen Storybook catalog', () => {
     await expect(page.getByRole('button', { name: /Sign In/i })).toHaveCount(0);
   });
 
+  test('device second factor takes an authenticator code or a recovery code', async ({ page }) => {
+    await openStory(page, 'components-loginscreen--device-second-factor');
+    const verify = page.getByRole('button', { name: 'Verify' });
+    const code = page.getByLabel('Authenticator code');
+    await expect(code).toBeFocused();
+    await expect(code).toHaveAttribute('autocomplete', 'one-time-code');
+    await expect(verify).toBeDisabled();
+    await code.fill('123456');
+    await expect(verify).toBeEnabled();
+
+    await page.getByRole('button', { name: 'Use recovery code' }).click();
+    await expect(page.getByLabel('Recovery code')).toHaveValue('');
+    await expect(verify).toBeDisabled();
+    await expect(page.getByRole('button', { name: 'Use authenticator app' })).toBeVisible();
+  });
+
   test('device approval exposes an announced busy state', async ({ page }) => {
     await openStory(page, 'components-loginscreen--device-full-login-approving');
 
