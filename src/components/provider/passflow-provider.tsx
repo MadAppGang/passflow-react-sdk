@@ -603,6 +603,8 @@ const useSecondFactorLanding = (
   // Once, on mount — the landing is a property of the page load.
   useEffect(() => {
     if (!landedWithTwoFactorToken) return;
+    // A signed-in user owes no factor: a `#tfa_token=` link is not theirs to answer.
+    if (passflow.isAuthenticated()) return;
     if (!passflow.isTwoFactorVerificationRequired()) passflow.handleTokensRedirect();
     if (passflow.isTwoFactorVerificationRequired()) setPending(true);
   }, []);

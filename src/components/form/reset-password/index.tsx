@@ -1,6 +1,15 @@
 import { Button, FieldPassword, Icon } from '@/components/ui';
+import { routes } from '@/context';
 import { useAppSettings, useNavigation, usePassflow, useResetPassword } from '@/hooks';
-import { cn, getUrlWithTokens, isValidUrl, passwordValidation, undefinedOnCatch, useUrlParams } from '@/utils';
+import {
+  cn,
+  getUrlWithTokens,
+  isValidUrl,
+  passwordValidation,
+  routeToSecondFactor,
+  undefinedOnCatch,
+  useUrlParams,
+} from '@/utils';
 /* eslint-disable max-len */
 /* eslint-disable react/jsx-props-no-spreading */
 /* eslint-disable jsx-a11y/label-has-associated-control */
@@ -23,13 +32,17 @@ const searchParamsResetPasswordSchema = Yup.object().shape({
 
 type TResetPassword = {
   successAuthRedirect?: SuccessAuthRedirect;
+  twoFactorVerifyPath?: string;
 };
 
 type ResetToken = Token & {
   redirect_url: string;
 };
 
-export const ResetPassword: FC<TResetPassword> = ({ successAuthRedirect }) => {
+export const ResetPassword: FC<TResetPassword> = ({
+  successAuthRedirect,
+  twoFactorVerifyPath = routes.two_factor_verify.path,
+}) => {
   const {
     getValues,
     control,
@@ -69,6 +82,8 @@ export const ResetPassword: FC<TResetPassword> = ({ successAuthRedirect }) => {
     const values = getValues();
     const resetTokenType = resetTokenData as ResetToken;
     const status = await fetch(values.password);
+    // A user with 2FA is signed in only once the second factor passes.
+    if (status && routeToSecondFactor(passflow, navigate, twoFactorVerifyPath)) return;
     if (status) {
       if (!isValidUrl(resetTokenType?.redirect_url ?? successAuthRedirect ?? appSettings?.defaults?.redirect))
         navigate({ to: resetTokenType?.redirect_url ?? successAuthRedirect ?? appSettings?.defaults?.redirect });

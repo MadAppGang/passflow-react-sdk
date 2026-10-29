@@ -1,4 +1,5 @@
 import { useNavigation, usePassflow } from '@/hooks';
+import { Passflow } from '@passflow/core';
 import { render, waitFor } from '@testing-library/react';
 import { type FC, useEffect } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -74,6 +75,20 @@ describe('PassflowProvider on a landing that owes its second factor', () => {
     renderProvider(navigate, { twoFactorVerifyPath: '/auth/two-factor-verify' });
 
     await waitFor(() => expect(navigate).toHaveBeenCalledWith({ to: '/auth/two-factor-verify', replace: true }));
+  });
+
+  it('leaves a signed-in user where they are', async () => {
+    // A `#tfa_token=` link planted on a signed-in user is not theirs to answer.
+    const signedIn = vi.spyOn(Passflow.prototype, 'isAuthenticated').mockReturnValue(true);
+    window.history.replaceState(null, '', `/dashboard#tfa_token=${TFA_TOKEN}`);
+    const navigate = vi.fn();
+
+    renderProvider(navigate);
+
+    await waitFor(() => expect(owesFactor).not.toBeUndefined());
+    await new Promise((resolve) => setTimeout(resolve, 20));
+    expect(navigate).not.toHaveBeenCalled();
+    signedIn.mockRestore();
   });
 
   it('leaves an ordinary page load alone', async () => {
