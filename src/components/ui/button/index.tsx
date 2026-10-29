@@ -34,7 +34,10 @@ export const Ripple: FC<RippleProps> = ({ size, x, y }) => {
 type TButton = PropsWithChildren &
   ButtonHTMLAttributes<HTMLButtonElement> & {
     size: 'small' | 'medium' | 'big';
-    variant: 'primary' | 'secondary' | 'outlined' | 'warning' | 'clean' | 'provider' | 'dark' | 'option';
+    /**
+     * `link` is an action set in running text: no box, link colour, no ripple.
+     */
+    variant: 'primary' | 'secondary' | 'outlined' | 'warning' | 'clean' | 'provider' | 'dark' | 'option' | 'link';
     type: 'button' | 'submit' | 'reset';
     withIcon?: boolean;
     asIcon?: boolean;
@@ -90,6 +93,7 @@ export const Button: FC<TButton> = ({
     'passflow-button--provider': variant === 'provider',
     'passflow-button--dark': variant === 'dark',
     'passflow-button--option': variant === 'option',
+    'passflow-button--link': variant === 'link',
     'passflow-button--with-icon': withIcon,
     'passflow-button--as-icon': asIcon,
   };
@@ -141,7 +145,7 @@ export const Button: FC<TButton> = ({
       ) : (
         children
       )}
-      {withRipple && (
+      {withRipple && variant !== 'link' && (
         <div aria-hidden className='passflow-ripple-container'>
           {ripples}
         </div>

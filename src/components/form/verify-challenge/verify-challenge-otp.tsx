@@ -7,6 +7,7 @@ import { VerifyChallengeOTPManual } from './verify-challenge-otp-manual';
 import { VerifyChallengeOTPRedirect } from './verify-challenge-otp-redirect';
 
 import '@/styles/index.css';
+import { routes } from '@/context';
 import { useUrlParams, verificationLinkErrorMessage } from '@/utils';
 
 type TVerifyChallengeOTP = {
@@ -14,6 +15,7 @@ type TVerifyChallengeOTP = {
   shouldAutoFocus: boolean;
   signUpPath: string;
   successAuthRedirect?: SuccessAuthRedirect;
+  twoFactorVerifyPath?: string;
 };
 
 const redirectSearchParamsVerifyChallengeOtpSchema = Yup.object().shape({
@@ -35,6 +37,7 @@ export const VerifyChallengeOTP: FC<TVerifyChallengeOTP> = ({
   numInputs,
   shouldAutoFocus,
   signUpPath,
+  twoFactorVerifyPath = routes.two_factor_verify.path,
 }) => {
   const { get } = useUrlParams({
     otp: '',
@@ -64,7 +67,9 @@ export const VerifyChallengeOTP: FC<TVerifyChallengeOTP> = ({
 
     const { appId, otp, challengeId } = redirectParams;
 
-    return <VerifyChallengeOTPRedirect appId={appId} challengeId={challengeId} otp={otp} />;
+    return (
+      <VerifyChallengeOTPRedirect appId={appId} challengeId={challengeId} otp={otp} twoFactorVerifyPath={twoFactorVerifyPath} />
+    );
   }
 
   const params = {
@@ -100,6 +105,7 @@ export const VerifyChallengeOTP: FC<TVerifyChallengeOTP> = ({
       shouldAutoFocus={shouldAutoFocus}
       signUpPath={signUpPath}
       successAuthRedirect={successAuthRedirect}
+      twoFactorVerifyPath={twoFactorVerifyPath}
     />
   );
 };

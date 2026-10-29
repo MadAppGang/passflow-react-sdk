@@ -2,6 +2,22 @@
 
 All notable changes to `@passflow/react` are documented in this file.
 
+## [0.13.0] - 2026-10-30
+
+### Added
+
+- Every sign-in path reaches the 2FA screen when the server asks for a second factor: sign-up, password reset, the typed OTP and the emailed link join sign-in's password and passkey paths, and `PassflowProvider` sends a federated landing that carries `#tfa_token=` there too. The route is the mounted flow's own, or the new `twoFactorVerifyPath` prop on `PassflowProvider`, `SignUp`, `VerifyChallengeOTP` and `ResetPassword`. A signed-in user who opens a `#tfa_token=` link stays where they are.
+- A "Trust this device" switch on the 2FA verify and recovery forms, off by default and labelled through `trustDeviceLabel`. Ticked, the server trusts the browser, and its later sign-ins skip the second factor while the app trusts devices.
+- `useTwoFactorVerify().verify(code, options?)` and `.useRecoveryCode(code, options?)` take `{ trustDevice }`.
+- `useTrustedDevices()` lists the user's trusted devices on the app and revokes one.
+- `Button` gains a `link` variant, which the 2FA forms' "use a recovery code" links now use; `Switch` gets its Storybook stories.
+
+### Changed
+
+- Requires `@passflow/core` 0.18.0 or later, up from 0.17.0.
+
+Needs a server that asks for the second factor on every sign-in path and sets trusted-device cookies (Passflow `src/v0.18.0`).
+
 ## [0.12.0] - 2026-10-29
 
 ### Added

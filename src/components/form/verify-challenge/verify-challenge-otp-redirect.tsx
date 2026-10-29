@@ -1,5 +1,12 @@
+import { routes } from '@/context';
 import { useNavigation, usePassflow, usePasswordlessComplete } from '@/hooks';
-import { getUrlWithTokens, isValidUrl, verificationLinkErrorMessage, verificationRequestErrorMessage } from '@/utils';
+import {
+  getUrlWithTokens,
+  isValidUrl,
+  routeToSecondFactor,
+  verificationLinkErrorMessage,
+  verificationRequestErrorMessage,
+} from '@/utils';
 import React, { useEffect, useState } from 'react';
 import { VerifyChallengeSuccess } from './verify-challenge-success';
 
@@ -7,9 +14,15 @@ type VerifyChallengeOTPRedirectProps = {
   appId: string | null;
   otp: string | null;
   challengeId: string | null;
+  twoFactorVerifyPath?: string;
 };
 
-export const VerifyChallengeOTPRedirect = ({ otp, challengeId, appId }: VerifyChallengeOTPRedirectProps) => {
+export const VerifyChallengeOTPRedirect = ({
+  otp,
+  challengeId,
+  appId,
+  twoFactorVerifyPath = routes.two_factor_verify.path,
+}: VerifyChallengeOTPRedirectProps) => {
   const passflow = usePassflow();
   const { navigate } = useNavigation();
   const [paramsError, setParamsError] = useState<string | null>(null);
@@ -30,6 +43,8 @@ export const VerifyChallengeOTPRedirect = ({ otp, challengeId, appId }: VerifyCh
         const response = await fetch({ otp, challenge_id: challengeId });
 
         if (response) {
+          // The link completed the first factor only: no tokens yet.
+          if (routeToSecondFactor(passflow, navigate, twoFactorVerifyPath)) return;
           if (response.redirect_url) {
             if (!isValidUrl(response.redirect_url)) navigate({ to: response.redirect_url });
             else window.location.href = await getUrlWithTokens(passflow, response.redirect_url);

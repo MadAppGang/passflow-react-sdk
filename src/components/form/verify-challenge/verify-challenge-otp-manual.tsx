@@ -1,6 +1,7 @@
 import { Button, Icon } from '@/components/ui';
+import { routes } from '@/context';
 import { useAppSettings, useNavigation, usePassflow, usePasswordlessComplete, useSignIn } from '@/hooks';
-import { cn, getUrlWithTokens, isValidUrl, useUrlParams } from '@/utils';
+import { cn, getUrlWithTokens, isValidUrl, routeToSecondFactor, useUrlParams } from '@/utils';
 import type {
   InternalStrategyChallenge,
   PassflowPasswordlessResponse,
@@ -27,6 +28,7 @@ type VerifyChallengeOTPManualProps = {
   shouldAutoFocus: boolean;
   signUpPath: string;
   successAuthRedirect?: string;
+  twoFactorVerifyPath?: string;
 };
 
 const challengeTypeFullString = {
@@ -44,6 +46,7 @@ export const VerifyChallengeOTPManual: FC<VerifyChallengeOTPManualProps> = ({
   shouldAutoFocus,
   successAuthRedirect,
   signUpPath,
+  twoFactorVerifyPath = routes.two_factor_verify.path,
 }) => {
   const passflow = usePassflow();
   const { appSettings, createTenantForNewUser, currentStyles, loginAppTheme } = useAppSettings();
@@ -85,6 +88,8 @@ export const VerifyChallengeOTPManual: FC<VerifyChallengeOTPManualProps> = ({
       const fetchData = async () => {
         const response = await fetchPasswordlessComplete(payload);
         if (response) {
+          // The code completed the first factor only: no tokens yet.
+          if (routeToSecondFactor(passflow, navigate, twoFactorVerifyPath)) return;
           if (response.redirect_url) {
             if (!isValidUrl(response.redirect_url)) navigate({ to: response.redirect_url });
             else window.location.href = await getUrlWithTokens(passflow, response.redirect_url);
@@ -95,7 +100,7 @@ export const VerifyChallengeOTPManual: FC<VerifyChallengeOTPManualProps> = ({
       };
       void fetchData();
     }
-  }, [valueOTP, numInputs, fetchPasswordlessComplete, challengeId, navigate, passflow]);
+  }, [valueOTP, numInputs, fetchPasswordlessComplete, challengeId, navigate, passflow, twoFactorVerifyPath]);
 
   if (paramsError) throw new Error(paramsError);
 

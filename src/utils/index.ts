@@ -19,6 +19,7 @@ export {
 } from './auth-error';
 export { getInvitationAuthChrome, type InvitationAuthIntent } from './invitation-auth-chrome';
 export { TwoFactorLoopPrevention } from './two-factor-loop-prevention';
+export { routeToSecondFactor, urlCarriesTwoFactorToken } from './second-factor';
 export {
   withAuth,
   attachAuth,

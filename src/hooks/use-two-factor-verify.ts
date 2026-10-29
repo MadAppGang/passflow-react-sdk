@@ -1,13 +1,15 @@
 import type { TwoFactorError, TwoFactorErrorType } from '@/types/two-factor-errors';
 import { classifyTwoFactorError } from '@/utils/classify-two-factor-error';
-import type { TwoFactorRecoveryResponse, TwoFactorVerifyResponse } from '@passflow/core';
+import type { TwoFactorCompletionOptions, TwoFactorRecoveryResponse, TwoFactorVerifyResponse } from '@passflow/core';
 import { useCallback, useState } from 'react';
 import { usePassflow } from './use-passflow';
 
 export type UseTwoFactorVerifyProps = () => {
   isVerificationRequired: () => boolean;
-  verify: (code: string) => Promise<TwoFactorVerifyResponse | null>;
-  useRecoveryCode: (code: string) => Promise<TwoFactorRecoveryResponse | null>;
+  /** `options.trustDevice` asks the server to trust this device for later sign-ins. */
+  verify: (code: string, options?: TwoFactorCompletionOptions) => Promise<TwoFactorVerifyResponse | null>;
+  /** `options.trustDevice` asks the server to trust this device for later sign-ins. */
+  useRecoveryCode: (code: string, options?: TwoFactorCompletionOptions) => Promise<TwoFactorRecoveryResponse | null>;
   reset: () => void;
   isLoading: boolean;
   isError: boolean;
@@ -42,7 +44,7 @@ export const useTwoFactorVerify: UseTwoFactorVerifyProps = () => {
   }, []);
 
   const verify = useCallback(
-    async (code: string): Promise<TwoFactorVerifyResponse | null> => {
+    async (code: string, options?: TwoFactorCompletionOptions): Promise<TwoFactorVerifyResponse | null> => {
       setIsLoading(true);
       setIsError(false);
       setError('');
@@ -50,7 +52,7 @@ export const useTwoFactorVerify: UseTwoFactorVerifyProps = () => {
       setErrorDetails(null);
 
       try {
-        const response = await passflow.verifyTwoFactor(code);
+        const response = await passflow.verifyTwoFactor(code, options);
         return response;
       } catch (e) {
         handleError(e);
@@ -63,7 +65,7 @@ export const useTwoFactorVerify: UseTwoFactorVerifyProps = () => {
   );
 
   const useRecoveryCode = useCallback(
-    async (code: string): Promise<TwoFactorRecoveryResponse | null> => {
+    async (code: string, options?: TwoFactorCompletionOptions): Promise<TwoFactorRecoveryResponse | null> => {
       setIsLoading(true);
       setIsError(false);
       setError('');
@@ -71,7 +73,7 @@ export const useTwoFactorVerify: UseTwoFactorVerifyProps = () => {
       setErrorDetails(null);
 
       try {
-        const response = await passflow.useTwoFactorRecoveryCode(code);
+        const response = await passflow.useTwoFactorRecoveryCode(code, options);
         return response;
       } catch (e) {
         handleError(e);
