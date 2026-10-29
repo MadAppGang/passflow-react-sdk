@@ -2,6 +2,17 @@
 
 All notable changes to `@passflow/react` are documented in this file.
 
+## [0.12.0] - 2026-10-29
+
+### Added
+
+- The device verification page asks for a second factor when the CLI's app requires one. `/oidc/device/authenticate` says so with `second_factor_required` and `second_factor_methods`, and that ticket can no longer approve. The page asks for an authenticator code, or a recovery code instead, posts it to `/oidc/device/second-factor`, and approves with the ticket that answers, which records both factors. A consent tap and the passkey mode approve straight after the factor; full login lands on the usual approval screen.
+- `useDeviceVerify` gains a `second_factor` status, `isSecondFactorPending`, `secondFactorMethods` and `submitSecondFactor`.
+- A `second-factor` `LoginScreen` state, with a catalogued Storybook story for entering a code, checking it, and a wrong code. It uses the sign-in's own two-factor copy and switches between an authenticator code and a recovery code.
+- The device error taxonomy gains `second_factor_invalid` and `missing_second_factor`, each with the page's own copy.
+
+Needs a server that sends `second_factor_required` (Passflow `src/v0.15.1`). Against an older server the page behaves as in 0.11.0.
+
 ## [0.11.0] - 2026-10-28
 
 ### Changed
