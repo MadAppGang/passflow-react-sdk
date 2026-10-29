@@ -11,7 +11,7 @@ All notable changes to `@passflow/react` are documented in this file.
 - A `second-factor` `LoginScreen` state, with a catalogued Storybook story for entering a code, checking it, and a wrong code. It uses the sign-in's own two-factor copy and switches between an authenticator code and a recovery code.
 - The device error taxonomy gains `second_factor_invalid` and `missing_second_factor`, each with the page's own copy.
 
-Needs a server that sends `second_factor_required` (Passflow `src/v0.15.1`). Against an older server the page behaves as in 0.11.0.
+Needs a server that sends `second_factor_required` (Passflow `src/v0.16.1`). Against an older server the page behaves as in 0.11.0.
 
 ## [0.11.0] - 2026-10-28
 
