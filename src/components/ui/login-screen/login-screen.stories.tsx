@@ -519,6 +519,52 @@ export const DeviceFullLoginApproving: Story = {
   ),
 };
 
+const deviceSecondFactorChrome = {
+  title: 'Two-Factor Authentication',
+  subtitle: 'One more step to approve Passflow CLI.',
+};
+
+export const DeviceSecondFactor: Story = {
+  args: story(
+    {
+      kind: 'second-factor',
+      methods: ['totp', 'recovery_codes'],
+      identity: 'jack@example.com',
+      testId: 'device-second-factor',
+      onSubmit: handlers.onCode,
+    },
+    deviceSecondFactorChrome,
+  ),
+};
+
+export const DeviceSecondFactorChecking: Story = {
+  args: story(
+    {
+      kind: 'second-factor',
+      methods: ['totp', 'recovery_codes'],
+      identity: 'jack@example.com',
+      busy: true,
+      testId: 'device-second-factor',
+      onSubmit: handlers.onCode,
+    },
+    deviceSecondFactorChrome,
+  ),
+};
+
+export const DeviceSecondFactorInvalid: Story = {
+  args: story(
+    {
+      kind: 'second-factor',
+      methods: ['totp', 'recovery_codes'],
+      identity: 'jack@example.com',
+      error: deviceErrorOfType('second_factor_invalid').message,
+      testId: 'device-second-factor',
+      onSubmit: handlers.onCode,
+    },
+    deviceSecondFactorChrome,
+  ),
+};
+
 export const DevicePasskeyWaiting: Story = {
   args: story(
     {

@@ -118,6 +118,23 @@ export type LoginDeviceApprovalState = {
   onApprove: () => void;
 };
 
+/** A second factor the screen can take, named as the server names it. */
+export type LoginSecondFactorMethod = 'totp' | 'recovery_codes';
+
+export type LoginSecondFactorState = {
+  kind: 'second-factor';
+  /** The factors on offer; the first is shown first. */
+  methods: LoginSecondFactorMethod[];
+  identity?: string | null;
+  busy?: boolean;
+  error?: string | null;
+  submitLabel?: string;
+  testId?: string;
+  onSubmit: (method: LoginSecondFactorMethod, code: string) => void;
+  /** Called when the user switches factor, so a stale error can be cleared. */
+  onMethodChange?: () => void;
+};
+
 export type LoginInvitationState = {
   kind: 'invitation';
   identity?: string | null;
@@ -190,6 +207,7 @@ export type LoginScreenState =
   | LoginCodeEntryState
   | LoginPasskeyProgressState
   | LoginDeviceApprovalState
+  | LoginSecondFactorState
   | LoginInvitationState
   | LoginGeneralErrorState
   | LoginConsentState

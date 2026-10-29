@@ -6,6 +6,7 @@ import { LoginDeviceApproval } from './device-approval';
 import { LoginGeneralError } from './general-error';
 import { LoginInvitation } from './invitation';
 import { LoginPasskeyProgress } from './passkey-progress';
+import { LoginSecondFactor } from './second-factor';
 import { LoginScreenShell } from './shell';
 import { LoginStatus } from './status';
 import type { LoginScreenProps } from './types';
@@ -21,6 +22,8 @@ export const LoginScreen: FC<LoginScreenProps> = ({ chrome, state }) => {
         return <LoginPasskeyProgress {...state} />;
       case 'device-approval':
         return <LoginDeviceApproval {...state} />;
+      case 'second-factor':
+        return <LoginSecondFactor {...state} />;
       case 'invitation':
         return <LoginInvitation {...state} />;
       case 'general-error':
