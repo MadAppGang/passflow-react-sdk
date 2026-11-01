@@ -1,4 +1,5 @@
 import { UpgradeProvider, type UpgradeProviderProps } from '@/components/provider/upgrade-provider';
+import { ContinuingStatus } from '@/components/ui/continuing-status';
 import {
   AuthProvider,
   type NavigateFunction,
@@ -68,6 +69,7 @@ type PassflowProviderProps = PassflowConfig & {
  * new credential endpoint lands server-side, it must be added here.
  *
  *   - /auth/login                      — password login
+ *   - /auth/register                   — password sign-up
  *   - /auth/passwordless/*             — OTP / magic-link start+complete
  *   - /auth/passkey/*                  — passkey registration/auth
  *   - /auth/2fa/*                      — second-factor verify
@@ -76,7 +78,8 @@ type PassflowProviderProps = PassflowConfig & {
  *                                        (ADR-2; activated on Leg 2 of
  *                                        OIDC two-step flows)
  */
-const AUTH_ENDPOINT_PATTERN = /\/auth\/(login|passwordless|passkey|2fa|session\/exchange)\b|\/auth\/federated\/start\b/;
+export const AUTH_ENDPOINT_PATTERN =
+  /\/auth\/(login|register|passwordless|passkey|2fa|session\/exchange)\b|\/auth\/federated\/start\b/;
 
 /**
  * Read `parent_challenge_id` from the current URL's query string.
@@ -548,27 +551,6 @@ const useSessionExchangeOnMount = (
 };
 
 /**
- * Default placeholder rendered while session exchange is in flight.
- * Consumers can theme this via the `continuingToAppPlaceholder` prop
- * on PassflowFlow.
- */
-const DefaultContinuingPlaceholder: FC<{ appName?: string }> = ({ appName }) => (
-  <div
-    style={{
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      minHeight: '100vh',
-      fontFamily: 'system-ui, sans-serif',
-      fontSize: '1rem',
-      color: '#444',
-    }}
-  >
-    {appName ? `Continuing to ${appName}…` : 'Continuing…'}
-  </div>
-);
-
-/**
  * Context surface exposed to children so the SDK's own components
  * (or consumer code) can read the OIDC parent-challenge state.
  */
@@ -766,7 +748,7 @@ export const PassflowProvider: FC<PassflowProviderProps> = ({
             {/* Mounted outside the exchange branch so a state change does not
                 tear down and reinstall the upgrade interceptors. */}
             <UpgradeProvider {...upgradeOptions} enabled={upgradeEnabled} backend={backend}>
-              {exchangeState === 'exchanging' ? <DefaultContinuingPlaceholder appName={parentMeta?.app_name} /> : children}
+              {exchangeState === 'exchanging' ? <ContinuingStatus appName={parentMeta?.app_name} /> : children}
             </UpgradeProvider>
           </AuthProvider>
         </OIDCExchangeContext.Provider>

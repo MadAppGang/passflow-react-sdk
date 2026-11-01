@@ -5,6 +5,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 // The sign-in and sign-up forms render `LoginScreen`; these tests drive the
 // callbacks it is handed, the way a submit would, and watch where they go.
 let screenProps: LoginScreenProps | undefined;
+let oidcRedirectFollowed = false;
 
 vi.mock('@/components/ui', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@/components/ui')>()),
@@ -15,7 +16,7 @@ vi.mock('@/components/ui', async (importOriginal) => ({
 }));
 
 vi.mock('@/components/provider/passflow-provider', () => ({
-  hasFollowedOIDCRedirect: () => false,
+  hasFollowedOIDCRedirect: () => oidcRedirectFollowed,
   readParentChallengeIdFromURL: () => undefined,
 }));
 
@@ -71,9 +72,24 @@ describe('credential forms and a second factor', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     screenProps = undefined;
+    oidcRedirectFollowed = false;
     signIn.mockResolvedValue(true);
     signUp.mockResolvedValue(true);
   });
+
+  for (const path of paths().filter((p) => p.fetch === signUp)) {
+    it(`${path.name} leaves the page to a redirect the OIDC interceptor already followed`, async () => {
+      passflow.isTwoFactorVerificationRequired.mockReturnValue(false);
+      oidcRedirectFollowed = true;
+      renderFor(path);
+
+      path.submit();
+
+      await waitFor(() => expect(path.fetch).toHaveBeenCalledTimes(1));
+      await new Promise((resolve) => setTimeout(resolve));
+      expect(navigate).not.toHaveBeenCalled();
+    });
+  }
 
   for (const path of paths()) {
     describe(path.name, () => {

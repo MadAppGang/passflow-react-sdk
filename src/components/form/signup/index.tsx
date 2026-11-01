@@ -136,7 +136,7 @@ export const SignUpForm: FC<TSignUp> = ({
       ...(inviteToken ? { invite_token: inviteToken } : {}),
     } as PassflowSignUpPayload;
 
-    if (await fetch(payload, 'password')) await completeRegistration();
+    if (await fetch(payload, 'password')) await completeRegistration({ oidcMayOwnRedirect: true });
   };
 
   const submitPasskey = async () => {
