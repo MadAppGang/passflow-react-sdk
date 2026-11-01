@@ -1,0 +1,9 @@
+.passflow-continuing-status {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  font-family: var(--passflow-font-family);
+  font-size: var(--passflow-body-1);
+  color: var(--passflow-secondary-text-color);
+}
