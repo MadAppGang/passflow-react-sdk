@@ -2,5 +2,10 @@ allowBuilds:
   '@biomejs/biome': true
   # Storybook 10 still installs esbuild even though Vite 8 no longer does.
   esbuild: true
+# Refuse any version published less than a day ago (pnpm 11's default, kept
+# explicit so a default change cannot silently loosen it).
+minimumReleaseAge: 1440
+# Exact versions only, never a package-wide pattern. Remove an entry once the
+# version is older than minimumReleaseAge or no longer in the lockfile.
 minimumReleaseAgeExclude:
-  - '@passflow/core@0.14.1 || 0.15.0 || 0.17.0 || 0.18.0 || 0.19.0'
+  - '@passflow/core@0.19.0'
