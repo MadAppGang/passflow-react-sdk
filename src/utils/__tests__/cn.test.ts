@@ -15,10 +15,6 @@ describe('cn', () => {
     expect(cn('foo', undefined, 'bar', null)).toBe('foo bar');
   });
 
-  it('should merge Tailwind classes without conflicts', () => {
-    expect(cn('px-2 py-1', 'px-4')).toBe('py-1 px-4');
-  });
-
   it('should handle arrays of classes', () => {
     expect(cn(['foo', 'bar'], 'baz')).toBe('foo bar baz');
   });
@@ -31,12 +27,9 @@ describe('cn', () => {
     expect(cn()).toBe('');
   });
 
-  it('should handle complex Tailwind conflict resolution', () => {
-    expect(cn('text-sm text-lg')).toBe('text-lg');
-    expect(cn('bg-red-500', 'bg-blue-500')).toBe('bg-blue-500');
-  });
-
-  it('should handle mixed conditional and Tailwind classes', () => {
-    expect(cn('p-4', false && 'p-2', 'text-red-500')).toBe('p-4 text-red-500');
+  it('keeps every class in order, including a caller className after the base classes', () => {
+    expect(cn('passflow-button passflow-button--primary', { 'passflow-button--small': true }, 'host-extra')).toBe(
+      'passflow-button passflow-button--primary passflow-button--small host-extra',
+    );
   });
 });

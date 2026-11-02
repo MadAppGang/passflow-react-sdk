@@ -3,7 +3,10 @@
   "description": "Passflow React UI Kit",
   "version": "0.15.0",
   "type": "module",
-  "files": ["dist", "CHANGELOG.md"],
+  "files": [
+    "dist",
+    "CHANGELOG.md"
+  ],
   "main": "dist/index.cjs",
   "module": "dist/index.es.js",
   "types": "dist/src/index.d.ts",
@@ -61,7 +64,6 @@
     "react-error-boundary": "^6.1.6",
     "react-hook-form": "^7.91.0",
     "react-international-phone": "^4.8.0",
-    "tailwind-merge": "^3.7.0",
     "yup": "^1.7.1"
   },
   "devDependencies": {
