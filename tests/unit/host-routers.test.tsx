@@ -1,5 +1,6 @@
 import { PassflowFlow, PassflowProvider, useNavigation } from '@passflow/react';
 import {
+  createMemoryHistory,
   createRootRoute,
   createRoute,
   createRouter,
@@ -201,5 +202,60 @@ describe.each(hosts)('zero-config PassflowFlow inside $name', ({ renderApp }) =>
     await new Promise((resolve) => setTimeout(resolve, 100));
     expect(window.location.pathname).toBe('/dashboard');
     expect(hostPath()).toBe('/dashboard');
+  });
+});
+
+// The README's full-control example, as written: a TanStack Router app on a memory
+// history (the address bar never moves) hands the flow its location and navigate.
+describe('full control: PassflowFlow driven by a TanStack Router memory history', () => {
+  const AuthPage = () => {
+    const router = useRouter();
+    const location = useRouterState({ select: (state) => state.location });
+    return (
+      <PassflowFlow
+        location={{ pathname: location.pathname, search: location.searchStr }}
+        navigate={(to, { replace }) => {
+          const href = `${to.pathname}${to.search}`;
+          if (replace) router.history.replace(href);
+          else router.history.push(href);
+        }}
+      />
+    );
+  };
+
+  const makeRouter = () => {
+    const rootRoute = createRootRoute({
+      component: () => (
+        <>
+          <Outlet />
+          <FlowButton />
+          <output data-testid='host-path'>{useRouterState({ select: (state) => state.location.href })}</output>
+        </>
+      ),
+    });
+    const authIndex = createRoute({ getParentRoute: () => rootRoute, path: '/auth', component: AuthPage });
+    const authSplat = createRoute({ getParentRoute: () => rootRoute, path: '/auth/$', component: AuthPage });
+    return createRouter({
+      routeTree: rootRoute.addChildren([authIndex, authSplat]),
+      history: createMemoryHistory({ initialEntries: ['/auth'] }),
+    });
+  };
+
+  test('lands on sign-in and moves with search params, the address bar untouched', async () => {
+    window.history.replaceState(null, '', '/page-with-a-widget');
+    const router = makeRouter();
+    render(
+      <PassflowProvider {...providerConfig}>
+        <RouterProvider router={router} />
+      </PassflowProvider>,
+    );
+    await waitFor(() => expect(signInHeading()).not.toBeNull());
+    await waitFor(() => expect(hostPath()).toBe('/auth/signin'));
+    await act(async () => screen.getByRole('button', { name: 'flow moves' }).click());
+    await waitFor(() => expect(hostPath()).toBe('/auth/forgot-password?default_method=email_or_username'));
+    expect(signInHeading()).toBeNull();
+    await act(async () => router.history.back());
+    await waitFor(() => expect(signInHeading()).not.toBeNull());
+    expect(window.location.pathname).toBe('/page-with-a-widget');
   });
 });

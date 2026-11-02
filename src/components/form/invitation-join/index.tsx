@@ -2,7 +2,7 @@ import { type InvitationToken, parseToken } from '@passflow/core';
 import { type FC, useEffect } from 'react';
 import { ErrorComponent } from '@/components/error';
 import { LoginScreen } from '@/components/ui';
-import { routes } from '@/context';
+import { routes, useSearchSource } from '@/context';
 import { withError } from '@/hocs';
 import { useAppSettings, useJoinInvite, useNavigation, usePassflow } from '@/hooks';
 import { getUrlWithTokens, invitationLinkErrorMessage, isValidUrl, undefinedOnCatch, useUrlParams } from '@/utils';
@@ -20,6 +20,7 @@ const InvitationJoinFlow: FC<TInvitationJoinFlow> = ({
 }) => {
   const { appSettings, currentStyles, loginAppTheme } = useAppSettings();
   const { navigate } = useNavigation();
+  const searchSource = useSearchSource();
   const { get } = useUrlParams();
   const passflow = usePassflow();
   const { fetch: joinInvite, isLoading, error, isError } = useJoinInvite();
@@ -30,9 +31,9 @@ const InvitationJoinFlow: FC<TInvitationJoinFlow> = ({
 
   useEffect(() => {
     if (invitationTokenData && !hasAuthenticatedSession) {
-      navigate({ to: signInPath, search: window.location.search });
+      navigate({ to: signInPath, search: searchSource.read() });
     }
-  }, [hasAuthenticatedSession, invitationTokenData, navigate, signInPath]);
+  }, [hasAuthenticatedSession, invitationTokenData, navigate, searchSource, signInPath]);
 
   if (!invitationTokenData) {
     console.error('[passflow] invitation token could not be parsed');
@@ -57,8 +58,8 @@ const InvitationJoinFlow: FC<TInvitationJoinFlow> = ({
     else window.location.href = await getUrlWithTokens(passflow, successJoinPath);
   };
 
-  const navigateToSignIn = () => navigate({ to: signInPath, search: window.location.search });
-  const navigateToSignUp = () => navigate({ to: signUpPath, search: window.location.search });
+  const navigateToSignIn = () => navigate({ to: signInPath, search: searchSource.read() });
+  const navigateToSignUp = () => navigate({ to: signUpPath, search: searchSource.read() });
 
   return (
     <LoginScreen

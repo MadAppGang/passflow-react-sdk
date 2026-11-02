@@ -1,5 +1,37 @@
+import { renderHook } from '@testing-library/react';
+import { createElement, type ReactNode } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { SearchContext, type SearchSource } from '../../context/search-context';
 import { useUrlParams } from '../url-params';
+
+const callUrlParams = (defaults?: Record<string, string>) => renderHook(() => useUrlParams(defaults)).result.current;
+
+describe('useUrlParams inside PassflowFlow', () => {
+  const sourceFor = (search: string) => {
+    const writes: Array<{ search: string; replace: boolean }> = [];
+    const source: SearchSource = { read: () => search, write: (next, { replace }) => writes.push({ search: next, replace }) };
+    const wrapper = ({ children }: { children: ReactNode }) =>
+      createElement(SearchContext.Provider, { value: source }, children);
+    return { writes, wrapper };
+  };
+
+  it('reads the flow location, not the address bar', () => {
+    window.history.replaceState(null, '', '/elsewhere?challenge_id=from-address-bar');
+    const { wrapper } = sourceFor('?challenge_id=from-flow');
+    const params = renderHook(() => useUrlParams(), { wrapper }).result.current;
+    expect(params.get('challenge_id')).toBe('from-flow');
+  });
+
+  it('writes defaults and set() to the flow, leaving the address bar alone', () => {
+    window.history.replaceState(null, '', '/elsewhere');
+    const { wrapper, writes } = sourceFor('?a=1');
+    const params = renderHook(() => useUrlParams({ b: '2' }), { wrapper }).result.current;
+    params.set({ c: '3', a: '' });
+    expect(writes[0]).toEqual({ search: '?a=1&b=2', replace: true });
+    expect(writes.at(-1)).toEqual({ search: '?c=3', replace: false });
+    expect(window.location.pathname + window.location.search).toBe('/elsewhere');
+  });
+});
 
 describe('useUrlParams', () => {
   const originalLocation = window.location;
@@ -45,7 +77,7 @@ describe('useUrlParams', () => {
     it('should return all URL parameters', () => {
       window.location.search = '?foo=bar&baz=qux';
 
-      const params = useUrlParams();
+      const params = callUrlParams();
       const result = params.getAll();
 
       expect(result).toEqual({ foo: 'bar', baz: 'qux' });
@@ -54,7 +86,7 @@ describe('useUrlParams', () => {
     it('should return empty object when no parameters', () => {
       window.location.search = '';
 
-      const params = useUrlParams();
+      const params = callUrlParams();
       const result = params.getAll();
 
       expect(result).toEqual({});
@@ -63,7 +95,7 @@ describe('useUrlParams', () => {
     it('should handle multiple parameters with same key', () => {
       window.location.search = '?tag=red&tag=blue';
 
-      const params = useUrlParams();
+      const params = callUrlParams();
       const result = params.getAll();
 
       // URLSearchParams only keeps the last value for duplicate keys
@@ -75,7 +107,7 @@ describe('useUrlParams', () => {
     it('should get a specific parameter value', () => {
       window.location.search = '?foo=bar&baz=qux';
 
-      const params = useUrlParams();
+      const params = callUrlParams();
 
       expect(params.get('foo')).toBe('bar');
       expect(params.get('baz')).toBe('qux');
@@ -84,7 +116,7 @@ describe('useUrlParams', () => {
     it('should return null for non-existent parameter', () => {
       window.location.search = '?foo=bar';
 
-      const params = useUrlParams();
+      const params = callUrlParams();
 
       expect(params.get('nonexistent')).toBeNull();
     });
@@ -92,7 +124,7 @@ describe('useUrlParams', () => {
     it('should return null for empty parameter value', () => {
       window.location.search = '?foo=';
 
-      const params = useUrlParams();
+      const params = callUrlParams();
 
       expect(params.get('foo')).toBeNull();
     });
@@ -100,7 +132,7 @@ describe('useUrlParams', () => {
     it('should handle URL-encoded values', () => {
       window.location.search = '?message=Hello%20World&special=%3D%26%3F';
 
-      const params = useUrlParams();
+      const params = callUrlParams();
 
       expect(params.get('message')).toBe('Hello World');
       expect(params.get('special')).toBe('=&?');
@@ -111,7 +143,7 @@ describe('useUrlParams', () => {
     it('should set URL parameters', () => {
       window.location.search = '';
 
-      const params = useUrlParams();
+      const params = callUrlParams();
       params.set({ foo: 'bar', baz: 'qux' });
 
       expect(window.history.pushState).toHaveBeenCalledWith(null, '', '/test?foo=bar&baz=qux');
@@ -120,7 +152,7 @@ describe('useUrlParams', () => {
     it('should update existing parameters', () => {
       window.location.search = '?foo=old&baz=qux';
 
-      const params = useUrlParams();
+      const params = callUrlParams();
       params.set({ foo: 'new' });
 
       expect(window.history.pushState).toHaveBeenCalledWith(null, '', '/test?foo=new&baz=qux');
@@ -129,7 +161,7 @@ describe('useUrlParams', () => {
     it('should delete parameters when value is null', () => {
       window.location.search = '?foo=bar&baz=qux';
 
-      const params = useUrlParams();
+      const params = callUrlParams();
       params.set({ foo: null as any });
 
       expect(window.history.pushState).toHaveBeenCalledWith(null, '', '/test?baz=qux');
@@ -138,7 +170,7 @@ describe('useUrlParams', () => {
     it('should delete parameters when value is undefined', () => {
       window.location.search = '?foo=bar&baz=qux';
 
-      const params = useUrlParams();
+      const params = callUrlParams();
       params.set({ foo: undefined as any });
 
       expect(window.history.pushState).toHaveBeenCalledWith(null, '', '/test?baz=qux');
@@ -147,7 +179,7 @@ describe('useUrlParams', () => {
     it('should delete parameters when value is empty string', () => {
       window.location.search = '?foo=bar&baz=qux';
 
-      const params = useUrlParams();
+      const params = callUrlParams();
       params.set({ foo: '' });
 
       expect(window.history.pushState).toHaveBeenCalledWith(null, '', '/test?baz=qux');
@@ -156,7 +188,7 @@ describe('useUrlParams', () => {
     it('should remove all parameters when all are deleted', () => {
       window.location.search = '?foo=bar';
 
-      const params = useUrlParams();
+      const params = callUrlParams();
       params.set({ foo: '' });
 
       expect(window.history.pushState).toHaveBeenCalledWith(null, '', '/test');
@@ -166,7 +198,7 @@ describe('useUrlParams', () => {
       window.location.search = '';
       window.location.hash = '#section';
 
-      const params = useUrlParams();
+      const params = callUrlParams();
       params.set({ foo: 'bar' });
 
       expect(window.history.pushState).toHaveBeenCalledWith(null, '', '/test?foo=bar#section');
@@ -177,7 +209,7 @@ describe('useUrlParams', () => {
     it('should set default values when parameters do not exist', () => {
       window.location.search = '';
 
-      useUrlParams({ foo: 'default', bar: 'value' });
+      callUrlParams({ foo: 'default', bar: 'value' });
 
       expect(window.history.replaceState).toHaveBeenCalledWith(null, '', '/test?foo=default&bar=value');
     });
@@ -185,7 +217,7 @@ describe('useUrlParams', () => {
     it('should not override existing parameters', () => {
       window.location.search = '?foo=existing';
 
-      useUrlParams({ foo: 'default', bar: 'value' });
+      callUrlParams({ foo: 'default', bar: 'value' });
 
       expect(window.history.replaceState).toHaveBeenCalledWith(null, '', '/test?foo=existing&bar=value');
     });
@@ -193,7 +225,7 @@ describe('useUrlParams', () => {
     it('should not set default values that are empty strings', () => {
       window.location.search = '';
 
-      useUrlParams({ foo: '', bar: 'value' });
+      callUrlParams({ foo: '', bar: 'value' });
 
       expect(window.history.replaceState).toHaveBeenCalledWith(null, '', '/test?bar=value');
     });
@@ -201,7 +233,7 @@ describe('useUrlParams', () => {
     it('should not update URL when no changes needed', () => {
       window.location.search = '?foo=existing';
 
-      useUrlParams({ foo: 'default' });
+      callUrlParams({ foo: 'default' });
 
       expect(window.history.replaceState).not.toHaveBeenCalled();
     });
@@ -210,7 +242,7 @@ describe('useUrlParams', () => {
       window.location.search = '';
       window.location.hash = '#section';
 
-      useUrlParams({ foo: 'default' });
+      callUrlParams({ foo: 'default' });
 
       expect(window.history.replaceState).toHaveBeenCalledWith(null, '', '/test?foo=default#section');
     });
@@ -231,7 +263,7 @@ describe('useUrlParams', () => {
         }
       } as any;
 
-      const params = useUrlParams();
+      const params = callUrlParams();
       const result = params.get('message');
 
       expect(result).toBe('Hello World');

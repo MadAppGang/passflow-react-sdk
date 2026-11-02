@@ -92,7 +92,58 @@ export const providerConfig = {
 };
 
 /** Call in beforeEach; undo with vi.unstubAllGlobals(). */
+const fixtureFor = (url: string) => (url.includes('/app/settings') ? appSettingsFixture : passflowSettingsFixture);
+
+/**
+ * @passflow/core talks through axios, which picks XHR in jsdom and would reach the
+ * network. This answers every request after a tick, as the fetch stub does.
+ */
+class FakeXMLHttpRequest {
+  static readonly DONE = 4;
+  readyState = 0;
+  status = 0;
+  statusText = '';
+  responseURL = '';
+  responseType = '';
+  response: unknown = null;
+  responseText = '';
+  timeout = 0;
+  withCredentials = false;
+  upload = { addEventListener: () => undefined };
+  onloadend: (() => void) | null = null;
+  onreadystatechange: (() => void) | null = null;
+  onerror: (() => void) | null = null;
+  onabort: (() => void) | null = null;
+  ontimeout: (() => void) | null = null;
+  private url = '';
+  open(_method: string, url: string) {
+    this.url = url;
+    this.readyState = 1;
+  }
+  setRequestHeader() {}
+  getAllResponseHeaders() {
+    return 'content-type: application/json\r\n';
+  }
+  addEventListener() {}
+  removeEventListener() {}
+  abort() {}
+  send() {
+    setTimeout(() => {
+      this.readyState = 4;
+      this.status = 200;
+      this.statusText = 'OK';
+      this.responseURL = this.url;
+      this.responseText = JSON.stringify(fixtureFor(this.url));
+      this.response = this.responseText;
+      this.onreadystatechange?.();
+      this.onloadend?.();
+    }, 0);
+  }
+}
+
 export const stubBrowserApis = () => {
+  vi.stubGlobal('XMLHttpRequest', FakeXMLHttpRequest);
+
   vi.stubGlobal(
     'matchMedia',
     vi.fn((query: string) => ({
@@ -111,7 +162,7 @@ export const stubBrowserApis = () => {
     'fetch',
     vi.fn(async (input: RequestInfo | URL) => {
       const url = typeof input === 'string' ? input : input instanceof URL ? input.href : input.url;
-      const body = url.includes('/app/settings') ? appSettingsFixture : passflowSettingsFixture;
+      const body = fixtureFor(url);
       return new Response(JSON.stringify(body), {
         status: 200,
         headers: { 'Content-Type': 'application/json' },

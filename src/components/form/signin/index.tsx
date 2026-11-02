@@ -12,7 +12,7 @@ import { useMemo } from 'react';
 import { ErrorComponent } from '@/components/error';
 import { hasFollowedOIDCRedirect, readParentChallengeIdFromURL } from '@/components/provider/passflow-provider';
 import { type LoginCredentialsValues, type LoginMethodConfig, LoginScreen } from '@/components/ui';
-import { routes } from '@/context';
+import { routes, useSearchSource } from '@/context';
 import { withError } from '@/hocs';
 import { useAppSettings, useNavigation, usePassflow, useProvider, useSignIn } from '@/hooks';
 import type { SuccessAuthRedirect } from '@/types';
@@ -87,6 +87,7 @@ export const SignInForm: FC<TSignIn> = ({
 }) => {
   const passflow = usePassflow();
   const { navigate } = useNavigation();
+  const searchSource = useSearchSource();
   const {
     appSettings,
     scopes,
@@ -170,7 +171,7 @@ export const SignInForm: FC<TSignIn> = ({
     if (!response) return;
 
     const passwordlessResponse = response as PassflowPasswordlessResponse;
-    const params = new URLSearchParams(window.location.search);
+    const params = new URLSearchParams(searchSource.read());
     const newParams = queryString.stringify({
       ...Object.fromEntries(params.entries()),
       ...payload,
@@ -242,7 +243,7 @@ export const SignInForm: FC<TSignIn> = ({
           to: forgotPasswordPath ?? routes.forgot_password.path,
           getSearch: (method) =>
             queryString.stringify({
-              ...queryString.parse(window.location.search),
+              ...queryString.parse(searchSource.read()),
               default_method: method,
             }),
         },
@@ -250,7 +251,7 @@ export const SignInForm: FC<TSignIn> = ({
           prompt: "Don't have an account?",
           label: 'Sign Up',
           to: signUpPath ?? routes.signup.path,
-          search: window.location.search,
+          search: searchSource.read(),
         },
         onPassword: (values) => void handlePassword(values),
         onPasswordless: (values) => void handlePasswordless(values),

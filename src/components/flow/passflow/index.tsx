@@ -12,7 +12,7 @@ import {
   VerifyChallengeMagicLink,
   VerifyChallengeOTP,
 } from '@/components/form';
-import { NavigationContext } from '@/context';
+import { NavigationContext, SearchContext, type SearchSource } from '@/context';
 import '@/styles/index.css';
 import { ErrorComponent } from '@/components/error';
 import { withError } from '@/hocs';
@@ -27,6 +27,7 @@ import {
   FLOW_SCREENS,
   type FlowHistory,
   type FlowLocation,
+  type FlowMatch,
   type FlowNavigate,
   type FlowScreen,
   isUnderPrefix,
@@ -156,8 +157,48 @@ const PassflowRoutes: FC<PassflowRoutesProps> = ({
     if (strayInsideFlow) navigateRef.current({ pathname: paths.signin, search: location.search }, { replace: true });
   }, [strayInsideFlow, paths.signin, location.search]);
 
+  // The forms read and write search params through the flow's location, not the
+  // address bar, so memory, hash and app-driven flows carry them too. A write can
+  // happen while a form renders (default params), so it moves after the render.
+  const pathnameRef = useRef(location.pathname);
+  pathnameRef.current = location.pathname;
+  const searchSource = useMemo<SearchSource>(
+    () => ({
+      read: () => location.search,
+      write: (search, { replace }) =>
+        queueMicrotask(() => navigateRef.current({ pathname: pathnameRef.current, search }, { replace })),
+    }),
+    [location.search],
+  );
+
   if (!match) return null;
 
+  return (
+    <SearchContext.Provider value={searchSource}>
+      <FlowScreenView
+        match={match}
+        paths={paths}
+        successAuthRedirect={successAuthRedirect}
+        federatedDisplayMode={federatedDisplayMode}
+        relyingPartyId={relyingPartyId}
+      />
+    </SearchContext.Provider>
+  );
+};
+
+type FlowScreenViewProps = Pick<PassflowRoutesProps, 'successAuthRedirect' | 'federatedDisplayMode' | 'relyingPartyId'> & {
+  match: FlowMatch;
+  paths: Record<FlowScreen, string>;
+};
+
+/** The screen a matched path names, wired to the flow's other screens. */
+const FlowScreenView: FC<FlowScreenViewProps> = ({
+  match,
+  paths,
+  successAuthRedirect,
+  federatedDisplayMode,
+  relyingPartyId,
+}) => {
   switch (match.screen) {
     case 'signin':
       return (

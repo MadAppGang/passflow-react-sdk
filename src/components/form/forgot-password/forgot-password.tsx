@@ -8,7 +8,7 @@ import { type FC, useMemo } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import * as Yup from 'yup';
 import { Button, FieldPhone, FieldText, Icon, Link } from '@/components/ui';
-import { routes } from '@/context';
+import { routes, useSearchSource } from '@/context';
 import { useAppSettings, useForgotPassword, useNavigation } from '@/hooks';
 import { cn, emailRegex, getAuthMethods, getIdentityLabel, useUrlParams } from '@/utils';
 import { Wrapper } from '../wrapper';
@@ -51,6 +51,7 @@ export const ForgotPassword: FC<TForgotPassword> = ({
 
   const authMethods = useMemo(() => getAuthMethods(appSettings?.auth_strategies), [appSettings]);
   const { navigate } = useNavigation();
+  const searchSource = useSearchSource();
   const { get } = useUrlParams({
     default_method: '',
   });
@@ -86,7 +87,7 @@ export const ForgotPassword: FC<TForgotPassword> = ({
     const status = await fetch(payload);
 
     if (status) {
-      const currentSearchParams = new URLSearchParams(window.location.search);
+      const currentSearchParams = new URLSearchParams(searchSource.read());
       const newParams = queryString.stringify({
         ...Object.fromEntries(currentSearchParams.entries()),
         ...payload,
