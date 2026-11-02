@@ -1,8 +1,8 @@
-import type { SuccessAuthRedirect } from '@/types';
 /* eslint-disable complexity */
 /* eslint-disable no-nested-ternary */
 import type { FC } from 'react';
 import * as Yup from 'yup';
+import type { SuccessAuthRedirect } from '@/types';
 import { VerifyChallengeOTPManual } from './verify-challenge-otp-manual';
 import { VerifyChallengeOTPRedirect } from './verify-challenge-otp-redirect';
 

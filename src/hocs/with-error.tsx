@@ -1,18 +1,15 @@
+/* eslint-disable react/prop-types */
+/* eslint-disable react/jsx-props-no-spreading */
+import { type ComponentType, useContext } from 'react';
+import { ErrorBoundary, type FallbackProps } from 'react-error-boundary';
 import type { TError } from '@/components/error';
 import type { PassflowProps } from '@/components/flow/passflow';
 import type { TInvitationJoinFlow, TSignIn, TSignUp } from '@/components/form';
 import { PassflowContext } from '@/context';
-import React from 'react';
-/* eslint-disable react/prop-types */
-/* eslint-disable react/jsx-props-no-spreading */
-import { type ComponentType, useContext } from 'react';
-import { ErrorBoundary } from 'react-error-boundary';
 
 type UnionType = TSignIn | TSignUp | TInvitationJoinFlow | PassflowProps;
-type TFallbackComponentProps = {
-  error: Error;
-  resetErrorBoundary: (...args: unknown[]) => void;
-};
+// react-error-boundary 6 types the caught value as unknown: anything can be thrown.
+const toErrorMessage = (error: unknown) => (error instanceof Error ? error.message : String(error));
 
 const excludeRoutes = ['verify-challenge-otp', 'password/reset', 'two-factor-verify', 'two-factor-recovery'];
 
@@ -28,8 +25,8 @@ export const withError =
       return (
         <ErrorBoundary
           // eslint-disable-next-line react/no-unstable-nested-components
-          FallbackComponent={({ error }: TFallbackComponentProps) => (
-            <ErrorComponent goBackRedirectTo={successAuthRedirect ?? '/'} error={error.message} />
+          FallbackComponent={({ error }: FallbackProps) => (
+            <ErrorComponent goBackRedirectTo={successAuthRedirect ?? '/'} error={toErrorMessage(error)} />
           )}
         >
           <Component {...props} />
@@ -52,8 +49,8 @@ export const withError =
     return (
       <ErrorBoundary
         // eslint-disable-next-line react/no-unstable-nested-components
-        FallbackComponent={({ error }: TFallbackComponentProps) => (
-          <ErrorComponent goBackRedirectTo={successAuthRedirect ?? '/'} error={error.message} />
+        FallbackComponent={({ error }: FallbackProps) => (
+          <ErrorComponent goBackRedirectTo={successAuthRedirect ?? '/'} error={toErrorMessage(error)} />
         )}
       >
         <Component {...props} />

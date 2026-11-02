@@ -1,5 +1,3 @@
-import type { AuthOperation, AuthUiError } from '@/types';
-import { authErrorFor } from '@/utils';
 import type {
   PassflowPasskeyAuthenticateStartPayload,
   PassflowPasswordlessResponse,
@@ -7,6 +5,8 @@ import type {
   PassflowSignInPayload,
 } from '@passflow/core';
 import { useCallback, useState } from 'react';
+import type { AuthOperation, AuthUiError } from '@/types';
+import { authErrorFor } from '@/utils';
 import { usePassflow } from './use-passflow';
 
 export type UseSignInProps = () => {

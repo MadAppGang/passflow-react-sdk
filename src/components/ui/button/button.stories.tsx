@@ -148,10 +148,10 @@ export const OptionPressedDisabled: Story = {
 };
 
 /**
- * The described state of `option`: the hint is the button's DESCRIPTION, not part
- * of its name. The variant pins the accessible name to the label span and points
- * `aria-describedby` at the hint, so assistive tech announces "Passkey" followed
- * by the hint as a description. The two-line geometry is unchanged.
+ * The described state of `option`: every visible line is part of the accessible
+ * name (WCAG 2.5.3, Label in Name). The button is named from its content, label
+ * first, so assistive tech announces "Passkey Confirm with your device" once,
+ * and a voice user can say what they see. The two-line geometry is unchanged.
  */
 export const OptionDescribed: Story = {
   args: {

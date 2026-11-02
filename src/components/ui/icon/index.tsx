@@ -1,9 +1,28 @@
-import { cn } from '@/utils';
 import type { CSSProperties } from 'react';
+import { cn } from '@/utils';
 import { CountryFlag } from '../country-flag';
 import '@/styles/index.css';
 import './style.css';
 
+import browserChrome from '@/assets/icons/general/browser-chrome.svg';
+import caretDown from '@/assets/icons/general/caret-down.svg';
+import check from '@/assets/icons/general/check.svg';
+import close from '@/assets/icons/general/close.svg';
+import dotsVertical from '@/assets/icons/general/dots-vertical.svg';
+import edit from '@/assets/icons/general/edit.svg';
+import eyeOff from '@/assets/icons/general/eye-off.svg';
+import eyeOn from '@/assets/icons/general/eye-on.svg';
+import key from '@/assets/icons/general/key.svg';
+import label from '@/assets/icons/general/label.svg';
+import logo from '@/assets/icons/general/logo.svg';
+import logoRed from '@/assets/icons/general/logo-red.svg';
+import mail from '@/assets/icons/general/mail.svg';
+import onePassword from '@/assets/icons/general/one-password.svg';
+import passkey from '@/assets/icons/general/passkey.svg';
+import phone from '@/assets/icons/general/phone.svg';
+import search from '@/assets/icons/general/search.svg';
+import trash from '@/assets/icons/general/trash.svg';
+import warning from '@/assets/icons/general/warning.svg';
 import apple from '@/assets/icons/providers/apple.svg';
 import atlassian from '@/assets/icons/providers/atlassian.svg';
 import bitbucket from '@/assets/icons/providers/bitbucket.svg';
@@ -23,26 +42,6 @@ import tiktok from '@/assets/icons/providers/tiktok.svg';
 import twitch from '@/assets/icons/providers/twitch.svg';
 import twitter from '@/assets/icons/providers/twitter.svg';
 import xero from '@/assets/icons/providers/xero.svg';
-
-import browserChrome from '@/assets/icons/general/browser-chrome.svg';
-import caretDown from '@/assets/icons/general/caret-down.svg';
-import check from '@/assets/icons/general/check.svg';
-import close from '@/assets/icons/general/close.svg';
-import dotsVertical from '@/assets/icons/general/dots-vertical.svg';
-import edit from '@/assets/icons/general/edit.svg';
-import eyeOff from '@/assets/icons/general/eye-off.svg';
-import eyeOn from '@/assets/icons/general/eye-on.svg';
-import key from '@/assets/icons/general/key.svg';
-import label from '@/assets/icons/general/label.svg';
-import logoRed from '@/assets/icons/general/logo-red.svg';
-import logo from '@/assets/icons/general/logo.svg';
-import mail from '@/assets/icons/general/mail.svg';
-import onePassword from '@/assets/icons/general/one-password.svg';
-import passkey from '@/assets/icons/general/passkey.svg';
-import phone from '@/assets/icons/general/phone.svg';
-import search from '@/assets/icons/general/search.svg';
-import trash from '@/assets/icons/general/trash.svg';
-import warning from '@/assets/icons/general/warning.svg';
 
 type TIcon = {
   type: 'general' | 'providers' | 'flags';

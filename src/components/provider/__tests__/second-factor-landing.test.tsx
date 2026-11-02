@@ -1,8 +1,8 @@
-import { useNavigation, usePassflow } from '@/hooks';
 import { Passflow } from '@passflow/core';
 import { render, waitFor } from '@testing-library/react';
 import { type FC, useEffect } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { useNavigation, usePassflow } from '@/hooks';
 import { PassflowProvider } from '../passflow-provider';
 
 // A federated sign-in on a non-PKCE app lands back on its redirect URL with

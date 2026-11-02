@@ -1,6 +1,6 @@
+import type { FC } from 'react';
 import { LoginScreen } from '@/components/ui';
 import { useConsent } from '@/hooks/use-consent';
-import type { FC } from 'react';
 import { getConsentLoginScreenProps } from './screen';
 
 /**

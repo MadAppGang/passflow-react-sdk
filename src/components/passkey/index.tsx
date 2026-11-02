@@ -1,5 +1,5 @@
-import { useAppSettings, useUserPasskeys } from '@/hooks';
 import { type FC, useState } from 'react';
+import { useAppSettings, useUserPasskeys } from '@/hooks';
 import { Wrapper } from '../form/wrapper';
 import { Button } from '../ui';
 import { PasskeyActions } from './passkey-actions';

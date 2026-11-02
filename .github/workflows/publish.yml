@@ -15,8 +15,9 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
+      # 6.1.0+ is needed to install the pnpm 12 that packageManager pins.
       - name: Set up pnpm
-        uses: pnpm/action-setup@v6
+        uses: pnpm/action-setup@v6.1.0
 
       - name: Use Node.js 22.x
         uses: actions/setup-node@v7

@@ -1,9 +1,7 @@
-import { Button, Icon } from '@/components/ui';
-import { useTwoFactorSetup } from '@/hooks';
-import { cn } from '@/utils';
 import type { FC, FormEvent } from 'react';
-import { useState } from 'react';
-import OtpInput from 'react-otp-input';
+import { useId, useState } from 'react';
+import { Button, FieldOtp, Icon } from '@/components/ui';
+import { useTwoFactorSetup } from '@/hooks';
 import { Wrapper } from '../wrapper';
 
 import '@/styles/index.css';
@@ -18,6 +16,9 @@ export const TwoFactorSetupForm: FC<TwoFactorSetupFormProps> = ({ onComplete, on
   const [code, setCode] = useState('');
   const [showSecret, setShowSecret] = useState(false);
   const { setupData, recoveryCodes, step, beginSetup, confirmSetup, reset, isLoading, isError, error } = useTwoFactorSetup();
+  const otpId = useId();
+  const otpLabelId = `${otpId}-label`;
+  const otpErrorId = `${otpId}-error`;
 
   // Get TOTP digits (defaults to 6 if not provided)
   const totpDigits = numInputs ?? 6;
@@ -92,23 +93,27 @@ export const TwoFactorSetupForm: FC<TwoFactorSetupFormProps> = ({ onComplete, on
           </div>
 
           <div className='passflow-2fa-confirm-section'>
-            <p className='passflow-2fa-confirm-label'>Enter the {totpDigits}-digit code from your app to confirm:</p>
+            <p id={otpLabelId} className='passflow-2fa-confirm-label'>
+              Enter the {totpDigits}-digit code from your app to confirm:
+            </p>
             <div id='otp-wrapper' className='passflow-verify-otp-wrapper'>
-              <OtpInput
+              <FieldOtp
+                id={otpId}
+                name='code'
+                length={totpDigits}
                 value={code}
                 onChange={handleCodeChange}
-                numInputs={totpDigits}
-                shouldAutoFocus
-                skipDefaultStyles
-                containerStyle='passflow-verify-otp-inputs'
-                inputStyle={cn('passflow-field-otp passflow-field-otp--focused', isError && 'passflow-field-otp--error')}
-                inputType='text'
-                renderInput={(props) => <input {...props} />}
+                state={isError ? 'error' : 'default'}
+                labelledBy={otpLabelId}
+                describedBy={isError ? otpErrorId : undefined}
+                autoFocus
               />
               {isError && (
                 <div className='passflow-verify-otp-error'>
                   <Icon size='small' id='warning' type='general' className='icon-warning' />
-                  <span className='passflow-verify-otp-error-text'>{error}</span>
+                  <span id={otpErrorId} className='passflow-verify-otp-error-text'>
+                    {error}
+                  </span>
                 </div>
               )}
             </div>

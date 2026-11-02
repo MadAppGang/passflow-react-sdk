@@ -35,8 +35,25 @@
  * happen is reported as though it had.
  */
 
-import { UpgradeDialog, dialogOutcomeFromError, readAssuranceBar, toDialogState } from '@/components/ui/upgrade-dialog';
+import {
+  type AssuranceBar,
+  PassflowEvent,
+  type PassflowSubscriber,
+  type ReplayPolicy,
+  requiredAcrLevel,
+  type UpgradeChallenge,
+  type UpgradeDiagnosticSink,
+  type UpgradeFactor,
+  type UpgradeFactorType,
+  type UpgradeFlightSummary,
+  type UpgradePromptHandler,
+  type UpgradePromptResult,
+  type UpgradeReplayInfo,
+  type Waiter,
+} from '@passflow/core';
+import { type FC, type ReactElement, type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { UpgradeDialogLabels, UpgradeDialogOutcome, UpgradeDialogProps } from '@/components/ui/upgrade-dialog';
+import { dialogOutcomeFromError, readAssuranceBar, toDialogState, UpgradeDialog } from '@/components/ui/upgrade-dialog';
 import {
   UpgradeContext,
   type UpgradeContextValue,
@@ -48,23 +65,6 @@ import {
 } from '@/context/upgrade-context';
 import { usePassflow } from '@/hooks/use-passflow';
 import { registerUpgradeAuthInstance, upgradeAuthInstance } from '@/utils/upgrade-auth';
-import {
-  type AssuranceBar,
-  PassflowEvent,
-  type PassflowSubscriber,
-  type ReplayPolicy,
-  type UpgradeChallenge,
-  type UpgradeDiagnosticSink,
-  type UpgradeFactor,
-  type UpgradeFactorType,
-  type UpgradeFlightSummary,
-  type UpgradePromptHandler,
-  type UpgradePromptResult,
-  type UpgradeReplayInfo,
-  type Waiter,
-  requiredAcrLevel,
-} from '@passflow/core';
-import { type FC, type ReactElement, type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 export type UpgradeProviderProps = {
   children?: ReactNode;

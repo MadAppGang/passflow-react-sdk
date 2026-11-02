@@ -14,12 +14,15 @@ describe('useUrlParams', () => {
       hash: '',
     };
 
-    // Mock window.history
-    (window as any).history = undefined;
-    (window as any).history = {
-      pushState: vi.fn(),
-      replaceState: vi.fn(),
-    };
+    // Mock window.history (jsdom exposes it as a getter, so plain assignment throws)
+    Object.defineProperty(window, 'history', {
+      value: {
+        pushState: vi.fn(),
+        replaceState: vi.fn(),
+      },
+      writable: true,
+      configurable: true,
+    });
 
     // Mock DOMParser
     global.DOMParser = class DOMParser {
@@ -35,7 +38,7 @@ describe('useUrlParams', () => {
 
   afterEach(() => {
     (window as any).location = originalLocation;
-    (window as any).history = originalHistory;
+    Object.defineProperty(window, 'history', { value: originalHistory, writable: true, configurable: true });
   });
 
   describe('getAll', () => {

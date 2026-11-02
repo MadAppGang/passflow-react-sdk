@@ -1,6 +1,6 @@
-import { type NavigateFunction, type NavigateOptions, NavigationContext } from '@/context';
 import qs from 'query-string';
 import { useCallback, useContext } from 'react';
+import { type NavigateFunction, type NavigateOptions, NavigationContext } from '@/context';
 
 export type ReactRouterNavigateOptions = {
   pathname: string;

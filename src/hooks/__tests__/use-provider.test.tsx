@@ -1,7 +1,7 @@
 import { renderHook } from '@testing-library/react';
 import type { FC, PropsWithChildren } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { PassflowContext, type PassflowContextType, initialState } from '../../context/passflow-context';
+import { initialState, PassflowContext, type PassflowContextType } from '../../context/passflow-context';
 import { useProvider } from '../use-provider';
 
 // Mock window.location.origin

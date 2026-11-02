@@ -1,5 +1,5 @@
-import { useAppSettings } from '@/hooks';
 import type { FC } from 'react';
+import { useAppSettings } from '@/hooks';
 import { Wrapper } from '../wrapper';
 
 export const VerifyChallengeSuccess: FC = () => {

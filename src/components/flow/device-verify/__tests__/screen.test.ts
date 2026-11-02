@@ -1,6 +1,6 @@
+import { describe, expect, it, vi } from 'vitest';
 import type { UseDeviceVerifyProps } from '@/hooks/use-device-verify';
 import { deviceErrorOfType } from '@/utils';
-import { describe, expect, it, vi } from 'vitest';
 import { getDeviceLoginScreenProps } from '../screen';
 
 const device = (overrides: Partial<UseDeviceVerifyProps> = {}): UseDeviceVerifyProps => ({

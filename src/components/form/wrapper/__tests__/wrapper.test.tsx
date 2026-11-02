@@ -118,7 +118,9 @@ describe('Wrapper', () => {
       render(<Wrapper customCss={customCss}>Content</Wrapper>);
 
       await waitFor(() => {
-        const override = document.head.querySelector('style.psfw-custom-styles[data-passflow-style-layer="custom"]');
+        const override = document
+          .getElementById('passflow-wrapper')
+          ?.querySelector('style.psfw-custom-styles[data-passflow-style-layer="custom"]');
         expect(override).toHaveTextContent(customCss);
       });
     });

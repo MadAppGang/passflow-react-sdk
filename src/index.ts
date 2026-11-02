@@ -1,15 +1,16 @@
 import '@/styles/index.css';
 import '@/utils/get-app-version';
 
+export * from '@passflow/core';
 export * from './components/flow';
 export * from './components/form';
-export * from './components/ui';
+export type { PassflowUpgradeOptions, UpgradeProviderProps } from './components/provider';
 export { PassflowProvider, UpgradeProvider } from './components/provider';
-export type { UpgradeProviderProps, PassflowUpgradeOptions } from './components/provider';
+export * from './components/ui';
 // Assurance upgrade (step-up): the context types and the free-function adapters.
 export {
-  UpgradeContext,
   INERT_UPGRADE_CONTEXT,
+  UpgradeContext,
   type UpgradeContextValue,
   type UpgradeElevateOptions,
   type UpgradeErrorStatusKind,
@@ -17,6 +18,5 @@ export {
   type UpgradePromptView,
   type UpgradeSettledState,
 } from './context/upgrade-context';
-export { withAuth, attachAuth } from './utils/upgrade-auth';
 export * from './hooks';
-export * from '@passflow/core';
+export { attachAuth, withAuth } from './utils/upgrade-auth';

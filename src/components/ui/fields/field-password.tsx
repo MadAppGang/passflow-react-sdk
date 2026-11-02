@@ -1,10 +1,12 @@
 /* eslint-disable react/jsx-props-no-spreading */
-import { type InputHTMLAttributes, forwardRef, useState } from 'react';
+import { forwardRef, type InputHTMLAttributes, useState } from 'react';
 import { Button, Icon } from '..';
 import '@/styles/index.css';
-import { cn } from '@/utils';
 import type { PassflowPasswordPolicySettings } from '@passflow/core';
-import { intersection, size } from 'lodash';
+import lodash from 'lodash';
+import { cn } from '@/utils';
+
+const { intersection, size } = lodash;
 
 type TFieldPassword = InputHTMLAttributes<HTMLInputElement> & {
   id: string;

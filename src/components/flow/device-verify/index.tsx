@@ -1,7 +1,7 @@
-import { LoginScreen } from '@/components/ui';
-import { useDeviceVerify } from '@/hooks/use-device-verify';
 import type { FC } from 'react';
 import { useEffect, useRef } from 'react';
+import { LoginScreen } from '@/components/ui';
+import { useDeviceVerify } from '@/hooks/use-device-verify';
 import { getDeviceLoginScreenProps } from './screen';
 
 /**

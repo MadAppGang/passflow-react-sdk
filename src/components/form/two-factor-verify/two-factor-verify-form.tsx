@@ -1,9 +1,9 @@
-import { Button, Icon, Switch } from '@/components/ui';
-import { useTwoFactorVerify } from '@/hooks';
-import { TwoFactorLoopPrevention, cn, getUserFriendlyErrorMessage } from '@/utils';
 import type { FC, FormEvent } from 'react';
-import { useState } from 'react';
-import OtpInput from 'react-otp-input';
+import { useId, useState } from 'react';
+import { Button, FieldOtp, Icon, Switch } from '@/components/ui';
+import { VisuallyHidden } from '@/components/ui/visually-hidden';
+import { useTwoFactorVerify } from '@/hooks';
+import { getUserFriendlyErrorMessage, TwoFactorLoopPrevention } from '@/utils';
 import { Wrapper } from '../wrapper';
 
 import '@/styles/index.css';
@@ -38,6 +38,9 @@ export const TwoFactorVerifyForm: FC<TwoFactorVerifyFormProps> = ({
   const [code, setCode] = useState('');
   const [trustDevice, setTrustDevice] = useState(false);
   const { verify, isLoading, isError, errorDetails, reset } = useTwoFactorVerify();
+  const otpId = useId();
+  const otpLabelId = `${otpId}-label`;
+  const otpErrorId = `${otpId}-error`;
 
   // Get TOTP digits (defaults to 6 if not provided)
   const totpDigits = numInputs ?? 6;
@@ -92,7 +95,9 @@ export const TwoFactorVerifyForm: FC<TwoFactorVerifyFormProps> = ({
         <div className='passflow-form-error passflow-form-error--critical'>
           <Icon size='medium' id='warning' type='general' className='icon-warning' />
           <div className='passflow-form-error-content'>
-            <span className='passflow-form-error-text'>{TwoFactorLoopPrevention.getLoopDetectedMessage()}</span>
+            <span id={otpErrorId} className='passflow-form-error-text'>
+              {TwoFactorLoopPrevention.getLoopDetectedMessage()}
+            </span>
             {signInPath && (
               <Button
                 type='button'
@@ -115,7 +120,9 @@ export const TwoFactorVerifyForm: FC<TwoFactorVerifyFormProps> = ({
         <div className='passflow-form-error passflow-form-error--persistent'>
           <Icon size='medium' id='warning' type='general' className='icon-warning' />
           <div className='passflow-form-error-content'>
-            <span className='passflow-form-error-text'>You need to set up two-factor authentication first.</span>
+            <span id={otpErrorId} className='passflow-form-error-text'>
+              You need to set up two-factor authentication first.
+            </span>
             <div className='passflow-form-error-actions'>
               {twoFactorSetupPath && (
                 <Button
@@ -150,7 +157,9 @@ export const TwoFactorVerifyForm: FC<TwoFactorVerifyFormProps> = ({
       return (
         <div className='passflow-form-info'>
           <Icon size='small' id='info' type='general' className='icon-info' />
-          <span className='passflow-form-info-text'>{getUserFriendlyErrorMessage(errorDetails)}</span>
+          <span id={otpErrorId} className='passflow-form-info-text'>
+            {getUserFriendlyErrorMessage(errorDetails)}
+          </span>
         </div>
       );
     }
@@ -159,7 +168,9 @@ export const TwoFactorVerifyForm: FC<TwoFactorVerifyFormProps> = ({
     return (
       <div className='passflow-form-error'>
         <Icon size='small' id='warning' type='general' className='icon-warning' />
-        <span className='passflow-form-error-text'>{getUserFriendlyErrorMessage(errorDetails)}</span>
+        <span id={otpErrorId} className='passflow-form-error-text'>
+          {getUserFriendlyErrorMessage(errorDetails)}
+        </span>
       </div>
     );
   };
@@ -167,6 +178,7 @@ export const TwoFactorVerifyForm: FC<TwoFactorVerifyFormProps> = ({
   // Disable input for non-recoverable errors
   const isInputDisabled =
     isLoading || errorDetails?.type === 'not_enabled' || errorDetails?.type === 'expired' || isLoopDetected;
+  const otpState = isInputDisabled ? 'disabled' : isError ? 'error' : 'default';
 
   return (
     <Wrapper title={title} subtitle={computedSubtitle} className='passflow-2fa-verify'>
@@ -182,20 +194,17 @@ export const TwoFactorVerifyForm: FC<TwoFactorVerifyFormProps> = ({
             />
           </div>
           <div className='passflow-verify-otp-wrapper'>
-            <OtpInput
+            <VisuallyHidden id={otpLabelId}>Verification code</VisuallyHidden>
+            <FieldOtp
+              id={otpId}
+              name='code'
+              length={totpDigits}
               value={code}
               onChange={handleOtpChange}
-              numInputs={totpDigits}
-              shouldAutoFocus={shouldAutoFocus && !isInputDisabled}
-              skipDefaultStyles
-              containerStyle='passflow-verify-otp-inputs'
-              inputStyle={cn(
-                'passflow-field-otp passflow-field-otp--focused',
-                isError && 'passflow-field-otp--error',
-                isInputDisabled && 'passflow-field-otp--disabled',
-              )}
-              inputType='text'
-              renderInput={(props) => <input {...props} disabled={isInputDisabled} />}
+              state={otpState}
+              labelledBy={otpLabelId}
+              describedBy={isError && errorDetails ? otpErrorId : undefined}
+              autoFocus={shouldAutoFocus && !isInputDisabled}
             />
           </div>
           {renderErrorContent()}

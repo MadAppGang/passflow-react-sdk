@@ -16,7 +16,7 @@ This is a SDK for react application.
   - [Integration](#integration)
     - [Passflow Cloud](#passflow-cloud)
     - [PassflowFlow](#passflowflow)
-    - [React Router DOM](#react-router-dom)
+    - [React Router](#react-router)
     - [Wouter](#wouter)
     - [TanStack Router](#tanstack-router)
   - [Props](#props)
@@ -137,13 +137,17 @@ Both scripts automatically start the demo app and Storybook. `pnpm test` uses th
 ## Installation
 
 ```bash
-pnpm add @passflow/passflow-react-sdk
+pnpm add @passflow/react react-router
 ```
+
+`react-router` (`^7.0.0 || ^8.0.0`) is a required peer dependency and is not bundled, so install it even when the app routes with Wouter or TanStack Router. `react-router-dom` is not needed: from v7 on, `BrowserRouter` and the rest are exported by `react-router`.
 
 ## Requirements
 
-- React 18+
-- React Router DOM v6/v7 or Wouter or TanStack Router
+- React 18+ (React 19.2.7+ with React Router 8)
+- React Router 7 or 8 (React Router 6 is not supported)
+- Node `^22.12.0 || ^24.0.0 || >=26.0.0`
+- Your app may route with React Router, Wouter or TanStack Router
 
 ## Integration
 
@@ -162,7 +166,7 @@ const passflowConfig: PassflowConfig = {
 export const PassflowProviderWrapper: FC<PropsWithChildren> = ({
   children,
 }) => {
-  const navigate = useNavigate(); // from react-router-dom
+  const navigate = useNavigate(); // from react-router
 
   return (
     <PassflowProvider
@@ -248,9 +252,18 @@ authentication-context claims those tokens carry.
 | federatedDisplayMode | "popup" \| "redirect" | Federated authentication display mode |
 | pathPrefix | string | Prefix for all routes (optional) |
 
-### React Router DOM
+Inside an app that already has a React Router `<Router>`, `PassflowFlow` uses that router rather than its own (`routerType` is ignored). Mount it under a splat route so its own routes can match, and `pathPrefix` is relative to that route:
 
-Example of integration with React Router DOM:
+```tsx
+<Routes>
+  <Route path="/" element={<Home />} />
+  <Route path="/auth/*" element={<PassflowFlow successAuthRedirect="/" />} />
+</Routes>
+```
+
+### React Router
+
+Example of integration with React Router:
 PS: The example uses the Declarative approach.
 
 ```tsx
@@ -261,7 +274,7 @@ import {
   ForgotPassword,
   ForgotPasswordSuccess,
 } from "@passflow/passflow-react-sdk";
-import { BrowserRouter, Routes, Route, useNavigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useNavigate } from "react-router";
 
 const passflowConfig = {
   url: import.meta.env.VITE_PASSFLOW_URL,

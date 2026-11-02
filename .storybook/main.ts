@@ -10,13 +10,6 @@ const config: StorybookConfig = {
   docs: {
     autodocs: 'tag',
   },
-  viteFinal: async (viteConfig) => ({
-    ...viteConfig,
-    plugins: viteConfig.plugins?.filter((plugin) => {
-      if (!plugin || Array.isArray(plugin) || typeof plugin === 'function') return true;
-      return !('name' in plugin) || plugin.name !== 'vite:dts';
-    }),
-  }),
 };
 
 export default config;

@@ -8,17 +8,15 @@
     "module": "ESNext",
     "skipLibCheck": true,
     "types": ["vite/client", "node"],
-    "baseUrl": "./",
     "paths": {
-      "@/*": ["src/*"]
+      "@/*": ["./src/*"]
     },
     /* Bundler mode */
     "moduleResolution": "Bundler",
     "resolveJsonModule": true,
     "isolatedModules": true,
     "noEmit": true,
-    "jsx": "react",
-    "esModuleInterop": false,
+    "jsx": "react-jsx",
     "forceConsistentCasingInFileNames": true,
     "outDir": "dist",
     "declaration": true,

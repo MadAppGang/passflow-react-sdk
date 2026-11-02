@@ -447,13 +447,11 @@ body {
   color: var(--passflow-secondary-text-color);
 }
 
-.passflow-field--focused:focus-visible,
-.passflow-field-otp--focused:focus-visible {
+.passflow-field--focused:focus-visible {
   outline: 1px solid var(--passflow-primary-color);
 }
 
-.passflow-field--error,
-.passflow-field-otp--error {
+.passflow-field--error {
   outline: 1px solid var(--passflow-warning) !important;
 }
 
@@ -462,17 +460,6 @@ body {
   color: var(--passflow-secondary-text-color);
   background-color: var(--passflow-input-background-color);
   cursor: not-allowed;
-}
-
-.passflow-field-otp {
-  width: 48px;
-  height: 48px;
-  border-radius: 4px;
-  background-color: var(--passflow-input-background-color);
-  outline: 1px solid var(--passflow-input-border-color);
-  color: var(--passflow-dark);
-  font-size: var(--passflow-body-2);
-  text-align: center;
 }
 
 /* RIPPLE EFFECT */
@@ -969,13 +956,6 @@ body {
   gap: 6px;
 }
 
-.passflow-verify-otp-inputs {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-}
-
 .passflow-verify-otp-error {
   display: flex;
   align-items: center;
@@ -1212,7 +1192,9 @@ body {
   display: block;
   opacity: 1;
   visibility: visible;
-  transition: opacity 0.2s ease, visibility 0.2s ease;
+  transition:
+    opacity 0.2s ease,
+    visibility 0.2s ease;
 }
 
 .passflow-country-search-wrapper--hidden {
@@ -1478,7 +1460,6 @@ body {
   line-height: 1.5;
 }
 
-.passflow-field-otp--disabled,
 .passflow-field--disabled {
   opacity: 0.5;
   cursor: not-allowed;

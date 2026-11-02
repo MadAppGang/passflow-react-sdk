@@ -1,9 +1,9 @@
-import type { DefaultMethod } from '@/types';
-import { cn, emailRegex, passwordValidation } from '@/utils';
 import { phone } from 'phone';
 import type { FC } from 'react';
 import { useEffect, useRef, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
+import type { DefaultMethod } from '@/types';
+import { cn, emailRegex, passwordValidation } from '@/utils';
 import { Button } from '../button';
 import { FieldPassword } from '../fields/field-password';
 import { FieldPhone } from '../fields/field-phone';

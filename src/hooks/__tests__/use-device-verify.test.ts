@@ -1,6 +1,6 @@
-import { deviceErrorOfType } from '@/utils';
 import { act, renderHook, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { deviceErrorOfType } from '@/utils';
 import { type DeviceUIMode, type DeviceVerifyInfo, useDeviceVerify } from '../use-device-verify';
 
 const info = (mode: DeviceUIMode): DeviceVerifyInfo => ({

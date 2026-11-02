@@ -10,7 +10,7 @@
  * `@passflow/core`, which raises the errors, and is imported from it.
  */
 
-import { type UpgradeErrorKind, classifyUpgradeError } from '@passflow/core';
+import { classifyUpgradeError, type UpgradeErrorKind } from '@passflow/core';
 import type {
   AssuranceBar,
   UpgradeDialogFactor,

@@ -2,8 +2,8 @@ import type { FC } from 'react';
 import { Button } from '../button';
 import { Icon } from '../icon';
 import '@/styles/index.css';
-import { cn } from '@/utils';
 import type { Providers } from '@passflow/core';
+import { cn } from '@/utils';
 
 type TProvidersBox = {
   providers: Providers[];

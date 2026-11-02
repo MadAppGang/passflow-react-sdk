@@ -1,10 +1,10 @@
+import type { FC } from 'react';
+import { useEffect, useState } from 'react';
 import { TwoFactorSetupForm } from '@/components/form/two-factor-setup';
 import { routes } from '@/context';
 import { useNavigation, usePassflow } from '@/hooks';
 import type { SuccessAuthRedirect } from '@/types';
 import { TwoFactorLoopPrevention } from '@/utils';
-import type { FC } from 'react';
-import { useEffect, useState } from 'react';
 
 import '@/styles/index.css';
 

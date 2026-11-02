@@ -1,3 +1,15 @@
+import type {
+  PassflowPasskeyAuthenticateStartPayload,
+  PassflowPasswordlessResponse,
+  PassflowPasswordlessSignInPayload,
+  PassflowSignInPayload,
+  Providers,
+} from '@passflow/core';
+import lodash from 'lodash';
+import { phone } from 'phone';
+import queryString from 'query-string';
+import type { FC } from 'react';
+import { useMemo } from 'react';
 import { ErrorComponent } from '@/components/error';
 import { hasFollowedOIDCRedirect, readParentChallengeIdFromURL } from '@/components/provider/passflow-provider';
 import { type LoginCredentialsValues, type LoginMethodConfig, LoginScreen } from '@/components/ui';
@@ -19,18 +31,8 @@ import {
   routeToSecondFactor,
   useUrlParams,
 } from '@/utils';
-import type {
-  PassflowPasskeyAuthenticateStartPayload,
-  PassflowPasswordlessResponse,
-  PassflowPasswordlessSignInPayload,
-  PassflowSignInPayload,
-  Providers,
-} from '@passflow/core';
-import { eq, isEmpty, size } from 'lodash';
-import { phone } from 'phone';
-import queryString from 'query-string';
-import type { FC } from 'react';
-import { useMemo } from 'react';
+
+const { eq, isEmpty, size } = lodash;
 
 const getLoginMethodConfig = (authMethods: AuthMethods): LoginMethodConfig => {
   const identities: LoginMethodConfig['identities'] = [];

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { type PassflowState, initialState, passflowReducer } from '../passflow-context';
+import { initialState, type PassflowState, passflowReducer } from '../passflow-context';
 
 describe('passflowReducer', () => {
   describe('initialState', () => {

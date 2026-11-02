@@ -1,19 +1,19 @@
+import { FETCH_PRIORITY_OIDC, Passflow, type PassflowConfig, registerFetchMiddleware } from '@passflow/core';
+import React, { type FC, type ReactNode, useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react';
 import { UpgradeProvider, type UpgradeProviderProps } from '@/components/provider/upgrade-provider';
 import { ContinuingStatus } from '@/components/ui/continuing-status';
 import {
   AuthProvider,
+  defaultNavigate,
+  initialState,
   type NavigateFunction,
   NavigationContext,
   PassflowContext,
-  type RouterType,
-  defaultNavigate,
-  initialState,
   passflowReducer,
+  type RouterType,
   routes,
 } from '@/context';
 import { urlCarriesTwoFactorToken } from '@/utils/second-factor';
-import { FETCH_PRIORITY_OIDC, Passflow, type PassflowConfig, registerFetchMiddleware } from '@passflow/core';
-import React, { type FC, type ReactNode, useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react';
 import '@/styles/index.css';
 
 /**

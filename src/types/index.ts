@@ -6,18 +6,17 @@ export type PreferChallenge = 'passkey' | 'password' | 'otp' | 'magic_link';
 
 export type SuccessAuthRedirect = string;
 
-export type { TwoFactorErrorType, TwoFactorError } from './two-factor-errors';
-export type { DeviceErrorType, DeviceError } from './device-errors';
-export type { AuthErrorScope, AuthFlow, AuthOperation, AuthUiError } from './auth-errors';
-
 // Re-export 2FA types from @passflow/core
 export type {
-  TwoFactorMethod,
-  TwoFactorChallengeResponse,
   RegisteredTwoFactorMethod,
+  TwoFactorChallengeResponse,
+  TwoFactorMethod,
   TwoFactorVerifyRequestV2,
   TwoFactorVerifyResponseV2,
 } from '@passflow/core';
+export type { AuthErrorScope, AuthFlow, AuthOperation, AuthUiError } from './auth-errors';
+export type { DeviceError, DeviceErrorType } from './device-errors';
+export type { TwoFactorError, TwoFactorErrorType } from './two-factor-errors';
 
 // React-specific hook return types
 export interface UseTwoFactorChallengeReturn {

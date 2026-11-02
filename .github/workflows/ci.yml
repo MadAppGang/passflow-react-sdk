@@ -11,15 +11,21 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
+    # Every Node line the package declares support for gets lint, unit tests and
+    # a build. One failing leg must not hide the others' results.
     strategy:
+      fail-fast: false
       matrix:
-        node-version: [22.x]
+        node-version: [22.x, 24.x, 26.x]
 
     steps:
       - uses: actions/checkout@v7
 
+      # No `version` input: the action installs the pnpm that package.json's
+      # packageManager pins. 6.1.0 is the first release that can install pnpm 12;
+      # the floating v6 tag still points at an earlier commit.
       - name: Set up pnpm
-        uses: pnpm/action-setup@v6
+        uses: pnpm/action-setup@v6.1.0
 
       - name: Use Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v7
@@ -39,15 +45,81 @@ jobs:
       - name: Build project
         run: pnpm build
 
+      # Storybook and Playwright exercise the browser, not Node, so they run on
+      # one leg only.
       - name: Build Storybook
+        if: matrix.node-version == '24.x'
         run: pnpm build-storybook
         env:
           STORYBOOK_DISABLE_TELEMETRY: '1'
 
       - name: Install Playwright Chromium
+        if: matrix.node-version == '24.x'
         run: pnpm exec playwright install --with-deps chromium
 
       - name: Run UI tests
+        if: matrix.node-version == '24.x'
         run: pnpm test
         env:
           STORYBOOK_DISABLE_TELEMETRY: '1'
+
+  # The package is developed on React 19, and its peer range still admits 18.
+  # This leg swaps in React 18 and its types and proves the sources still
+  # type-check and the unit tests still pass there. React Router 8 needs
+  # React >=19.2.7, so the leg also swaps in React Router 7 (the peer admits both).
+  react18-compat:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v6.1.0
+
+      - name: Use Node.js 24.x
+        uses: actions/setup-node@v7
+        with:
+          node-version: 24.x
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Swap in React 18 and React Router 7
+        run: pnpm add -D react@18.3.1 react-dom@18.3.1 @types/react@^18.3 @types/react-dom@^18.3 react-router@7.18.5
+
+      - name: Type-check against React 18 types
+        run: pnpm exec tsc
+
+      - name: Run unit tests on React 18
+        run: pnpm test:unit
+
+  # Type-checks the packed tarball the way consumers see it: moduleResolution
+  # bundler, node16 and nodenext, on TypeScript 5.9 and 7, with React 19 +
+  # React Router 8 and React 18 + React Router 7, skipLibCheck off. Then runs
+  # @arethetypeswrong/cli on the tarball. Pins live in tests/consumer-types/legs.json.
+  consumer-types:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v6.1.0
+
+      - name: Use Node.js 24.x
+        uses: actions/setup-node@v7
+        with:
+          node-version: 24.x
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # prepack runs the full build (bundles and declarations).
+      - name: Build and pack
+        run: pnpm pack --pack-destination "$RUNNER_TEMP/pack"
+
+      # Installs into $RUNNER_TEMP, outside this pnpm workspace, with scripts disabled.
+      - name: Type-check the tarball as a consumer
+        run: node tests/consumer-types/run.mjs "$RUNNER_TEMP"/pack/passflow-react-*.tgz --work "$RUNNER_TEMP/consumer-types"

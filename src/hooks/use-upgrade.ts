@@ -9,6 +9,8 @@
  * rather than throwing (§9.5 H8).
  */
 
+import type { AssuranceBar, UpgradeChallenge, UpgradeFactor, UpgradeFactorType } from '@passflow/core';
+import { useContext, useMemo } from 'react';
 import {
   INERT_UPGRADE_CONTEXT,
   UpgradeContext,
@@ -19,8 +21,6 @@ import {
   type UpgradePromptView,
   type UpgradeSettledState,
 } from '@/context/upgrade-context';
-import type { AssuranceBar, UpgradeChallenge, UpgradeFactor, UpgradeFactorType } from '@passflow/core';
-import { useContext, useMemo } from 'react';
 
 export type UseUpgradeResult = {
   /** True when an `UpgradeProvider` installed a prompt handler. */

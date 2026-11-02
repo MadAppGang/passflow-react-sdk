@@ -1,5 +1,5 @@
-import type { AuthUiError, DefaultMethod } from '@/types';
 import type { PassflowPasswordPolicySettings, Providers } from '@passflow/core';
+import type { AuthUiError, DefaultMethod } from '@/types';
 
 export type LoginScreenChrome = {
   title: string;

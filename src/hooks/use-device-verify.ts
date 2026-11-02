@@ -1,6 +1,7 @@
-import type { DeviceError } from '@/types/device-errors';
-import { DeviceApiError, classifyDeviceError } from '@/utils';
+import type { PublicKeyCredentialRequestOptionsJSON } from '@simplewebauthn/browser';
 import { useCallback, useEffect, useRef, useState } from 'react';
+import type { DeviceError } from '@/types/device-errors';
+import { classifyDeviceError, DeviceApiError } from '@/utils';
 
 /**
  * The RFC 8628 verification flow, as a hook.
@@ -326,12 +327,16 @@ export const useDeviceVerify = (): UseDeviceVerifyProps => {
       throw new DOMException('this browser does not implement PublicKeyCredential', 'NotSupportedError');
     }
 
-    const start = await post<{ passkey_challenge_id: string; publicKey: unknown }>(DEVICE_ENDPOINTS.passkeyStart, {});
+    const start = await post<{ passkey_challenge_id: string; publicKey: PublicKeyCredentialRequestOptionsJSON }>(
+      DEVICE_ENDPOINTS.passkeyStart,
+      {},
+    );
 
     // The SDK's existing WebAuthn primitive, not a hand-rolled base64url dance.
-    // @simplewebauthn/browser v13 takes the server's JSON options as-is.
+    // @simplewebauthn/browser (v14, the same copy @passflow/core uses) takes the
+    // server's JSON options as-is. Loaded on demand: only this branch needs it.
     const { startAuthentication } = await import('@simplewebauthn/browser');
-    const assertion = await startAuthentication({ optionsJSON: start.publicKey as never });
+    const assertion = await startAuthentication({ optionsJSON: start.publicKey });
 
     const res = await post<DeviceAuthenticateResponse>(DEVICE_ENDPOINTS.authenticate, {
       method: 'passkey',

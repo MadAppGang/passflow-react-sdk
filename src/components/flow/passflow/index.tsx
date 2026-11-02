@@ -1,3 +1,4 @@
+import { type FC, type ReactNode, useEffect, useMemo } from 'react';
 import { TwoFactorSetupFlow } from '@/components/flow/two-factor-setup';
 import { TwoFactorVerifyFlow } from '@/components/flow/two-factor-verify';
 import {
@@ -11,17 +12,27 @@ import {
   VerifyChallengeOTP,
 } from '@/components/form';
 import { routes } from '@/context';
-import { type FC, type ReactNode, useEffect, useMemo } from 'react';
 import '@/styles/index.css';
+// react-router (v7 or v8) is a required peer dependency, shared with the host app and
+// never bundled. It is imported statically, so a missing peer fails at module
+// load with the resolver's own error; no runtime guard could run earlier.
+import {
+  BrowserRouter,
+  HashRouter,
+  MemoryRouter,
+  Navigate,
+  Route,
+  Routes,
+  useInRouterContext,
+  useLocation,
+  useNavigate,
+  useParams,
+} from 'react-router';
 import { ErrorComponent } from '@/components/error';
 import { withError } from '@/hocs';
 import { useNavigation } from '@/hooks';
 import type { SuccessAuthRedirect } from '@/types';
 import { authRedirectErrorMessage, getUrlErrors } from '@/utils';
-// react-router-dom is imported statically, so a missing peer dependency fails at
-// module load with its own error. There is no later point at which a runtime
-// guard could still catch it — see git history for the probe this replaced.
-import { BrowserRouter, HashRouter, MemoryRouter, Navigate, Route, Routes, useNavigate } from 'react-router-dom';
 
 export type PassflowProps = {
   successAuthRedirect?: SuccessAuthRedirect;
@@ -29,9 +40,15 @@ export type PassflowProps = {
   error?: string;
   relyingPartyId?: string;
   pathPrefix?: string;
+  /**
+   * The router the flow creates for itself. Ignored when the flow is rendered
+   * inside a host react-router `<Router>`: the flow then uses the host's router.
+   */
   routerType?: 'browser' | 'hash' | 'memory';
   basename?: string;
 };
+
+type RouterKind = NonNullable<PassflowProps['routerType']>;
 
 const normalizePathPrefix = (path?: string) => {
   if (!path) return '';
@@ -49,7 +66,7 @@ const combineRoutesWithPrefix = (prefix?: string) =>
     {} as Record<keyof typeof routes, string>,
   );
 
-const RouterProvider: FC<{ children: ReactNode; routerType: 'hash' | 'memory' | 'browser' }> = ({ children, routerType }) => {
+const RouterProvider: FC<{ children: ReactNode; routerType: RouterKind }> = ({ children, routerType }) => {
   switch (routerType) {
     case 'hash':
       return <HashRouter>{children}</HashRouter>;
@@ -60,16 +77,158 @@ const RouterProvider: FC<{ children: ReactNode; routerType: 'hash' | 'memory' | 
   }
 };
 
+/**
+ * Where the flow is mounted inside a host router: the pathname its parent route
+ * consumed, without a trailing slash. Under `<Route path='/auth/*'>` at
+ * `/auth/signin` this is `/auth`. With no parent route (the flow's own router, or
+ * a host router with no `<Routes>` around the flow) it is `''`.
+ */
+const useParentRouteBase = (): string => {
+  const { pathname } = useLocation();
+  const splat = useParams()['*'];
+  if (splat === undefined) return '';
+  const tail = pathname.endsWith(splat) ? splat : encodeURI(splat);
+  const base = pathname.endsWith(tail) ? pathname.slice(0, pathname.length - tail.length) : pathname;
+  return base.replace(/\/+$/, '');
+};
+
 const RouterInnerWrapperProvider: FC<{ children: ReactNode }> = ({ children }) => {
   const navigate = useNavigate();
   const { setNavigate } = useNavigation();
 
   useEffect(() => {
-    //@ts-ignore
+    //@ts-expect-error
     setNavigate((options) => navigate(options));
   }, [navigate, setNavigate]);
 
   return children;
+};
+
+type PassflowRoutesProps = Required<Pick<PassflowProps, 'federatedDisplayMode' | 'relyingPartyId' | 'pathPrefix'>> &
+  Pick<PassflowProps, 'successAuthRedirect'>;
+
+/**
+ * The flow's routes, rendered inside whichever router is in context. Route
+ * `path`s are matched against what the parent route left over (the whole
+ * pathname when there is no parent route), so they carry only `pathPrefix`.
+ * Navigation targets are absolute, so they also carry the parent route's base.
+ */
+const PassflowRoutes: FC<PassflowRoutesProps> = ({ successAuthRedirect, federatedDisplayMode, relyingPartyId, pathPrefix }) => {
+  const parentBase = useParentRouteBase();
+  const matchPaths = useMemo(() => combineRoutesWithPrefix(pathPrefix), [pathPrefix]);
+  const paths = useMemo(
+    () => combineRoutesWithPrefix(`${parentBase}${normalizePathPrefix(pathPrefix)}`),
+    [parentBase, pathPrefix],
+  );
+
+  // A landing that owes its second factor goes to this flow's own (prefixed)
+  // 2FA route; PassflowProvider does the navigation.
+  const { setTwoFactorVerifyPath } = useNavigation();
+  useEffect(() => {
+    setTwoFactorVerifyPath?.(paths.two_factor_verify);
+    return () => setTwoFactorVerifyPath?.(null);
+  }, [setTwoFactorVerifyPath, paths.two_factor_verify]);
+
+  return (
+    <RouterInnerWrapperProvider>
+      <Routes>
+        <Route
+          path={matchPaths.signin}
+          element={
+            <SignIn
+              successAuthRedirect={successAuthRedirect}
+              relyingPartyId={relyingPartyId}
+              federatedDisplayMode={federatedDisplayMode}
+              signUpPath={paths.signup}
+              forgotPasswordPath={paths.forgot_password}
+              verifyMagicLinkPath={paths.verify_magic_link}
+              verifyOTPPath={paths.verify_otp}
+              twoFactorVerifyPath={paths.two_factor_verify}
+            />
+          }
+        />
+        <Route
+          path={matchPaths.signup}
+          element={
+            <SignUp
+              successAuthRedirect={successAuthRedirect}
+              relyingPartyId={relyingPartyId}
+              federatedDisplayMode={federatedDisplayMode}
+              signInPath={paths.signin}
+              verifyMagicLinkPath={paths.verify_magic_link}
+              verifyOTPPath={paths.verify_otp}
+              twoFactorVerifyPath={paths.two_factor_verify}
+            />
+          }
+        />
+        <Route
+          path={matchPaths.verify_otp}
+          element={
+            <VerifyChallengeOTP
+              successAuthRedirect={successAuthRedirect}
+              numInputs={6}
+              shouldAutoFocus
+              signUpPath={paths.signup}
+              twoFactorVerifyPath={paths.two_factor_verify}
+            />
+          }
+        />
+        <Route path={matchPaths.verify_magic_link} element={<VerifyChallengeMagicLink />} />
+        <Route
+          path={matchPaths.forgot_password}
+          element={
+            <ForgotPassword
+              successResetRedirect={successAuthRedirect}
+              signInPath={paths.signin}
+              forgotPasswordSuccessPath={paths.forgot_password_success}
+            />
+          }
+        />
+        <Route path={matchPaths.forgot_password_success} element={<ForgotPasswordSuccess />} />
+        <Route
+          path={matchPaths.reset_password}
+          element={<ResetPassword successAuthRedirect={successAuthRedirect} twoFactorVerifyPath={paths.two_factor_verify} />}
+        />
+        <Route
+          path={matchPaths.invitation}
+          element={
+            <InvitationJoin successAuthRedirect={successAuthRedirect} signInPath={paths.signin} signUpPath={paths.signup} />
+          }
+        />
+        <Route
+          path={matchPaths.two_factor_verify}
+          element={
+            <TwoFactorVerifyFlow
+              successAuthRedirect={successAuthRedirect}
+              signInPath={paths.signin}
+              twoFactorSetupPath={paths.two_factor_setup}
+            />
+          }
+        />
+        <Route
+          path={matchPaths.two_factor_setup}
+          element={
+            <TwoFactorSetupFlow
+              successAuthRedirect={successAuthRedirect}
+              twoFactorVerifyPath={paths.two_factor_verify}
+              signInPath={paths.signin}
+            />
+          }
+        />
+        <Route
+          path='*'
+          element={
+            <Navigate
+              to={{
+                pathname: paths.signin,
+                search: window.location.search,
+              }}
+            />
+          }
+        />
+      </Routes>
+    </RouterInnerWrapperProvider>
+  );
 };
 
 const PassflowWrapper: FC<PassflowProps> = ({
@@ -78,7 +237,7 @@ const PassflowWrapper: FC<PassflowProps> = ({
   error = undefined,
   relyingPartyId = window.location.hostname,
   pathPrefix = '',
-  routerType = 'browser',
+  routerType,
 }) => {
   const { error: errorUrlSuccess, message: messageUrlSuccess } = getUrlErrors(successAuthRedirect);
 
@@ -90,129 +249,32 @@ const PassflowWrapper: FC<PassflowProps> = ({
     throw new Error(authRedirectErrorMessage);
   }
 
-  const routesWithPrefix = useMemo(() => combineRoutesWithPrefix(pathPrefix), [pathPrefix]);
-
-  // A landing that owes its second factor goes to this flow's own (prefixed)
-  // 2FA route; PassflowProvider does the navigation.
-  const { setTwoFactorVerifyPath } = useNavigation();
+  // Inside a host react-router <Router> the flow must not create its own: the
+  // router is a shared peer, and a nested <Router> throws. The host's router
+  // then owns history, and the flow's routes resolve under its parent route.
+  const isInHostRouter = useInRouterContext();
   useEffect(() => {
-    setTwoFactorVerifyPath?.(routesWithPrefix.two_factor_verify);
-    return () => setTwoFactorVerifyPath?.(null);
-  }, [setTwoFactorVerifyPath, routesWithPrefix.two_factor_verify]);
+    if (isInHostRouter && routerType) {
+      console.warn(
+        `[passflow] PassflowFlow is inside a react-router <Router>, so routerType='${routerType}' is ignored and the host router is used.`,
+      );
+    }
+  }, [isInHostRouter, routerType]);
 
   if (error) throw new Error(error);
 
-  return (
-    <RouterProvider routerType={routerType}>
-      <RouterInnerWrapperProvider>
-        <Routes>
-          <Route
-            path={routesWithPrefix.signin}
-            element={
-              <SignIn
-                successAuthRedirect={successAuthRedirect}
-                relyingPartyId={relyingPartyId}
-                federatedDisplayMode={federatedDisplayMode}
-                signUpPath={routesWithPrefix.signup}
-                forgotPasswordPath={routesWithPrefix.forgot_password}
-                verifyMagicLinkPath={routesWithPrefix.verify_magic_link}
-                verifyOTPPath={routesWithPrefix.verify_otp}
-                twoFactorVerifyPath={routesWithPrefix.two_factor_verify}
-              />
-            }
-          />
-          <Route
-            path={routesWithPrefix.signup}
-            element={
-              <SignUp
-                successAuthRedirect={successAuthRedirect}
-                relyingPartyId={relyingPartyId}
-                federatedDisplayMode={federatedDisplayMode}
-                signInPath={routesWithPrefix.signin}
-                verifyMagicLinkPath={routesWithPrefix.verify_magic_link}
-                verifyOTPPath={routesWithPrefix.verify_otp}
-                twoFactorVerifyPath={routesWithPrefix.two_factor_verify}
-              />
-            }
-          />
-          <Route
-            path={routesWithPrefix.verify_otp}
-            element={
-              <VerifyChallengeOTP
-                successAuthRedirect={successAuthRedirect}
-                numInputs={6}
-                shouldAutoFocus
-                signUpPath={routesWithPrefix.signup}
-                twoFactorVerifyPath={routesWithPrefix.two_factor_verify}
-              />
-            }
-          />
-          <Route path={routesWithPrefix.verify_magic_link} element={<VerifyChallengeMagicLink />} />
-          <Route
-            path={routesWithPrefix.forgot_password}
-            element={
-              <ForgotPassword
-                successResetRedirect={successAuthRedirect}
-                signInPath={routesWithPrefix.signin}
-                forgotPasswordSuccessPath={routesWithPrefix.forgot_password_success}
-              />
-            }
-          />
-          <Route path={routesWithPrefix.forgot_password_success} element={<ForgotPasswordSuccess />} />
-          <Route
-            path={routesWithPrefix.reset_password}
-            element={
-              <ResetPassword
-                successAuthRedirect={successAuthRedirect}
-                twoFactorVerifyPath={routesWithPrefix.two_factor_verify}
-              />
-            }
-          />
-          <Route
-            path={routesWithPrefix.invitation}
-            element={
-              <InvitationJoin
-                successAuthRedirect={successAuthRedirect}
-                signInPath={routesWithPrefix.signin}
-                signUpPath={routesWithPrefix.signup}
-              />
-            }
-          />
-          <Route
-            path={routesWithPrefix.two_factor_verify}
-            element={
-              <TwoFactorVerifyFlow
-                successAuthRedirect={successAuthRedirect}
-                signInPath={routesWithPrefix.signin}
-                twoFactorSetupPath={routesWithPrefix.two_factor_setup}
-              />
-            }
-          />
-          <Route
-            path={routesWithPrefix.two_factor_setup}
-            element={
-              <TwoFactorSetupFlow
-                successAuthRedirect={successAuthRedirect}
-                twoFactorVerifyPath={routesWithPrefix.two_factor_verify}
-                signInPath={routesWithPrefix.signin}
-              />
-            }
-          />
-          <Route
-            path='*'
-            element={
-              <Navigate
-                to={{
-                  pathname: routesWithPrefix.signin,
-                  search: window.location.search,
-                }}
-              />
-            }
-          />
-        </Routes>
-      </RouterInnerWrapperProvider>
-    </RouterProvider>
+  const flowRoutes = (
+    <PassflowRoutes
+      successAuthRedirect={successAuthRedirect}
+      federatedDisplayMode={federatedDisplayMode}
+      relyingPartyId={relyingPartyId}
+      pathPrefix={pathPrefix}
+    />
   );
+
+  if (isInHostRouter) return flowRoutes;
+
+  return <RouterProvider routerType={routerType ?? 'browser'}>{flowRoutes}</RouterProvider>;
 };
 
 export const PassflowFlow = withError(PassflowWrapper, ErrorComponent);

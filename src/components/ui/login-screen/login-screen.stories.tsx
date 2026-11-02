@@ -1,8 +1,8 @@
-import { deviceErrorOfType } from '@/utils';
 import { type PassflowPasswordPolicySettings, Providers } from '@passflow/core';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { type FC, useState } from 'react';
 import { expect, fn, userEvent, within } from 'storybook/test';
+import { deviceErrorOfType } from '@/utils';
 import { LoginScreen } from './login-screen';
 import type { LoginConsentState, LoginCredentialsState, LoginMethodConfig, LoginScreenProps } from './types';
 

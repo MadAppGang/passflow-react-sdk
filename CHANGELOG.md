@@ -2,6 +2,49 @@
 
 All notable changes to `@passflow/react` are documented in this file.
 
+## [0.15.0] - 2026-11-02
+
+### Breaking
+
+- `react-router` is now a required peer dependency, `^7.0.0 || ^8.0.0`, and is no longer bundled, so the SDK and the host share one router. `react-router-dom` is not a peer. A host on React Router 7 adds `react-router`, which `react-router-dom` 7 already installs; a host on React Router 8 needs React 19.2.7 or later, as React Router 8 itself does. Hosts on React Router 6 are no longer supported. A host that routes with Wouter or TanStack Router installs `react-router` too, because the package imports it.
+- `PassflowFlow` inside a host React Router `<Router>` now uses that router. Mount it under a splat route, `<Route path="/auth/*" element={<PassflowFlow />} />`; `pathPrefix` is then relative to that route, and `routerType` is ignored with a console warning. Before, a nested flow ran a private router of its own. A flow with no host router behaves as before.
+- The CommonJS entry is `dist/index.cjs`, renamed from `dist/index.cjs.js`. Under the package's `"type": "module"`, Node loaded the old file as an empty module, so `require('@passflow/react')` returned nothing; it now returns the full export set. React Router 8 is ESM-only, so a CommonJS consumer on it relies on Node's `require(esm)`.
+- Requires Node `^22.12.0 || ^24.0.0 || >=26.0.0` (`engines`), the same lines as `@passflow/core`.
+
+### Changed
+
+- Requires `@passflow/core` 0.20.1 or later, up from 0.19.0.
+- One-time-code fields are one input instead of one per digit. The browser's one-time-code autofill works, a whole code pastes in one go, and numeric codes accept digits only, with the numeric keypad on phones. The boxes look as before, and `custom_css` aimed at `.passflow-field-otp` still styles each box.
+- An app's `customCss` is rendered as a `<style>` element inside `#passflow-wrapper`, and only when it is set, instead of in `document.head`. No `HelmetProvider` is needed.
+- Developed on React 19. React 18 is still supported and tested in CI.
+
+### Added
+
+- `FieldOtp`, the code field above, with its Storybook stories.
+
+### Fixed
+
+- `TwoFactorSetupMagicLinkFlow` reads `:token` from the host's router. With the router bundled it read a separate copy and never saw the host's route params.
+- Type declarations resolve under `moduleResolution` `node16`, `nodenext` and `bundler`, and the `require` entry has its own `.d.cts` declarations. CI type-checks the packed package as a consumer would, on TypeScript 5.9 and 7, with React 19 and React Router 8 and with React 18 and React Router 7.
+- The ESM and CommonJS entries load in plain Node with no DOM, as server rendering needs. 0.14.0 threw `window is not defined` at module load, and its ESM entry failed to link its named imports from `lodash`.
+- The `option` button's accessible name is all of its visible text, label and hint, so a voice-control user can say what they see (WCAG 2.5.3, flagged by axe 4.14).
+
+### Removed
+
+- The runtime dependencies `react-otp-input`, `react-helmet-async`, `history` and `tailwindcss-scoped-preflight`. `terser` is build-only, and React Router is no longer bundled.
+
+Dependencies: `@simplewebauthn/browser` 14, `react-error-boundary` 6, `query-string` 10 and `tailwind-merge` 3 at runtime, with `input-otp` new. The toolchain moves to TypeScript 7, Vite 8.3, Vitest 5, Biome 2, pnpm 12 and Storybook 10.6; none of it ships.
+
+## [0.14.0] - 2026-11-02
+
+### Changed
+
+- Password sign-up under an OIDC parent reaches the relying party. The provider's interceptor now covers `/auth/register`, so a sign-up on a PKCE app carries `parent_challenge_id` like sign-in does and follows the server's redirect back to the app.
+- The line shown while a session is handed over to the app is `ContinuingStatus`, a themed library component, instead of an inline-styled placeholder.
+- Requires `@passflow/core` 0.19.0 or later, up from 0.18.0.
+
+Needs a server that accepts an OIDC parent on password sign-up (Passflow `src/v0.22.0`).
+
 ## [0.13.0] - 2026-10-30
 
 ### Added

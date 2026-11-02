@@ -1,5 +1,5 @@
-import { cn } from '@/utils';
 import type { FC } from 'react';
+import { cn } from '@/utils';
 import './spinner.css';
 
 export type SpinnerSize = 'small' | 'medium';

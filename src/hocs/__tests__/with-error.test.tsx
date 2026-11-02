@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import type { FC } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { PassflowContext, type PassflowContextType, initialState } from '../../context/passflow-context';
+import { initialState, PassflowContext, type PassflowContextType } from '../../context/passflow-context';
 import { withError } from '../with-error';
 
 // Mock component to wrap

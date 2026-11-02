@@ -1,5 +1,7 @@
 import type { AuthStrategies, FimStrategy, InternalStrategy, Providers } from '@passflow/core';
-import { eq } from 'lodash';
+import lodash from 'lodash';
+
+const { eq } = lodash;
 
 export type AuthMethods = {
   internal: {

@@ -1,8 +1,10 @@
 /* eslint-disable complexity */
 /* eslint-disable max-len */
 import type { PassflowPasswordPolicySettings } from '@passflow/core';
-import { size } from 'lodash';
+import lodash from 'lodash';
 import * as Yup from 'yup';
+
+const { size } = lodash;
 
 export const emailRegex =
   /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|.(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
