@@ -73,3 +73,11 @@
     animation: none;
   }
 }
+
+/* With `label`: the prompt sits above the boxes, aligned to their left edge, at
+   the same 6px label gap as every other field (.passflow-field-container). */
+.passflow-field-otp-field {
+  display: inline-flex;
+  flex-direction: column;
+  gap: 6px;
+}

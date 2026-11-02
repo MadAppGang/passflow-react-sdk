@@ -1,7 +1,6 @@
 import type { FC, FormEvent } from 'react';
 import { useId, useState } from 'react';
 import { Button, FieldOtp, Icon, Switch } from '@/components/ui';
-import { VisuallyHidden } from '@/components/ui/visually-hidden';
 import { useTwoFactorVerify } from '@/hooks';
 import { getUserFriendlyErrorMessage, TwoFactorLoopPrevention } from '@/utils';
 import { Wrapper } from '../wrapper';
@@ -39,7 +38,6 @@ export const TwoFactorVerifyForm: FC<TwoFactorVerifyFormProps> = ({
   const [trustDevice, setTrustDevice] = useState(false);
   const { verify, isLoading, isError, errorDetails, reset } = useTwoFactorVerify();
   const otpId = useId();
-  const otpLabelId = `${otpId}-label`;
   const otpErrorId = `${otpId}-error`;
 
   // Get TOTP digits (defaults to 6 if not provided)
@@ -194,7 +192,6 @@ export const TwoFactorVerifyForm: FC<TwoFactorVerifyFormProps> = ({
             />
           </div>
           <div className='passflow-verify-otp-wrapper'>
-            <VisuallyHidden id={otpLabelId}>Verification code</VisuallyHidden>
             <FieldOtp
               id={otpId}
               name='code'
@@ -202,7 +199,7 @@ export const TwoFactorVerifyForm: FC<TwoFactorVerifyFormProps> = ({
               value={code}
               onChange={handleOtpChange}
               state={otpState}
-              labelledBy={otpLabelId}
+              label='Verification code'
               describedBy={isError && errorDetails ? otpErrorId : undefined}
               autoFocus={shouldAutoFocus && !isInputDisabled}
             />
