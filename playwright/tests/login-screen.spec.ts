@@ -22,6 +22,15 @@ const openStory = async (page: Page, id: string) => {
   const storyRoot = page.locator('#storybook-root');
   await expect(storyRoot).toBeVisible();
   await expect(storyRoot).not.toBeEmpty();
+  // The theme decorator (withThemeByClassName) sets its class on <html> after the story's
+  // first render, up to ~100 ms later, and the new colours then arrive through CSS colour
+  // transitions. Measured: Dark Theme renders with the light text colour first. Wait for
+  // the class and for running CSS transitions (not animations: a spinner's never ends),
+  // or audits read a half-themed page.
+  await expect(page.locator('html')).toHaveClass(/storybook-passflow-(light|dark|brand)/);
+  await page.waitForFunction(() =>
+    document.getAnimations().every((animation) => !(animation instanceof CSSTransition) || animation.playState !== 'running'),
+  );
   return storyRoot;
 };
 
