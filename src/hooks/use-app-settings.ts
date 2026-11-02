@@ -199,15 +199,10 @@ export const useAppSettings: UseAppSettingsProps = () => {
     });
   };
 
+  // `custom_css` is not written here: each screen passes `currentStyles.custom_css`
+  // to its shell, which renders it inline.
   const applyThemeStyles = (style: CompatibleLoginWebAppStyle) => {
     applyLoginThemeStyles(document.documentElement, style);
-
-    if (style.custom_css) {
-      const customStylesElement = document.querySelector('.psfw-custom-styles');
-      if (customStylesElement) {
-        customStylesElement.innerHTML = style.custom_css;
-      }
-    }
   };
 
   const getCurrentTheme = () => {
