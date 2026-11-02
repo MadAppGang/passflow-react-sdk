@@ -5,6 +5,7 @@ import {
   FieldOtp,
   type FieldOtpProps,
   PassflowFlow,
+  type PassflowProps,
   PassflowProvider,
   TwoFactorSetupMagicLinkFlow,
   useAuth,
@@ -12,8 +13,6 @@ import {
 import type { ReactElement } from 'react';
 import { BrowserRouter, Route, Routes } from 'react-router';
 
-// PassflowFlow's props type is not exported from the package root; derive it.
-type PassflowProps = Parameters<typeof PassflowFlow>[0];
 
 type IsAny<T> = 0 extends 1 & T ? true : false;
 type ExpectFalse<T extends false> = T;
