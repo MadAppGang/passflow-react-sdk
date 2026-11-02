@@ -1,6 +1,5 @@
 import type { FC } from 'react';
 import { useEffect } from 'react';
-import { useParams } from 'react-router';
 import { TwoFactorSetupForm } from '@/components/form/two-factor-setup';
 import { Wrapper } from '@/components/form/wrapper';
 import { Button, Icon } from '@/components/ui';
@@ -18,6 +17,11 @@ type MagicLinkError = NonNullable<UseTwoFactorSetupMagicLinkReturn['error']>;
  * Props for TwoFactorSetupMagicLinkFlow component
  */
 export type TwoFactorSetupMagicLinkFlowProps = {
+  /**
+   * The magic-link token. Leave it out and it is read from the URL: the path
+   * segment after `/two-factor-setup-magic-link/` (or the same after `#`).
+   */
+  token?: string;
   /** Callback after successful setup */
   onSuccess?: () => void;
   /** Callback on validation error */
@@ -28,11 +32,24 @@ export type TwoFactorSetupMagicLinkFlowProps = {
   signInPath?: string;
 };
 
+const MAGIC_LINK_SEGMENT = /\/two-factor-setup-magic-link\/([^/?#]+)/;
+
+/** The token in the current URL's path, or after `#` for hash routing; '' when there is none. */
+const tokenFromUrl = (): string => {
+  const found = MAGIC_LINK_SEGMENT.exec(window.location.pathname) ?? MAGIC_LINK_SEGMENT.exec(window.location.hash);
+  if (!found?.[1]) return '';
+  try {
+    return decodeURIComponent(found[1]);
+  } catch {
+    return found[1];
+  }
+};
+
 /**
  * Flow component for magic link 2FA setup
  *
  * This component:
- * 1. Extracts token from URL params
+ * 1. Takes the token from its `token` prop, or from the URL
  * 2. Validates token via useTwoFactorSetupMagicLink hook
  * 3. Shows loading state during validation
  * 4. Shows error UI if validation fails
@@ -42,16 +59,17 @@ export type TwoFactorSetupMagicLinkFlowProps = {
  * Route: /two-factor-setup-magic-link/:token
  */
 export const TwoFactorSetupMagicLinkFlow: FC<TwoFactorSetupMagicLinkFlowProps> = ({
+  token: tokenProp,
   onSuccess,
   onError,
   redirectOnSuccess = true,
   signInPath = routes.signin.path,
 }) => {
-  const { token } = useParams<{ token: string }>();
+  const token = tokenProp ?? tokenFromUrl();
   const { navigate } = useNavigation();
 
   // Validate magic link token
-  const { isLoading, isRetrying, isValidated, error, retry, retryCountdown } = useTwoFactorSetupMagicLink(token || '');
+  const { isLoading, isRetrying, isValidated, error, retry, retryCountdown } = useTwoFactorSetupMagicLink(token);
 
   /**
    * Handle validation error
