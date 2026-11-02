@@ -2,14 +2,15 @@ allowBuilds:
   '@biomejs/biome': true
   # Storybook 10 still installs esbuild even though Vite 8 no longer does.
   esbuild: true
-# Refuse any version published less than a day ago. 1440 is also pnpm's
-# built-in default; it is set here so a default change cannot loosen it.
-minimumReleaseAge: 1440
-# pnpm 12 already turns this on whenever minimumReleaseAge is set explicitly:
-# a too-new version fails the install instead of being added to the exclude
-# list on its own. Kept explicit for the same reason as above.
+# Refuse any version published less than three days ago (the same policy as
+# @passflow/core). Set explicitly so a change to pnpm's default cannot loosen it.
+minimumReleaseAge: 4320
+# A too-new version fails the install instead of being added to the exclude
+# list on its own. pnpm 12 also re-checks the lockfile against this rule on
+# every install, frozen included.
 minimumReleaseAgeStrict: true
-# Exact versions only, never a package-wide pattern. Remove an entry once the
-# version is older than minimumReleaseAge or no longer in the lockfile.
+# First-party packages only: Passflow releases the SDK chain together, so a
+# just-published @passflow/* version must be installable at once. Never add
+# third-party packages here; pin an older, allowed version instead.
 minimumReleaseAgeExclude:
-  - '@passflow/core@0.20.0'
+  - '@passflow/*'
