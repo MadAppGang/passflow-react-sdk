@@ -2,6 +2,30 @@
 
 All notable changes to `@passflow/react` are documented in this file.
 
+## [0.16.0] - 2026-11-03
+
+### Breaking
+
+- `react-router` is no longer a peer dependency, and the package does not import it. The only peers are `react` and `react-dom`, `^18 || ^19`. `PassflowFlow` keeps its own small router, so it works the same in an app that routes with React Router, TanStack Router, Wouter, another router, or none. A host that installed `react-router` only for this package can remove it.
+- `PassflowFlow` no longer picks up a host React Router `<Router>`, and the console warning about `routerType` inside one is gone. Inside an app router in browser mode it shares the address bar with it: each side sees the other's navigations, and Back reaches both. Mount it on a catch-all route (`/auth/*` in React Router, `/auth/$` in TanStack Router, `<Route path="/auth" nest>` in Wouter).
+- `pathPrefix` is an absolute path from the root of the URL. When it is not given, the flow takes it from the first URL it sees, so `<PassflowFlow />` on `/auth` or `/auth/signin` uses `/auth`. Before, inside a host router, it was relative to the parent route.
+- `TwoFactorSetupMagicLinkFlow` no longer uses React Router's `useParams`. It reads the token from the URL segment after `/two-factor-setup-magic-link/`, or from a new `token` prop.
+
+### Added
+
+- `<PassflowFlow />` with no props works: browser history, prefix from the URL, every screen at a fixed path under it (`/signin`, `/signup`, `/verify-challenge-otp`, `/two-factor-setup-magic-link/:token`, …).
+- Full control: pass `location` and `navigate` together and the app's router owns the location, for example a TanStack Router memory history. Their types are exported as `PassflowFlowLocation` and `PassflowFlowNavigate`.
+- `PassflowFlow` serves the 2FA setup magic link (`/two-factor-setup-magic-link/:token`) as one of its screens.
+
+### Fixed
+
+- Forms inside `PassflowFlow` read search params from the flow's location. In memory or hash mode, or under `location` + `navigate`, they read the address bar, which never carried them; forgot-password then threw "Invalid default method param".
+
+### Internal
+
+- Tests run the zero-config flow inside React Router, TanStack Router and Wouter (jsdom), and inside a TanStack Router app in Chromium. `@tanstack/react-router` and `wouter` are dev dependencies; `react-router` stays one, for those tests and the docs.
+- The consumer type check installs no router.
+
 ## [0.15.1] - 2026-11-02
 
 ### Fixed

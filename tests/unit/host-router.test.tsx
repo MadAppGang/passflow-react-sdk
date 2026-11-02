@@ -1,10 +1,10 @@
+import { FieldOtp, PassflowFlow, PassflowProvider } from '@passflow/react';
 import { cleanup, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { useState } from 'react';
 import { MemoryRouter, Route, Routes } from 'react-router';
 // Coverage map: REQ-1 (REQ-1.11), REQ-3 (REQ-3.1, REQ-3.2, REQ-3.3)
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
-import { FieldOtp, PassflowFlow, PassflowProvider } from '@passflow/react';
 
 const passflowSettingsFixture = {
   password_policy: {
@@ -128,7 +128,7 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
-describe('REQ-3 React Router shared peer and PassflowFlow inside a host router', () => {
+describe('REQ-3 PassflowFlow inside a host router', () => {
   test('TEST-15 REQ-3.1 renders <PassflowFlow> inside a host <MemoryRouter> under <Route path="/auth/*"> without throwing', () => {
     const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
 
@@ -138,7 +138,7 @@ describe('REQ-3 React Router shared peer and PassflowFlow inside a host router',
         <PassflowProvider {...providerConfig}>
           <MemoryRouter initialEntries={['/auth/signin']}>
             <Routes>
-              <Route path="/auth/*" element={<PassflowFlow />} />
+              <Route path='/auth/*' element={<PassflowFlow />} />
             </Routes>
           </MemoryRouter>
         </PassflowProvider>,
@@ -151,26 +151,29 @@ describe('REQ-3 React Router shared peer and PassflowFlow inside a host router',
     expect(routerTypeWarns).toHaveLength(0);
   });
 
-  test('TEST-16 REQ-3.2 logs console.warn mentioning routerType is ignored when nested in a host router and routerType is passed', () => {
+  // 0.16.0 changed REQ-3.2: the flow no longer uses React Router, so it does not detect a
+  // host router and `routerType` is never ignored. Inside a host router it keeps the
+  // history it is given (here memory) and warns about nothing.
+  test('TEST-16 REQ-3.2 (0.16.0) honours routerType inside a host router, without a warning', () => {
     const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
 
+    let container: HTMLElement | undefined;
     expect(() => {
-      render(
+      const rendered = render(
         <PassflowProvider {...providerConfig}>
           <MemoryRouter initialEntries={['/auth/signin']}>
             <Routes>
-              <Route path="/auth/*" element={<PassflowFlow routerType="memory" />} />
+              <Route path='/auth/*' element={<PassflowFlow routerType='memory' />} />
             </Routes>
           </MemoryRouter>
         </PassflowProvider>,
       );
+      container = rendered.container;
     }).not.toThrow();
 
-    const messages = warnSpy.mock.calls.map((args) => args.map(String).join(' '));
-    expect(
-      messages.some((msg) => /routerType/i.test(msg) && /ignore/i.test(msg)),
-      `Expected console.warn to mention routerType is ignored, got: ${JSON.stringify(messages)}`,
-    ).toBe(true);
+    expect(container?.innerHTML).not.toBe('');
+    const routerTypeWarns = warnSpy.mock.calls.filter((args) => args.join(' ').includes('routerType'));
+    expect(routerTypeWarns).toHaveLength(0);
   });
 
   test('TEST-17 REQ-3.3 renders standalone <PassflowFlow routerType="memory"> with no host router without error and without warning', () => {
@@ -180,7 +183,7 @@ describe('REQ-3 React Router shared peer and PassflowFlow inside a host router',
     expect(() => {
       const rendered = render(
         <PassflowProvider {...providerConfig}>
-          <PassflowFlow routerType="memory" />
+          <PassflowFlow routerType='memory' />
         </PassflowProvider>,
       );
       container = rendered.container;
@@ -201,15 +204,15 @@ describe('REQ-1.11 FieldOtp onComplete callback', () => {
       const [value, setValue] = useState('');
       return (
         <div>
-          <span id="otp-label">Verification code</span>
+          <span id='otp-label'>Verification code</span>
           <FieldOtp
-            id="otp-input"
-            name="otp"
+            id='otp-input'
+            name='otp'
             length={6}
             value={value}
             onChange={setValue}
             onComplete={onComplete}
-            labelledBy="otp-label"
+            labelledBy='otp-label'
           />
         </div>
       );

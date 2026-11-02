@@ -137,17 +137,15 @@ Both scripts automatically start the demo app and Storybook. `pnpm test` uses th
 ## Installation
 
 ```bash
-pnpm add @passflow/react react-router
+pnpm add @passflow/react
 ```
 
-`react-router` (`^7.0.0 || ^8.0.0`) is a required peer dependency and is not bundled, so install it even when the app routes with Wouter or TanStack Router. `react-router-dom` is not needed: from v7 on, `BrowserRouter` and the rest are exported by `react-router`.
+No router is needed. `PassflowFlow` has its own small router, and works on its own or inside an app routed by React Router, TanStack Router, Wouter or anything else.
 
 ## Requirements
 
-- React 18+ (React 19.2.7+ with React Router 8)
-- React Router 7 or 8 (React Router 6 is not supported)
+- React 18 or 19
 - Node `^22.12.0 || ^24.0.0 || >=26.0.0`
-- Your app may route with React Router, Wouter or TanStack Router
 
 ## Integration
 
@@ -246,20 +244,62 @@ authentication-context claims those tokens carry.
 
 ### PassflowFlow
 
+The whole sign-in experience on its own pages: sign-in, sign-up, one-time codes, magic links, password reset, invitations and two-factor. It needs no router and no setup:
+
+```tsx
+<PassflowProvider url="https://auth.example.com" appId="your-app-id">
+  <PassflowFlow />
+</PassflowProvider>
+```
+
 | Prop | Type | Description |
 |------|------|-------------|
 | successAuthRedirect | string | URL to redirect after successful authentication |
-| federatedDisplayMode | "popup" \| "redirect" | Federated authentication display mode |
-| pathPrefix | string | Prefix for all routes (optional) |
+| federatedDisplayMode | "modal" \| "redirect" | Federated authentication display mode |
+| pathPrefix | string | Where the flow lives, such as `/auth`. Optional: worked out from the first URL |
+| routerType | "browser" \| "hash" \| "memory" | The history the flow keeps. Default `browser` |
+| location, navigate | see below | Full control by the app's router. Optional, always together |
 
-Inside an app that already has a React Router `<Router>`, `PassflowFlow` uses that router rather than its own (`routerType` is ignored). Mount it under a splat route so its own routes can match, and `pathPrefix` is relative to that route:
+**Paths.** The flow's screens are `<prefix>/signin`, `<prefix>/signup`, `<prefix>/verify-challenge-otp`, `<prefix>/verify-challenge-magic-link`, `<prefix>/forgot-password`, `<prefix>/forgot-password/success`, `<prefix>/password/reset`, `<prefix>/invitation`, `<prefix>/two-factor-verify`, `<prefix>/two-factor-setup` and `<prefix>/two-factor-setup-magic-link/:token`. Without `pathPrefix` the flow takes the prefix from the first URL it sees: `/auth/signin` and `/auth` both give `/auth`, `/` gives none. A path under the prefix that names no screen goes to sign-in.
+
+**Inside an app's router.** Mount the flow on a catch-all route; nothing else is needed. The flow moves the address bar and announces it with `popstate`, the event React Router, TanStack Router and Wouter listen to, so the app's router follows the flow and the flow follows the app, Back and Forward included:
 
 ```tsx
-<Routes>
-  <Route path="/" element={<Home />} />
-  <Route path="/auth/*" element={<PassflowFlow successAuthRedirect="/" />} />
-</Routes>
+// TanStack Router
+const authRoute = createRoute({ getParentRoute: () => rootRoute, path: '/auth/$', component: () => <PassflowFlow /> });
+
+// React Router
+<Route path="/auth/*" element={<PassflowFlow />} />
+
+// Wouter
+<Route path="/auth" nest><PassflowFlow /></Route>
 ```
+
+**`routerType`.** `browser` (default) uses the address bar. `hash` keeps the flow's path after `#`. `memory` leaves the URL alone, for an embedded widget or tests.
+
+**Full control.** When the app's router does not use the address bar (it runs in hash or memory mode), hand the flow its location and a way to move it. `routerType` is then not used:
+
+```tsx
+// TanStack Router with a memory or hash history
+function AuthPage() {
+  const router = useRouter();
+  const location = useRouterState({ select: (state) => state.location });
+  return (
+    <PassflowFlow
+      location={{ pathname: location.pathname, search: location.searchStr }}
+      navigate={(to, { replace }) => {
+        const href = `${to.pathname}${to.search}`;
+        if (replace) router.history.replace(href);
+        else router.history.push(href);
+      }}
+    />
+  );
+}
+```
+
+`TwoFactorSetupMagicLinkFlow` can also be mounted on its own page. It reads the token from the URL (the segment after `/two-factor-setup-magic-link/`), or takes it as a `token` prop.
+
+The sections below wire the app's router into the **standalone form components** (`SignIn`, `SignUp`, …) through `PassflowProvider`'s `navigate` and `router` props. `PassflowFlow` does not need them.
 
 ### React Router
 

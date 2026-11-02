@@ -1,5 +1,6 @@
-import { type FC, type ReactNode, useContext, useEffect, useMemo } from 'react';
+import { type FC, useContext, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import { TwoFactorSetupFlow } from '@/components/flow/two-factor-setup';
+import { TwoFactorSetupMagicLinkFlow } from '@/components/flow/two-factor-setup-magic-link';
 import { TwoFactorVerifyFlow } from '@/components/flow/two-factor-verify';
 import {
   ForgotPassword,
@@ -11,121 +12,134 @@ import {
   VerifyChallengeMagicLink,
   VerifyChallengeOTP,
 } from '@/components/form';
-import { NavigationContext, routes } from '@/context';
+import { NavigationContext, SearchContext, type SearchSource } from '@/context';
 import '@/styles/index.css';
-// react-router (v7 or v8) is a required peer dependency, shared with the host app and
-// never bundled. It is imported statically, so a missing peer fails at module
-// load with the resolver's own error; no runtime guard could run earlier.
-import {
-  BrowserRouter,
-  HashRouter,
-  MemoryRouter,
-  Navigate,
-  Route,
-  Routes,
-  useInRouterContext,
-  useLocation,
-  useNavigate,
-  useParams,
-} from 'react-router';
 import { ErrorComponent } from '@/components/error';
 import { withError } from '@/hocs';
 import { useNavigation } from '@/hooks';
 import type { SuccessAuthRedirect } from '@/types';
 import { authRedirectErrorMessage, getUrlErrors } from '@/utils';
+import {
+  createBrowserHistory,
+  createHashHistory,
+  createMemoryHistory,
+  detectPrefix,
+  FLOW_SCREENS,
+  type FlowHistory,
+  type FlowLocation,
+  type FlowMatch,
+  type FlowNavigate,
+  type FlowScreen,
+  isUnderPrefix,
+  matchScreen,
+  normalizePrefix,
+  screenPath,
+  withQuestionMark,
+} from './flow-router';
 
-export type PassflowProps = {
+export type { FlowLocation as PassflowFlowLocation, FlowNavigate as PassflowFlowNavigate } from './flow-router';
+
+type PassflowBaseProps = {
   successAuthRedirect?: SuccessAuthRedirect;
   federatedDisplayMode?: 'modal' | 'redirect';
   error?: string;
   relyingPartyId?: string;
+  /**
+   * Where the flow is mounted, such as `/auth`: its screens are then `/auth/signin`,
+   * `/auth/signup`, and so on. Leave it out and the flow works it out from the first
+   * URL it sees (`/auth/signin` or `/auth` → `/auth`; `/` → none).
+   */
   pathPrefix?: string;
   /**
-   * The router the flow creates for itself. Ignored when the flow is rendered
-   * inside a host react-router `<Router>`: the flow then uses the host's router.
+   * The history the flow keeps when the app does not pass `location`. `browser`
+   * (the default) uses the address bar, on its own or inside the app's router;
+   * `hash` keeps the flow's path after `#`; `memory` leaves the URL alone.
    */
   routerType?: 'browser' | 'hash' | 'memory';
+  /** @deprecated Never had an effect. Use `pathPrefix`. */
   basename?: string;
 };
 
-type RouterKind = NonNullable<PassflowProps['routerType']>;
-
-const normalizePathPrefix = (path?: string) => {
-  if (!path) return '';
-  const pathReplace = path.replace(/^\/+|\/+$/g, '');
-  return pathReplace.startsWith('/') ? pathReplace : `/${pathReplace}`;
-};
-
-const combineRoutesWithPrefix = (prefix?: string) =>
-  Object.keys(routes).reduce(
-    (acc, key) => {
-      const PATH = key as keyof typeof routes;
-      acc[PATH] = `${normalizePathPrefix(prefix)}${routes[key as keyof typeof routes]?.path}`;
-      return acc;
-    },
-    {} as Record<keyof typeof routes, string>,
+export type PassflowProps = PassflowBaseProps &
+  (
+    | {
+        location?: undefined;
+        navigate?: undefined;
+      }
+    | {
+        /**
+         * Full control: the app's router owns the location. Pass its current
+         * `{ pathname, search }` and a `navigate` that moves it; `routerType` is then
+         * not used. Not needed for an app router in browser mode, which the default
+         * already follows.
+         */
+        location: FlowLocation;
+        navigate: FlowNavigate;
+      }
   );
 
-const RouterProvider: FC<{ children: ReactNode; routerType: RouterKind }> = ({ children, routerType }) => {
-  switch (routerType) {
-    case 'hash':
-      return <HashRouter>{children}</HashRouter>;
-    case 'memory':
-      return <MemoryRouter>{children}</MemoryRouter>;
-    default:
-      return <BrowserRouter>{children}</BrowserRouter>;
+type RouterKind = NonNullable<PassflowBaseProps['routerType']>;
+
+const createHistory = (routerType: RouterKind): FlowHistory => {
+  if (routerType === 'hash') return createHashHistory();
+  if (routerType === 'memory') return createMemoryHistory();
+  return createBrowserHistory();
+};
+
+/** The location the flow renders and how it moves: its own history, or the app's when it passes both. */
+const useFlowLocation = (
+  routerType: RouterKind,
+  controlledLocation: FlowLocation | undefined,
+  controlledNavigate: FlowNavigate | undefined,
+): { location: FlowLocation; navigate: FlowNavigate } => {
+  const history = useMemo(() => createHistory(routerType), [routerType]);
+  const ownLocation = useSyncExternalStore(history.subscribe, history.read);
+  if (controlledLocation && controlledNavigate) {
+    return {
+      location: { pathname: controlledLocation.pathname, search: withQuestionMark(controlledLocation.search ?? '') },
+      navigate: controlledNavigate,
+    };
   }
+  return { location: ownLocation, navigate: history.navigate };
 };
 
-/**
- * Where the flow is mounted inside a host router: the pathname its parent route
- * consumed, without a trailing slash. Under `<Route path='/auth/*'>` at
- * `/auth/signin` this is `/auth`. With no parent route (the flow's own router, or
- * a host router with no `<Routes>` around the flow) it is `''`.
- */
-const useParentRouteBase = (): string => {
-  const { pathname } = useLocation();
-  const splat = useParams()['*'];
-  if (splat === undefined) return '';
-  const tail = pathname.endsWith(splat) ? splat : encodeURI(splat);
-  const base = pathname.endsWith(tail) ? pathname.slice(0, pathname.length - tail.length) : pathname;
-  return base.replace(/\/+$/, '');
-};
+type PassflowRoutesProps = Required<Pick<PassflowBaseProps, 'federatedDisplayMode' | 'relyingPartyId'>> &
+  Pick<PassflowBaseProps, 'successAuthRedirect' | 'pathPrefix'> & {
+    location: FlowLocation;
+    navigate: FlowNavigate;
+  };
 
-const RouterInnerWrapperProvider: FC<{ children: ReactNode }> = ({ children }) => {
-  const navigate = useNavigate();
-  // Registered with the provider directly, not through useNavigation's adapter: that
-  // adapter shapes calls for the host's own navigate according to the provider's
-  // `router` prop, and with the default value it sends every step through
-  // window.location, out of this router. The flow always runs inside a React Router (its own or the host's).
+const PassflowRoutes: FC<PassflowRoutesProps> = ({
+  successAuthRedirect,
+  federatedDisplayMode,
+  relyingPartyId,
+  pathPrefix,
+  location,
+  navigate,
+}) => {
+  // Fixed from the first URL unless the app names it.
+  const [detectedPrefix] = useState(() => detectPrefix(location.pathname));
+  const prefix = pathPrefix === undefined ? detectedPrefix : normalizePrefix(pathPrefix);
+
+  const paths = useMemo(
+    () => Object.fromEntries(FLOW_SCREENS.map((screen) => [screen, screenPath(screen, prefix)])) as Record<FlowScreen, string>,
+    [prefix],
+  );
+
+  // The forms navigate through the provider. Registered once, reading the latest
+  // `navigate` through a ref: an app's inline `navigate` prop changes every render,
+  // and re-registering it would re-render the provider and loop.
+  const navigateRef = useRef(navigate);
+  navigateRef.current = navigate;
   const { setNavigate } = useContext(NavigationContext);
-
   useEffect(() => {
     setNavigate(({ to, search = '', replace = false }) => {
-      // React Router reads `replace` from the options argument only.
-      navigate({ pathname: to, search: search && !search.startsWith('?') ? `?${search}` : search }, { replace });
+      const queryAt = to.indexOf('?');
+      const pathname = queryAt >= 0 ? to.slice(0, queryAt) : to;
+      const query = search || (queryAt >= 0 ? to.slice(queryAt) : '');
+      navigateRef.current({ pathname, search: withQuestionMark(query) }, { replace });
     });
-  }, [navigate, setNavigate]);
-
-  return children;
-};
-
-type PassflowRoutesProps = Required<Pick<PassflowProps, 'federatedDisplayMode' | 'relyingPartyId' | 'pathPrefix'>> &
-  Pick<PassflowProps, 'successAuthRedirect'>;
-
-/**
- * The flow's routes, rendered inside whichever router is in context. Route
- * `path`s are matched against what the parent route left over (the whole
- * pathname when there is no parent route), so they carry only `pathPrefix`.
- * Navigation targets are absolute, so they also carry the parent route's base.
- */
-const PassflowRoutes: FC<PassflowRoutesProps> = ({ successAuthRedirect, federatedDisplayMode, relyingPartyId, pathPrefix }) => {
-  const parentBase = useParentRouteBase();
-  const matchPaths = useMemo(() => combineRoutesWithPrefix(pathPrefix), [pathPrefix]);
-  const paths = useMemo(
-    () => combineRoutesWithPrefix(`${parentBase}${normalizePathPrefix(pathPrefix)}`),
-    [parentBase, pathPrefix],
-  );
+  }, [setNavigate]);
 
   // A landing that owes its second factor goes to this flow's own (prefixed)
   // 2FA route; PassflowProvider does the navigation.
@@ -135,106 +149,127 @@ const PassflowRoutes: FC<PassflowRoutesProps> = ({ successAuthRedirect, federate
     return () => setTwoFactorVerifyPath?.(null);
   }, [setTwoFactorVerifyPath, paths.two_factor_verify]);
 
-  return (
-    <RouterInnerWrapperProvider>
-      <Routes>
-        <Route
-          path={matchPaths.signin}
-          element={
-            <SignIn
-              successAuthRedirect={successAuthRedirect}
-              relyingPartyId={relyingPartyId}
-              federatedDisplayMode={federatedDisplayMode}
-              signUpPath={paths.signup}
-              forgotPasswordPath={paths.forgot_password}
-              verifyMagicLinkPath={paths.verify_magic_link}
-              verifyOTPPath={paths.verify_otp}
-              twoFactorVerifyPath={paths.two_factor_verify}
-            />
-          }
-        />
-        <Route
-          path={matchPaths.signup}
-          element={
-            <SignUp
-              successAuthRedirect={successAuthRedirect}
-              relyingPartyId={relyingPartyId}
-              federatedDisplayMode={federatedDisplayMode}
-              signInPath={paths.signin}
-              verifyMagicLinkPath={paths.verify_magic_link}
-              verifyOTPPath={paths.verify_otp}
-              twoFactorVerifyPath={paths.two_factor_verify}
-            />
-          }
-        />
-        <Route
-          path={matchPaths.verify_otp}
-          element={
-            <VerifyChallengeOTP
-              successAuthRedirect={successAuthRedirect}
-              numInputs={6}
-              shouldAutoFocus
-              signUpPath={paths.signup}
-              twoFactorVerifyPath={paths.two_factor_verify}
-            />
-          }
-        />
-        <Route path={matchPaths.verify_magic_link} element={<VerifyChallengeMagicLink />} />
-        <Route
-          path={matchPaths.forgot_password}
-          element={
-            <ForgotPassword
-              successResetRedirect={successAuthRedirect}
-              signInPath={paths.signin}
-              forgotPasswordSuccessPath={paths.forgot_password_success}
-            />
-          }
-        />
-        <Route path={matchPaths.forgot_password_success} element={<ForgotPasswordSuccess />} />
-        <Route
-          path={matchPaths.reset_password}
-          element={<ResetPassword successAuthRedirect={successAuthRedirect} twoFactorVerifyPath={paths.two_factor_verify} />}
-        />
-        <Route
-          path={matchPaths.invitation}
-          element={
-            <InvitationJoin successAuthRedirect={successAuthRedirect} signInPath={paths.signin} signUpPath={paths.signup} />
-          }
-        />
-        <Route
-          path={matchPaths.two_factor_verify}
-          element={
-            <TwoFactorVerifyFlow
-              successAuthRedirect={successAuthRedirect}
-              signInPath={paths.signin}
-              twoFactorSetupPath={paths.two_factor_setup}
-            />
-          }
-        />
-        <Route
-          path={matchPaths.two_factor_setup}
-          element={
-            <TwoFactorSetupFlow
-              successAuthRedirect={successAuthRedirect}
-              twoFactorVerifyPath={paths.two_factor_verify}
-              signInPath={paths.signin}
-            />
-          }
-        />
-        <Route
-          path='*'
-          element={
-            <Navigate
-              to={{
-                pathname: paths.signin,
-                search: window.location.search,
-              }}
-            />
-          }
-        />
-      </Routes>
-    </RouterInnerWrapperProvider>
+  const match = matchScreen(location.pathname, prefix);
+  // A path inside the flow that names no screen goes to sign-in, keeping its search
+  // params. A path outside the flow belongs to the app: the flow renders nothing.
+  const strayInsideFlow = !match && isUnderPrefix(location.pathname, prefix);
+  useEffect(() => {
+    if (strayInsideFlow) navigateRef.current({ pathname: paths.signin, search: location.search }, { replace: true });
+  }, [strayInsideFlow, paths.signin, location.search]);
+
+  // The forms read and write search params through the flow's location, not the
+  // address bar, so memory, hash and app-driven flows carry them too. A write can
+  // happen while a form renders (default params), so it moves after the render.
+  const pathnameRef = useRef(location.pathname);
+  pathnameRef.current = location.pathname;
+  const searchSource = useMemo<SearchSource>(
+    () => ({
+      read: () => location.search,
+      write: (search, { replace }) =>
+        queueMicrotask(() => navigateRef.current({ pathname: pathnameRef.current, search }, { replace })),
+    }),
+    [location.search],
   );
+
+  if (!match) return null;
+
+  return (
+    <SearchContext.Provider value={searchSource}>
+      <FlowScreenView
+        match={match}
+        paths={paths}
+        successAuthRedirect={successAuthRedirect}
+        federatedDisplayMode={federatedDisplayMode}
+        relyingPartyId={relyingPartyId}
+      />
+    </SearchContext.Provider>
+  );
+};
+
+type FlowScreenViewProps = Pick<PassflowRoutesProps, 'successAuthRedirect' | 'federatedDisplayMode' | 'relyingPartyId'> & {
+  match: FlowMatch;
+  paths: Record<FlowScreen, string>;
+};
+
+/** The screen a matched path names, wired to the flow's other screens. */
+const FlowScreenView: FC<FlowScreenViewProps> = ({
+  match,
+  paths,
+  successAuthRedirect,
+  federatedDisplayMode,
+  relyingPartyId,
+}) => {
+  switch (match.screen) {
+    case 'signin':
+      return (
+        <SignIn
+          successAuthRedirect={successAuthRedirect}
+          relyingPartyId={relyingPartyId}
+          federatedDisplayMode={federatedDisplayMode}
+          signUpPath={paths.signup}
+          forgotPasswordPath={paths.forgot_password}
+          verifyMagicLinkPath={paths.verify_magic_link}
+          verifyOTPPath={paths.verify_otp}
+          twoFactorVerifyPath={paths.two_factor_verify}
+        />
+      );
+    case 'signup':
+      return (
+        <SignUp
+          successAuthRedirect={successAuthRedirect}
+          relyingPartyId={relyingPartyId}
+          federatedDisplayMode={federatedDisplayMode}
+          signInPath={paths.signin}
+          verifyMagicLinkPath={paths.verify_magic_link}
+          verifyOTPPath={paths.verify_otp}
+          twoFactorVerifyPath={paths.two_factor_verify}
+        />
+      );
+    case 'verify_otp':
+      return (
+        <VerifyChallengeOTP
+          successAuthRedirect={successAuthRedirect}
+          numInputs={6}
+          shouldAutoFocus
+          signUpPath={paths.signup}
+          twoFactorVerifyPath={paths.two_factor_verify}
+        />
+      );
+    case 'verify_magic_link':
+      return <VerifyChallengeMagicLink />;
+    case 'forgot_password':
+      return (
+        <ForgotPassword
+          successResetRedirect={successAuthRedirect}
+          signInPath={paths.signin}
+          forgotPasswordSuccessPath={paths.forgot_password_success}
+        />
+      );
+    case 'forgot_password_success':
+      return <ForgotPasswordSuccess />;
+    case 'reset_password':
+      return <ResetPassword successAuthRedirect={successAuthRedirect} twoFactorVerifyPath={paths.two_factor_verify} />;
+    case 'invitation':
+      return <InvitationJoin successAuthRedirect={successAuthRedirect} signInPath={paths.signin} signUpPath={paths.signup} />;
+    case 'two_factor_verify':
+      return (
+        <TwoFactorVerifyFlow
+          successAuthRedirect={successAuthRedirect}
+          signInPath={paths.signin}
+          twoFactorSetupPath={paths.two_factor_setup}
+        />
+      );
+    case 'two_factor_setup':
+      return (
+        <TwoFactorSetupFlow
+          successAuthRedirect={successAuthRedirect}
+          twoFactorVerifyPath={paths.two_factor_verify}
+          signInPath={paths.signin}
+        />
+      );
+    case 'two_factor_setup_magic_link':
+      return <TwoFactorSetupMagicLinkFlow token={match.params.token ?? ''} signInPath={paths.signin} />;
+  }
 };
 
 const PassflowWrapper: FC<PassflowProps> = ({
@@ -242,10 +277,13 @@ const PassflowWrapper: FC<PassflowProps> = ({
   federatedDisplayMode = 'redirect',
   error = undefined,
   relyingPartyId = window.location.hostname,
-  pathPrefix = '',
-  routerType,
+  pathPrefix,
+  routerType = 'browser',
+  location: controlledLocation,
+  navigate: controlledNavigate,
 }) => {
   const { error: errorUrlSuccess, message: messageUrlSuccess } = getUrlErrors(successAuthRedirect);
+  const { location, navigate } = useFlowLocation(routerType, controlledLocation, controlledNavigate);
 
   if (errorUrlSuccess) {
     console.error('[passflow] authentication redirect returned an error', {
@@ -255,32 +293,18 @@ const PassflowWrapper: FC<PassflowProps> = ({
     throw new Error(authRedirectErrorMessage);
   }
 
-  // Inside a host react-router <Router> the flow must not create its own: the
-  // router is a shared peer, and a nested <Router> throws. The host's router
-  // then owns history, and the flow's routes resolve under its parent route.
-  const isInHostRouter = useInRouterContext();
-  useEffect(() => {
-    if (isInHostRouter && routerType) {
-      console.warn(
-        `[passflow] PassflowFlow is inside a react-router <Router>, so routerType='${routerType}' is ignored and the host router is used.`,
-      );
-    }
-  }, [isInHostRouter, routerType]);
-
   if (error) throw new Error(error);
 
-  const flowRoutes = (
+  return (
     <PassflowRoutes
       successAuthRedirect={successAuthRedirect}
       federatedDisplayMode={federatedDisplayMode}
       relyingPartyId={relyingPartyId}
       pathPrefix={pathPrefix}
+      location={location}
+      navigate={navigate}
     />
   );
-
-  if (isInHostRouter) return flowRoutes;
-
-  return <RouterProvider routerType={routerType ?? 'browser'}>{flowRoutes}</RouterProvider>;
 };
 
 export const PassflowFlow = withError(PassflowWrapper, ErrorComponent);

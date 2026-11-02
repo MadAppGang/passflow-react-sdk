@@ -1,6 +1,7 @@
 /**
  * Utility for native handling of URL parameters
  */
+import { useSearchSource } from '../context/search-context';
 
 /**
  * Decodes HTML entities in a string
@@ -10,14 +11,18 @@ const decodeHtmlEntities = (input: string): string => {
   return doc.documentElement.textContent || '';
 };
 
+const withQuestionMark = (params: URLSearchParams) => (params.toString() ? `?${params.toString()}` : '');
+
 /**
- * Get URL parameters
+ * Get URL parameters. Inside PassflowFlow they come from the flow's location; outside it, from the
+ * address bar.
  * @param defaultValues Default values
  * @returns Object with methods getAll, get, set
  */
 export const useUrlParams = <T extends Record<string, string>>(defaultValues?: T) => {
+  const source = useSearchSource();
   // Decode HTML entities in location.search
-  const decodedSearch = decodeHtmlEntities(window.location.search);
+  const decodedSearch = decodeHtmlEntities(source.read());
   const searchParams = new URLSearchParams(decodedSearch);
 
   // Set default values if parameters don't exist
@@ -32,8 +37,7 @@ export const useUrlParams = <T extends Record<string, string>>(defaultValues?: T
     }
 
     if (hasChanged) {
-      const newUrl = `${window.location.pathname}${searchParams.toString() ? `?${searchParams.toString()}` : ''}${window.location.hash}`;
-      window.history.replaceState(null, '', newUrl);
+      source.write(withQuestionMark(searchParams), { replace: true });
     }
   }
 
@@ -64,7 +68,7 @@ export const useUrlParams = <T extends Record<string, string>>(defaultValues?: T
    * @param params Object with parameters
    */
   const set = (params: Record<string, string>) => {
-    const newSearchParams = new URLSearchParams(window.location.search);
+    const newSearchParams = new URLSearchParams(source.read());
 
     for (const [key, value] of Object.entries(params)) {
       if (value === null || value === undefined || value === '') {
@@ -74,8 +78,7 @@ export const useUrlParams = <T extends Record<string, string>>(defaultValues?: T
       }
     }
 
-    const newUrl = `${window.location.pathname}${newSearchParams.toString() ? `?${newSearchParams.toString()}` : ''}${window.location.hash}`;
-    window.history.pushState(null, '', newUrl);
+    source.write(withQuestionMark(newSearchParams), { replace: false });
   };
 
   return {
