@@ -1,6 +1,6 @@
 import { PassflowFlow } from '@/components/flow';
 import type { PassflowConfig } from '@passflow/core';
-import React, { type FC, type PropsWithChildren } from 'react';
+import type { FC, PropsWithChildren } from 'react';
 import { PassflowProvider } from './components/provider';
 
 const passflowConfig: PassflowConfig = {

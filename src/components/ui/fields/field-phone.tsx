@@ -17,7 +17,6 @@ import { Button, CountryFlag, Icon } from '..';
 
 import '@/styles/index.css';
 import 'react-international-phone/style.css';
-import React from 'react';
 
 type TFieldPhone = InputHTMLAttributes<HTMLInputElement> & {
   id: string;

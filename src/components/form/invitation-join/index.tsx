@@ -5,7 +5,7 @@ import { withError } from '@/hocs';
 import { useAppSettings, useJoinInvite, useNavigation, usePassflow } from '@/hooks';
 import { getUrlWithTokens, invitationLinkErrorMessage, isValidUrl, undefinedOnCatch, useUrlParams } from '@/utils';
 import { type InvitationToken, parseToken } from '@passflow/core';
-import React, { type FC, useEffect } from 'react';
+import { type FC, useEffect } from 'react';
 
 export type TInvitationJoinFlow = {
   successAuthRedirect?: string;

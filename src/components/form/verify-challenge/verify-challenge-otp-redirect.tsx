@@ -7,7 +7,7 @@ import {
   verificationLinkErrorMessage,
   verificationRequestErrorMessage,
 } from '@/utils';
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { VerifyChallengeSuccess } from './verify-challenge-success';
 
 type VerifyChallengeOTPRedirectProps = {

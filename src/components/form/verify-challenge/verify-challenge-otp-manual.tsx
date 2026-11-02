@@ -11,7 +11,7 @@ import type {
 } from '@passflow/core';
 /* eslint-disable no-void */
 /* eslint-disable complexity */
-import React, { type FC, useEffect, useId, useState } from 'react';
+import { type FC, useEffect, useId, useState } from 'react';
 import { Wrapper } from '../wrapper';
 import { TimerButton } from './timer-button';
 import { VerifyChallengeSuccess } from './verify-challenge-success';

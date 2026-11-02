@@ -62,3 +62,33 @@ jobs:
         run: pnpm test
         env:
           STORYBOOK_DISABLE_TELEMETRY: '1'
+
+  # The package is developed on React 19, and its peer range still admits 18.
+  # This leg swaps in React 18 and its types and proves the sources still
+  # type-check and the unit tests still pass there.
+  react18-compat:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v6.1.0
+
+      - name: Use Node.js 24.x
+        uses: actions/setup-node@v7
+        with:
+          node-version: 24.x
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Swap in React 18
+        run: pnpm add -D react@18.3.1 react-dom@18.3.1 @types/react@^18.3 @types/react-dom@^18.3
+
+      - name: Type-check against React 18 types
+        run: pnpm exec tsc
+
+      - name: Run unit tests on React 18
+        run: pnpm test:unit

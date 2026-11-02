@@ -1,5 +1,5 @@
 import { Button } from '@/components/ui';
-import React, { type FC, type PropsWithChildren, useEffect, useState } from 'react';
+import { type FC, type PropsWithChildren, useEffect, useState } from 'react';
 import '@/styles/index.css';
 import { cn } from '@/utils';
 

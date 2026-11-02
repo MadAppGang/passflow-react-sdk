@@ -2,7 +2,6 @@ import { LoginScreen } from '@/components/ui';
 import { useAppSettings, useNavigation } from '@/hooks';
 import { isValidUrl } from '@/utils';
 import type { FC } from 'react';
-import React from 'react';
 
 export type TError = {
   goBackRedirectTo: string;
