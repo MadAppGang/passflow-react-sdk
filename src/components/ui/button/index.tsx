@@ -9,7 +9,6 @@ import {
   type MouseEvent,
   type PropsWithChildren,
   useEffect,
-  useId,
   useState,
 } from 'react';
 import '@/styles/index.css';
@@ -45,7 +44,8 @@ type TButton = PropsWithChildren &
     withRipple?: boolean;
     /**
      * The `option` variant's second line — the hint under the label. Rendered
-     * only by that variant, which owns the two-line geometry.
+     * only by that variant, which owns the two-line geometry. It is part of the
+     * button's accessible name ("label hint"), because it is visible text.
      */
     description?: string;
     /**
@@ -68,18 +68,9 @@ export const Button: FC<TButton> = ({
   withRipple = true,
   description,
   pressed,
-  'aria-describedby': ariaDescribedBy,
   ...rest
 }) => {
   const [ripples, setRipples] = useState<JSX.Element[]>();
-  // The `option` variant renders two lines inside one button. Without this, the
-  // computed accessible name is "label + hint": the hint is a DESCRIPTION, so
-  // the name is pinned to the label span and the hint is referenced instead.
-  const optionId = useId();
-  const optionLabelId = `${optionId}-label`;
-  const optionHintId = `${optionId}-hint`;
-  const isDescribedOption = variant === 'option' && Boolean(description);
-  const describedBy = [isDescribedOption ? optionHintId : undefined, ariaDescribedBy].filter(Boolean).join(' ') || undefined;
 
   const styles = {
     'passflow-button passflow-button--big': size === 'big',
@@ -122,24 +113,19 @@ export const Button: FC<TButton> = ({
   }, [ripples]);
 
   return (
-    <button
-      className={cn(styles, className)}
-      type={type}
-      aria-pressed={pressed}
-      aria-labelledby={isDescribedOption ? optionLabelId : undefined}
-      aria-describedby={describedBy}
-      onClick={handleClick}
-      {...rest}
-    >
+    <button className={cn(styles, className)} type={type} aria-pressed={pressed} onClick={handleClick} {...rest}>
       {variant === 'option' ? (
+        // WCAG 2.5.3 (Label in Name): the button is named from its content, so
+        // both visible lines are in the name ("label hint") and a voice user can
+        // say what they see. The space keeps the two lines separate words in
+        // that name; the column flex layout does not render it.
         <>
-          <span id={isDescribedOption ? optionLabelId : undefined} className='passflow-button__option-label'>
-            {children}
-          </span>
+          <span className='passflow-button__option-label'>{children}</span>
           {description ? (
-            <span id={optionHintId} className='passflow-button__option-hint'>
-              {description}
-            </span>
+            <>
+              {' '}
+              <span className='passflow-button__option-hint'>{description}</span>
+            </>
           ) : null}
         </>
       ) : (

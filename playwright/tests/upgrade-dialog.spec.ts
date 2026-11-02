@@ -103,8 +103,8 @@ test.describe('REQ-FR5 UpgradeDialog public story states', () => {
     await expect(page.getByRole('button', { name: /use another way/i })).toBeVisible();
     await openStory(page, 'challenge-alternatives');
     await expect(page.getByRole('dialog')).toBeVisible();
-    await expect(page.getByRole('button', { name: 'Passkey', exact: true })).toBeVisible();
-    await expect(page.getByRole('button', { name: 'Recovery code', exact: true })).toBeVisible();
+    await expect(page.getByRole('button', { name: /^Passkey\b/ })).toBeVisible();
+    await expect(page.getByRole('button', { name: /^Recovery code\b/ })).toBeVisible();
   });
 
   test('REQ-FR5 PasskeySuggested · never asks for a code', async ({ page }) => {
