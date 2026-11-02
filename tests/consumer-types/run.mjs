@@ -5,7 +5,8 @@
 //
 // For each variant in legs.json (React/router/@types pins), installs the tarball into <work>/<variant> with
 // pnpm (scripts disabled, the repo's release-age policy copied in), copies src/ and the tsconfigs there, and
-// type-checks every config (bundler, node16, nodenext) with every TypeScript leg. Then runs the pinned
+// type-checks every config (bundler, node16, nodenext; node16-cjs and nodenext-cjs for the CommonJS consumer in
+// src-cjs/) with every TypeScript leg. Then runs the pinned
 // @arethetypeswrong/cli on the tarball. Exits 1 if any check fails.
 //
 // The work dir must be outside this repo's pnpm workspace; the default is <os tmpdir>/passflow-consumer-types.
@@ -64,7 +65,8 @@ for (const [variant, deps] of Object.entries(legs.variants)) {
   // Same supply-chain policy as the repo (minimum release age, first-party excludes).
   cpSync(join(repo, 'pnpm-workspace.yaml'), join(dir, 'pnpm-workspace.yaml'));
   for (const name of readdirSync(here)) {
-    if (name === 'src' || /^tsconfig\..*\.json$/.test(name)) cpSync(join(here, name), join(dir, name), { recursive: true });
+    if (name === 'src' || name === 'src-cjs' || /^tsconfig\..*\.json$/.test(name))
+      cpSync(join(here, name), join(dir, name), { recursive: true });
   }
 
   const install = run('pnpm', ['install', '--ignore-scripts'], dir);

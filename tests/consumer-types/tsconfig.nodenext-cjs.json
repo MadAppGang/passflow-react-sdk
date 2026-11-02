@@ -1,0 +1,8 @@
+{
+  // CommonJS consumer (.cts): resolves the package's "require" condition.
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "module": "nodenext"
+  },
+  "include": ["src-cjs"]
+}

@@ -9,10 +9,10 @@
     "5.9.3": "typescript-5.9",
     "7.0.2": "typescript"
   },
-  "configs": ["bundler", "node16", "nodenext"],
+  "configs": ["bundler", "node16", "nodenext", "node16-cjs", "nodenext-cjs"],
   "attw": {
-    "$comment": "Every attw rule is enforced under the strict profile (node10, node16 from CJS and ESM, bundler) except: ./dist/style.css is a CSS file with no types by design; false-esm is the CommonJS entry typed by the ESM .d.ts (fixed by a .d.cts mirror).",
-    "args": ["--profile", "strict", "--exclude-entrypoints", "./dist/style.css", "--ignore-rules", "false-esm"]
+    "$comment": "Every attw rule is enforced under the strict profile (node10, node16 from CJS and ESM, bundler) except the ./dist/style.css entry, a CSS file with no types by design.",
+    "args": ["--profile", "strict", "--exclude-entrypoints", "./dist/style.css"]
   },
   "variants": {
     "react19-rr8": {
