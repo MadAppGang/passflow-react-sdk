@@ -21,8 +21,11 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
+      # No `version` input: the action installs the pnpm that package.json's
+      # packageManager pins. 6.1.0 is the first release that can install pnpm 12;
+      # the floating v6 tag still points at an earlier commit.
       - name: Set up pnpm
-        uses: pnpm/action-setup@v6
+        uses: pnpm/action-setup@v6.1.0
 
       - name: Use Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v7
