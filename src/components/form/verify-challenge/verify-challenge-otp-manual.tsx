@@ -8,7 +8,6 @@ import type {
 /* eslint-disable complexity */
 import { type FC, useEffect, useId, useState } from 'react';
 import { Button, FieldOtp, Icon } from '@/components/ui';
-import { VisuallyHidden } from '@/components/ui/visually-hidden';
 import { routes } from '@/context';
 import { useAppSettings, useNavigation, usePassflow, usePasswordlessComplete, useSignIn } from '@/hooks';
 import { getUrlWithTokens, isValidUrl, routeToSecondFactor, useUrlParams } from '@/utils';
@@ -58,7 +57,6 @@ export const VerifyChallengeOTPManual: FC<VerifyChallengeOTPManualProps> = ({
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
   const { set } = useUrlParams();
   const otpId = useId();
-  const otpLabelId = `${otpId}-label`;
   const otpErrorId = `${otpId}-error`;
 
   const onChangeOTP = (value: string) => setValueOTP(value);
@@ -136,7 +134,6 @@ export const VerifyChallengeOTPManual: FC<VerifyChallengeOTPManualProps> = ({
           </Button>
         )}
         <div id='otp-wrapper' className='passflow-verify-otp-wrapper'>
-          <VisuallyHidden id={otpLabelId}>Verification code</VisuallyHidden>
           <FieldOtp
             id={otpId}
             name='otp'
@@ -144,7 +141,7 @@ export const VerifyChallengeOTPManual: FC<VerifyChallengeOTPManualProps> = ({
             value={valueOTP}
             onChange={onChangeOTP}
             state={isError ? 'error' : 'default'}
-            labelledBy={otpLabelId}
+            label='Verification code'
             describedBy={isError ? otpErrorId : undefined}
             autoFocus={shouldAutoFocus}
           />

@@ -2,6 +2,29 @@
 
 All notable changes to `@passflow/react` are documented in this file.
 
+## [0.15.1] - 2026-11-02
+
+### Fixed
+
+- `PassflowFlow` navigates through its own router whatever the provider's `router` prop says. With the default value, every step inside the flow did a full page load through `window.location` to an unprefixed path, leaving a memory, hash or host router. Hosts that pass `router="react-router"` were not affected.
+- A navigation asked for with `replace: true` inside `PassflowFlow` replaces the history entry. It pushed a new one, because `replace` was handed to React Router as part of the destination.
+- The passwordless OTP screen and the 2FA verify form name the code field with a visible "Verification code" label. They used hidden text only, which fails WCAG labelling (axe `label-title-only`) once a wrong code shows an error.
+
+### Added
+
+- `FieldOtp` takes an optional `label`: the field then draws its own visible label above the boxes. `labelledBy` still works; a field takes one or the other. New stories: With label, With label error.
+- `PassflowProps`, the props of `PassflowFlow`, is exported from the package root.
+
+### Changed
+
+- `lodash` and `tailwind-merge` are no longer dependencies. lodash is CommonJS, so it could not be tree-shaken and added about 70 KB minified to an app's bundle; tailwind-merge resolved Tailwind class conflicts in a library that styles only with `passflow-*` classes.
+
+### Internal
+
+- CI loads the packed package in plain Node through both `require` and `import`, and fails if either throws or the two expose different exports.
+- README examples import from `@passflow/react` instead of the old package name.
+- Two flaky UI tests fixed: the Storybook audits wait for the theme to settle, and the FieldOtp length test no longer depends on keystroke timing.
+
 ## [0.15.0] - 2026-11-02
 
 ### Breaking

@@ -1,5 +1,4 @@
 import { getCountryForTimezone } from 'countries-and-timezones';
-import lodash from 'lodash';
 import {
   type ChangeEvent,
   type FC,
@@ -17,8 +16,6 @@ import { Button, CountryFlag, Icon } from '..';
 
 import '@/styles/index.css';
 import 'react-international-phone/style.css';
-
-const { eq, size } = lodash;
 
 type TFieldPhone = InputHTMLAttributes<HTMLInputElement> & {
   id: string;
@@ -77,7 +74,7 @@ export const FieldPhone: FC<TFieldPhone> = ({
     () =>
       defaultCountries.filter((defCountry) => {
         const { iso2 } = parseCountry(defCountry);
-        return eq(iso2, userCountry?.id.toLocaleLowerCase());
+        return iso2 === userCountry?.id.toLocaleLowerCase();
       }),
     [userCountry?.id],
   );
@@ -222,7 +219,7 @@ export const FieldPhone: FC<TFieldPhone> = ({
           'passflow-country-search-wrapper--without-preferred': !!filterValue || preferredCountries.length === 0,
         })}
       >
-        {size(filteredCountries) > 0 ? (
+        {filteredCountries.length > 0 ? (
           <>
             <div role='presentation' aria-hidden='true' className='passflow-country-search-sticky-top' />
             {!filterValue && preferredCountries.length > 0 ? (

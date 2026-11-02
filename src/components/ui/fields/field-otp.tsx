@@ -8,7 +8,7 @@ export type FieldOtpCharset = 'numeric' | 'alphanumeric';
 
 export type FieldOtpState = 'default' | 'error' | 'disabled';
 
-export type FieldOtpProps = {
+type FieldOtpBaseProps = {
   /** Id of the one real `<input>`; the boxes are drawn from its value. */
   id: string;
   /** Form field name, for a native form submit. */
@@ -23,12 +23,29 @@ export type FieldOtpProps = {
   charset?: FieldOtpCharset;
   /** `error` marks the code invalid (`aria-invalid`); `disabled` locks it. Default `default`. */
   state?: FieldOtpState;
-  /** Id of the element that names the code field (a prompt, heading or hidden label). */
-  labelledBy: string;
   /** Id of the element that describes it, such as the error message. */
   describedBy?: string;
   autoFocus?: boolean;
 };
+
+/**
+ * The code field is named either by a visible label it draws itself (`label`),
+ * or by an element the screen already shows (`labelledBy`), never both. A
+ * hidden-only name fails axe `label-title-only` once `describedBy` is set.
+ */
+export type FieldOtpProps = FieldOtpBaseProps &
+  (
+    | {
+        /** Visible prompt drawn above the boxes, as the field's `<label>`. */
+        label: string;
+        labelledBy?: never;
+      }
+    | {
+        /** Id of a visible element on the screen that names the code field, such as a prompt or heading. */
+        labelledBy: string;
+        label?: never;
+      }
+  );
 
 const CHARSETS: Record<FieldOtpCharset, { pattern: string; inputMode: 'numeric' | 'text' }> = {
   numeric: { pattern: REGEXP_ONLY_DIGITS, inputMode: 'numeric' },
@@ -55,9 +72,9 @@ const Slot: FC<SlotViewProps> = ({ char, isActive, hasFakeCaret, state }) => (
  *
  * There is one real `<input>` (named, `autocomplete="one-time-code"`), so SMS
  * autofill, password managers and pasting a whole code all work. The boxes are
- * a drawing of its value, hidden from assistive technology. The field has no
- * visible label of its own: `labelledBy` points at the prompt that asks for
- * the code, or at a `VisuallyHidden` label where the screen has none.
+ * a drawing of its value, hidden from assistive technology. With `label` the
+ * field draws its own visible label above the boxes; with `labelledBy` it is
+ * named by a prompt the screen already shows.
  */
 export const FieldOtp: FC<FieldOtpProps> = ({
   id,
@@ -68,13 +85,14 @@ export const FieldOtp: FC<FieldOtpProps> = ({
   onComplete,
   charset = 'numeric',
   state = 'default',
+  label,
   labelledBy,
   describedBy,
   autoFocus = false,
 }) => {
   const { pattern, inputMode } = CHARSETS[charset];
 
-  return (
+  const input = (
     <OTPInput
       id={id}
       name={name}
@@ -102,5 +120,16 @@ export const FieldOtp: FC<FieldOtpProps> = ({
         </div>
       )}
     />
+  );
+
+  if (label === undefined) return input;
+
+  return (
+    <div className='passflow-field-otp-field'>
+      <label htmlFor={id} className='passflow-field-label'>
+        {label}
+      </label>
+      {input}
+    </div>
   );
 };

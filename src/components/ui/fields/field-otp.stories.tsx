@@ -8,16 +8,18 @@ const ERROR_ID = 'field-otp-story-error';
 
 /**
  * Owns the value, so each story can be typed into, pasted into and cleared
- * with the keyboard. A visible prompt above the boxes names the field, as on
- * a real screen, styled with the library's field label.
+ * with the keyboard. With `labelledBy`, a visible prompt above the boxes names
+ * the field, as on a real screen; with `label`, FieldOtp draws its own.
  */
 const Controlled = (props: ComponentProps<typeof FieldOtp>) => {
   const [value, setValue] = useState(props.value);
   return (
     <div className='passflow-field-container'>
-      <p id={LABEL_ID} className='passflow-field-label'>
-        Verification code
-      </p>
+      {props.label === undefined ? (
+        <p id={LABEL_ID} className='passflow-field-label'>
+          Verification code
+        </p>
+      ) : null}
       <FieldOtp
         {...props}
         value={value}
@@ -91,4 +93,15 @@ export const Alphanumeric: Story = {
 /** A four-character code: the row is as long as `length`. */
 export const FourDigits: Story = {
   args: { length: 4 },
+};
+
+/** FieldOtp draws its own visible label (`label`), for screens that show no prompt of their own. */
+export const WithLabel: Story = {
+  args: { label: 'Verification code', labelledBy: undefined },
+};
+
+/** Own label, and the server rejected the code: the label stays visible next to the error. */
+export const WithLabelError: Story = {
+  name: 'With label, error',
+  args: { label: 'Verification code', labelledBy: undefined, value: '123456', state: 'error', describedBy: ERROR_ID },
 };

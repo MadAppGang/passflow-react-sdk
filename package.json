@@ -1,9 +1,12 @@
 {
   "name": "@passflow/react",
   "description": "Passflow React UI Kit",
-  "version": "0.15.0",
+  "version": "0.15.1",
   "type": "module",
-  "files": ["dist", "CHANGELOG.md"],
+  "files": [
+    "dist",
+    "CHANGELOG.md"
+  ],
   "main": "dist/index.cjs",
   "module": "dist/index.es.js",
   "types": "dist/src/index.d.ts",
@@ -55,13 +58,11 @@
     "countries-and-timezones": "^3.11.0",
     "dayjs": "^1.11.23",
     "input-otp": "^1.5.0",
-    "lodash": "^4.18.1",
     "phone": "^3.1.72",
     "query-string": "^10.0.0",
     "react-error-boundary": "^6.1.6",
     "react-hook-form": "^7.91.0",
     "react-international-phone": "^4.8.0",
-    "tailwind-merge": "^3.7.0",
     "yup": "^1.7.1"
   },
   "devDependencies": {
@@ -75,7 +76,6 @@
     "@testing-library/jest-dom": "^7.0.1",
     "@testing-library/react": "^16.3.3",
     "@testing-library/user-event": "^14.6.8",
-    "@types/lodash": "^4.17.27",
     "@types/node": "^22.20.5",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",

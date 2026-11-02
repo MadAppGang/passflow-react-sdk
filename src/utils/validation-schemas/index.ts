@@ -1,10 +1,7 @@
 /* eslint-disable complexity */
 /* eslint-disable max-len */
 import type { PassflowPasswordPolicySettings } from '@passflow/core';
-import lodash from 'lodash';
 import * as Yup from 'yup';
-
-const { size } = lodash;
 
 export const emailRegex =
   /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|.(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
@@ -27,7 +24,7 @@ export const passwordValidation = (passwordPolicy: PassflowPasswordPolicySetting
             require_uppercase: requireUpperCase,
           } = passwordPolicy;
 
-          if (size(value) < minPasswordLength) errors.push('length');
+          if ((value ?? '').length < minPasswordLength) errors.push('length');
           if (requireUpperCase && !/[A-Z]/.test(value)) errors.push('uppercase');
           if (requireLowerCase && !/[a-z]/.test(value)) errors.push('lowercase');
           if (requireNumber && !/\d/.test(value)) errors.push('number');

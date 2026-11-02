@@ -4,10 +4,7 @@ import { Button } from '@/components/ui';
 import { useAppSettings, useSignIn } from '@/hooks';
 import { Wrapper } from '../wrapper';
 import '@/styles/index.css';
-import lodash from 'lodash';
 import { useUrlParams } from '@/utils';
-
-const { eq } = lodash;
 
 const challengeTypeFullString = {
   email: 'email address',
@@ -33,8 +30,8 @@ export const VerifyChallengeMagicLink = () => {
 
   const onClickResendHandler = async () => {
     const resendPayload = {
-      ...(eq(identity, 'email') ? { email: identityValue } : undefined),
-      ...(eq(identity, 'phone') ? { phone: identityValue } : undefined),
+      ...(identity === 'email' ? { email: identityValue } : undefined),
+      ...(identity === 'phone' ? { phone: identityValue } : undefined),
       challenge_type: challengeType,
       redirect_url: redirectUrl,
     };

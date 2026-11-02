@@ -1,10 +1,10 @@
-# @passflow/passflow-react-sdk
+# @passflow/react
 
 This is a SDK for react application.
 
 ## Table of Contents
 
-- [@passflow/passflow-react-sdk](#passflowpassflow-react-sdk)
+- [@passflow/react](#passflowreact)
   - [Table of Contents](#table-of-contents)
   - [Local Development](#local-development)
     - [Using Local Passflow JS SDK](#using-local-passflow-js-sdk)
@@ -273,7 +273,7 @@ import {
   SignUp,
   ForgotPassword,
   ForgotPasswordSuccess,
-} from "@passflow/passflow-react-sdk";
+} from "@passflow/react";
 import { BrowserRouter, Routes, Route, useNavigate } from "react-router";
 
 const passflowConfig = {
@@ -344,7 +344,7 @@ import {
   SignUp,
   ForgotPassword,
   ForgotPasswordSuccess,
-} from "@passflow/passflow-react-sdk";
+} from "@passflow/react";
 import { Switch, Route, useLocation } from "wouter";
 
 const passflowConfig = {
@@ -410,7 +410,7 @@ export const App = () => (
 );
 
 // PassflowProviderWrapper.tsx
-import { PassflowProvider } from '@passflow/passflow-react-sdk';
+import { PassflowProvider } from '@passflow/react';
 
 const passflowConfig = {
   url: import.meta.env.VITE_PASSFLOW_URL,
@@ -432,7 +432,7 @@ export const PassflowProviderWrapper = ({ children }) => (
 );
 
 // router/root.tsx
-import { useNavigation } from '@passflow/passflow-react-sdk';
+import { useNavigation } from '@passflow/react';
 import { Outlet, useNavigate } from '@tanstack/react-router';
 
 export const Root = () => {
@@ -451,7 +451,7 @@ import { QueryClient } from '@tanstack/react-query';
 import { createRouter } from '@tanstack/react-router';
 import { queryClient } from '../query';
 import { routerTree } from './routes';
-import { Passflow } from '@passflow/passflow-react-sdk';
+import { Passflow } from '@passflow/react';
 
 export interface RouterContext {
   queryClient: QueryClient;
@@ -479,7 +479,7 @@ import { Outlet, createRootRouteWithContext, createRoute, redirect } from '@tans
 import { RouterContext } from './router';
 import { Root } from './root';
 import { About, Home } from '@/pages';
-import { ForgotPassword, ForgotPasswordSuccess, SignIn, SignUp } from '@passflow/passflow-react-sdk';
+import { ForgotPassword, ForgotPasswordSuccess, SignIn, SignUp } from '@passflow/react';
 import { RootLayout } from '@/layouts';
 
 const redirectToSignin = () => {

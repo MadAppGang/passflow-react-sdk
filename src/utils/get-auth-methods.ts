@@ -1,7 +1,4 @@
 import type { AuthStrategies, FimStrategy, InternalStrategy, Providers } from '@passflow/core';
-import lodash from 'lodash';
-
-const { eq } = lodash;
 
 export type AuthMethods = {
   internal: {
@@ -69,7 +66,7 @@ export const getAuthMethods = (strategies?: AuthStrategies[]): AuthMethods => {
       case 'internal':
         switch (identity) {
           case 'email':
-            if (eq(challenge, 'magic_link')) methods.internal.email.magicLink = true;
+            if (challenge === 'magic_link') methods.internal.email.magicLink = true;
             else methods.internal.email[challenge as keyof AuthMethods['internal']['email']] = true;
             methods.hasEmailMethods = true;
 
@@ -78,7 +75,7 @@ export const getAuthMethods = (strategies?: AuthStrategies[]): AuthMethods => {
 
             break;
           case 'phone':
-            if (eq(challenge, 'magic_link')) methods.internal.phone.magicLink = true;
+            if (challenge === 'magic_link') methods.internal.phone.magicLink = true;
             else methods.internal.phone[challenge as keyof AuthMethods['internal']['phone']] = true;
             methods.hasPhoneMethods = true;
 

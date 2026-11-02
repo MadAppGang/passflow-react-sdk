@@ -5,7 +5,6 @@ import type {
   PassflowSignInPayload,
   Providers,
 } from '@passflow/core';
-import lodash from 'lodash';
 import { phone } from 'phone';
 import queryString from 'query-string';
 import type { FC } from 'react';
@@ -31,8 +30,6 @@ import {
   routeToSecondFactor,
   useUrlParams,
 } from '@/utils';
-
-const { eq, isEmpty, size } = lodash;
 
 const getLoginMethodConfig = (authMethods: AuthMethods): LoginMethodConfig => {
   const identities: LoginMethodConfig['identities'] = [];
@@ -139,7 +136,7 @@ export const SignInForm: FC<TSignIn> = ({
   const submitPassword = async (userPayload: PassflowSignInPayload) => {
     const payload = {
       ...userPayload,
-      ...(!isEmpty(inviteToken) && { invite_token: inviteToken }),
+      ...(inviteToken && { invite_token: inviteToken }),
     } as PassflowSignInPayload;
 
     const status = await fetch(payload, 'password');
@@ -149,7 +146,7 @@ export const SignInForm: FC<TSignIn> = ({
   const submitPasskey = async (passkeyPayload: PassflowPasskeyAuthenticateStartPayload) => {
     const payload = {
       ...passkeyPayload,
-      ...(!isEmpty(inviteToken) && { invite_token: inviteToken }),
+      ...(inviteToken && { invite_token: inviteToken }),
     } as PassflowPasskeyAuthenticateStartPayload;
 
     const response = await fetch(payload, 'passkey');
@@ -166,7 +163,7 @@ export const SignInForm: FC<TSignIn> = ({
       challenge_type: challengeType,
       create_tenant: createTenantForNewUser,
       redirect_url: successAuthRedirect ?? appSettings?.defaults?.redirect,
-      ...(!isEmpty(inviteToken) && { invite_token: inviteToken }),
+      ...(inviteToken && { invite_token: inviteToken }),
     } as PassflowPasswordlessSignInPayload;
 
     const response = await fetch(payload, 'passwordless');
@@ -183,14 +180,14 @@ export const SignInForm: FC<TSignIn> = ({
       create_tenant: createTenantForNewUser,
     });
 
-    if (eq(challengeType, 'otp')) navigate({ to: verifyOTPPath ?? routes.verify_otp.path, search: newParams });
-    if (eq(challengeType, 'magic_link'))
+    if (challengeType === 'otp') navigate({ to: verifyOTPPath ?? routes.verify_otp.path, search: newParams });
+    if (challengeType === 'magic_link')
       navigate({ to: verifyMagicLinkPath ?? routes.verify_magic_link.path, search: newParams });
   };
 
   const handlePassword = async (values: LoginCredentialsValues) => {
     const isEmail = Boolean(values.emailOrUsername.match(emailRegex));
-    const isUsername = values.method === 'email_or_username' && !isEmail && size(values.emailOrUsername) > 0;
+    const isUsername = values.method === 'email_or_username' && !isEmail && values.emailOrUsername.length > 0;
     const validatedPhone = phone(values.phone);
     const payload = {
       ...(isEmail && { email: values.emailOrUsername }),

@@ -6,10 +6,7 @@ import { useAppSettings, useForgotPassword } from '@/hooks';
 import { Wrapper } from '../wrapper';
 import '@/styles/index.css';
 import type { PassflowSendPasswordResetEmailPayload } from '@passflow/core';
-import lodash from 'lodash';
 import { useUrlParams, verificationLinkErrorMessage } from '@/utils';
-
-const { eq } = lodash;
 
 const searchParamsForgotPasswordSuccessSchema = Yup.object().shape({
   identity: Yup.string().oneOf(['email', 'phone']).required(),
@@ -55,7 +52,7 @@ export const ForgotPasswordSuccess = () => {
     >
       <div className='passflow-forgot-password-success-container'>
         <p className='passflow-forgot-password-success-text'>
-          We sent a link to {eq(params.identity, 'phone') ? 'phone number' : 'email address'}{' '}
+          We sent a link to {params.identity === 'phone' ? 'phone number' : 'email address'}{' '}
           <strong className='passflow-forgot-password-success-text--strong'>{params.identityValue}</strong>. Click the link to
           reset your password.
         </p>
@@ -67,7 +64,7 @@ export const ForgotPasswordSuccess = () => {
           // eslint-disable-next-line @typescript-eslint/no-misused-promises
           onClick={onClickResendHandler}
         >
-          Resend {eq(params.identity, 'email') ? 'email' : 'SMS'}
+          Resend {params.identity === 'email' ? 'email' : 'SMS'}
         </Button>
       </div>
     </Wrapper>

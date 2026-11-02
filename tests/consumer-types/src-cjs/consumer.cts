@@ -6,13 +6,13 @@ import {
   Passflow,
   type PassflowConfig,
   PassflowFlow,
+  type PassflowProps,
   type PassflowProvider,
   type TwoFactorSetupMagicLinkFlow,
   type useAuth,
 } from '@passflow/react';
 import { createElement } from 'react';
 
-type PassflowProps = Parameters<typeof PassflowFlow>[0];
 
 type IsAny<T> = 0 extends 1 & T ? true : false;
 type ExpectFalse<T extends false> = T;

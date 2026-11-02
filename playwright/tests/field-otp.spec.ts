@@ -147,9 +147,7 @@ test.describe('REQ-1 FieldOtp Storybook catalog and behaviour', () => {
     expect(boxes).toEqual(['1', '2', '3', '', '', '']);
   });
 
-  test('TEST-3 REQ-1.1 REQ-1.4 FieldOtp · Filled · displays all six characters across the visual boxes', async ({
-    page,
-  }) => {
+  test('TEST-3 REQ-1.1 REQ-1.4 FieldOtp · Filled · displays all six characters across the visual boxes', async ({ page }) => {
     const { input } = await openStory(page, 'filled');
 
     await expect(input).toHaveValue('123456');
@@ -207,11 +205,18 @@ test.describe('REQ-1 FieldOtp Storybook catalog and behaviour', () => {
     expect(initialBoxes).toHaveLength(4);
 
     await input.focus();
-    await page.keyboard.type('123456');
+    await page.keyboard.type('1234');
 
     await expect(input).toHaveValue('1234');
     const filledBoxes = await getHiddenBoxTexts(page, 4);
     expect(filledBoxes).toEqual(['1', '2', '3', '4']);
+
+    // Typing on into a full field never makes it longer. input-otp puts the caret on
+    // the last box once the field is full, so an extra key may replace that digit
+    // (which one depends on keystroke timing); the first three stay.
+    await page.keyboard.type('56');
+    await expect(input).toHaveValue(/^123\d$/);
+    expect(await getHiddenBoxTexts(page, 4)).toHaveLength(4);
   });
 
   test('TEST-8 REQ-1.3 FieldOtp · Default · numeric charset rejects letters and accepts digits', async ({ page }) => {
@@ -262,10 +267,7 @@ test.describe('REQ-1 FieldOtp Storybook catalog and behaviour', () => {
       });
       const notCancelled = el.dispatchEvent(pasteEvent);
       if (notCancelled && el.value !== '654321') {
-        const nativeInputValueSetter = Object.getOwnPropertyDescriptor(
-          window.HTMLInputElement.prototype,
-          'value',
-        )?.set;
+        const nativeInputValueSetter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value')?.set;
         nativeInputValueSetter?.call(el, '654321');
         el.dispatchEvent(new InputEvent('input', { bubbles: true, data: '654321', inputType: 'insertFromPaste' }));
       }
@@ -285,10 +287,7 @@ test.describe('REQ-1 FieldOtp Storybook catalog and behaviour', () => {
       });
       const notCancelled = el.dispatchEvent(pasteEvent);
       if (notCancelled && el.value !== '987654') {
-        const nativeInputValueSetter = Object.getOwnPropertyDescriptor(
-          window.HTMLInputElement.prototype,
-          'value',
-        )?.set;
+        const nativeInputValueSetter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value')?.set;
         nativeInputValueSetter?.call(el, '9876543210'.slice(0, el.maxLength > 0 ? el.maxLength : 6));
         el.dispatchEvent(new InputEvent('input', { bubbles: true, data: '9876543210', inputType: 'insertFromPaste' }));
       }

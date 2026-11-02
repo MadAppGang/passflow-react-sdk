@@ -1,16 +1,13 @@
 import type { InternalStrategyChallenge } from '@passflow/core';
 /* eslint-disable complexity */
-import lodash from 'lodash';
 import type { DefaultMethod } from '@/types';
 import type { AuthMethods } from './get-auth-methods';
 
-const { eq } = lodash;
-
 export const getIdentityLabel = (methods: AuthMethods, type: 'label' | 'button') => {
   if (methods.hasSignInEmailMethods && methods.hasSignInUsernameMethods)
-    return eq(type, 'label') ? 'Email or username' : 'Use email or username';
-  if (methods.hasSignInEmailMethods) return eq(type, 'label') ? 'Email' : 'Use email';
-  if (methods.hasSignInUsernameMethods) return eq(type, 'label') ? 'Username' : 'Use username';
+    return type === 'label' ? 'Email or username' : 'Use email or username';
+  if (methods.hasSignInEmailMethods) return type === 'label' ? 'Email' : 'Use email';
+  if (methods.hasSignInUsernameMethods) return type === 'label' ? 'Username' : 'Use username';
 
   return null;
 };
@@ -19,12 +16,12 @@ export const getPasswordlessData = (
   methods: AuthMethods,
   currentMethod: DefaultMethod | null,
 ): { label: string; challengeType: InternalStrategyChallenge } | null => {
-  if (eq(currentMethod, 'phone')) {
+  if (currentMethod === 'phone') {
     if (methods.internal.phone.otp) return { label: 'SMS code', challengeType: 'otp' };
     if (methods.internal.phone.magicLink) return { label: 'SMS link', challengeType: 'magic_link' };
   }
 
-  if (eq(currentMethod, 'email_or_username')) {
+  if (currentMethod === 'email_or_username') {
     if (methods.internal.email.otp) return { label: 'email code', challengeType: 'otp' };
     if (methods.internal.email.magicLink) return { label: 'email link', challengeType: 'magic_link' };
   }
