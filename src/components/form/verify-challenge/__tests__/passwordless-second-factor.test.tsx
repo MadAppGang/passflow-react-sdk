@@ -13,13 +13,6 @@ vi.mock('@/hooks', () => ({
   usePasswordlessComplete: () => ({ fetch: complete, isError: false, error: '', isLoading: false }),
 }));
 
-// One plain input stands in for the six boxes, so a test can enter the code at once.
-vi.mock('react-otp-input', () => ({
-  default: ({ value, onChange }: { value: string; onChange: (value: string) => void }) => (
-    <input aria-label='code' value={value} onChange={(event) => onChange(event.target.value)} />
-  ),
-}));
-
 import { VerifyChallengeOTPManual } from '../verify-challenge-otp-manual';
 import { VerifyChallengeOTPRedirect } from '../verify-challenge-otp-redirect';
 
@@ -57,7 +50,7 @@ const paths = [
     name: 'a typed one-time code',
     run: () => {
       renderManual();
-      fireEvent.change(screen.getByLabelText('code'), { target: { value: '123456' } });
+      fireEvent.change(screen.getByLabelText('Verification code'), { target: { value: '123456' } });
     },
   },
   { name: 'an emailed link (magic link or OTP link)', run: renderLinkLanding },

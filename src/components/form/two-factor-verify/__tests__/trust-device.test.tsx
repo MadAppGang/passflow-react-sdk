@@ -16,13 +16,6 @@ vi.mock('@/hooks', () => ({
   }),
 }));
 
-// One plain input stands in for the six boxes, so a test can enter the code at once.
-vi.mock('react-otp-input', () => ({
-  default: ({ value, onChange }: { value: string; onChange: (value: string) => void }) => (
-    <input aria-label='code' value={value} onChange={(event) => onChange(event.target.value)} />
-  ),
-}));
-
 import { TwoFactorRecoveryForm, TwoFactorVerifyForm } from '..';
 
 const forms = [
@@ -31,7 +24,7 @@ const forms = [
     complete: verify,
     run: () => {
       render(<TwoFactorVerifyForm onSuccess={vi.fn()} />);
-      return () => fireEvent.change(screen.getByLabelText('code'), { target: { value: '123456' } });
+      return () => fireEvent.change(screen.getByLabelText('Verification code'), { target: { value: '123456' } });
     },
     code: '123456',
   },

@@ -1,0 +1,75 @@
+/*
+ * The one-time-code field owns its own geometry.
+ *
+ * input-otp lays one transparent `<input>` over the row of boxes; the boxes
+ * here are only its drawing. The box size and the gap between boxes are the
+ * primitive's geometry, declared once as local custom properties: the box is
+ * the same 48px as every other field's height, and the 10px gap is the
+ * spacing the boxes have always had. Colour, radius and type come from
+ * `--passflow-*` tokens.
+ *
+ * Each box keeps the `passflow-field-otp` class the old per-box inputs had,
+ * so an app's custom CSS aimed at the boxes still applies.
+ */
+
+.passflow-field-otp-group {
+  --passflow-field-otp-size: 48px;
+  --passflow-field-otp-gap: 10px;
+}
+
+.passflow-field-otp-group--disabled {
+  cursor: not-allowed;
+}
+
+.passflow-field-otp-slots {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--passflow-field-otp-gap);
+}
+
+.passflow-field-otp {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--passflow-field-otp-size);
+  height: var(--passflow-field-otp-size);
+  border-radius: var(--passflow-radius);
+  background-color: var(--passflow-input-background-color);
+  outline: 1px solid var(--passflow-input-border-color);
+  color: var(--passflow-text-color);
+  font-size: var(--passflow-body-2);
+}
+
+.passflow-field-otp--active {
+  outline-color: var(--passflow-primary-color);
+}
+
+/* After active, so an invalid code stays marked while the field has focus. */
+.passflow-field-otp--error {
+  outline-color: var(--passflow-warning);
+}
+
+.passflow-field-otp--disabled {
+  opacity: 0.5;
+}
+
+.passflow-field-otp__caret {
+  width: 1px;
+  height: 1em;
+  background-color: currentColor;
+  animation: passflow-field-otp-caret-blink 1s step-end infinite;
+}
+
+@keyframes passflow-field-otp-caret-blink {
+  50% {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .passflow-field-otp__caret {
+    animation: none;
+  }
+}

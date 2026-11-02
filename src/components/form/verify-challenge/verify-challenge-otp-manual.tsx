@@ -1,7 +1,8 @@
-import { Button, Icon } from '@/components/ui';
+import { Button, FieldOtp, Icon } from '@/components/ui';
+import { VisuallyHidden } from '@/components/ui/visually-hidden';
 import { routes } from '@/context';
 import { useAppSettings, useNavigation, usePassflow, usePasswordlessComplete, useSignIn } from '@/hooks';
-import { cn, getUrlWithTokens, isValidUrl, routeToSecondFactor, useUrlParams } from '@/utils';
+import { getUrlWithTokens, isValidUrl, routeToSecondFactor, useUrlParams } from '@/utils';
 import type {
   InternalStrategyChallenge,
   PassflowPasswordlessResponse,
@@ -10,8 +11,7 @@ import type {
 } from '@passflow/core';
 /* eslint-disable no-void */
 /* eslint-disable complexity */
-import React, { type FC, useEffect, useState } from 'react';
-import OtpInput from 'react-otp-input';
+import React, { type FC, useEffect, useId, useState } from 'react';
 import { Wrapper } from '../wrapper';
 import { TimerButton } from './timer-button';
 import { VerifyChallengeSuccess } from './verify-challenge-success';
@@ -57,6 +57,9 @@ export const VerifyChallengeOTPManual: FC<VerifyChallengeOTPManualProps> = ({
   const [paramsError, setParamsError] = useState<string | null>(null);
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
   const { set } = useUrlParams();
+  const otpId = useId();
+  const otpLabelId = `${otpId}-label`;
+  const otpErrorId = `${otpId}-error`;
 
   const onChangeOTP = (value: string) => setValueOTP(value);
 
@@ -133,21 +136,24 @@ export const VerifyChallengeOTPManual: FC<VerifyChallengeOTPManualProps> = ({
           </Button>
         )}
         <div id='otp-wrapper' className='passflow-verify-otp-wrapper'>
-          <OtpInput
+          <VisuallyHidden id={otpLabelId}>Verification code</VisuallyHidden>
+          <FieldOtp
+            id={otpId}
+            name='otp'
+            length={numInputs}
             value={valueOTP}
             onChange={onChangeOTP}
-            numInputs={numInputs}
-            shouldAutoFocus={shouldAutoFocus}
-            skipDefaultStyles
-            containerStyle='passflow-verify-otp-inputs'
-            inputStyle={cn('passflow-field-otp passflow-field-otp--focused', isError && 'passflow-field-otp--error')}
-            inputType='text'
-            renderInput={(props) => <input {...props} />}
+            state={isError ? 'error' : 'default'}
+            labelledBy={otpLabelId}
+            describedBy={isError ? otpErrorId : undefined}
+            autoFocus={shouldAutoFocus}
           />
           {isError && (
             <div className='passflow-verify-otp-error'>
               <Icon size='small' id='warning' type='general' className='icon-warning' />
-              <span className='passflow-verify-otp-error-text'>{error}</span>
+              <span id={otpErrorId} className='passflow-verify-otp-error-text'>
+                {error}
+              </span>
             </div>
           )}
         </div>

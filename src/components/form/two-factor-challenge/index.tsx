@@ -1,9 +1,9 @@
+import { FieldOtp } from '@/components/ui';
 import { useTwoFactorChallenge } from '@/hooks/use-two-factor-challenge';
 import type { TwoFactorMethod } from '@passflow/core';
 import type { FC } from 'react';
-import { useEffect, useState } from 'react';
+import { useEffect, useId, useState } from 'react';
 import { MethodSelector } from './method-selector';
-import { OtpInputComponent } from './otp-input';
 
 type TwoFactorChallengeProps = {
   firstFactorMethod?: string;
@@ -22,6 +22,9 @@ export const TwoFactorChallenge: FC<TwoFactorChallengeProps> = ({
 
   const [otpValue, setOtpValue] = useState('');
   const [isMethodSelectorOpen, setIsMethodSelectorOpen] = useState(false);
+  const otpId = useId();
+  const otpLabelId = `${otpId}-label`;
+  const otpErrorId = `${otpId}-error`;
 
   // Request challenge on mount
   useEffect(() => {
@@ -84,14 +87,22 @@ export const TwoFactorChallenge: FC<TwoFactorChallengeProps> = ({
       case 'sms_otp':
         return (
           <div className='pf-challenge-input-wrapper'>
-            <OtpInputComponent
+            <FieldOtp
+              id={otpId}
+              name='code'
+              length={6}
               value={otpValue}
               onChange={handleOtpChange}
-              numInputs={6}
-              error={error?.message}
-              disabled={isLoading}
+              state={isLoading ? 'disabled' : error ? 'error' : 'default'}
+              labelledBy={otpLabelId}
+              describedBy={error ? otpErrorId : undefined}
               autoFocus
             />
+            {error && (
+              <div id={otpErrorId} className='pf-otp-error'>
+                {error.message}
+              </div>
+            )}
             {currentMethod === 'email_otp' && challenge.code_sent_to && (
               <p className='pf-challenge-hint'>Code sent to {challenge.code_sent_to}</p>
             )}
@@ -149,7 +160,7 @@ export const TwoFactorChallenge: FC<TwoFactorChallengeProps> = ({
     <div className='pf-two-factor-challenge'>
       <div className='pf-challenge-method-info'>
         <h3>Two-Factor Authentication</h3>
-        <p>Enter the verification code</p>
+        <p id={otpLabelId}>Enter the verification code</p>
       </div>
 
       {renderChallengeInput()}
