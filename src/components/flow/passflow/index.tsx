@@ -18,7 +18,7 @@ import { withError } from '@/hocs';
 import { useNavigation } from '@/hooks';
 import type { SuccessAuthRedirect } from '@/types';
 import { authRedirectErrorMessage, getUrlErrors } from '@/utils';
-// react-router-dom is a required peer dependency, shared with the host app and
+// react-router (v7 or v8) is a required peer dependency, shared with the host app and
 // never bundled. It is imported statically, so a missing peer fails at module
 // load with the resolver's own error; no runtime guard could run earlier.
 import {
@@ -32,7 +32,7 @@ import {
   useLocation,
   useNavigate,
   useParams,
-} from 'react-router-dom';
+} from 'react-router';
 
 export type PassflowProps = {
   successAuthRedirect?: SuccessAuthRedirect;
