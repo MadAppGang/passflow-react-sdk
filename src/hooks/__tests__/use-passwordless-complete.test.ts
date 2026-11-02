@@ -1,7 +1,7 @@
-import { verificationRequestErrorMessage } from '@/utils';
 import type { PassflowPasswordlessSignInCompletePayload } from '@passflow/core';
 import { act, renderHook, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { verificationRequestErrorMessage } from '@/utils';
 import { usePasswordlessComplete } from '../use-passwordless-complete';
 
 vi.mock('../use-passflow', () => ({

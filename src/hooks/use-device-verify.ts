@@ -1,7 +1,7 @@
-import type { DeviceError } from '@/types/device-errors';
-import { DeviceApiError, classifyDeviceError } from '@/utils';
 import type { PublicKeyCredentialRequestOptionsJSON } from '@simplewebauthn/browser';
 import { useCallback, useEffect, useRef, useState } from 'react';
+import type { DeviceError } from '@/types/device-errors';
+import { classifyDeviceError, DeviceApiError } from '@/utils';
 
 /**
  * The RFC 8628 verification flow, as a hook.

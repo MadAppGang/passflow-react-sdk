@@ -1,6 +1,6 @@
-import type { DeviceErrorType } from '@/types/device-errors';
-import { DeviceApiError, classifyDeviceError, deviceErrorOfType } from '@/utils/classify-device-error';
 import { describe, expect, it } from 'vitest';
+import type { DeviceErrorType } from '@/types/device-errors';
+import { classifyDeviceError, DeviceApiError, deviceErrorOfType } from '@/utils/classify-device-error';
 
 /**
  * The contract: a user never reads a string we did not write for them.

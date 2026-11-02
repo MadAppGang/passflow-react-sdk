@@ -1,13 +1,13 @@
-import { Button } from '@/components/ui';
-import { useAppSettings, useForgotPassword } from '@/hooks';
 /* eslint-disable no-nested-ternary */
 /* eslint-disable complexity */
 import * as Yup from 'yup';
+import { Button } from '@/components/ui';
+import { useAppSettings, useForgotPassword } from '@/hooks';
 import { Wrapper } from '../wrapper';
 import '@/styles/index.css';
-import { useUrlParams, verificationLinkErrorMessage } from '@/utils';
 import type { PassflowSendPasswordResetEmailPayload } from '@passflow/core';
 import lodash from 'lodash';
+import { useUrlParams, verificationLinkErrorMessage } from '@/utils';
 
 const { eq } = lodash;
 

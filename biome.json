@@ -1,36 +1,45 @@
 {
-  "$schema": "https://biomejs.dev/schemas/1.9.4/schema.json",
-  "organizeImports": {
-    "enabled": true
-  },
+  "$schema": "https://biomejs.dev/schemas/2.6.4/schema.json",
+  "assist": { "actions": { "source": { "organizeImports": "on" } } },
   "linter": {
     "enabled": true,
     "rules": {
-      "recommended": true,
+      "preset": "recommended",
       "suspicious": {
         "noExplicitAny": "warn",
-        "noArrayIndexKey": "warn"
+        "noArrayIndexKey": "warn",
+        "noDuplicateProperties": "warn"
       },
       "style": {
         "noNonNullAssertion": "warn",
         "noUselessElse": "warn"
       },
       "correctness": {
-        "noUnnecessaryContinue": "warn",
-        "useExhaustiveDependencies": "off"
+        "useExhaustiveDependencies": "off",
+        "useHookAtTopLevel": "warn",
+        "noComponentHookFactories": "warn"
       },
       "complexity": {
-        "noForEach": "warn"
+        "noForEach": "warn",
+        "noUselessContinue": "warn"
       },
       "a11y": {
         "noAutofocus": "off",
-        "useSemanticElements": "off"
+        "useSemanticElements": "off",
+        "useAriaPropsSupportedByRole": "warn"
       }
     }
   },
   "overrides": [
     {
-      "include": ["**/__tests__/**/*.ts", "**/__tests__/**/*.tsx", "**/*.test.ts", "**/*.test.tsx", "**/test/**/*.ts", "**/test/**/*.tsx"],
+      "includes": [
+        "**/__tests__/**/*.ts",
+        "**/__tests__/**/*.tsx",
+        "**/*.test.ts",
+        "**/*.test.tsx",
+        "**/test/**/*.ts",
+        "**/test/**/*.tsx"
+      ],
       "linter": {
         "rules": {
           "suspicious": {
@@ -41,10 +50,20 @@
           }
         }
       }
+    },
+    {
+      "includes": ["**/*.svg"],
+      "linter": {
+        "rules": {
+          "a11y": {
+            "noSvgWithoutTitle": "warn"
+          }
+        }
+      }
     }
   ],
   "files": {
-    "ignore": ["**/*.d.ts"]
+    "includes": ["**", "!**/*.d.ts"]
   },
   "formatter": {
     "enabled": true,

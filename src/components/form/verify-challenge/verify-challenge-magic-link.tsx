@@ -1,11 +1,11 @@
-import { Button } from '@/components/ui';
-import { useAppSettings, useSignIn } from '@/hooks';
 /* eslint-disable no-nested-ternary */
 import type { PassflowPasswordlessSignInPayload } from '@passflow/core';
+import { Button } from '@/components/ui';
+import { useAppSettings, useSignIn } from '@/hooks';
 import { Wrapper } from '../wrapper';
 import '@/styles/index.css';
-import { useUrlParams } from '@/utils';
 import lodash from 'lodash';
+import { useUrlParams } from '@/utils';
 
 const { eq } = lodash;
 

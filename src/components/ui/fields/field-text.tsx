@@ -1,5 +1,5 @@
 /* eslint-disable react/jsx-props-no-spreading */
-import { type InputHTMLAttributes, forwardRef } from 'react';
+import { forwardRef, type InputHTMLAttributes } from 'react';
 import '@/styles/index.css';
 import { cn } from '@/utils';
 

@@ -1,5 +1,5 @@
-import { cn } from '@/utils';
 import type { FC, PropsWithChildren } from 'react';
+import { cn } from '@/utils';
 import { Icon } from '../icon';
 import '@/styles/index.css';
 import './login-screen.css';

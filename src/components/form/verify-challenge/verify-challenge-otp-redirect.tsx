@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import { routes } from '@/context';
 import { useNavigation, usePassflow, usePasswordlessComplete } from '@/hooks';
 import {
@@ -7,7 +8,6 @@ import {
   verificationLinkErrorMessage,
   verificationRequestErrorMessage,
 } from '@/utils';
-import { useEffect, useState } from 'react';
 import { VerifyChallengeSuccess } from './verify-challenge-success';
 
 type VerifyChallengeOTPRedirectProps = {

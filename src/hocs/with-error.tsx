@@ -1,11 +1,11 @@
-import type { TError } from '@/components/error';
-import type { PassflowProps } from '@/components/flow/passflow';
-import type { TInvitationJoinFlow, TSignIn, TSignUp } from '@/components/form';
-import { PassflowContext } from '@/context';
 /* eslint-disable react/prop-types */
 /* eslint-disable react/jsx-props-no-spreading */
 import { type ComponentType, useContext } from 'react';
 import { ErrorBoundary, type FallbackProps } from 'react-error-boundary';
+import type { TError } from '@/components/error';
+import type { PassflowProps } from '@/components/flow/passflow';
+import type { TInvitationJoinFlow, TSignIn, TSignUp } from '@/components/form';
+import { PassflowContext } from '@/context';
 
 type UnionType = TSignIn | TSignUp | TInvitationJoinFlow | PassflowProps;
 // react-error-boundary 6 types the caught value as unknown: anything can be thrown.

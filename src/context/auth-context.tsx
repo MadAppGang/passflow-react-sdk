@@ -1,5 +1,5 @@
 import { type ParsedTokens, PassflowEvent, type PassflowSubscriber, type Tokens } from '@passflow/core';
-import { type FC, type PropsWithChildren, createContext, useCallback, useEffect, useState } from 'react';
+import { createContext, type FC, type PropsWithChildren, useCallback, useEffect, useState } from 'react';
 import { usePassflow } from '../hooks/use-passflow';
 
 export type SessionExpiredHandler = (reason: 'refresh_failed' | 'token_invalid' | 'logged_out') => void;

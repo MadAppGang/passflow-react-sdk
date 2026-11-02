@@ -1,6 +1,6 @@
-import { cn } from '@/utils';
 import { OTPInput, REGEXP_ONLY_DIGITS, REGEXP_ONLY_DIGITS_AND_CHARS, type SlotProps } from 'input-otp';
 import type { FC } from 'react';
+import { cn } from '@/utils';
 import '@/styles/index.css';
 import './field-otp.css';
 

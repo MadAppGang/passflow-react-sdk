@@ -1192,7 +1192,9 @@ body {
   display: block;
   opacity: 1;
   visibility: visible;
-  transition: opacity 0.2s ease, visibility 0.2s ease;
+  transition:
+    opacity 0.2s ease,
+    visibility 0.2s ease;
 }
 
 .passflow-country-search-wrapper--hidden {

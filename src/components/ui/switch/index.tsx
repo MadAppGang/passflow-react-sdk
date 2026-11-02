@@ -1,5 +1,5 @@
-import { cn } from '@/utils';
 import { type ChangeEvent, type FC, useId } from 'react';
+import { cn } from '@/utils';
 
 type TSwitch = {
   label: string;

@@ -1,5 +1,5 @@
-import type { NavigateFunction } from '@/context';
 import type { Passflow } from '@passflow/core';
+import type { NavigateFunction } from '@/context';
 
 /**
  * Sends a sign-in that still owes its second factor to the 2FA screen.

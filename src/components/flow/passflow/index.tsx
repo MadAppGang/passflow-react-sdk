@@ -1,3 +1,4 @@
+import { type FC, type ReactNode, useEffect, useMemo } from 'react';
 import { TwoFactorSetupFlow } from '@/components/flow/two-factor-setup';
 import { TwoFactorVerifyFlow } from '@/components/flow/two-factor-verify';
 import {
@@ -11,13 +12,7 @@ import {
   VerifyChallengeOTP,
 } from '@/components/form';
 import { routes } from '@/context';
-import { type FC, type ReactNode, useEffect, useMemo } from 'react';
 import '@/styles/index.css';
-import { ErrorComponent } from '@/components/error';
-import { withError } from '@/hocs';
-import { useNavigation } from '@/hooks';
-import type { SuccessAuthRedirect } from '@/types';
-import { authRedirectErrorMessage, getUrlErrors } from '@/utils';
 // react-router (v7 or v8) is a required peer dependency, shared with the host app and
 // never bundled. It is imported statically, so a missing peer fails at module
 // load with the resolver's own error; no runtime guard could run earlier.
@@ -33,6 +28,11 @@ import {
   useNavigate,
   useParams,
 } from 'react-router';
+import { ErrorComponent } from '@/components/error';
+import { withError } from '@/hocs';
+import { useNavigation } from '@/hooks';
+import type { SuccessAuthRedirect } from '@/types';
+import { authRedirectErrorMessage, getUrlErrors } from '@/utils';
 
 export type PassflowProps = {
   successAuthRedirect?: SuccessAuthRedirect;
@@ -97,7 +97,7 @@ const RouterInnerWrapperProvider: FC<{ children: ReactNode }> = ({ children }) =
   const { setNavigate } = useNavigation();
 
   useEffect(() => {
-    //@ts-ignore
+    //@ts-expect-error
     setNavigate((options) => navigate(options));
   }, [navigate, setNavigate]);
 

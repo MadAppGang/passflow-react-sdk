@@ -1,5 +1,5 @@
-import type { ConsentInfo, UseConsentProps } from '@/hooks/use-consent';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import type { ConsentInfo, UseConsentProps } from '@/hooks/use-consent';
 import { getConsentLoginScreenProps } from '../screen';
 
 const info: ConsentInfo = {

@@ -1,7 +1,3 @@
-import { Button, FieldPhone, FieldText, Icon, Link } from '@/components/ui';
-import { routes } from '@/context';
-import { useAppSettings, useForgotPassword, useNavigation } from '@/hooks';
-import { cn, emailRegex, getAuthMethods, getIdentityLabel, useUrlParams } from '@/utils';
 import type { PassflowSendPasswordResetEmailPayload } from '@passflow/core';
 import lodash from 'lodash';
 import { phone } from 'phone';
@@ -12,6 +8,10 @@ import { phone } from 'phone';
 import { type FC, useMemo } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import * as Yup from 'yup';
+import { Button, FieldPhone, FieldText, Icon, Link } from '@/components/ui';
+import { routes } from '@/context';
+import { useAppSettings, useForgotPassword, useNavigation } from '@/hooks';
+import { cn, emailRegex, getAuthMethods, getIdentityLabel, useUrlParams } from '@/utils';
 import { Wrapper } from '../wrapper';
 
 import '@/styles/index.css';

@@ -1,4 +1,3 @@
-import { cn } from '@/utils';
 /* eslint-disable react/button-has-type */
 /* eslint-disable react/jsx-props-no-spreading */
 import {
@@ -11,6 +10,7 @@ import {
   useEffect,
   useState,
 } from 'react';
+import { cn } from '@/utils';
 import '@/styles/index.css';
 
 type RippleProps = {

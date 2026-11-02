@@ -1,7 +1,7 @@
-import { cn } from '@/utils';
 import * as DialogPrimitive from '@radix-ui/react-dialog';
 /* eslint-disable react/jsx-props-no-spreading */
-import { type ComponentPropsWithoutRef, type ElementRef, type HTMLAttributes, forwardRef } from 'react';
+import { type ComponentPropsWithoutRef, type ElementRef, forwardRef, type HTMLAttributes } from 'react';
+import { cn } from '@/utils';
 
 const Dialog = DialogPrimitive.Root;
 
@@ -60,13 +60,13 @@ DialogDescription.displayName = DialogPrimitive.Description.displayName;
 
 export {
   Dialog,
-  DialogPortal,
-  DialogOverlay,
-  DialogTrigger,
   DialogClose,
   DialogContent,
-  DialogHeader,
-  DialogFooter,
-  DialogTitle,
   DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogOverlay,
+  DialogPortal,
+  DialogTitle,
+  DialogTrigger,
 };

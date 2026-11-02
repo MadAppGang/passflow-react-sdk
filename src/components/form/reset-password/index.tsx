@@ -1,3 +1,8 @@
+/* eslint-disable max-len */
+/* eslint-disable react/jsx-props-no-spreading */
+/* eslint-disable jsx-a11y/label-has-associated-control */
+import type { FC } from 'react';
+import * as Yup from 'yup';
 import { Button, FieldPassword, Icon } from '@/components/ui';
 import { routes } from '@/context';
 import { useAppSettings, useNavigation, usePassflow, useResetPassword } from '@/hooks';
@@ -10,17 +15,12 @@ import {
   undefinedOnCatch,
   useUrlParams,
 } from '@/utils';
-/* eslint-disable max-len */
-/* eslint-disable react/jsx-props-no-spreading */
-/* eslint-disable jsx-a11y/label-has-associated-control */
-import type { FC } from 'react';
-import * as Yup from 'yup';
 import { Wrapper } from '../wrapper';
 import '@/styles/index.css';
-import type { SuccessAuthRedirect } from '@/types';
-import { type Token, parseToken } from '@passflow/core';
+import { parseToken, type Token } from '@passflow/core';
 import lodash from 'lodash';
 import { Controller, useForm } from 'react-hook-form';
+import type { SuccessAuthRedirect } from '@/types';
 
 const { has } = lodash;
 

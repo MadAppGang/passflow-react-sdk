@@ -1,11 +1,11 @@
+import type { FC } from 'react';
+import { useEffect } from 'react';
+import { useParams } from 'react-router';
 import { TwoFactorSetupForm } from '@/components/form/two-factor-setup';
 import { Wrapper } from '@/components/form/wrapper';
 import { Button, Icon } from '@/components/ui';
 import { routes } from '@/context';
 import { type UseTwoFactorSetupMagicLinkReturn, useNavigation, useTwoFactorSetupMagicLink } from '@/hooks';
-import type { FC } from 'react';
-import { useEffect } from 'react';
-import { useParams } from 'react-router';
 
 import '@/styles/index.css';
 

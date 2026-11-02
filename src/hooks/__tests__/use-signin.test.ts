@@ -1,7 +1,7 @@
-import { authErrorFor } from '@/utils';
 import type { PassflowPasswordlessResponse, PassflowSignInPayload } from '@passflow/core';
 import { act, renderHook, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { authErrorFor } from '@/utils';
 import { useSignIn } from '../use-signin';
 
 // Mock the usePassflow hook

@@ -1,9 +1,9 @@
+import type { FC, FormEvent } from 'react';
+import { useId, useState } from 'react';
 import { Button, FieldOtp, Icon, Switch } from '@/components/ui';
 import { VisuallyHidden } from '@/components/ui/visually-hidden';
 import { useTwoFactorVerify } from '@/hooks';
-import { TwoFactorLoopPrevention, getUserFriendlyErrorMessage } from '@/utils';
-import type { FC, FormEvent } from 'react';
-import { useId, useState } from 'react';
+import { getUserFriendlyErrorMessage, TwoFactorLoopPrevention } from '@/utils';
 import { Wrapper } from '../wrapper';
 
 import '@/styles/index.css';

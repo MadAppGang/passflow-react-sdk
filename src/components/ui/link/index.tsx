@@ -1,6 +1,6 @@
-import { useNavigation } from '@/hooks';
 /* eslint-disable react/jsx-props-no-spreading */
 import type { FC, MouseEvent, PropsWithChildren } from 'react';
+import { useNavigation } from '@/hooks';
 import '@/styles/index.css';
 
 type LinkProps = PropsWithChildren<{

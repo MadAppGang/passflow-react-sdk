@@ -1,5 +1,3 @@
-import { useOutsideClick } from '@/hooks';
-import { cn } from '@/utils';
 import { getCountryForTimezone } from 'countries-and-timezones';
 import lodash from 'lodash';
 import {
@@ -13,6 +11,8 @@ import {
   useState,
 } from 'react';
 import { type CountryIso2, defaultCountries, parseCountry, usePhoneInput } from 'react-international-phone';
+import { useOutsideClick } from '@/hooks';
+import { cn } from '@/utils';
 import { Button, CountryFlag, Icon } from '..';
 
 import '@/styles/index.css';

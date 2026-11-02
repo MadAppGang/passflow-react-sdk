@@ -1,8 +1,8 @@
-import { FieldOtp } from '@/components/ui';
-import { useTwoFactorChallenge } from '@/hooks/use-two-factor-challenge';
 import type { TwoFactorMethod } from '@passflow/core';
 import type { FC } from 'react';
 import { useEffect, useId, useState } from 'react';
+import { FieldOtp } from '@/components/ui';
+import { useTwoFactorChallenge } from '@/hooks/use-two-factor-challenge';
 import { MethodSelector } from './method-selector';
 
 type TwoFactorChallengeProps = {

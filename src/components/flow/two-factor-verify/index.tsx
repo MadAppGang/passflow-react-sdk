@@ -1,12 +1,12 @@
+import type { FC } from 'react';
+import { useEffect, useState } from 'react';
 import { TwoFactorChallenge } from '@/components/form/two-factor-challenge';
 import { TwoFactorRecoveryForm, TwoFactorVerifyForm } from '@/components/form/two-factor-verify';
 import { hasFollowedOIDCRedirect } from '@/components/provider/passflow-provider';
 import { routes } from '@/context';
 import { useNavigation, usePassflow, useTwoFactorVerify } from '@/hooks';
 import type { SuccessAuthRedirect } from '@/types';
-import { TwoFactorLoopPrevention, getUrlWithTokens, isValidUrl } from '@/utils';
-import type { FC } from 'react';
-import { useEffect, useState } from 'react';
+import { getUrlWithTokens, isValidUrl, TwoFactorLoopPrevention } from '@/utils';
 
 import '@/styles/index.css';
 

@@ -1,8 +1,3 @@
-import { Button, FieldOtp, Icon } from '@/components/ui';
-import { VisuallyHidden } from '@/components/ui/visually-hidden';
-import { routes } from '@/context';
-import { useAppSettings, useNavigation, usePassflow, usePasswordlessComplete, useSignIn } from '@/hooks';
-import { getUrlWithTokens, isValidUrl, routeToSecondFactor, useUrlParams } from '@/utils';
 import type {
   InternalStrategyChallenge,
   PassflowPasswordlessResponse,
@@ -12,6 +7,11 @@ import type {
 /* eslint-disable no-void */
 /* eslint-disable complexity */
 import { type FC, useEffect, useId, useState } from 'react';
+import { Button, FieldOtp, Icon } from '@/components/ui';
+import { VisuallyHidden } from '@/components/ui/visually-hidden';
+import { routes } from '@/context';
+import { useAppSettings, useNavigation, usePassflow, usePasswordlessComplete, useSignIn } from '@/hooks';
+import { getUrlWithTokens, isValidUrl, routeToSecondFactor, useUrlParams } from '@/utils';
 import { Wrapper } from '../wrapper';
 import { TimerButton } from './timer-button';
 import { VerifyChallengeSuccess } from './verify-challenge-success';

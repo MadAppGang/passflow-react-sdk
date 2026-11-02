@@ -1,8 +1,8 @@
-import { Button, Icon, Switch } from '@/components/ui';
-import { useTwoFactorVerify } from '@/hooks';
-import { TwoFactorLoopPrevention, cn, getUserFriendlyErrorMessage } from '@/utils';
 import type { ChangeEvent, FC, FormEvent } from 'react';
 import { useState } from 'react';
+import { Button, Icon, Switch } from '@/components/ui';
+import { useTwoFactorVerify } from '@/hooks';
+import { cn, getUserFriendlyErrorMessage, TwoFactorLoopPrevention } from '@/utils';
 import { Wrapper } from '../wrapper';
 
 import '@/styles/index.css';

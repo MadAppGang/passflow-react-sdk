@@ -1,7 +1,7 @@
-import { PassflowContext } from '@/context';
-import { isValidUrl } from '@/utils';
 import type { PassflowFederatedAuthPayload, Providers } from '@passflow/core';
 import { useContext } from 'react';
+import { PassflowContext } from '@/context';
+import { isValidUrl } from '@/utils';
 import { usePassflow } from './use-passflow';
 
 const getFullRedirectUrl = (redirectUrl?: string): string => {

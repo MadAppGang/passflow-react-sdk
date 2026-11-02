@@ -1,6 +1,6 @@
-import type { LoginCredentialsState, LoginScreenProps } from '@/components/ui';
 import { render, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import type { LoginCredentialsState, LoginScreenProps } from '@/components/ui';
 
 // The sign-in and sign-up forms render `LoginScreen`; these tests drive the
 // callbacks it is handed, the way a submit would, and watch where they go.

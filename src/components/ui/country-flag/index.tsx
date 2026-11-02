@@ -1,6 +1,6 @@
+import type { CSSProperties, FC } from 'react';
 import flags from '@/assets/icons/flags.png';
 import { cn } from '@/utils';
-import type { CSSProperties, FC } from 'react';
 import { COUNTRY_FLAG_POSITIONS, type SupportedCountryFlag } from './positions';
 import './style.css';
 

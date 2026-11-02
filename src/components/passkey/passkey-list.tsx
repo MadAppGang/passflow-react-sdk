@@ -1,7 +1,7 @@
-import { FORMATS } from '@/constants';
-import { formatDateToString, usedFieldString } from '@/utils';
 import type { PassflowUserPasskey } from '@passflow/core';
 import type { FC, JSX } from 'react';
+import { FORMATS } from '@/constants';
+import { formatDateToString, usedFieldString } from '@/utils';
 import { Icon } from '../ui';
 
 type TPasskeyList = {

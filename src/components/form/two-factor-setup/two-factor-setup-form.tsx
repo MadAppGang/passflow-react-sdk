@@ -1,7 +1,7 @@
-import { Button, FieldOtp, Icon } from '@/components/ui';
-import { useTwoFactorSetup } from '@/hooks';
 import type { FC, FormEvent } from 'react';
 import { useId, useState } from 'react';
+import { Button, FieldOtp, Icon } from '@/components/ui';
+import { useTwoFactorSetup } from '@/hooks';
 import { Wrapper } from '../wrapper';
 
 import '@/styles/index.css';
