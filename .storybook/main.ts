@@ -10,15 +10,6 @@ const config: StorybookConfig = {
   docs: {
     autodocs: 'tag',
   },
-  // Storybook does not need declaration files; drop the d.ts plugin from the
-  // library build config (vite-plugin-dts 5 registers as 'unplugin-dts').
-  viteFinal: async (viteConfig) => ({
-    ...viteConfig,
-    plugins: viteConfig.plugins?.filter((plugin) => {
-      if (!plugin || Array.isArray(plugin) || typeof plugin === 'function') return true;
-      return !('name' in plugin) || plugin.name !== 'unplugin-dts';
-    }),
-  }),
 };
 
 export default config;

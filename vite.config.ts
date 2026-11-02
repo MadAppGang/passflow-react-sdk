@@ -2,7 +2,6 @@ import path from 'node:path';
 import react from '@vitejs/plugin-react';
 import cssnano from 'cssnano';
 import { defineConfig } from 'vite';
-import dts from 'vite-plugin-dts';
 import EnvironmentPlugin from 'vite-plugin-environment';
 import { dependencies, peerDependencies } from './package.json';
 
@@ -12,17 +11,6 @@ const baseExternal = [...Object.keys(dependencies), ...Object.keys(peerDependenc
 export default defineConfig({
   plugins: [
     react(),
-    dts({
-      include: ['src'],
-      exclude: [
-        'src/app.tsx',
-        'src/main.tsx',
-        'src/test/**',
-        'src/**/__tests__/**',
-        'src/**/*.test.*',
-        'src/**/*.stories.*',
-      ],
-    }),
     EnvironmentPlugin('all'),
   ],
   resolve: { alias: { '@': path.resolve(__dirname, './src') } },

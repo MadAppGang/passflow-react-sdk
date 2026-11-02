@@ -1,0 +1,27 @@
+{
+  // Declarations for the published package: dist/src/**/*.d.ts (+ maps).
+  // `pnpm build:types` runs tsc with this file, then tsc-alias rewrites the
+  // @/ aliases to relative paths with full .js / /index.js specifiers so the
+  // types resolve under moduleResolution node16 / nodenext as well as bundler.
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": false,
+    "emitDeclarationOnly": true,
+    "declaration": true,
+    "declarationMap": true,
+    "incremental": false,
+    "rootDir": ".",
+    "outDir": "dist"
+  },
+  "include": ["src"],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "src/app.tsx",
+    "src/main.tsx",
+    "src/test/**",
+    "src/**/__tests__/**",
+    "src/**/*.test.*",
+    "src/**/*.stories.*"
+  ]
+}

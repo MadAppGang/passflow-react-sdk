@@ -22,7 +22,8 @@
   },
   "scripts": {
     "dev": "vite",
-    "build": "tsc && vite build",
+    "build": "tsc && vite build && pnpm build:types",
+    "build:types": "tsc -p tsconfig.build.json && tsc-alias -p tsconfig.build.json && node scripts/fix-dts-specifiers.mjs",
     "prepack": "pnpm build",
     "lint": "biome check src",
     "lint:fix": "biome check --write src",
@@ -90,7 +91,6 @@
     "tsc-alias": "^1.9.9",
     "typescript": "5.8.2",
     "vite": "^8.3.5",
-    "vite-plugin-dts": "^5.1.2",
     "vite-plugin-environment": "^1.1.4",
     "vitest": "^5.0.5"
   },
