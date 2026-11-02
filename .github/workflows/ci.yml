@@ -11,9 +11,12 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
+    # Every Node line the package declares support for gets lint, unit tests and
+    # a build. One failing leg must not hide the others' results.
     strategy:
+      fail-fast: false
       matrix:
-        node-version: [22.x]
+        node-version: [22.x, 24.x, 26.x]
 
     steps:
       - uses: actions/checkout@v7
@@ -39,15 +42,20 @@ jobs:
       - name: Build project
         run: pnpm build
 
+      # Storybook and Playwright exercise the browser, not Node, so they run on
+      # one leg only.
       - name: Build Storybook
+        if: matrix.node-version == '24.x'
         run: pnpm build-storybook
         env:
           STORYBOOK_DISABLE_TELEMETRY: '1'
 
       - name: Install Playwright Chromium
+        if: matrix.node-version == '24.x'
         run: pnpm exec playwright install --with-deps chromium
 
       - name: Run UI tests
+        if: matrix.node-version == '24.x'
         run: pnpm test
         env:
           STORYBOOK_DISABLE_TELEMETRY: '1'

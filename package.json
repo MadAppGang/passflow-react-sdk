@@ -130,5 +130,5 @@
     "react-ui-kit",
     "passflow-react-ui-kit"
   ],
-  "packageManager": "pnpm@11.17.0"
+  "packageManager": "pnpm@11.28.9"
 }
