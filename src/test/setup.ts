@@ -1,8 +1,5 @@
-import * as matchers from '@testing-library/jest-dom/matchers';
-import { expect } from 'vitest';
-import '@testing-library/jest-dom';
-
-expect.extend(matchers);
+// Registers the jest-dom matchers on vitest's expect and types them.
+import '@testing-library/jest-dom/vitest';
 
 // jsdom has no layout, so it has no `elementFromPoint`. FieldOtp's input-otp
 // calls it on focus to look for a password-manager badge; with no layout there
