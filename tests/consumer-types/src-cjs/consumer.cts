@@ -13,7 +13,6 @@ import {
 } from '@passflow/react';
 import { createElement } from 'react';
 
-
 type IsAny<T> = 0 extends 1 & T ? true : false;
 type ExpectFalse<T extends false> = T;
 
@@ -29,6 +28,7 @@ export type Canaries = [
 ];
 
 export const flow = createElement(PassflowFlow, { pathPrefix: '/web', routerType: 'memory' });
+export const zeroConfigFlow = createElement(PassflowFlow);
 
 // @ts-expect-error routerType is a closed union
 export const badFlowProps: PassflowProps = { routerType: 'electron' };

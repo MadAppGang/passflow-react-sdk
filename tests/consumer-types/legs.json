@@ -1,5 +1,5 @@
 {
-  "$comment": "Exact pins for the consumer-types check (tests/consumer-types/run.mjs). Each variant is installed once, with the packed tarball, and every TypeScript leg type-checks every config in it.",
+  "$comment": "Exact pins for the consumer-types check (tests/consumer-types/run.mjs). Each variant is installed once, with the packed tarball, and every TypeScript leg type-checks every config in it. No variant installs a router: @passflow/react must install, type-check and load without one.",
   "tools": {
     "typescript": "7.0.2",
     "typescript-5.9": "npm:typescript@5.9.3",
@@ -15,19 +15,17 @@
     "args": ["--profile", "strict", "--exclude-entrypoints", "./dist/style.css"]
   },
   "variants": {
-    "react19-rr8": {
+    "react19": {
       "react": "19.3.1",
       "react-dom": "19.3.1",
       "@types/react": "19.3.0",
-      "@types/react-dom": "19.3.0",
-      "react-router": "8.5.1"
+      "@types/react-dom": "19.3.0"
     },
-    "react18-rr7": {
+    "react18": {
       "react": "18.3.1",
       "react-dom": "18.3.1",
       "@types/react": "18.3.31",
-      "@types/react-dom": "18.3.7",
-      "react-router": "7.18.5"
+      "@types/react-dom": "18.3.7"
     }
   }
 }
