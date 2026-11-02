@@ -30,7 +30,9 @@ export default defineConfig({
     lib: {
       entry: path.resolve(__dirname, 'src/index.ts'),
       formats: ['es', 'cjs'],
-      fileName: (format, entryName) => `${entryName}.${format}.js`,
+      // The package is "type": "module", so Node reads any .js file as ESM. The
+      // CommonJS bundle must end in .cjs, or require() gets an empty object.
+      fileName: (format, entryName) => (format === 'cjs' ? `${entryName}.cjs` : `${entryName}.${format}.js`),
     },
     rolldownOptions: {
       external: (id) => {
