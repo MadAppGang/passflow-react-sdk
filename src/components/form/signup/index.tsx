@@ -26,11 +26,13 @@ import type {
   PassflowUserPayload,
   Providers,
 } from '@passflow/core';
-import { eq } from 'lodash';
+import lodash from 'lodash';
 import { phone } from 'phone';
 import queryString from 'query-string';
 import type { FC } from 'react';
 import { useMemo } from 'react';
+
+const { eq } = lodash;
 
 const getSignUpMethodConfig = (authMethods: AuthMethods): LoginMethodConfig => {
   const identities: LoginMethodConfig['identities'] = [];

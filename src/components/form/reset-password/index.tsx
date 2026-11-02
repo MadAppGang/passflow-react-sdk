@@ -19,8 +19,10 @@ import { Wrapper } from '../wrapper';
 import '@/styles/index.css';
 import type { SuccessAuthRedirect } from '@/types';
 import { type Token, parseToken } from '@passflow/core';
-import { has } from 'lodash';
+import lodash from 'lodash';
 import { Controller, useForm } from 'react-hook-form';
+
+const { has } = lodash;
 
 const initialValues = {
   password: '',

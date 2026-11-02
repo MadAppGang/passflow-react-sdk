@@ -5,7 +5,9 @@ import type { PassflowPasswordlessSignInPayload } from '@passflow/core';
 import { Wrapper } from '../wrapper';
 import '@/styles/index.css';
 import { useUrlParams } from '@/utils';
-import { eq } from 'lodash';
+import lodash from 'lodash';
+
+const { eq } = lodash;
 
 const challengeTypeFullString = {
   email: 'email address',

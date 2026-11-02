@@ -1,9 +1,11 @@
 import { PassflowContext } from '@/context';
 import { type CompatibleLoginWebAppStyle, applyLoginThemeStyles } from '@/utils/login-theme';
 import type { AppSettings, LoginWebAppStyle, LoginWebAppTheme, PassflowPasswordPolicySettings } from '@passflow/core';
-import { isUndefined, some } from 'lodash';
+import lodash from 'lodash';
 import { useContext, useLayoutEffect, useRef, useState } from 'react';
 import { usePassflow } from './use-passflow';
+
+const { isUndefined, some } = lodash;
 
 export type UseAppSettingsProps = () => {
   appSettings: AppSettings | null;

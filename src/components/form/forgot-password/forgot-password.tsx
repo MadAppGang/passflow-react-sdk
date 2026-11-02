@@ -3,7 +3,7 @@ import { routes } from '@/context';
 import { useAppSettings, useForgotPassword, useNavigation } from '@/hooks';
 import { cn, emailRegex, getAuthMethods, getIdentityLabel, useUrlParams } from '@/utils';
 import type { PassflowSendPasswordResetEmailPayload } from '@passflow/core';
-import { eq, has, size } from 'lodash';
+import lodash from 'lodash';
 import { phone } from 'phone';
 /* eslint-disable max-len */
 /* eslint-disable react/jsx-props-no-spreading */
@@ -16,6 +16,8 @@ import { Wrapper } from '../wrapper';
 
 import '@/styles/index.css';
 import queryString from 'query-string';
+
+const { eq, has, size } = lodash;
 
 const initialValues = {
   email_or_username: '',

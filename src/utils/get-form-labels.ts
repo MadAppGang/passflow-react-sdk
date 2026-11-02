@@ -1,8 +1,10 @@
 import type { DefaultMethod } from '@/types';
 import type { InternalStrategyChallenge } from '@passflow/core';
 /* eslint-disable complexity */
-import { eq } from 'lodash';
+import lodash from 'lodash';
 import type { AuthMethods } from './get-auth-methods';
+
+const { eq } = lodash;
 
 export const getIdentityLabel = (methods: AuthMethods, type: 'label' | 'button') => {
   if (methods.hasSignInEmailMethods && methods.hasSignInUsernameMethods)

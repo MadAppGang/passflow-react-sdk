@@ -1,7 +1,7 @@
 import { useOutsideClick } from '@/hooks';
 import { cn } from '@/utils';
 import { getCountryForTimezone } from 'countries-and-timezones';
-import { eq, size } from 'lodash';
+import lodash from 'lodash';
 import {
   type ChangeEvent,
   type FC,
@@ -17,6 +17,8 @@ import { Button, CountryFlag, Icon } from '..';
 
 import '@/styles/index.css';
 import 'react-international-phone/style.css';
+
+const { eq, size } = lodash;
 
 type TFieldPhone = InputHTMLAttributes<HTMLInputElement> & {
   id: string;

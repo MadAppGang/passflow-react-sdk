@@ -7,7 +7,9 @@ import { Wrapper } from '../wrapper';
 import '@/styles/index.css';
 import { useUrlParams, verificationLinkErrorMessage } from '@/utils';
 import type { PassflowSendPasswordResetEmailPayload } from '@passflow/core';
-import { eq } from 'lodash';
+import lodash from 'lodash';
+
+const { eq } = lodash;
 
 const searchParamsForgotPasswordSuccessSchema = Yup.object().shape({
   identity: Yup.string().oneOf(['email', 'phone']).required(),
