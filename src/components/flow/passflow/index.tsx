@@ -31,6 +31,7 @@ import {
 import { ErrorComponent } from '@/components/error';
 import { withError } from '@/hocs';
 import { useNavigation } from '@/hooks';
+import type { ReactRouterNavigateOptions } from '@/hooks/use-navigation';
 import type { SuccessAuthRedirect } from '@/types';
 import { authRedirectErrorMessage, getUrlErrors } from '@/utils';
 
@@ -97,8 +98,13 @@ const RouterInnerWrapperProvider: FC<{ children: ReactNode }> = ({ children }) =
   const { setNavigate } = useNavigation();
 
   useEffect(() => {
-    //@ts-expect-error
-    setNavigate((options) => navigate(options));
+    // The react-router adapter in useNavigation hands over { pathname, search, replace }.
+    // React Router reads `replace` from navigate's options argument only; left inside
+    // the destination it is ignored and every navigation pushes.
+    setNavigate((options) => {
+      const { replace, ...to } = options as ReactRouterNavigateOptions;
+      navigate(to, { replace });
+    });
   }, [navigate, setNavigate]);
 
   return children;
