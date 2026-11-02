@@ -8,7 +8,8 @@ export default defineConfig({
     globals: true,
     environment: 'jsdom',
     setupFiles: ['./src/test/setup.ts'],
-    include: ['src/**/*.test.ts', 'src/**/*.test.tsx'],
+    // tests/unit holds black-box tests that import the package by its public name.
+    include: ['src/**/*.test.ts', 'src/**/*.test.tsx', 'tests/unit/**/*.test.ts', 'tests/unit/**/*.test.tsx'],
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html'],
@@ -24,8 +25,10 @@ export default defineConfig({
     }
   },
   resolve: {
-    alias: {
-      '@': path.resolve(__dirname, './src')
-    }
+    alias: [
+      { find: '@', replacement: path.resolve(__dirname, './src') },
+      // The package's own name resolves to its sources, not to a built dist/.
+      { find: /^@passflow\/react$/, replacement: path.resolve(__dirname, './src/index.ts') }
+    ]
   }
 });
