@@ -1,4 +1,4 @@
-import { type FC, type ReactNode, useEffect, useMemo } from 'react';
+import { type FC, type ReactNode, useContext, useEffect, useMemo } from 'react';
 import { TwoFactorSetupFlow } from '@/components/flow/two-factor-setup';
 import { TwoFactorVerifyFlow } from '@/components/flow/two-factor-verify';
 import {
@@ -11,7 +11,7 @@ import {
   VerifyChallengeMagicLink,
   VerifyChallengeOTP,
 } from '@/components/form';
-import { routes } from '@/context';
+import { NavigationContext, routes } from '@/context';
 import '@/styles/index.css';
 // react-router (v7 or v8) is a required peer dependency, shared with the host app and
 // never bundled. It is imported statically, so a missing peer fails at module
@@ -31,7 +31,6 @@ import {
 import { ErrorComponent } from '@/components/error';
 import { withError } from '@/hocs';
 import { useNavigation } from '@/hooks';
-import type { ReactRouterNavigateOptions } from '@/hooks/use-navigation';
 import type { SuccessAuthRedirect } from '@/types';
 import { authRedirectErrorMessage, getUrlErrors } from '@/utils';
 
@@ -95,15 +94,16 @@ const useParentRouteBase = (): string => {
 
 const RouterInnerWrapperProvider: FC<{ children: ReactNode }> = ({ children }) => {
   const navigate = useNavigate();
-  const { setNavigate } = useNavigation();
+  // Registered with the provider directly, not through useNavigation's adapter: that
+  // adapter shapes calls for the host's own navigate according to the provider's
+  // `router` prop, and with the default value it sends every step through
+  // window.location, out of this router. The flow always runs inside a React Router (its own or the host's).
+  const { setNavigate } = useContext(NavigationContext);
 
   useEffect(() => {
-    // The react-router adapter in useNavigation hands over { pathname, search, replace }.
-    // React Router reads `replace` from navigate's options argument only; left inside
-    // the destination it is ignored and every navigation pushes.
-    setNavigate((options) => {
-      const { replace, ...to } = options as ReactRouterNavigateOptions;
-      navigate(to, { replace });
+    setNavigate(({ to, search = '', replace = false }) => {
+      // React Router reads `replace` from the options argument only.
+      navigate({ pathname: to, search: search && !search.startsWith('?') ? `?${search}` : search }, { replace });
     });
   }, [navigate, setNavigate]);
 

@@ -147,9 +147,9 @@ const Probe = () => {
   );
 };
 
-const renderInHostRouter = () =>
+const renderInHostRouter = (router: 'react-router' | undefined) =>
   render(
-    <PassflowProvider {...providerConfig} router='react-router'>
+    <PassflowProvider {...providerConfig} router={router}>
       <MemoryRouter initialEntries={['/auth/signin']}>
         <Routes>
           <Route path='/auth/*' element={<PassflowFlow />} />
@@ -159,9 +159,15 @@ const renderInHostRouter = () =>
     </PassflowProvider>,
   );
 
-describe('PassflowFlow navigation through the host router', () => {
+// The provider's `router` prop describes the host's own navigate function. It must not
+// change how the flow navigates: with the default value the flow used to leave its
+// router through window.location.
+describe.each([
+  ['react-router', 'react-router'],
+  ['default (no prop)', undefined],
+] as const)('PassflowFlow navigation through the host router, provider router %s', (_label, router) => {
   test('replace: true replaces the history entry', async () => {
-    renderInHostRouter();
+    renderInHostRouter(router);
     // Wait until the flow has registered the host navigate with the provider.
     await waitFor(() => expect(screen.getByTestId('where').textContent).toBe('/auth/signin POP'));
     await act(async () => screen.getByRole('button', { name: 'replace' }).click());
@@ -169,7 +175,7 @@ describe('PassflowFlow navigation through the host router', () => {
   });
 
   test('without replace the navigation pushes', async () => {
-    renderInHostRouter();
+    renderInHostRouter(router);
     await waitFor(() => expect(screen.getByTestId('where').textContent).toBe('/auth/signin POP'));
     await act(async () => screen.getByRole('button', { name: 'push' }).click());
     await waitFor(() => expect(screen.getByTestId('where').textContent).toBe('/auth/signup?a=1 PUSH'));
