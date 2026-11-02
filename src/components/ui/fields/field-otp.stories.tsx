@@ -1,7 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { type ComponentProps, useState } from 'react';
 import { fn } from 'storybook/test';
-import { VisuallyHidden } from '../visually-hidden';
 import { FieldOtp } from './field-otp';
 
 const LABEL_ID = 'field-otp-story-label';
@@ -9,14 +8,16 @@ const ERROR_ID = 'field-otp-story-error';
 
 /**
  * Owns the value, so each story can be typed into, pasted into and cleared
- * with the keyboard. The hidden label stands in for the prompt a screen shows
- * above the boxes.
+ * with the keyboard. A visible prompt above the boxes names the field, as on
+ * a real screen, styled with the library's field label.
  */
 const Controlled = (props: ComponentProps<typeof FieldOtp>) => {
   const [value, setValue] = useState(props.value);
   return (
-    <div>
-      <VisuallyHidden id={LABEL_ID}>Verification code</VisuallyHidden>
+    <div className='passflow-field-container'>
+      <p id={LABEL_ID} className='passflow-field-label'>
+        Verification code
+      </p>
       <FieldOtp
         {...props}
         value={value}
