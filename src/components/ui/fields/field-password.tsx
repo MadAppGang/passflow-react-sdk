@@ -3,10 +3,7 @@ import { forwardRef, type InputHTMLAttributes, useState } from 'react';
 import { Button, Icon } from '..';
 import '@/styles/index.css';
 import type { PassflowPasswordPolicySettings } from '@passflow/core';
-import lodash from 'lodash';
 import { cn } from '@/utils';
-
-const { intersection, size } = lodash;
 
 type TFieldPassword = InputHTMLAttributes<HTMLInputElement> & {
   id: string;
@@ -58,13 +55,13 @@ export const FieldPassword = forwardRef<HTMLInputElement, TFieldPassword>(
     };
 
     const errorStyles = (fields: string[]) => {
-      if (size(value) > 0 && size(intersection(validationErrors, fields)) === 0)
+      if (value.length > 0 && !fields.some((field) => validationErrors.includes(field)))
         return 'passflow-password-validation-item--success';
       return null;
     };
 
     const changeIcon = (fields: string[]) => {
-      if (size(value) > 0 && size(intersection(validationErrors, fields)) === 0) return 'check';
+      if (value.length > 0 && !fields.some((field) => validationErrors.includes(field))) return 'check';
       return 'close';
     };
 

@@ -1,11 +1,8 @@
 import type { AppSettings, LoginWebAppStyle, LoginWebAppTheme, PassflowPasswordPolicySettings } from '@passflow/core';
-import lodash from 'lodash';
 import { useContext, useLayoutEffect, useRef, useState } from 'react';
 import { PassflowContext } from '@/context';
 import { applyLoginThemeStyles, type CompatibleLoginWebAppStyle } from '@/utils/login-theme';
 import { usePassflow } from './use-passflow';
-
-const { isUndefined, some } = lodash;
 
 export type UseAppSettingsProps = () => {
   appSettings: AppSettings | null;
@@ -22,7 +19,7 @@ export type UseAppSettingsProps = () => {
 };
 
 const hasPasswordStrategy = (strategies: AppSettings['auth_strategies']): boolean => {
-  return some(strategies, (strategy) => strategy.type === 'internal' && strategy.strategy?.challenge === 'password');
+  return strategies?.some((strategy) => strategy.type === 'internal' && strategy.strategy?.challenge === 'password') ?? false;
 };
 
 export const useAppSettings: UseAppSettingsProps = () => {
@@ -100,7 +97,7 @@ export const useAppSettings: UseAppSettingsProps = () => {
                   }
 
                   // Update createTenantForNewUser if available and not already set
-                  if (isUndefined(state.createTenantForNewUser)) {
+                  if (state.createTenantForNewUser === undefined) {
                     const createTenant = settings.login_app?.create_tenant_for_new_user ?? settings.createTenantForNewUser;
                     if (createTenant !== undefined) {
                       stateUpdates.createTenantForNewUser = createTenant;
@@ -150,7 +147,7 @@ export const useAppSettings: UseAppSettingsProps = () => {
           };
 
           if (!state.scopes) finalStateUpdates.scopes = appSettings.defaults?.scopes;
-          if (isUndefined(state.createTenantForNewUser))
+          if (state.createTenantForNewUser === undefined)
             finalStateUpdates.createTenantForNewUser = appSettings.defaults?.create_tenant_for_new_user;
 
           let passwordPolicy = null;

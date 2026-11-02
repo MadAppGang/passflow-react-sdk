@@ -18,11 +18,8 @@ import {
 import { Wrapper } from '../wrapper';
 import '@/styles/index.css';
 import { parseToken, type Token } from '@passflow/core';
-import lodash from 'lodash';
 import { Controller, useForm } from 'react-hook-form';
 import type { SuccessAuthRedirect } from '@/types';
-
-const { has } = lodash;
 
 const initialValues = {
   password: '',
@@ -152,7 +149,9 @@ export const ResetPassword: FC<TResetPassword> = ({
                   isError={isError}
                   passwordPolicy={passwordPolicy}
                   validationErrors={
-                    has(errors, 'password') && errors.password?.message ? errors.password.message.split(', ') : undefined
+                    Object.hasOwn(errors, 'password') && errors.password?.message
+                      ? errors.password.message.split(', ')
+                      : undefined
                   }
                   id='password'
                   name='password'

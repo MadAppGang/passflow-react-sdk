@@ -6,7 +6,6 @@ import type {
   PassflowUserPayload,
   Providers,
 } from '@passflow/core';
-import lodash from 'lodash';
 import { phone } from 'phone';
 import queryString from 'query-string';
 import type { FC } from 'react';
@@ -31,8 +30,6 @@ import {
   routeToSecondFactor,
   useUrlParams,
 } from '@/utils';
-
-const { eq } = lodash;
 
 const getSignUpMethodConfig = (authMethods: AuthMethods): LoginMethodConfig => {
   const identities: LoginMethodConfig['identities'] = [];
@@ -178,8 +175,8 @@ export const SignUpForm: FC<TSignUp> = ({
       create_tenant: createTenantForNewUser,
     });
 
-    if (eq(challengeType, 'otp')) navigate({ to: verifyOTPPath ?? routes.verify_otp.path, search: newParams });
-    if (eq(challengeType, 'magic_link'))
+    if (challengeType === 'otp') navigate({ to: verifyOTPPath ?? routes.verify_otp.path, search: newParams });
+    if (challengeType === 'magic_link')
       navigate({ to: verifyMagicLinkPath ?? routes.verify_magic_link.path, search: newParams });
   };
 
