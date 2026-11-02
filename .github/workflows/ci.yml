@@ -93,3 +93,33 @@ jobs:
 
       - name: Run unit tests on React 18
         run: pnpm test:unit
+
+  # Type-checks the packed tarball the way consumers see it: moduleResolution
+  # bundler, node16 and nodenext, on TypeScript 5.9 and 7, with React 19 +
+  # React Router 8 and React 18 + React Router 7, skipLibCheck off. Then runs
+  # @arethetypeswrong/cli on the tarball. Pins live in tests/consumer-types/legs.json.
+  consumer-types:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v6.1.0
+
+      - name: Use Node.js 24.x
+        uses: actions/setup-node@v7
+        with:
+          node-version: 24.x
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # prepack runs the full build (bundles and declarations).
+      - name: Build and pack
+        run: pnpm pack --pack-destination "$RUNNER_TEMP/pack"
+
+      # Installs into $RUNNER_TEMP, outside this pnpm workspace, with scripts disabled.
+      - name: Type-check the tarball as a consumer
+        run: node tests/consumer-types/run.mjs "$RUNNER_TEMP"/pack/passflow-react-*.tgz --work "$RUNNER_TEMP/consumer-types"

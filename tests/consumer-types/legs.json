@@ -1,0 +1,33 @@
+{
+  "$comment": "Exact pins for the consumer-types check (tests/consumer-types/run.mjs). Each variant is installed once, with the packed tarball, and every TypeScript leg type-checks every config in it.",
+  "tools": {
+    "typescript": "7.0.2",
+    "typescript-5.9": "npm:typescript@5.9.3",
+    "@arethetypeswrong/cli": "0.18.5"
+  },
+  "typescript": {
+    "5.9.3": "typescript-5.9",
+    "7.0.2": "typescript"
+  },
+  "configs": ["bundler", "node16", "nodenext"],
+  "attw": {
+    "$comment": "Every attw rule is enforced under the strict profile (node10, node16 from CJS and ESM, bundler) except: ./dist/style.css is a CSS file with no types by design; false-esm is the CommonJS entry typed by the ESM .d.ts (fixed by a .d.cts mirror).",
+    "args": ["--profile", "strict", "--exclude-entrypoints", "./dist/style.css", "--ignore-rules", "false-esm"]
+  },
+  "variants": {
+    "react19-rr8": {
+      "react": "19.3.1",
+      "react-dom": "19.3.1",
+      "@types/react": "19.3.0",
+      "@types/react-dom": "19.3.0",
+      "react-router": "8.5.1"
+    },
+    "react18-rr7": {
+      "react": "18.3.1",
+      "react-dom": "18.3.1",
+      "@types/react": "18.3.31",
+      "@types/react-dom": "18.3.7",
+      "react-router": "7.18.5"
+    }
+  }
+}
