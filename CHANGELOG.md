@@ -2,6 +2,27 @@
 
 All notable changes to `@passflow/react` are documented in this file.
 
+## [0.18.0] - 2026-11-03
+
+### Added
+
+- Email verification code step. When an app's registration policy requires a verified email, `/auth/register` and `/auth/login` may answer with a challenge instead of tokens. Sign-up and sign-in then show a code screen bound to that challenge. The submitted code goes to `/auth/validate`, and its answer continues the flow as before: second factor, PKCE or redirect. Resend repeats the original request. Cancel goes back to the form.
+- When the server's code budget is spent and it emails a link instead, the flow shows a "check your email" screen with no code input. The link opens the reset-password screen with a continuation grant. That screen titles itself "Create your password" and signs the user in with the tokens `/auth/password/change` returns.
+- `useEmailCodeStep()` (with `UseEmailCodeStep` and `UseEmailCodeStepOptions` types) drives the code step for custom UIs. Also exported: `EmailCodeStep`, `EmailVerificationStep`, `readEmailVerificationStep`, `emailCodeStepReducer`, `initialEmailCodeStepState`, and the error helpers `authErrorFrom`, `authRedirectErrorFrom`, `invitationJoinErrorFrom`, `emailCodeErrorMessage`, `newPasswordErrorMessage`, `serverMessageFor` and `isPasswordSavedRateLimit`.
+- `LoginScreen` states `email-code` and `new-password`, and an `info` tone for the `status` state, each with a Storybook story.
+- `Button` honours `aria-disabled`: it looks disabled and ignores clicks but stays focusable, so focus is not lost while a resend cooldown runs.
+
+### Changed
+
+- Requires `@passflow/core` `^0.22.0`, which adds `verifyEmailCode` and the `EmailVerificationRequired` event.
+- For these error ids the forms show the server's localized `error.message` instead of fixed copy: `error.registration.email.domain_not_allowed`, `email.required`, `email.not_verified_by_provider`, `error.invite.email.domain_not_allowed`, `error.verification.code.rate_limited`, and wrong, expired or used codes. The same list applies to errors that arrive in the URL from a federated sign-in. Other ids keep the fixed copy.
+- The reset-password screen is built on `LoginScreen`. Its outer wrapper class is unchanged, but the elements inside it are different, so `custom_css` rules aimed at its inner classes need updating.
+
+### Fixed
+
+- A 429 from the server is recognised whether core passes it on as a `PassflowError` or as a raw HTTP error, so rate limits show the rate-limit message instead of a generic failure.
+- A URL error message containing a literal `%` no longer breaks decoding.
+
 ## [0.17.0] - 2026-11-03
 
 ### Changed
