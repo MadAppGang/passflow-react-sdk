@@ -1,8 +1,14 @@
-import { type ParsedTokens, PassflowEvent, type PassflowSubscriber, type Tokens } from '@passflow/core';
+import {
+  type ParsedTokens,
+  PassflowEvent,
+  type PassflowSubscriber,
+  type SessionExpiredReason,
+  type Tokens,
+} from '@passflow/core';
 import { createContext, type FC, type PropsWithChildren, useCallback, useEffect, useState } from 'react';
 import { usePassflow } from '../hooks/use-passflow';
 
-export type SessionExpiredHandler = (reason: 'refresh_failed' | 'token_invalid' | 'logged_out') => void;
+export type SessionExpiredHandler = (reason: SessionExpiredReason) => void;
 
 export type AuthContextValue = {
   isAuthenticated: () => boolean;
@@ -16,8 +22,9 @@ export const AuthContext = createContext<AuthContextValue | undefined>(undefined
 
 export type AuthProviderProps = PropsWithChildren<{
   /**
-   * Called when the session expires (token refresh failed).
-   * Use this to redirect to your login page.
+   * Called when the session has really ended: last auth strike, no successor token pair
+   * in time, or another user's tokens in storage. A transient refresh failure keeps the
+   * session and does not call this. Use this to redirect to your login page.
    */
   onSessionExpired?: SessionExpiredHandler;
 }>;
@@ -32,8 +39,7 @@ export const AuthProvider: FC<AuthProviderProps> = ({ children, onSessionExpired
     const subscriber: PassflowSubscriber = {
       onAuthChange: (eventType, payload) => {
         if (eventType === PassflowEvent.SessionExpired) {
-          const reason =
-            (payload as { reason?: 'refresh_failed' | 'token_invalid' | 'logged_out' })?.reason ?? 'refresh_failed';
+          const reason = (payload as { reason?: SessionExpiredReason })?.reason ?? 'refresh_failed';
           setIsSessionExpired(true);
           onSessionExpired?.(reason);
         } else if (eventType === PassflowEvent.SignIn || eventType === PassflowEvent.Register) {
