@@ -6,6 +6,8 @@ export {
   emailCodeErrorMessage,
   invitationJoinErrorFrom,
   invitationLinkErrorMessage,
+  isPasswordSavedRateLimit,
+  newPasswordErrorMessage,
   serverMessageFor,
   verificationLinkErrorMessage,
   verificationRequestErrorMessage,
@@ -14,6 +16,13 @@ export { classifyDeviceError, DeviceApiError, deviceErrorOfType } from './classi
 export { classifyTwoFactorError, getUserFriendlyErrorMessage } from './classify-two-factor-error';
 export { cn } from './cn';
 export * from './dayjs';
+export {
+  type EmailCodeStepEvent,
+  type EmailCodeStepState,
+  emailCodeStepReducer,
+  initialEmailCodeStepState,
+  readEmailVerificationStep,
+} from './email-verification';
 export { type AuthMethods, getAuthMethods } from './get-auth-methods';
 export { getIdentityLabel, getPasswordlessData, getValidationErrorsLabel } from './get-form-labels';
 export { getUrlErrors } from './get-url-errors';

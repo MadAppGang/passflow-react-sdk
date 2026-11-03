@@ -18,6 +18,11 @@ export {
   type UseDeviceVerifyProps,
   useDeviceVerify,
 } from './use-device-verify';
+export {
+  type UseEmailCodeStep,
+  type UseEmailCodeStepOptions,
+  useEmailCodeStep,
+} from './use-email-code-step';
 export { type UseForgotPasswordProps, useForgotPassword } from './use-forgot-password';
 export { useJoinInvite } from './use-join-invite';
 export { type UseLogoutProps, useLogout } from './use-logout';

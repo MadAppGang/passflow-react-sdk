@@ -12,7 +12,13 @@ import type { FC } from 'react';
 import { useMemo } from 'react';
 import { ErrorComponent } from '@/components/error';
 import { hasFollowedOIDCRedirect } from '@/components/provider/passflow-provider';
-import { type LoginCredentialsValues, type LoginMethodConfig, LoginScreen } from '@/components/ui';
+import {
+  type LoginCredentialsValues,
+  type LoginMethodConfig,
+  LoginScreen,
+  type LoginScreenChrome,
+  type LoginScreenState,
+} from '@/components/ui';
 import { routes, useSearchSource } from '@/context';
 import { withError } from '@/hocs';
 import { useAppSettings, useNavigation, usePassflow, useProvider, useSignUp } from '@/hooks';
@@ -117,7 +123,7 @@ export const SignUpForm: FC<TSignUp> = ({
   const { get } = useUrlParams({ invite_token: '' });
   const inviteToken = get('invite_token');
   const invitationChrome = getInvitationAuthChrome(inviteToken, 'sign-up');
-  const { fetch, isError, error, reset, isLoading } = useSignUp();
+  const { fetch, isError, error, reset, isLoading, emailCode } = useSignUp();
 
   // The server can answer a sign-up with a 2FA token in place of tokens, as it
   // does a sign-in, so the 2FA screen comes before any success redirect.
@@ -210,17 +216,66 @@ export const SignUpForm: FC<TSignUp> = ({
 
   const handleProvider = (provider: Providers) => federatedWithRedirect(provider, inviteToken ?? undefined);
 
+  // The emailed code answers like a sign-up: the same 2FA, OIDC and redirect path follows.
+  const verifyEmailCode = async (code: string) => {
+    if (await emailCode.verify(code)) await completeRegistration({ oidcMayOwnRedirect: true });
+  };
+
+  const resendEmailCode = async () => {
+    if (await emailCode.resend()) await completeRegistration({ oidcMayOwnRedirect: true });
+  };
+
+  const chrome: LoginScreenChrome = {
+    title: invitationChrome?.title ?? 'Create your account',
+    subtitle: invitationChrome?.subtitle ?? 'For Passflow by Madappgang',
+    variant: 'sign-in',
+    customCss: currentStyles?.custom_css,
+    customLogo: currentStyles?.logo_url,
+    customLogoAlt: `${loginAppTheme?.application_name ?? 'Application'} logo`,
+    removeBranding: loginAppTheme?.remove_passflow_logo,
+  };
+
+  const { step } = emailCode;
+
+  if (step.kind !== 'none') {
+    const stepState: LoginScreenState =
+      step.kind === 'code'
+        ? {
+            kind: 'email-code',
+            message: step.message,
+            error: emailCode.error,
+            busy: emailCode.isVerifying,
+            resend: {
+              restartKey: step.challengeId,
+              busy: emailCode.isResending,
+              onResend: () => void resendEmailCode(),
+            },
+            secondaryAction: { label: 'Use a different email', onClick: emailCode.cancel },
+            onSubmit: (code) => void verifyEmailCode(code),
+          }
+        : {
+            kind: 'status',
+            tone: 'info',
+            message: step.message,
+            primaryAction: { label: 'Back to sign up', onClick: emailCode.cancel },
+          };
+
+    return (
+      <LoginScreen
+        chrome={{
+          ...chrome,
+          title: 'Check your email',
+          subtitle:
+            step.kind === 'code' ? 'Enter the code to finish creating your account' : 'Follow the link to finish signing up',
+        }}
+        state={stepState}
+      />
+    );
+  }
+
   return (
     <LoginScreen
-      chrome={{
-        title: invitationChrome?.title ?? 'Create your account',
-        subtitle: invitationChrome?.subtitle ?? 'For Passflow by Madappgang',
-        variant: 'sign-in',
-        customCss: currentStyles?.custom_css,
-        customLogo: currentStyles?.logo_url,
-        customLogoAlt: `${loginAppTheme?.application_name ?? 'Application'} logo`,
-        removeBranding: loginAppTheme?.remove_passflow_logo,
-      }}
+      chrome={chrome}
       state={{
         kind: 'credentials',
         methods: loginMethods,

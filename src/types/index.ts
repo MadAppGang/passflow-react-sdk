@@ -16,6 +16,7 @@ export type {
 } from '@passflow/core';
 export type { AuthErrorScope, AuthFlow, AuthOperation, AuthUiError } from './auth-errors';
 export type { DeviceError, DeviceErrorType } from './device-errors';
+export type { EmailCodeStep, EmailVerificationStep } from './email-verification';
 export type { TwoFactorError, TwoFactorErrorType } from './two-factor-errors';
 
 // React-specific hook return types

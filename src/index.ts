@@ -19,4 +19,5 @@ export {
   type UpgradeSettledState,
 } from './context/upgrade-context';
 export * from './hooks';
+export type { EmailCodeStep, EmailVerificationStep } from './types';
 export { attachAuth, withAuth } from './utils/upgrade-auth';

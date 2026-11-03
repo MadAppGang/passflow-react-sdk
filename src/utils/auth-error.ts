@@ -120,3 +120,32 @@ export const emailCodeErrorMessage = (error: unknown): string => {
   }
   return emailCodeRestartMessage;
 };
+
+export const resetLinkInvalidMessage = 'This link is invalid or has expired. Request a new one.';
+export const newPasswordUnavailableMessage = "We couldn't save your password. Try again.";
+export const passwordSavedRateLimitedMessage =
+  'Your password was saved, but we cannot send a verification code right now. Wait a few minutes, then sign in with your new password.';
+
+/**
+ * A 429 from `/auth/password/change`: the password was already changed, only the emailed code that should follow
+ * was refused, so the screen must not ask for the password again.
+ */
+export const isPasswordSavedRateLimit = (error: unknown): boolean =>
+  readField(error, 'id') === 'error.verification.code.rate_limited' || readField(error, 'status') === 429;
+
+/**
+ * Error copy for the new-password screen (reset link or registration continuation): allow-listed ids show the server
+ * message; a refused or spent link (any other 4xx, an `error.token.*` id) asks for a new one; a server or network
+ * failure asks to retry. The raw message of anything else is never shown.
+ */
+export const newPasswordErrorMessage = (error: unknown): string => {
+  if (isPasswordSavedRateLimit(error)) return passwordSavedRateLimitedMessage;
+  const serverMessage = serverMessageFor(error);
+  if (serverMessage !== null) return serverMessage;
+
+  const id = readField(error, 'id');
+  const status = readField(error, 'status');
+  if (typeof id === 'string' && id.startsWith('error.token.')) return resetLinkInvalidMessage;
+  if (typeof status === 'number' && status >= 400 && status < 500) return resetLinkInvalidMessage;
+  return newPasswordUnavailableMessage;
+};

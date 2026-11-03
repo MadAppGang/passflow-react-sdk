@@ -1,29 +1,13 @@
-/* eslint-disable max-len */
-/* eslint-disable react/jsx-props-no-spreading */
-/* eslint-disable jsx-a11y/label-has-associated-control */
+import { parseToken, type Token } from '@passflow/core';
 import type { FC } from 'react';
 import * as Yup from 'yup';
-import { Button, FieldPassword, Icon } from '@/components/ui';
+import { hasFollowedOIDCRedirect } from '@/components/provider/passflow-provider';
+import { LoginScreen, type LoginScreenChrome, type LoginScreenState } from '@/components/ui';
 import { routes } from '@/context';
 import { useAppSettings, useNavigation, usePassflow, useResetPassword } from '@/hooks';
-import {
-  cn,
-  getUrlWithTokens,
-  isValidUrl,
-  passwordValidation,
-  routeToSecondFactor,
-  undefinedOnCatch,
-  useUrlParams,
-} from '@/utils';
-import { Wrapper } from '../wrapper';
-import '@/styles/index.css';
-import { parseToken, type Token } from '@passflow/core';
-import { Controller, useForm } from 'react-hook-form';
 import type { SuccessAuthRedirect } from '@/types';
-
-const initialValues = {
-  password: '',
-};
+import { getUrlWithTokens, isValidUrl, routeToSecondFactor, undefinedOnCatch, useUrlParams } from '@/utils';
+import '@/styles/index.css';
 
 const searchParamsResetPasswordSchema = Yup.object().shape({
   token: Yup.string().required(),
@@ -32,34 +16,29 @@ const searchParamsResetPasswordSchema = Yup.object().shape({
 type TResetPassword = {
   successAuthRedirect?: SuccessAuthRedirect;
   twoFactorVerifyPath?: string;
+  /** Where `Back to sign in` goes once the password is saved. */
+  signInPath?: string;
 };
 
+/**
+ * The reset link's claims. A registration continuation link (an account started by email whose code budget ran out)
+ * carries `registration_continuation` and no `redirect_url`.
+ */
 type ResetToken = Token & {
-  redirect_url: string;
+  redirect_url?: string;
+  registration_continuation?: string;
 };
 
 export const ResetPassword: FC<TResetPassword> = ({
   successAuthRedirect,
   twoFactorVerifyPath = routes.two_factor_verify.path,
+  signInPath = routes.signin.path,
 }) => {
-  const {
-    getValues,
-    control,
-    register,
-    trigger,
-    formState: { errors, isDirty, isValid },
-    clearErrors,
-    setError,
-  } = useForm({
-    defaultValues: initialValues,
-  });
-
   const passflow = usePassflow();
-  const { appSettings } = useAppSettings();
-  const { fetch, error, isError, isLoading } = useResetPassword();
+  const { fetch, error, isError, isLoading, isPasswordSaved, emailCode } = useResetPassword();
   const { navigate } = useNavigation();
   const { get } = useUrlParams();
-  const { passwordPolicy, currentStyles, isError: isErrorApp, error: errorApp, loginAppTheme } = useAppSettings();
+  const { appSettings, passwordPolicy, currentStyles, isError: isErrorApp, error: errorApp, loginAppTheme } = useAppSettings();
 
   if (isErrorApp) throw new Error(errorApp);
 
@@ -69,118 +48,95 @@ export const ResetPassword: FC<TResetPassword> = ({
 
   try {
     searchParamsResetPasswordSchema.validateSync(params, { abortEarly: false });
-  } catch (err) {
+  } catch {
     throw new Error('Invalid reset token.');
   }
 
   const { token: resetToken } = params;
+  const resetTokenData = resetToken ? (undefinedOnCatch(parseToken)(resetToken) as ResetToken | undefined) : undefined;
+  const isContinuation = Boolean(resetTokenData?.registration_continuation);
 
-  const resetTokenData = resetToken ? undefinedOnCatch(parseToken)(resetToken) : undefined;
-
-  const onSubmitHanlder = async () => {
-    const values = getValues();
-    const resetTokenType = resetTokenData as ResetToken;
-    const status = await fetch(values.password);
-    // A user with 2FA is signed in only once the second factor passes.
-    if (status && routeToSecondFactor(passflow, navigate, twoFactorVerifyPath)) return;
-    if (status) {
-      if (!isValidUrl(resetTokenType?.redirect_url ?? successAuthRedirect ?? appSettings?.defaults?.redirect))
-        navigate({ to: resetTokenType?.redirect_url ?? successAuthRedirect ?? appSettings?.defaults?.redirect });
-      else
-        window.location.href = await getUrlWithTokens(
-          passflow,
-          resetTokenType?.redirect_url ?? successAuthRedirect ?? appSettings?.defaults?.redirect,
-        );
-    }
+  // A user with 2FA is signed in only once the second factor passes; an OIDC parent's redirect wins over ours.
+  const completeSignIn = async (answerRedirectUrl?: string) => {
+    if (routeToSecondFactor(passflow, navigate, twoFactorVerifyPath)) return;
+    if (hasFollowedOIDCRedirect()) return;
+    const redirectUrl =
+      answerRedirectUrl ?? resetTokenData?.redirect_url ?? successAuthRedirect ?? appSettings?.defaults?.redirect ?? '';
+    if (!isValidUrl(redirectUrl)) navigate({ to: redirectUrl });
+    else window.location.href = await getUrlWithTokens(passflow, redirectUrl);
   };
 
-  const handlePasswordChange = async () => {
-    await trigger(['password']);
+  const savePassword = async (password: string) => {
+    // The token goes along explicitly: core would otherwise read it from the address bar, which a hash or memory
+    // router does not keep.
+    if (await fetch(password, resetToken ?? undefined)) await completeSignIn();
   };
 
-  return (
-    <Wrapper
-      title='Reset password'
-      subtitle='Let’s get you back in.'
-      className='passflow-reset-password-wrapper'
-      customCss={currentStyles?.custom_css}
-      customLogo={currentStyles?.logo_url}
-      removeBranding={loginAppTheme?.remove_passflow_logo}
-    >
-      <span className='passflow-reset-password-text'>Enter your new password below.</span>
-      <form
-        onSubmit={(e) => {
-          e.preventDefault();
-          void onSubmitHanlder();
-        }}
-        className='passflow-form passflow-reset-password-form'
-      >
-        <div className='passflow-form-container'>
-          <div className='passflow-form-field'>
-            <div className='passflow-form-field__header'>
-              <label htmlFor='password' className={cn('passflow-field-label', { 'passflow-field-label--error': isError })}>
-                New password
-              </label>
-            </div>
-            <Controller
-              name='password'
-              control={control}
-              rules={{
-                required: 'Password is required',
-                validate: (value) => {
-                  try {
-                    passwordValidation(passwordPolicy).validateSync(value);
-                    clearErrors('password');
-                    return true;
-                  } catch (err) {
-                    const passwordErrors = err as { errors: string[] };
-                    setError('password', {
-                      type: 'manual',
-                      message: passwordErrors.errors.join(', '),
-                    });
-                    return passwordErrors.errors.join(', ');
-                  }
-                },
-              }}
-              render={({ field }) => (
-                <FieldPassword
-                  {...field}
-                  {...register('password')}
-                  isError={isError}
-                  passwordPolicy={passwordPolicy}
-                  validationErrors={
-                    Object.hasOwn(errors, 'password') && errors.password?.message
-                      ? errors.password.message.split(', ')
-                      : undefined
-                  }
-                  id='password'
-                  name='password'
-                  withMessages
-                  onChange={(e) => {
-                    field.onChange(e);
-                    void handlePasswordChange();
-                  }}
-                />
-              )}
-            />
-            {isError && (
-              <div className='passflow-form-error'>
-                <Icon size='small' id='warning' type='general' className='icon-warning' />
-                <span className='passflow-form-error-text'>{error}</span>
-              </div>
-            )}
-          </div>
-        </div>
-        <Button
-          size='big'
-          variant='primary'
-          type='submit'
-          disabled={!isDirty || !isValid || isLoading}
-          className='passflow-button-reset-password'
-        >
-          Save new password
-        </Button>
-      </form>
-    </Wrapper>
-  );
+  const verifyEmailCode = async (code: string) => {
+    const answer = await emailCode.verify(code);
+    if (answer) await completeSignIn(answer.redirect_url);
+  };
+
+  const backToSignIn = () => {
+    emailCode.cancel();
+    navigate({ to: signInPath });
+  };
+
+  const chrome: LoginScreenChrome = {
+    title: isContinuation ? 'Create your password' : 'Reset password',
+    subtitle: isContinuation ? 'Finish creating your account' : 'Let’s get you back in.',
+    variant: 'reset-password',
+    customCss: currentStyles?.custom_css,
+    customLogo: currentStyles?.logo_url,
+    customLogoAlt: `${loginAppTheme?.application_name ?? 'Application'} logo`,
+    removeBranding: loginAppTheme?.remove_passflow_logo,
+  };
+
+  const { step } = emailCode;
+
+  const state: LoginScreenState =
+    step.kind === 'code'
+      ? {
+          // No resend: the reset link is spent once the password is saved.
+          kind: 'email-code',
+          message: step.message,
+          error: emailCode.error,
+          busy: emailCode.isVerifying,
+          secondaryAction: { label: 'Back to sign in', onClick: backToSignIn },
+          onSubmit: (code) => void verifyEmailCode(code),
+        }
+      : step.kind === 'link'
+        ? {
+            kind: 'status',
+            tone: 'info',
+            message: step.message,
+            primaryAction: { label: 'Back to sign in', onClick: backToSignIn },
+          }
+        : isPasswordSaved
+          ? {
+              kind: 'status',
+              tone: 'info',
+              message: error,
+              primaryAction: { label: 'Back to sign in', onClick: backToSignIn },
+            }
+          : {
+              kind: 'new-password',
+              passwordPolicy,
+              hint: isContinuation ? 'Choose a password to finish creating your account.' : 'Enter your new password below.',
+              error: isError ? error : null,
+              busy: isLoading,
+              submitLabel: isContinuation ? 'Create account' : 'Save new password',
+              onSubmit: (password) => void savePassword(password),
+            };
+
+  const heading: Pick<LoginScreenChrome, 'title' | 'subtitle'> =
+    step.kind === 'code'
+      ? { title: 'Verify your email', subtitle: 'Enter the code to finish signing in' }
+      : step.kind === 'link'
+        ? { title: 'Check your email', subtitle: undefined }
+        : isPasswordSaved
+          ? { title: 'Password saved', subtitle: undefined }
+          : { title: chrome.title, subtitle: chrome.subtitle };
+
+  return <LoginScreen chrome={{ ...chrome, ...heading }} state={state} />;
 };
