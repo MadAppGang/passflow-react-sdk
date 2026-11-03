@@ -18,7 +18,7 @@ import { useAppSettings, useNavigation, usePassflow, useProvider, useSignIn } fr
 import type { SuccessAuthRedirect } from '@/types';
 import {
   type AuthMethods,
-  authRedirectErrorMessage,
+  authRedirectErrorFrom,
   emailRegex,
   getAuthMethods,
   getIdentityLabel,
@@ -108,7 +108,7 @@ export const SignInForm: FC<TSignIn> = ({
 
   if (errorUrl) {
     console.error('[passflow] sign-in redirect returned an error', { error: errorUrl, message: messageUrl });
-    throw new Error(authRedirectErrorMessage);
+    throw new Error(authRedirectErrorFrom(errorUrl, messageUrl));
   }
 
   const { get } = useUrlParams({ invite_token: '' });

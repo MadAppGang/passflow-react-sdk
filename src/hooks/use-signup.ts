@@ -6,7 +6,7 @@ import type {
 } from '@passflow/core';
 import { useCallback, useState } from 'react';
 import type { AuthOperation, AuthUiError } from '@/types';
-import { authErrorFor } from '@/utils';
+import { authErrorFrom } from '@/utils';
 import { usePassflow } from './use-passflow';
 
 export type UseSignUpProps = () => {
@@ -50,7 +50,7 @@ export const useSignUp: UseSignUpProps = () => {
       } catch (error) {
         console.error(`[passflow] ${type} sign-up failed`, error);
         setIsError(true);
-        setError(authErrorFor('sign-up', type));
+        setError(authErrorFrom(error, 'sign-up', type));
         cleanup();
         return false;
       } finally {

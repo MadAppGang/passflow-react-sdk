@@ -1,7 +1,6 @@
 import { useCallback, useState } from 'react';
+import { invitationJoinErrorFrom } from '@/utils';
 import { usePassflow } from './use-passflow';
-
-const invitationJoinError = "We couldn't accept this invitation. Try again.";
 
 export type UseJoinInviteProps = () => {
   fetch: (token: string) => Promise<boolean>;
@@ -28,7 +27,7 @@ export const useJoinInvite: UseJoinInviteProps = () => {
       } catch (error) {
         console.error('[passflow] accepting invitation failed', error);
         setIsError(true);
-        setErrorMessage(invitationJoinError);
+        setErrorMessage(invitationJoinErrorFrom(error));
         return false;
       } finally {
         setIsLoading(false);
