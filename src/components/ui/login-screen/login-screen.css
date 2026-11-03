@@ -230,6 +230,17 @@
   font-weight: var(--passflow-medium);
 }
 
+.passflow-login-screen-info {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--passflow-spacing-3);
+}
+
+.passflow-login-screen-info-icon {
+  color: var(--passflow-primary-color);
+}
+
 .passflow-login-screen-spinner {
   width: 26px;
   height: 26px;

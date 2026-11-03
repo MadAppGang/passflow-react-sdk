@@ -1,5 +1,5 @@
 import { OTPInput, REGEXP_ONLY_DIGITS, REGEXP_ONLY_DIGITS_AND_CHARS, type SlotProps } from 'input-otp';
-import type { FC } from 'react';
+import type { FC, Ref } from 'react';
 import { cn } from '@/utils';
 import '@/styles/index.css';
 import './field-otp.css';
@@ -26,6 +26,8 @@ type FieldOtpBaseProps = {
   /** Id of the element that describes it, such as the error message. */
   describedBy?: string;
   autoFocus?: boolean;
+  /** The one real `<input>`, so a screen can return focus to it after the field was locked. */
+  ref?: Ref<HTMLInputElement>;
 };
 
 /**
@@ -89,11 +91,13 @@ export const FieldOtp: FC<FieldOtpProps> = ({
   labelledBy,
   describedBy,
   autoFocus = false,
+  ref,
 }) => {
   const { pattern, inputMode } = CHARSETS[charset];
 
   const input = (
     <OTPInput
+      ref={ref}
       id={id}
       name={name}
       maxLength={length}

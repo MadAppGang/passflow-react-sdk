@@ -89,7 +89,16 @@ export const Button: FC<TButton> = ({
     'passflow-button--as-icon': asIcon,
   };
 
+  // `aria-disabled` is the focusable disabled state: the button keeps focus (so a
+  // control that locks itself after a press, like a resend countdown, does not drop
+  // the keyboard user), looks disabled, and ignores presses.
+  const ariaDisabled = rest['aria-disabled'] === true || rest['aria-disabled'] === 'true';
+
   const handleClick = (e: MouseEvent<HTMLButtonElement>) => {
+    if (ariaDisabled) {
+      e.preventDefault();
+      return;
+    }
     const rect = e.currentTarget.getBoundingClientRect();
     const rippleSize = Math.max(rect.width, rect.height);
     const x = e.clientX - rect.left - rippleSize / 2;

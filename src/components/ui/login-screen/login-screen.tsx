@@ -3,8 +3,10 @@ import { LoginCodeEntry } from './code-entry';
 import { LoginConsent } from './consent';
 import { LoginCredentials } from './credentials';
 import { LoginDeviceApproval } from './device-approval';
+import { LoginEmailCode } from './email-code';
 import { LoginGeneralError } from './general-error';
 import { LoginInvitation } from './invitation';
+import { LoginNewPassword } from './new-password';
 import { LoginPasskeyProgress } from './passkey-progress';
 import { LoginSecondFactor } from './second-factor';
 import { LoginScreenShell } from './shell';
@@ -18,6 +20,10 @@ export const LoginScreen: FC<LoginScreenProps> = ({ chrome, state }) => {
         return <LoginCredentials {...state} />;
       case 'code-entry':
         return <LoginCodeEntry {...state} />;
+      case 'email-code':
+        return <LoginEmailCode {...state} />;
+      case 'new-password':
+        return <LoginNewPassword {...state} />;
       case 'passkey-progress':
         return <LoginPasskeyProgress {...state} />;
       case 'device-approval':
@@ -40,7 +46,9 @@ export const LoginScreen: FC<LoginScreenProps> = ({ chrome, state }) => {
       ? 'passflow-error-wrapper'
       : chrome.variant === 'sign-in'
         ? 'passflow-signin-wrapper'
-        : undefined;
+        : chrome.variant === 'reset-password'
+          ? 'passflow-reset-password-wrapper'
+          : undefined;
 
   return (
     <LoginScreenShell

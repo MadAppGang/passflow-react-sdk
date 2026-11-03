@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { fn } from 'storybook/test';
+import { expect, fn, userEvent, within } from 'storybook/test';
 import { Button } from '.';
 
 /**
@@ -45,6 +45,21 @@ export const Warning: Story = {
 
 export const Clean: Story = {
   args: { variant: 'clean', children: 'Cancel' },
+};
+
+/**
+ * Disabled but still focusable (`aria-disabled`): looks disabled and ignores
+ * presses, yet keeps keyboard focus. For a control that locks itself right after
+ * it is pressed, such as a resend countdown.
+ */
+export const CleanAriaDisabled: Story = {
+  args: { variant: 'clean', children: 'Resend code', 'aria-disabled': true },
+  play: async ({ args, canvasElement }) => {
+    const button = within(canvasElement).getByRole('button', { name: 'Resend code' });
+    await userEvent.click(button);
+    await expect(args.onClick).not.toHaveBeenCalled();
+    await expect(button).toHaveAttribute('aria-disabled', 'true');
+  },
 };
 
 /**

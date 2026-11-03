@@ -4,7 +4,11 @@ import type { AuthUiError, DefaultMethod } from '@/types';
 export type LoginScreenChrome = {
   title: string;
   subtitle?: string;
-  variant?: 'sign-in';
+  /**
+   * `sign-in` and `reset-password` keep the wrapper class (`passflow-signin-wrapper`,
+   * `passflow-reset-password-wrapper`) that an app's custom CSS may target.
+   */
+  variant?: 'sign-in' | 'reset-password';
   customCss?: string;
   customLogo?: string;
   customLogoAlt?: string;
@@ -87,6 +91,64 @@ export type LoginCodeEntryState = {
   submitLabel?: string;
   testId?: string;
   onSubmit: (code: string) => void;
+};
+
+/** The resend control of the emailed-code step. Omitted when the code cannot be sent again. */
+export type LoginEmailCodeResend = {
+  /** Seconds the control waits before it can be pressed. Default 30; restarts on every press and on `restartKey` change. */
+  cooldownSeconds?: number;
+  /** Changes when a new code was sent (pass the challenge id): restarts the cooldown and clears the typed code. */
+  restartKey?: string;
+  /** A resend is in flight. */
+  busy?: boolean;
+  /** Default `Resend code`. */
+  label?: string;
+  onResend: () => void;
+};
+
+/** The way back out of the step, such as `Use a different email` or `Back to sign in`. */
+export type LoginScreenAction = {
+  label: string;
+  onClick: () => void;
+};
+
+/**
+ * The emailed verification code step: the server's prompt, a row of code boxes,
+ * Verify, Resend and a way back.
+ */
+export type LoginEmailCodeState = {
+  kind: 'email-code';
+  /** The server's prompt, such as "We sent a code to a***@example.com."; it also names the code field. */
+  message: string;
+  /** Digits in the code. Default 6. */
+  length?: number;
+  /** The server's answer to a failed verify or resend; clears the typed code. */
+  error?: string | null;
+  /** A verify is in flight: the code, Resend and the way back are locked. */
+  busy?: boolean;
+  /** Default `Verify`. */
+  submitLabel?: string;
+  resend?: LoginEmailCodeResend;
+  secondaryAction?: LoginScreenAction;
+  testId?: string;
+  onSubmit: (code: string) => void;
+};
+
+/** Choosing a new password: for a reset, or to finish an account started by email. */
+export type LoginNewPasswordState = {
+  kind: 'new-password';
+  passwordPolicy: PassflowPasswordPolicySettings | null;
+  /** Default `New password`. */
+  label?: string;
+  /** Default `Enter your new password below.` */
+  hint?: string;
+  error?: string | null;
+  /** The password is being saved: the field and the button are locked. */
+  busy?: boolean;
+  /** Default `Save new password`. */
+  submitLabel?: string;
+  testId?: string;
+  onSubmit: (password: string) => void;
 };
 
 export type LoginPasskeyProgressState = {
@@ -189,7 +251,8 @@ export type LoginConsentState = {
 
 export type LoginStatusState = {
   kind: 'status';
-  tone: 'success' | 'error' | 'disabled';
+  /** `info` is a neutral notice, such as "check your email"; it keeps the normal logo. */
+  tone: 'success' | 'error' | 'disabled' | 'info';
   message: string;
   detail?: string;
   recoverable?: boolean;
@@ -205,6 +268,8 @@ export type LoginStatusState = {
 export type LoginScreenState =
   | LoginCredentialsState
   | LoginCodeEntryState
+  | LoginEmailCodeState
+  | LoginNewPasswordState
   | LoginPasskeyProgressState
   | LoginDeviceApprovalState
   | LoginSecondFactorState
