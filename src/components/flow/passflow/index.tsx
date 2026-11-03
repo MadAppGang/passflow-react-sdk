@@ -18,7 +18,7 @@ import { ErrorComponent } from '@/components/error';
 import { withError } from '@/hocs';
 import { useNavigation } from '@/hooks';
 import type { SuccessAuthRedirect } from '@/types';
-import { authRedirectErrorMessage, getUrlErrors } from '@/utils';
+import { authRedirectErrorFrom, getUrlErrors } from '@/utils';
 import {
   createBrowserHistory,
   createHashHistory,
@@ -296,7 +296,8 @@ const PassflowWrapper: FC<PassflowProps> = ({
       error: errorUrlSuccess,
       message: messageUrlSuccess,
     });
-    throw new Error(authRedirectErrorMessage);
+    // A federated redirect lands here before SignIn / SignUp mount: allow-listed ids keep the server's localized text.
+    throw new Error(authRedirectErrorFrom(errorUrlSuccess, messageUrlSuccess));
   }
 
   if (error) throw new Error(error);

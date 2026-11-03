@@ -67,12 +67,27 @@ const readField = (value: unknown, field: string): unknown =>
   typeof value === 'object' && value !== null ? (value as Record<string, unknown>)[field] : undefined;
 
 /**
+ * The `{ id, message, status }` body of a server error. Core converts most failures to a `PassflowError`, but it
+ * rejects a 429 on a non-idempotent request (`POST /auth/validate`, `/auth/register`) with the raw axios error, whose
+ * body sits at `response.data.error`; read that shape too so a rate limit is classified by its id like any other.
+ */
+const readServerError = (error: unknown): unknown => {
+  if (typeof readField(error, 'id') === 'string') return error;
+  const response = readField(error, 'response');
+  const body = readField(readField(response, 'data'), 'error');
+  if (typeof body !== 'object' || body === null) return error;
+  return { status: readField(response, 'status'), ...body };
+};
+
+/**
  * The server's own message for an allow-listed error id, trimmed; `null` for anything else. Duck-typed on
- * `{ id, message }`, so it reads a `PassflowError` as well as a plain object such as a redirect's query.
+ * `{ id, message }`, so it reads a `PassflowError`, a raw axios rejection's body, or a plain object such as a
+ * redirect's query.
  */
 export const serverMessageFor = (error: unknown): string | null => {
-  const id = readField(error, 'id');
-  const message = readField(error, 'message');
+  const serverError = readServerError(error);
+  const id = readField(serverError, 'id');
+  const message = readField(serverError, 'message');
   if (typeof id !== 'string' || !SERVER_MESSAGE_ERROR_IDS.has(id)) return null;
   if (typeof message !== 'string') return null;
   const trimmed = message.trim();
@@ -102,19 +117,17 @@ export const emailCodeUnavailableMessage = "We couldn't check the code. Try agai
 export const emailCodeRestartMessage = "We couldn't verify the code. Go back and start again.";
 
 /**
- * Error copy for the emailed-code step (`/auth/validate`, resend): allow-listed ids show the server message; an
- * unknown or spent challenge asks for a new code; a server or network failure asks to retry; anything else (401, a
- * missing PKCE verifier) asks to start again.
+ * Error copy for the emailed-code step (`/auth/validate`, resend): allow-listed ids (wrong, expired or spent code,
+ * rate limit, ...) show the server message; `error.not.found` (unknown or spent challenge) asks for a new code; a
+ * request that got no answer at all (offline, CORS, timeout) asks to retry; every other server answer (401, a missing
+ * PKCE verifier, an unlisted 4xx or a 5xx) asks to start again, and the screen keeps its way back to the form.
  */
 export const emailCodeErrorMessage = (error: unknown): string => {
   const serverMessage = serverMessageFor(error);
   if (serverMessage !== null) return serverMessage;
 
-  const id = readField(error, 'id');
-  const status = readField(error, 'status');
-  if (id === 'error.not.found' || status === 400) return emailCodeInvalidMessage;
-  if (typeof status === 'number' && status >= 500) return emailCodeUnavailableMessage;
-  // An axios failure with no response (offline, CORS, timeout) is not converted to a PassflowError by core.
+  if (readField(readServerError(error), 'id') === 'error.not.found') return emailCodeInvalidMessage;
+  // An axios failure with no response is not converted to a PassflowError by core: nothing was decided server-side.
   if (readField(error, 'isAxiosError') === true && readField(error, 'response') === undefined) {
     return emailCodeUnavailableMessage;
   }
@@ -130,8 +143,10 @@ export const passwordSavedRateLimitedMessage =
  * A 429 from `/auth/password/change`: the password was already changed, only the emailed code that should follow
  * was refused, so the screen must not ask for the password again.
  */
-export const isPasswordSavedRateLimit = (error: unknown): boolean =>
-  readField(error, 'id') === 'error.verification.code.rate_limited' || readField(error, 'status') === 429;
+export const isPasswordSavedRateLimit = (error: unknown): boolean => {
+  const serverError = readServerError(error);
+  return readField(serverError, 'id') === 'error.verification.code.rate_limited' || readField(serverError, 'status') === 429;
+};
 
 /**
  * Error copy for the new-password screen (reset link or registration continuation): allow-listed ids show the server
@@ -143,8 +158,9 @@ export const newPasswordErrorMessage = (error: unknown): string => {
   const serverMessage = serverMessageFor(error);
   if (serverMessage !== null) return serverMessage;
 
-  const id = readField(error, 'id');
-  const status = readField(error, 'status');
+  const serverError = readServerError(error);
+  const id = readField(serverError, 'id');
+  const status = readField(serverError, 'status');
   if (typeof id === 'string' && id.startsWith('error.token.')) return resetLinkInvalidMessage;
   if (typeof status === 'number' && status >= 400 && status < 500) return resetLinkInvalidMessage;
   return newPasswordUnavailableMessage;
