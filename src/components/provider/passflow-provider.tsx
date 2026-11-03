@@ -1,6 +1,7 @@
 import { FETCH_PRIORITY_OIDC, Passflow, type PassflowConfig, registerFetchMiddleware } from '@passflow/core';
 import React, { type FC, type ReactNode, useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react';
 import { UpgradeProvider, type UpgradeProviderProps } from '@/components/provider/upgrade-provider';
+import { useDisposeOnReplace } from '@/components/provider/use-dispose-on-replace';
 import { ContinuingStatus } from '@/components/ui/continuing-status';
 import {
   AuthProvider,
@@ -635,6 +636,7 @@ export const PassflowProvider: FC<PassflowProviderProps> = ({
   const [landedWithTwoFactorToken] = useState(urlCarriesTwoFactorToken);
 
   const passflow = useMemo(() => new Passflow(state), [state]);
+  useDisposeOnReplace(passflow);
 
   // OIDC AuthFlow integration: the interceptor injects
   // parent_challenge_id on outbound auth POSTs + follows
