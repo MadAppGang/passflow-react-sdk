@@ -1,8 +1,6 @@
-import { PassflowEvent, type PassflowSubscriber } from '@passflow/core';
+import { PassflowEvent, type PassflowSubscriber, type SessionExpiredReason } from '@passflow/core';
 import { useEffect, useState } from 'react';
 import { usePassflow } from './use-passflow';
-
-export type SessionExpiredReason = 'refresh_failed' | 'token_invalid' | 'logged_out';
 
 export interface UseSessionExpiredOptions {
   /**
@@ -30,9 +28,13 @@ export interface UseSessionExpiredResult {
 /**
  * Hook to handle session expiration events.
  *
- * When the SDK detects that the session is invalid (e.g., refresh token expired),
- * it emits a SessionExpired event. This hook allows you to react to that event
- * and redirect users to your login page.
+ * Core emits SessionExpired only when the session has really ended: the last
+ * auth strike (`'refresh_failed'`), no successor token pair in time
+ * (`'successor_timeout'`), or another user's tokens in storage
+ * (`'identity_changed'`). A transient refresh failure (network, 5xx) keeps the
+ * session and is reported as RefreshFailing / RefreshRecovered instead; see
+ * `useRefreshStatus`. This hook lets you react to the real end and redirect
+ * users to your login page.
  *
  * @example
  * ```tsx

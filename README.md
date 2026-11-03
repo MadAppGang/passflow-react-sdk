@@ -46,6 +46,8 @@ This is a SDK for react application.
     - [useJoinInvite](#usejoininvite)
     - [useLogout](#uselogout)
     - [usePasswordlessComplete](#usepasswordlesscomplete)
+    - [useSessionExpired](#usesessionexpired)
+    - [useRefreshStatus](#userefreshstatus)
 
 to install just type:
 
@@ -947,3 +949,43 @@ const { fetch, isLoading, isError, error } = usePasswordlessComplete();
 | isLoading | `boolean` | Loading state |
 | isError | `boolean` | Error state |
 | error | `string` | Error message |
+
+### useSessionExpired
+Hook for reacting to the end of a session, for example to redirect to your login page.
+
+```typescript
+const { isSessionExpired, expiredReason, resetSessionExpired } = useSessionExpired({
+  onSessionExpired: (reason) => navigate('/signin'),
+});
+```
+
+`SessionExpired` fires only when the session has really ended: the last auth strike (`'refresh_failed'`), no successor token pair in time (`'successor_timeout'`), or another user's tokens in storage (`'identity_changed'`). A transient refresh failure (network error, 5xx) keeps the session and shows up as `RefreshFailing` / `RefreshRecovered` instead; use [useRefreshStatus](#userefreshstatus) for that. The state resets on `SignIn` and `Register`.
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| onSessionExpired | `(reason: SessionExpiredReason) => void` (optional) | Called when the session ends |
+
+**Returns:**
+
+| Property | Type | Description |
+|----------|------|-------------|
+| isSessionExpired | `boolean` | True once the session has ended |
+| expiredReason | `SessionExpiredReason \| null` | Why it ended (`SessionExpiredReason` is exported from `@passflow/core`) |
+| resetSessionExpired | `() => void` | Clears the expired state |
+
+### useRefreshStatus
+Hook for showing a "connection trouble" notice while token refresh is failing transiently. The session is kept during the episode; show the notice on `RefreshFailing` and hide it on `RefreshRecovered`.
+
+```typescript
+const { isFailing, since, nextRetryAt } = useRefreshStatus();
+```
+
+Set by `RefreshFailing`. Cleared by `RefreshRecovered`, `SessionExpired`, `SignOut`, `SignIn` and `Register`. The episode is known only from events, so a component that mounts after `RefreshFailing` starts idle: call the hook in a component that lives as long as the app, near `PassflowProvider`.
+
+**Returns:**
+
+| Property | Type | Description |
+|----------|------|-------------|
+| isFailing | `boolean` | True inside a transient-failure episode |
+| since | `number \| null` | Epoch ms of the episode's first failure |
+| nextRetryAt | `number \| null` | Epoch ms of the pending retry, when known |

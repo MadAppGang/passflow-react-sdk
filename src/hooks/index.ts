@@ -26,10 +26,11 @@ export { useOutsideClick } from './use-outsideclick';
 export { usePassflow } from './use-passflow';
 export { type UsePasswordlessCompleteProps, usePasswordlessComplete } from './use-passwordless-complete';
 export { type UseProviderProps, useProvider } from './use-provider';
+export { type UseRefreshStatusResult, useRefreshStatus } from './use-refresh-status';
 export { type UseResetPasswordProps, useResetPassword } from './use-reset-password';
 // Session management hooks
+// `SessionExpiredReason` comes from @passflow/core (re-exported by the package root).
 export {
-  type SessionExpiredReason,
   type UseSessionExpiredOptions,
   type UseSessionExpiredResult,
   useSessionExpired,
