@@ -114,6 +114,25 @@ test.describe('invitation join flow', () => {
     await expect(page.getByRole('button', { name: 'Accept invitation' })).toBeEnabled();
   });
 
+  test('REQ-13 invitation join displays its localized domain policy message', async ({ page }) => {
+    const message = 'Votre adresse ne peut pas rejoindre ce domaine.';
+    await page.route('**/user/tenant/join', (route) => route.fulfill({
+      status: 403,
+      json: { error: {
+        id: 'error.invite.email.domain_not_allowed',
+        message,
+        status: 403,
+        location: '/user/tenant/join',
+        time: '2026-11-03T18:00:00Z',
+      } },
+    }));
+    await page.goto(`http://localhost:5173/web/invitation?appId=${APP_ID}&invite_token=${VALID_INVITE_TOKEN}`);
+    await page.getByRole('button', { name: 'Accept invitation' }).click();
+    await expect(page.getByRole('alert')).toHaveText(message);
+    await expect(page.getByRole('button', { name: 'Accept invitation' })).toBeEnabled();
+    await expect(page).toHaveURL(/\/web\/invitation\?/);
+  });
+
   test('invitation join flow with valid token to switch account', async ({ page }) => {
     await page.goto(`http://localhost:5173/web/invitation?appId=${APP_ID}&invite_token=${VALID_INVITE_TOKEN}`);
 

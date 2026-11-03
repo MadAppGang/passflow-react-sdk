@@ -4,7 +4,15 @@ import { type FC, useState } from 'react';
 import { expect, fn, userEvent, within } from 'storybook/test';
 import { deviceErrorOfType } from '@/utils';
 import { LoginScreen } from './login-screen';
-import type { LoginConsentState, LoginCredentialsState, LoginMethodConfig, LoginScreenProps } from './types';
+import type {
+  LoginConsentState,
+  LoginCredentialsState,
+  LoginEmailCodeState,
+  LoginMethodConfig,
+  LoginNewPasswordState,
+  LoginScreenChrome,
+  LoginScreenProps,
+} from './types';
 
 const passwordPolicy: PassflowPasswordPolicySettings = {
   restrict_min_password_length: true,
@@ -38,6 +46,11 @@ const handlers = {
   onToggleScope: fn(),
   onAllow: fn(),
   onDeny: fn(),
+  onEmailCode: fn(),
+  onResendCode: fn(),
+  onLeaveEmailCode: fn(),
+  onNewPassword: fn(),
+  onBackToSignIn: fn(),
 };
 
 type MethodOptions = {
@@ -812,4 +825,184 @@ const ConsentPlayground: FC = () => {
 export const ConsentInteractive: Story = {
   args: story(consent(), consentChrome),
   render: () => <ConsentPlayground />,
+};
+
+// The emailed verification code step: sign-up, sign-in and reset-password all show it
+// when the server holds the request until the email address is proven.
+
+const emailCodeChrome: LoginScreenChrome = {
+  title: 'Check your email',
+  subtitle: 'Enter the code to finish creating your account',
+};
+
+const emailCodeMessage = 'We sent a code to a***@example.com.';
+
+const emailCode = (overrides: Partial<LoginEmailCodeState> = {}): LoginEmailCodeState => ({
+  kind: 'email-code',
+  message: emailCodeMessage,
+  resend: { cooldownSeconds: 30, restartKey: 'challenge-1', onResend: handlers.onResendCode },
+  secondaryAction: { label: 'Use a different email', onClick: handlers.onLeaveEmailCode },
+  testId: 'email-code-step',
+  onSubmit: handlers.onEmailCode,
+  ...overrides,
+});
+
+const codeField = (canvasElement: HTMLElement) => within(canvasElement).getByRole('textbox', { name: emailCodeMessage });
+
+/** The code was just sent: Resend counts down; six digits submit by themselves. */
+export const EmailCodeEntry: Story = {
+  args: story(emailCode(), emailCodeChrome),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.getByRole('button', { name: 'Resend code' })).toHaveAttribute('aria-disabled', 'true');
+    await expect(canvas.getByRole('button', { name: 'Verify' })).toBeDisabled();
+    await userEvent.type(codeField(canvasElement), '123456');
+    await expect(handlers.onEmailCode).toHaveBeenCalledWith('123456');
+  },
+};
+
+/** The cooldown is over: Resend can be pressed, and counts down again after it is. */
+export const EmailCodeResendReady: Story = {
+  args: story(
+    emailCode({ resend: { cooldownSeconds: 0, restartKey: 'challenge-1', onResend: handlers.onResendCode } }),
+    emailCodeChrome,
+  ),
+  play: async ({ canvasElement }) => {
+    const resend = within(canvasElement).getByRole('button', { name: 'Resend code' });
+    await expect(resend).toHaveAttribute('aria-disabled', 'false');
+    await userEvent.click(resend);
+    await expect(handlers.onResendCode).toHaveBeenCalledTimes(1);
+  },
+};
+
+/** A new code is being requested. */
+export const EmailCodeResending: Story = {
+  args: story(
+    emailCode({ resend: { cooldownSeconds: 0, busy: true, restartKey: 'challenge-1', onResend: handlers.onResendCode } }),
+    emailCodeChrome,
+  ),
+};
+
+/** The code is being checked: the code, Resend and the way back are all locked. */
+export const EmailCodeVerifying: Story = {
+  args: story(emailCode({ busy: true }), emailCodeChrome),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(codeField(canvasElement)).toBeDisabled();
+    await expect(canvas.getByRole('button', { name: 'Verifying…' })).toBeDisabled();
+    await expect(canvas.getByRole('button', { name: 'Resend code' })).toHaveAttribute('aria-disabled', 'true');
+    await expect(canvas.getByRole('button', { name: 'Use a different email' })).toBeDisabled();
+  },
+};
+
+/** The server rejected the code: its message is shown and the boxes are empty for the next try. */
+export const EmailCodeWrongCode: Story = {
+  args: story(emailCode({ error: 'The code is not match, please check it and try again.' }), emailCodeChrome),
+  play: async ({ canvasElement }) => {
+    const field = codeField(canvasElement);
+    await expect(field).toHaveAttribute('aria-invalid', 'true');
+    await expect(field).toHaveValue('');
+    await expect(within(canvasElement).getByRole('alert')).toHaveTextContent(
+      'The code is not match, please check it and try again.',
+    );
+  },
+};
+
+/** Too many codes were asked for: the server's message, and Resend counts down again. */
+export const EmailCodeRateLimited: Story = {
+  args: story(
+    emailCode({ error: 'Too many verification codes were requested. Please wait a few minutes and try again.' }),
+    emailCodeChrome,
+  ),
+};
+
+/** The reset-password step: the code cannot be sent again, so there is no Resend, only the way back. */
+export const EmailCodeNoResend: Story = {
+  args: story(
+    emailCode({
+      resend: undefined,
+      secondaryAction: { label: 'Back to sign in', onClick: handlers.onBackToSignIn },
+    }),
+    {
+      title: 'Verify your email',
+      subtitle: 'Your password was changed. Enter the code to sign in.',
+      variant: 'reset-password',
+    },
+  ),
+};
+
+export const EmailCodeDarkTheme: Story = {
+  args: story(emailCode(), emailCodeChrome),
+  globals: { theme: 'Dark' },
+};
+
+/** The server sent a link instead of a code: a neutral notice and the way back, nothing to type. */
+export const CheckYourEmail: Story = {
+  args: story(
+    {
+      kind: 'status',
+      tone: 'info',
+      message: 'We sent a link to a***@example.com. Follow it to choose your password and finish signing up.',
+      primaryAction: { label: 'Back to sign up', onClick: handlers.onLeaveEmailCode },
+    },
+    { title: 'Check your email' },
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.getByRole('status')).toHaveTextContent('We sent a link to a***@example.com.');
+    await expect(canvas.queryByRole('textbox')).toBeNull();
+  },
+};
+
+const resetChrome: LoginScreenChrome = {
+  title: 'Reset password',
+  subtitle: 'Let’s get you back in.',
+  variant: 'reset-password',
+};
+
+const newPassword = (overrides: Partial<LoginNewPasswordState> = {}): LoginNewPasswordState => ({
+  kind: 'new-password',
+  passwordPolicy,
+  testId: 'new-password',
+  onSubmit: handlers.onNewPassword,
+  ...overrides,
+});
+
+/** A new password, checked against the policy as it is typed. */
+export const NewPassword: Story = {
+  args: story(newPassword(), resetChrome),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await userEvent.type(canvas.getByLabelText('New password'), 'Str0ngPassword');
+    await userEvent.click(canvas.getByRole('button', { name: 'Save new password' }));
+    await expect(handlers.onNewPassword).toHaveBeenCalledWith('Str0ngPassword');
+  },
+};
+
+/** The password does not meet the policy yet: the list says what is missing and Save stays locked. */
+export const NewPasswordInvalid: Story = {
+  args: story(newPassword(), resetChrome),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await userEvent.type(canvas.getByLabelText('New password'), 'short');
+    await expect(canvas.getByRole('button', { name: 'Save new password' })).toBeDisabled();
+  },
+};
+
+/** The server refused the password: its message, next to the field. */
+export const NewPasswordError: Story = {
+  args: story(newPassword({ error: 'This reset link has expired. Ask for a new one.' }), resetChrome),
+};
+
+export const NewPasswordSaving: Story = {
+  args: story(newPassword({ busy: true }), resetChrome),
+};
+
+/** The link from a sign-up that ran out of codes: choosing the password creates the account. */
+export const CreateAccountPassword: Story = {
+  args: story(newPassword({ hint: 'Choose a password to finish creating your account.', submitLabel: 'Create account' }), {
+    title: 'Create your password',
+    subtitle: 'Finish creating your account',
+    variant: 'reset-password',
+  }),
 };

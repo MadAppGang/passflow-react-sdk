@@ -39,8 +39,23 @@ vi.mock('@/hooks', () => ({
     error: '',
     loginAppTheme: null,
   }),
-  useSignIn: () => ({ fetch: signIn, isError: false, error: '', reset: vi.fn(), isLoading: false }),
-  useSignUp: () => ({ fetch: signUp, isError: false, error: '', reset: vi.fn(), isLoading: false }),
+  // REQ-20: additive hook contract; credentials are shown only while no email step is active.
+  useSignIn: () => ({
+    fetch: signIn,
+    isError: false,
+    error: '',
+    reset: vi.fn(),
+    isLoading: false,
+    emailCode: { step: { kind: 'none' } },
+  }),
+  useSignUp: () => ({
+    fetch: signUp,
+    isError: false,
+    error: '',
+    reset: vi.fn(),
+    isLoading: false,
+    emailCode: { step: { kind: 'none' } },
+  }),
 }));
 
 import { SignInForm } from '../signin';

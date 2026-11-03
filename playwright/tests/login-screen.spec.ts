@@ -53,7 +53,8 @@ const auditStory = async (page: Page) => {
 
 test.describe('LoginScreen Storybook catalog', () => {
   test('renders and audits every catalogued state', async ({ page, request }) => {
-    test.setTimeout(120_000);
+    // REQ-18: allow index loading first; below, budget each catalogued story independently.
+    test.setTimeout(60_000);
     const response = await request.get(`${storybookUrl}/index.json`);
     expect(response.ok()).toBe(true);
 
@@ -62,7 +63,9 @@ test.describe('LoginScreen Storybook catalog', () => {
       .filter((entry) => entry.type === 'story' && entry.title === storyTitle)
       .sort((left, right) => left.name.localeCompare(right.name));
 
-    expect(stories.length).toBeGreaterThanOrEqual(38);
+    expect(stories.length).toBeGreaterThanOrEqual(76);
+    // Render + axe can compete with parallel workers. Grow with the catalog, not a fixed 120 s.
+    test.setTimeout(60_000 + stories.length * 10_000);
 
     for (const story of stories) {
       await test.step(story.name, async () => {

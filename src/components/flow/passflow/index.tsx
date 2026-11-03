@@ -18,7 +18,7 @@ import { ErrorComponent } from '@/components/error';
 import { withError } from '@/hocs';
 import { useNavigation } from '@/hooks';
 import type { SuccessAuthRedirect } from '@/types';
-import { authRedirectErrorMessage, getUrlErrors } from '@/utils';
+import { authRedirectErrorFrom, getUrlErrors } from '@/utils';
 import {
   createBrowserHistory,
   createHashHistory,
@@ -248,7 +248,13 @@ const FlowScreenView: FC<FlowScreenViewProps> = ({
     case 'forgot_password_success':
       return <ForgotPasswordSuccess />;
     case 'reset_password':
-      return <ResetPassword successAuthRedirect={successAuthRedirect} twoFactorVerifyPath={paths.two_factor_verify} />;
+      return (
+        <ResetPassword
+          successAuthRedirect={successAuthRedirect}
+          twoFactorVerifyPath={paths.two_factor_verify}
+          signInPath={paths.signin}
+        />
+      );
     case 'invitation':
       return <InvitationJoin successAuthRedirect={successAuthRedirect} signInPath={paths.signin} signUpPath={paths.signup} />;
     case 'two_factor_verify':
@@ -290,7 +296,8 @@ const PassflowWrapper: FC<PassflowProps> = ({
       error: errorUrlSuccess,
       message: messageUrlSuccess,
     });
-    throw new Error(authRedirectErrorMessage);
+    // A federated redirect lands here before SignIn / SignUp mount: allow-listed ids keep the server's localized text.
+    throw new Error(authRedirectErrorFrom(errorUrlSuccess, messageUrlSuccess));
   }
 
   if (error) throw new Error(error);

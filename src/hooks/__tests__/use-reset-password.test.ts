@@ -19,6 +19,33 @@ describe('useResetPassword', () => {
     (usePassflow as any).mockReturnValue(mockPassflow);
   });
 
+  for (const kind of ['code', 'link'] as const) {
+    it(`REQ-20 returns false with the public ${kind} step instead of authenticating`, async () => {
+      const message = kind === 'code' ? 'We sent a code.' : 'Follow the link in your email.';
+      mockPassflow.resetPassword.mockResolvedValue({
+        email_verification_required: true,
+        message,
+        ...(kind === 'code' ? { challenge_id: 'reset-challenge' } : {}),
+      });
+      const { result } = renderHook(() => useResetPassword());
+      expect(result.current.emailCode.step).toEqual({ kind: 'none' });
+      let completed: boolean | undefined;
+      await act(async () => {
+        completed = await result.current.fetch('Str0ngPassword!724');
+      });
+
+      expect(completed).toBe(false);
+      expect(result.current.emailCode.step).toEqual(
+        kind === 'code' ? { kind, challengeId: 'reset-challenge', message } : { kind, message },
+      );
+      expect(result.current.isLoading).toBe(false);
+      expect(result.current.isError).toBe(false);
+      expect(result.current.error).toBe('');
+
+      // Navigation/cancellation of the screen is exercised in Playwright, not via private hook state.
+    });
+  }
+
   it('should successfully reset password', async () => {
     mockPassflow.resetPassword.mockResolvedValue(undefined);
 
@@ -58,9 +85,10 @@ describe('useResetPassword', () => {
 
     expect(resetResult).toBe(false);
     expect(result.current.isError).toBe(true);
-    expect(result.current.error).toBe(errorMessage);
-    // Note: The hook doesn't set isLoading to false in the error case (a potential bug)
-    expect(result.current.isLoading).toBe(true);
+    // REQ-17: an unlisted raw error is not user-facing copy.
+    expect(result.current.error).toBe("We couldn't save your password. Try again.");
+    // REQ-17: failed saves must not leave the caller in a permanently loading state.
+    expect(result.current.isLoading).toBe(false);
   });
 
   it('should set loading state during password reset', async () => {
@@ -109,7 +137,8 @@ describe('useResetPassword', () => {
     });
 
     expect(result.current.isError).toBe(true);
-    expect(result.current.error).toBe(errorMessage);
+    // REQ-17: an unlisted raw error is not user-facing copy.
+    expect(result.current.error).toBe("We couldn't save your password. Try again.");
 
     // Reset the state
     act(() => {
@@ -137,7 +166,8 @@ describe('useResetPassword', () => {
 
     expect(resetResult).toBe(false);
     expect(result.current.isError).toBe(true);
-    expect(result.current.error).toBe(errorMessage);
+    // REQ-17: an unlisted raw error is not user-facing copy.
+    expect(result.current.error).toBe("We couldn't save your password. Try again.");
   });
 
   it('should handle network errors during password reset', async () => {
@@ -154,6 +184,7 @@ describe('useResetPassword', () => {
 
     expect(resetResult).toBe(false);
     expect(result.current.isError).toBe(true);
-    expect(result.current.error).toBe(errorMessage);
+    // REQ-17: an unlisted raw error is not user-facing copy.
+    expect(result.current.error).toBe("We couldn't save your password. Try again.");
   });
 });

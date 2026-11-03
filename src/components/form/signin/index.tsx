@@ -11,14 +11,20 @@ import type { FC } from 'react';
 import { useMemo } from 'react';
 import { ErrorComponent } from '@/components/error';
 import { hasFollowedOIDCRedirect, readParentChallengeIdFromURL } from '@/components/provider/passflow-provider';
-import { type LoginCredentialsValues, type LoginMethodConfig, LoginScreen } from '@/components/ui';
+import {
+  type LoginCredentialsValues,
+  type LoginMethodConfig,
+  LoginScreen,
+  type LoginScreenChrome,
+  type LoginScreenState,
+} from '@/components/ui';
 import { routes, useSearchSource } from '@/context';
 import { withError } from '@/hocs';
 import { useAppSettings, useNavigation, usePassflow, useProvider, useSignIn } from '@/hooks';
 import type { SuccessAuthRedirect } from '@/types';
 import {
   type AuthMethods,
-  authRedirectErrorMessage,
+  authRedirectErrorFrom,
   emailRegex,
   getAuthMethods,
   getIdentityLabel,
@@ -108,13 +114,13 @@ export const SignInForm: FC<TSignIn> = ({
 
   if (errorUrl) {
     console.error('[passflow] sign-in redirect returned an error', { error: errorUrl, message: messageUrl });
-    throw new Error(authRedirectErrorMessage);
+    throw new Error(authRedirectErrorFrom(errorUrl, messageUrl));
   }
 
   const { get } = useUrlParams({ invite_token: '' });
   const inviteToken = get('invite_token');
   const invitationChrome = getInvitationAuthChrome(inviteToken, 'sign-in');
-  const { fetch, isError, error, reset, isLoading } = useSignIn();
+  const { fetch, isError, error, reset, isLoading, emailCode } = useSignIn();
 
   const oidcLayerOwnsRedirect = (): boolean => {
     if (hasFollowedOIDCRedirect()) return true;
@@ -219,17 +225,66 @@ export const SignInForm: FC<TSignIn> = ({
 
   const handleProvider = (provider: Providers) => federatedWithRedirect(provider, inviteToken ?? undefined);
 
+  // The emailed code answers like a sign-in: the same 2FA, OIDC and redirect path follows.
+  const verifyEmailCode = async (code: string) => {
+    if (await emailCode.verify(code)) await completeAuthentication();
+  };
+
+  const resendEmailCode = async () => {
+    if (await emailCode.resend()) await completeAuthentication();
+  };
+
+  const chrome: LoginScreenChrome = {
+    title: invitationChrome?.title ?? 'Sign In to your account',
+    subtitle: invitationChrome?.subtitle ?? 'To Passflow by Madappgang',
+    variant: 'sign-in',
+    customCss: currentStyles?.custom_css,
+    customLogo: currentStyles?.logo_url,
+    customLogoAlt: `${loginAppTheme?.application_name ?? 'Application'} logo`,
+    removeBranding: loginAppTheme?.remove_passflow_logo,
+  };
+
+  const { step } = emailCode;
+
+  if (step.kind !== 'none') {
+    // The server does not answer a sign-in with a link today; the state is mapped anyway.
+    const stepState: LoginScreenState =
+      step.kind === 'code'
+        ? {
+            kind: 'email-code',
+            message: step.message,
+            error: emailCode.error,
+            busy: emailCode.isVerifying,
+            resend: {
+              restartKey: step.challengeId,
+              busy: emailCode.isResending,
+              onResend: () => void resendEmailCode(),
+            },
+            secondaryAction: { label: 'Use a different account', onClick: emailCode.cancel },
+            onSubmit: (code) => void verifyEmailCode(code),
+          }
+        : {
+            kind: 'status',
+            tone: 'info',
+            message: step.message,
+            primaryAction: { label: 'Back to sign in', onClick: emailCode.cancel },
+          };
+
+    return (
+      <LoginScreen
+        chrome={{
+          ...chrome,
+          title: step.kind === 'code' ? 'Verify your email' : 'Check your email',
+          subtitle: step.kind === 'code' ? 'Enter the code to finish signing in' : 'Follow the link to finish signing in',
+        }}
+        state={stepState}
+      />
+    );
+  }
+
   return (
     <LoginScreen
-      chrome={{
-        title: invitationChrome?.title ?? 'Sign In to your account',
-        subtitle: invitationChrome?.subtitle ?? 'To Passflow by Madappgang',
-        variant: 'sign-in',
-        customCss: currentStyles?.custom_css,
-        customLogo: currentStyles?.logo_url,
-        customLogoAlt: `${loginAppTheme?.application_name ?? 'Application'} logo`,
-        removeBranding: loginAppTheme?.remove_passflow_logo,
-      }}
+      chrome={chrome}
       state={{
         kind: 'credentials',
         methods: loginMethods,

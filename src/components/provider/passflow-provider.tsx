@@ -74,13 +74,14 @@ type PassflowProviderProps = PassflowConfig & {
  *   - /auth/passwordless/*             — OTP / magic-link start+complete
  *   - /auth/passkey/*                  — passkey registration/auth
  *   - /auth/2fa/*                      — second-factor verify
+ *   - /auth/validate                   — emailed sign-up / sign-in code
  *   - /auth/federated/start            — federated start (callback is server)
  *   - /auth/session/exchange           — RFC 8693-style session exchange
  *                                        (ADR-2; activated on Leg 2 of
  *                                        OIDC two-step flows)
  */
 export const AUTH_ENDPOINT_PATTERN =
-  /\/auth\/(login|register|passwordless|passkey|2fa|session\/exchange)\b|\/auth\/federated\/start\b/;
+  /\/auth\/(login|register|passwordless|passkey|2fa|validate|session\/exchange)\b|\/auth\/federated\/start\b/;
 
 /**
  * Read `parent_challenge_id` from the current URL's query string.

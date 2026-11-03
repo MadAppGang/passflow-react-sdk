@@ -229,21 +229,27 @@ body {
 /* Disabled states */
 .passflow-button--primary:disabled,
 .passflow-button--warning:disabled,
-.passflow-button--dark:disabled {
+.passflow-button--dark:disabled,
+.passflow-button--primary[aria-disabled="true"],
+.passflow-button--warning[aria-disabled="true"],
+.passflow-button--dark[aria-disabled="true"] {
   cursor: not-allowed;
   background-color: var(--passflow-grey-two);
   box-shadow: none;
 }
 
 .passflow-button--secondary:disabled,
-.passflow-button--outlined:disabled {
+.passflow-button--outlined:disabled,
+.passflow-button--secondary[aria-disabled="true"],
+.passflow-button--outlined[aria-disabled="true"] {
   cursor: not-allowed;
   background-color: var(--passflow-white);
   border-color: var(--passflow-grey-four);
   color: var(--passflow-grey-two);
 }
 
-.passflow-button--clean:disabled {
+.passflow-button--clean:disabled,
+.passflow-button--clean[aria-disabled="true"] {
   cursor: not-allowed;
   background-color: transparent;
   opacity: 0.5;

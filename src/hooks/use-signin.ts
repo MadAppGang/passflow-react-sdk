@@ -4,9 +4,10 @@ import type {
   PassflowPasswordlessSignInPayload,
   PassflowSignInPayload,
 } from '@passflow/core';
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import type { AuthOperation, AuthUiError } from '@/types';
-import { authErrorFor } from '@/utils';
+import { authErrorFrom } from '@/utils';
+import { type UseEmailCodeStep, useEmailCodeStep } from './use-email-code-step';
 import { usePassflow } from './use-passflow';
 
 export type UseSignInProps = () => {
@@ -18,10 +19,35 @@ export type UseSignInProps = () => {
   isError: boolean;
   error: AuthUiError | null;
   reset: () => void;
+  /**
+   * The emailed-code step. A password request the server answers with a code (or a link) enters it, and `fetch`
+   * resolves `false`: there is no session yet.
+   */
+  emailCode: UseEmailCodeStep;
 };
 
 export const useSignIn: UseSignInProps = () => {
   const passflow = usePassflow();
+  // The password request is kept only to repeat it for "Resend code"; never rendered, logged or stored.
+  const lastPasswordPayloadRef = useRef<PassflowSignInPayload | null>(null);
+  const resendPasswordRequest = useCallback(async () => {
+    const payload = lastPasswordPayloadRef.current;
+    if (!payload) throw new Error('Nothing to resend');
+    return passflow.signIn(payload);
+  }, [passflow]);
+  const emailCode = useEmailCodeStep({
+    resend: resendPasswordRequest,
+    onRelease: () => {
+      lastPasswordPayloadRef.current = null;
+    },
+  });
+
+  useEffect(
+    () => () => {
+      lastPasswordPayloadRef.current = null;
+    },
+    [],
+  );
   const [error, setError] = useState<AuthUiError | null>(null);
   const [isError, setIsError] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -38,8 +64,13 @@ export const useSignIn: UseSignInProps = () => {
 
       // We'll make sure to call cleanup after the operation completes
       try {
-        if (type === 'password') await passflow.signIn(payload as PassflowSignInPayload);
-        else if (type === 'passkey') {
+        if (type === 'password') {
+          const answer = await passflow.signIn(payload as PassflowSignInPayload);
+          // Held before entering: a link answer releases it at once, a code answer keeps it for resend.
+          lastPasswordPayloadRef.current = payload as PassflowSignInPayload;
+          if (emailCode.enter(answer)) return false;
+          lastPasswordPayloadRef.current = null;
+        } else if (type === 'passkey') {
           await passflow.passkeyAuthenticate(payload as PassflowPasskeyAuthenticateStartPayload);
         } else {
           return await passflow.passwordlessSignIn(payload as PassflowPasswordlessSignInPayload);
@@ -48,13 +79,13 @@ export const useSignIn: UseSignInProps = () => {
       } catch (error) {
         console.error(`[passflow] ${type} sign-in failed`, error);
         setIsError(true);
-        setError(authErrorFor('sign-in', type));
+        setError(authErrorFrom(error, 'sign-in', type));
         return false;
       } finally {
         cleanup();
       }
     },
-    [passflow.passkeyAuthenticate, passflow.passwordlessSignIn, passflow.signIn],
+    [passflow.passkeyAuthenticate, passflow.passwordlessSignIn, passflow.signIn, emailCode.enter],
   );
 
   const reset = () => {
@@ -63,5 +94,5 @@ export const useSignIn: UseSignInProps = () => {
     setIsLoading(false);
   };
 
-  return { fetch, isLoading, isError, error, reset } as const;
+  return { fetch, isLoading, isError, error, reset, emailCode } as const;
 };

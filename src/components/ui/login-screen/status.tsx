@@ -1,7 +1,7 @@
 import type { FC } from 'react';
 import { Button } from '../button';
 import { Icon } from '../icon';
-import { LoginAlert } from './shared';
+import { LoginActionStack, LoginAlert } from './shared';
 import type { LoginStatusState } from './types';
 
 export const LoginStatus: FC<LoginStatusState> = ({
@@ -21,19 +21,28 @@ export const LoginStatus: FC<LoginStatusState> = ({
           <Icon size='small' id='check' type='general' className='icon-success' decorative />
           <span className='passflow-login-screen-success-text'>{message}</span>
         </div>
+      ) : tone === 'info' ? (
+        <div className='passflow-login-screen-info' role='status'>
+          <Icon size='big' id='mail' type='general' className='passflow-login-screen-info-icon' matchTextColor decorative />
+          <p className='passflow-login-screen-text passflow-login-screen-centered-text'>{message}</p>
+        </div>
       ) : (
         <LoginAlert message={message} />
       )}
       {detail ? <p className='passflow-login-screen-hint'>{detail}</p> : null}
     </div>
     {primaryAction ? (
-      <Button size='big' variant='primary' type='button' onClick={primaryAction.onClick}>
-        {primaryAction.label}
-      </Button>
+      <LoginActionStack>
+        <Button size='big' variant='primary' type='button' onClick={primaryAction.onClick}>
+          {primaryAction.label}
+        </Button>
+      </LoginActionStack>
     ) : tone === 'error' && recoverable && onRetry ? (
-      <Button size='big' variant='primary' type='button' onClick={onRetry}>
-        {retryLabel}
-      </Button>
+      <LoginActionStack>
+        <Button size='big' variant='primary' type='button' onClick={onRetry}>
+          {retryLabel}
+        </Button>
+      </LoginActionStack>
     ) : null}
   </div>
 );
