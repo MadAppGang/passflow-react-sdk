@@ -2,6 +2,21 @@
 
 All notable changes to `@passflow/react` are documented in this file.
 
+## [0.17.0] - 2026-11-03
+
+### Changed
+
+- Requires `@passflow/core` `^0.21.0`: one token refresh per browser across tabs, with transient failures kept apart from the end of a session. See core's `docs/token-refresh.md`, "Migrating from 0.20.1". What reaches React apps: a network error or 5xx during refresh no longer signs the user out; `SessionExpired` fires only at a real end; `SignOut` fires once per sign-out.
+- `SessionExpiredReason` is core's type, re-exported from the package root as before. It adds `'successor_timeout'` and `'identity_changed'`, so `useSessionExpired` and `AuthProvider`'s `onSessionExpired` can receive them. An exhaustive `switch` over the reason needs the new cases.
+
+### Added
+
+- `useRefreshStatus()` returns `{ isFailing, since, nextRetryAt }` while token refresh is failing transiently (`RefreshFailing` until `RefreshRecovered`), for a "reconnecting" notice. Call it in a component that lives as long as the app: a component that mounts mid-episode starts idle.
+
+### Fixed
+
+- `PassflowProvider` disposes the `Passflow` instances it replaces (its state changes on app ID discovery and app settings) and the one it holds on unmount. From core 0.21 each instance holds refresh timers, a `BroadcastChannel` and Web Locks, so an undisposed one went on acting as another tab.
+
 ## [0.16.0] - 2026-11-03
 
 ### Breaking
