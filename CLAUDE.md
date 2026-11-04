@@ -1,5 +1,11 @@
 # Passflow React SDK development rules
 
+## Keep it simple, even when it hurts UX
+
+A failure that happens about once in 1000 times gets the shortest code that handles it: show an error and ask the user to try again later, or sign the user out. Don't write automatic recovery, idempotency or race-condition handling for it.
+
+Decided by Jack on 2026-11-04. On PFL-769 every plan revision added machinery for rare cases: leases, repair paths, fencing, session-confirmation probes. The design reached 744 lines and still failed review with 8 critical findings. The rare-case machinery was where the bugs were.
+
 ## Storybook-backed component library
 
 `src/components/ui/**` is the visual source of truth. Storybook is the required catalog for its supported states.
