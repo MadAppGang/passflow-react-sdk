@@ -2,7 +2,21 @@ import { type PassflowPasswordPolicySettings, Providers } from '@passflow/core';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { type FC, useState } from 'react';
 import { expect, fn, userEvent, within } from 'storybook/test';
-import { deviceErrorOfType } from '@/utils';
+import {
+  approvalAlreadyDecidedMessage,
+  approvalApprovedMessage,
+  approvalAttemptsMessage,
+  approvalConnectionMessage,
+  approvalDeniedMessage,
+  approvalInvalidMessage,
+  approvalUnavailableMessage,
+  authErrorFrom,
+  deviceErrorOfType,
+  passwordlessLinkExpiredMessage,
+  passwordlessSignInFailedMessage,
+  passwordlessWaitCompletedMessage,
+  passwordlessWaitDeniedMessage,
+} from '@/utils';
 import { LoginScreen } from './login-screen';
 import type {
   LoginConsentState,
@@ -10,6 +24,8 @@ import type {
   LoginEmailCodeState,
   LoginMethodConfig,
   LoginNewPasswordState,
+  LoginPasswordlessApprovalFormState,
+  LoginPasswordlessWaitingState,
   LoginScreenChrome,
   LoginScreenProps,
 } from './types';
@@ -51,6 +67,10 @@ const handlers = {
   onLeaveEmailCode: fn(),
   onNewPassword: fn(),
   onBackToSignIn: fn(),
+  onStartAgain: fn(),
+  onResendLink: fn(),
+  onApproveSignIn: fn(),
+  onDenySignIn: fn(),
 };
 
 type MethodOptions = {
@@ -1005,4 +1025,199 @@ export const CreateAccountPassword: Story = {
     subtitle: 'Finish creating your account',
     variant: 'reset-password',
   }),
+};
+
+const refusedParent = (id: string) =>
+  story(
+    credentials(methods({ emailPassword: true }), {
+      error: authErrorFrom({ id, message: 'server text' }, 'sign-in', 'password'),
+      onStartAgain: handlers.onStartAgain,
+    }),
+  );
+
+/** The parent challenge this form belongs to has expired: only starting again can help, so the fields stay neutral. */
+export const RefusedParentExpired: Story = {
+  args: refusedParent('error.auth.flow.parent.expired'),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await userEvent.click(canvas.getByRole('button', { name: 'Start again' }));
+    await expect(handlers.onStartAgain).toHaveBeenCalled();
+  },
+};
+
+export const RefusedParentNotFound: Story = {
+  args: refusedParent('error.auth.flow.parent.not.found'),
+};
+
+export const RefusedParentCompleted: Story = {
+  args: refusedParent('error.auth.flow.parent.completed'),
+};
+
+/** The alert's other site: a passkey-only form. */
+export const RefusedParentPasskeyOnly: Story = {
+  args: story(
+    credentials(methods({ passkey: true }), {
+      error: authErrorFrom({ id: 'error.auth.flow.parent.expired', message: 'server text' }, 'sign-in', 'passkey'),
+      onStartAgain: handlers.onStartAgain,
+    }),
+  ),
+};
+
+const waitingChrome = { title: 'Check your email' };
+
+const waiting = (overrides: Partial<LoginPasswordlessWaitingState> = {}): LoginPasswordlessWaitingState => ({
+  kind: 'passwordless-waiting',
+  matchCode: '4821',
+  resend: { restartKey: 'challenge-1', onResend: handlers.onResendLink },
+  testId: 'passwordless-waiting',
+  codeTestId: 'passwordless-match-code',
+  ...overrides,
+});
+
+/** The tab that started a sign-in, waiting while the link is approved on any device. */
+export const PasswordlessWaiting: Story = {
+  args: story(waiting(), waitingChrome),
+};
+
+export const PasswordlessWaitingResendReady: Story = {
+  args: story(waiting({ resend: { cooldownSeconds: 0, onResend: handlers.onResendLink } }), waitingChrome),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await userEvent.click(canvas.getByRole('button', { name: 'Resend email' }));
+    await expect(handlers.onResendLink).toHaveBeenCalled();
+  },
+};
+
+export const PasswordlessWaitingResendBusy: Story = {
+  args: story(waiting({ resend: { busy: true, onResend: handlers.onResendLink } }), waitingChrome),
+};
+
+export const PasswordlessWaitingResendFailed: Story = {
+  args: story(
+    waiting({
+      error: "We couldn't send a new link. Try again.",
+      resend: { cooldownSeconds: 0, onResend: handlers.onResendLink },
+    }),
+    waitingChrome,
+  ),
+};
+
+const waitOutcome = (message: string) =>
+  story(
+    {
+      kind: 'status',
+      tone: 'error',
+      message,
+      primaryAction: { label: 'Start again', onClick: handlers.onStartAgain },
+    },
+    { title: 'Sign-in not completed' },
+  );
+
+export const PasswordlessWaitDenied: Story = {
+  args: waitOutcome(passwordlessWaitDeniedMessage),
+};
+
+export const PasswordlessWaitExpired: Story = {
+  args: waitOutcome(passwordlessLinkExpiredMessage),
+};
+
+export const PasswordlessWaitCompleted: Story = {
+  args: waitOutcome(passwordlessWaitCompletedMessage),
+};
+
+export const PasswordlessWaitFailed: Story = {
+  args: waitOutcome(passwordlessSignInFailedMessage),
+};
+
+const approvalChrome = { title: 'Approve sign-in' };
+
+const approval = (overrides: Partial<LoginPasswordlessApprovalFormState> = {}): LoginPasswordlessApprovalFormState => ({
+  kind: 'passwordless-approval',
+  appName: 'Acme Portal',
+  browser: 'Chrome',
+  os: 'macOS',
+  location: 'Lisbon, Portugal',
+  requestedAt: '4 Nov 2026, 16:42',
+  testId: 'passwordless-approval',
+  onApprove: handlers.onApproveSignIn,
+  onDeny: handlers.onDenySignIn,
+  ...overrides,
+});
+
+/** The device that opened the link. Four digits submit nothing: only Approve does. */
+export const PasswordlessApproval: Story = {
+  args: story(approval(), approvalChrome),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await userEvent.type(canvas.getByLabelText('Code shown on your other device'), '4821');
+    await expect(handlers.onApproveSignIn).not.toHaveBeenCalled();
+    await userEvent.click(canvas.getByRole('button', { name: 'Approve' }));
+    await expect(handlers.onApproveSignIn).toHaveBeenCalledWith('4821');
+  },
+};
+
+export const PasswordlessApprovalLoading: Story = {
+  args: story({ kind: 'passwordless-approval', loading: true }, approvalChrome),
+};
+
+export const PasswordlessApprovalNoLocation: Story = {
+  args: story(approval({ location: null }), approvalChrome),
+};
+
+export const PasswordlessApprovalWrongCode: Story = {
+  args: story(approval({ error: 'That code does not match. 3 tries left.' }), approvalChrome),
+};
+
+/** The server did not answer: nothing was decided, so the form stays. */
+export const PasswordlessApprovalConnectionError: Story = {
+  args: story(approval({ error: approvalConnectionMessage }), approvalChrome),
+};
+
+export const PasswordlessApprovalBusy: Story = {
+  args: story(approval({ busy: true }), approvalChrome),
+};
+
+const approvalFinal = (tone: 'success' | 'error', message: string) =>
+  story({ kind: 'status', tone, message }, { title: 'Sign-in request' });
+
+export const PasswordlessApprovalApproved: Story = {
+  args: approvalFinal('success', approvalApprovedMessage),
+};
+
+export const PasswordlessApprovalDenied: Story = {
+  args: approvalFinal('success', approvalDeniedMessage),
+};
+
+export const PasswordlessApprovalInvalidLink: Story = {
+  args: approvalFinal('error', approvalInvalidMessage),
+};
+
+export const PasswordlessApprovalUnavailable: Story = {
+  args: approvalFinal('error', approvalUnavailableMessage),
+};
+
+export const PasswordlessApprovalExpired: Story = {
+  args: approvalFinal('error', passwordlessLinkExpiredMessage),
+};
+
+export const PasswordlessApprovalAlreadyDecided: Story = {
+  args: approvalFinal('error', approvalAlreadyDecidedMessage),
+};
+
+export const PasswordlessApprovalTooManyCodes: Story = {
+  args: approvalFinal('error', approvalAttemptsMessage),
+};
+
+/** The request could not be read at all, for a reason that may pass. */
+export const PasswordlessApprovalLoadFailed: Story = {
+  args: story(
+    {
+      kind: 'status',
+      tone: 'error',
+      message: approvalConnectionMessage,
+      recoverable: true,
+      onRetry: handlers.onRetry,
+    },
+    { title: 'Sign-in request' },
+  ),
 };

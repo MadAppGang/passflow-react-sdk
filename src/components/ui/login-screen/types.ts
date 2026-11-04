@@ -80,6 +80,8 @@ export type LoginCredentialsState = {
   onPasskey?: () => void;
   onProvider?: (provider: Providers) => void;
   onReset?: () => void;
+  /** Shown beside the alert when `error.startAgain` is set: the request behind this form is gone. */
+  onStartAgain?: () => void;
 };
 
 export type LoginCodeEntryState = {
@@ -265,10 +267,59 @@ export type LoginStatusState = {
   };
 };
 
+/**
+ * The tab that started a cross-device sign-in, waiting while the link is approved. The outcome messages use `status`,
+ * with a primary action labelled `Start again`.
+ */
+export type LoginPasswordlessWaitingState = {
+  kind: 'passwordless-waiting';
+  /** The 4-digit code the approving device asks for. Only this tab ever shows it. */
+  matchCode: string;
+  /** The answer to a failed resend. */
+  error?: string | null;
+  /** The label defaults to `Resend email`. */
+  resend?: LoginEmailCodeResend;
+  testId?: string;
+  codeTestId?: string;
+};
+
+/**
+ * The device that opened the link, approving or denying the sign-in. It shows no identity, and the final messages use
+ * `status`.
+ */
+export type LoginPasswordlessApprovalFormState = {
+  kind: 'passwordless-approval';
+  loading?: false;
+  appName: string;
+  browser: string;
+  os: string;
+  /** Omitted from the screen when null. */
+  location: string | null;
+  /** Ready to display. */
+  requestedAt: string;
+  /** Why the last answer failed; clears the typed code. */
+  error?: string | null;
+  /** An answer is in flight: the code and both actions are locked. */
+  busy?: boolean;
+  testId?: string;
+  onApprove: (code: string) => void;
+  onDeny: () => void;
+};
+
+/** The sign-in request is still being read: only a progress message shows. */
+export type LoginPasswordlessApprovalLoadingState = {
+  kind: 'passwordless-approval';
+  loading: true;
+};
+
+export type LoginPasswordlessApprovalState = LoginPasswordlessApprovalFormState | LoginPasswordlessApprovalLoadingState;
+
 export type LoginScreenState =
   | LoginCredentialsState
   | LoginCodeEntryState
   | LoginEmailCodeState
+  | LoginPasswordlessWaitingState
+  | LoginPasswordlessApprovalState
   | LoginNewPasswordState
   | LoginPasskeyProgressState
   | LoginDeviceApprovalState

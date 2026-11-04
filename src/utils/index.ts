@@ -1,4 +1,14 @@
 export {
+  type ApprovalError,
+  approvalAlreadyDecidedMessage,
+  approvalApprovedMessage,
+  approvalAttemptsMessage,
+  approvalConnectionMessage,
+  approvalDeniedMessage,
+  approvalErrorFrom,
+  approvalInvalidMessage,
+  approvalUnavailableMessage,
+  approvalUnknownErrorMessage,
   authErrorFor,
   authErrorFrom,
   authRedirectErrorFrom,
@@ -6,8 +16,14 @@ export {
   emailCodeErrorMessage,
   invitationJoinErrorFrom,
   invitationLinkErrorMessage,
+  isApprovalMatchError,
   isPasswordSavedRateLimit,
   newPasswordErrorMessage,
+  passwordlessCompleteErrorMessage,
+  passwordlessLinkExpiredMessage,
+  passwordlessSignInFailedMessage,
+  passwordlessWaitCompletedMessage,
+  passwordlessWaitDeniedMessage,
   serverMessageFor,
   verificationLinkErrorMessage,
   verificationRequestErrorMessage,
@@ -38,6 +54,6 @@ export {
   upgradeAuthInstance,
   withAuth,
 } from './upgrade-auth';
-export { useUrlParams } from './url-params';
+export { readParentChallengeIdFromURL, urlWithoutParentChallenge, useUrlParams } from './url-params';
 export { isValidUrl } from './validate-url';
 export * from './validation-schemas';

@@ -14,6 +14,48 @@ const decodeHtmlEntities = (input: string): string => {
 const withQuestionMark = (params: URLSearchParams) => (params.toString() ? `?${params.toString()}` : '');
 
 /**
+ * Read `parent_challenge_id` from the current URL's query string.
+ * Returns `undefined` when not present so callers can short-circuit
+ * the OIDC interceptor on non-OIDC mounts.
+ *
+ * Lowercases only the parameter KEYS (not values) so the
+ * KSUID-shaped value isn't corrupted on the way through. (URL params
+ * are case-sensitive per RFC 3986; some Passflow URLs use mixed
+ * case like `appId=...`. The lowercase-keys treatment mirrors what
+ * the bundled login-app was doing pre-SDK-migration.)
+ */
+export const readParentChallengeIdFromURL = (): string | undefined => {
+  if (typeof window === 'undefined') return undefined;
+  const raw = new URLSearchParams(window.location.search);
+  // Lowercase only keys, preserve values (values are often
+  // case-sensitive — KSUIDs, JWTs, OIDC state, etc.).
+  const lower = new URLSearchParams(Array.from(raw, ([key, value]) => [key.toLowerCase(), value]));
+  const value = lower.get('parent_challenge_id');
+  return value || undefined;
+};
+
+const isParentChallengePair = (pair: string): boolean =>
+  Array.from(new URLSearchParams(pair).keys())[0]?.toLowerCase() === 'parent_challenge_id';
+
+/**
+ * The URL without `parent_challenge_id`, in any key case. Works on the raw query, so every other param keeps its
+ * exact encoding.
+ */
+export const urlWithoutParentChallenge = (url: string): string => {
+  const hashAt = url.indexOf('#');
+  const hash = hashAt < 0 ? '' : url.slice(hashAt);
+  const beforeHash = hashAt < 0 ? url : url.slice(0, hashAt);
+  const queryAt = beforeHash.indexOf('?');
+  if (queryAt < 0) return url;
+
+  const kept = beforeHash
+    .slice(queryAt + 1)
+    .split('&')
+    .filter((pair) => !isParentChallengePair(pair));
+  return `${beforeHash.slice(0, queryAt)}${kept.length > 0 ? `?${kept.join('&')}` : ''}${hash}`;
+};
+
+/**
  * Get URL parameters. Inside PassflowFlow they come from the flow's location; outside it, from the
  * address bar.
  * @param defaultValues Default values

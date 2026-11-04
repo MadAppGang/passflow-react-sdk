@@ -27,7 +27,7 @@ type EmailCodeResendButtonProps = LoginEmailCodeResend & {
  * The step remounts it (`key`) when `restartKey` changes, which restarts the
  * cooldown for a code the server sent again.
  */
-const EmailCodeResendButton: FC<EmailCodeResendButtonProps> = ({
+export const EmailCodeResendButton: FC<EmailCodeResendButtonProps> = ({
   cooldownSeconds = DEFAULT_COOLDOWN_SECONDS,
   busy = false,
   label = 'Resend code',

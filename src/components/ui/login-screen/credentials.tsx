@@ -132,6 +132,17 @@ export const LoginCredentials: FC<LoginCredentialsState> = (state) => {
   };
   const selectedIdentityValue = defaultMethod === 'phone' ? watch('phone') : watch('email_or_username');
   const alternateIdentity = methods.identities.find((method) => method.id !== defaultMethod);
+  const formAlert =
+    state.error?.startAgain && state.onStartAgain ? (
+      <div className='passflow-login-screen-alert-row'>
+        <LoginAlert message={state.error.message} />
+        <Button size='small' variant='link' type='button' disabled={controlsDisabled} onClick={state.onStartAgain}>
+          Start again
+        </Button>
+      </div>
+    ) : (
+      <LoginAlert message={state.error?.message} />
+    );
 
   return (
     <>
@@ -304,7 +315,7 @@ export const LoginCredentials: FC<LoginCredentialsState> = (state) => {
                 </div>
               ) : null}
 
-              <LoginAlert message={state.error?.message} />
+              {formAlert}
             </div>
 
             <LoginActionStack>
@@ -361,7 +372,7 @@ export const LoginCredentials: FC<LoginCredentialsState> = (state) => {
 
         {showStandalonePasskey ? (
           <>
-            <LoginAlert message={state.error?.message} />
+            {formAlert}
             {state.onPasskey ? (
               <LoginActionStack>
                 <Button

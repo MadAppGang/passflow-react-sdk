@@ -8,6 +8,8 @@ import { LoginGeneralError } from './general-error';
 import { LoginInvitation } from './invitation';
 import { LoginNewPassword } from './new-password';
 import { LoginPasskeyProgress } from './passkey-progress';
+import { LoginPasswordlessApproval } from './passwordless-approval';
+import { LoginPasswordlessWaiting } from './passwordless-waiting';
 import { LoginSecondFactor } from './second-factor';
 import { LoginScreenShell } from './shell';
 import { LoginStatus } from './status';
@@ -22,6 +24,10 @@ export const LoginScreen: FC<LoginScreenProps> = ({ chrome, state }) => {
         return <LoginCodeEntry {...state} />;
       case 'email-code':
         return <LoginEmailCode {...state} />;
+      case 'passwordless-waiting':
+        return <LoginPasswordlessWaiting {...state} />;
+      case 'passwordless-approval':
+        return <LoginPasswordlessApproval {...state} />;
       case 'new-password':
         return <LoginNewPassword {...state} />;
       case 'passkey-progress':
