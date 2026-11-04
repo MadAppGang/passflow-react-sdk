@@ -16,9 +16,9 @@ import { NavigationContext, SearchContext, type SearchSource } from '@/context';
 import '@/styles/index.css';
 import { ErrorComponent } from '@/components/error';
 import { withError } from '@/hocs';
-import { useNavigation } from '@/hooks';
-import type { SuccessAuthRedirect } from '@/types';
-import { authRedirectErrorFrom, getUrlErrors } from '@/utils';
+import { useNavigation, usePassflow } from '@/hooks';
+import type { FederatedLanding, SuccessAuthRedirect } from '@/types';
+import { authRedirectErrorFrom, getUrlErrors, getUrlWithTokens, passwordlessSignInFailedMessage } from '@/utils';
 import {
   createBrowserHistory,
   createHashHistory,
@@ -42,6 +42,12 @@ export type { FlowLocation as PassflowFlowLocation, FlowNavigate as PassflowFlow
 type PassflowBaseProps = {
   successAuthRedirect?: SuccessAuthRedirect;
   federatedDisplayMode?: 'modal' | 'redirect';
+  /**
+   * Where a federated redirect comes back. `app` (the default) keeps today's redirect URL. `login-page`, for a hosted
+   * login page on a PKCE app, comes back to this page, which exchanges the code and forwards the tokens to
+   * `successAuthRedirect`, else the app's default redirect.
+   */
+  federatedLanding?: FederatedLanding;
   error?: string;
   relyingPartyId?: string;
   /**
@@ -103,7 +109,7 @@ const useFlowLocation = (
   return { location: ownLocation, navigate: history.navigate };
 };
 
-type PassflowRoutesProps = Required<Pick<PassflowBaseProps, 'federatedDisplayMode' | 'relyingPartyId'>> &
+type PassflowRoutesProps = Required<Pick<PassflowBaseProps, 'federatedDisplayMode' | 'federatedLanding' | 'relyingPartyId'>> &
   Pick<PassflowBaseProps, 'successAuthRedirect' | 'pathPrefix'> & {
     location: FlowLocation;
     navigate: FlowNavigate;
@@ -112,6 +118,7 @@ type PassflowRoutesProps = Required<Pick<PassflowBaseProps, 'federatedDisplayMod
 const PassflowRoutes: FC<PassflowRoutesProps> = ({
   successAuthRedirect,
   federatedDisplayMode,
+  federatedLanding,
   relyingPartyId,
   pathPrefix,
   location,
@@ -180,13 +187,17 @@ const PassflowRoutes: FC<PassflowRoutesProps> = ({
         paths={paths}
         successAuthRedirect={successAuthRedirect}
         federatedDisplayMode={federatedDisplayMode}
+        federatedLanding={federatedLanding}
         relyingPartyId={relyingPartyId}
       />
     </SearchContext.Provider>
   );
 };
 
-type FlowScreenViewProps = Pick<PassflowRoutesProps, 'successAuthRedirect' | 'federatedDisplayMode' | 'relyingPartyId'> & {
+type FlowScreenViewProps = Pick<
+  PassflowRoutesProps,
+  'successAuthRedirect' | 'federatedDisplayMode' | 'federatedLanding' | 'relyingPartyId'
+> & {
   match: FlowMatch;
   paths: Record<FlowScreen, string>;
 };
@@ -197,6 +208,7 @@ const FlowScreenView: FC<FlowScreenViewProps> = ({
   paths,
   successAuthRedirect,
   federatedDisplayMode,
+  federatedLanding,
   relyingPartyId,
 }) => {
   switch (match.screen) {
@@ -206,6 +218,7 @@ const FlowScreenView: FC<FlowScreenViewProps> = ({
           successAuthRedirect={successAuthRedirect}
           relyingPartyId={relyingPartyId}
           federatedDisplayMode={federatedDisplayMode}
+          federatedLanding={federatedLanding}
           signUpPath={paths.signup}
           forgotPasswordPath={paths.forgot_password}
           verifyMagicLinkPath={paths.verify_magic_link}
@@ -219,6 +232,7 @@ const FlowScreenView: FC<FlowScreenViewProps> = ({
           successAuthRedirect={successAuthRedirect}
           relyingPartyId={relyingPartyId}
           federatedDisplayMode={federatedDisplayMode}
+          federatedLanding={federatedLanding}
           signInPath={paths.signin}
           verifyMagicLinkPath={paths.verify_magic_link}
           verifyOTPPath={paths.verify_otp}
@@ -236,7 +250,7 @@ const FlowScreenView: FC<FlowScreenViewProps> = ({
         />
       );
     case 'verify_magic_link':
-      return <VerifyChallengeMagicLink />;
+      return <VerifyChallengeMagicLink signInPath={paths.signin} />;
     case 'forgot_password':
       return (
         <ForgotPassword
@@ -281,6 +295,7 @@ const FlowScreenView: FC<FlowScreenViewProps> = ({
 const PassflowWrapper: FC<PassflowProps> = ({
   successAuthRedirect,
   federatedDisplayMode = 'redirect',
+  federatedLanding = 'app',
   error = undefined,
   relyingPartyId = window.location.hostname,
   pathPrefix,
@@ -290,6 +305,29 @@ const PassflowWrapper: FC<PassflowProps> = ({
 }) => {
   const { error: errorUrlSuccess, message: messageUrlSuccess } = getUrlErrors(successAuthRedirect);
   const { location, navigate } = useFlowLocation(routerType, controlledLocation, controlledNavigate);
+  const passflow = usePassflow();
+  const { federatedLandingOutcome } = useContext(NavigationContext);
+
+  // Only a code this tab exchanged arms the forward, never the URL or another
+  // sign-in. Settings are read here because `appSettings` state may still be null.
+  const forwardedRef = useRef(false);
+  // Only the outcome arms the forward; any `passflow` instance reads the tokens from storage, so a newer one changes nothing.
+  useEffect(() => {
+    if (federatedLanding !== 'login-page' || federatedLandingOutcome !== 'signed-in' || forwardedRef.current) return;
+    forwardedRef.current = true;
+
+    const forward = async () => {
+      try {
+        const target = successAuthRedirect ?? (await passflow.getAppSettings()).defaults?.redirect;
+        if (target) window.location.href = await getUrlWithTokens(passflow, target);
+      } catch {
+        // No target to forward to: the user stays signed in on this page.
+      }
+    };
+    void forward();
+  }, [federatedLandingOutcome]);
+
+  if (federatedLandingOutcome === 'failed') throw new Error(passwordlessSignInFailedMessage);
 
   if (errorUrlSuccess) {
     console.error('[passflow] authentication redirect returned an error', {
@@ -306,6 +344,7 @@ const PassflowWrapper: FC<PassflowProps> = ({
     <PassflowRoutes
       successAuthRedirect={successAuthRedirect}
       federatedDisplayMode={federatedDisplayMode}
+      federatedLanding={federatedLanding}
       relyingPartyId={relyingPartyId}
       pathPrefix={pathPrefix}
       location={location}

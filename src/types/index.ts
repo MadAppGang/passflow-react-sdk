@@ -6,6 +6,8 @@ export type PreferChallenge = 'passkey' | 'password' | 'otp' | 'magic_link';
 
 export type SuccessAuthRedirect = string;
 
+export type FederatedLanding = 'app' | 'login-page';
+
 // Re-export 2FA types from @passflow/core
 export type {
   RegisteredTwoFactorMethod,

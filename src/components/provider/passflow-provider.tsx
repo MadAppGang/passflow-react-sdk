@@ -1,4 +1,13 @@
-import { FETCH_PRIORITY_OIDC, Passflow, type PassflowConfig, registerFetchMiddleware } from '@passflow/core';
+import {
+  type ErrorPayload,
+  FETCH_PRIORITY_OIDC,
+  Passflow,
+  type PassflowConfig,
+  PassflowEvent,
+  type PassflowEventPayload,
+  type PassflowSubscriber,
+  registerFetchMiddleware,
+} from '@passflow/core';
 import React, { type FC, type ReactNode, useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react';
 import { UpgradeProvider, type UpgradeProviderProps } from '@/components/provider/upgrade-provider';
 import { useDisposeOnReplace } from '@/components/provider/use-dispose-on-replace';
@@ -6,6 +15,7 @@ import { ContinuingStatus } from '@/components/ui/continuing-status';
 import {
   AuthProvider,
   defaultNavigate,
+  type FederatedLandingOutcome,
   initialState,
   type NavigateFunction,
   NavigationContext,
@@ -15,7 +25,10 @@ import {
   routes,
 } from '@/context';
 import { urlCarriesTwoFactorToken } from '@/utils/second-factor';
+import { readParentChallengeIdFromURL } from '@/utils/url-params';
 import '@/styles/index.css';
+
+export { readParentChallengeIdFromURL };
 
 /**
  * The assurance-upgrade options a consumer may set on `PassflowProvider`.
@@ -71,7 +84,8 @@ type PassflowProviderProps = PassflowConfig & {
  *
  *   - /auth/login                      — password login
  *   - /auth/register                   — password sign-up
- *   - /auth/passwordless/*             — OTP / magic-link start+complete
+ *   - /auth/passwordless/start|complete — OTP / magic-link; the status and
+ *                                        approval calls take no parent
  *   - /auth/passkey/*                  — passkey registration/auth
  *   - /auth/2fa/*                      — second-factor verify
  *   - /auth/validate                   — emailed sign-up / sign-in code
@@ -81,28 +95,7 @@ type PassflowProviderProps = PassflowConfig & {
  *                                        OIDC two-step flows)
  */
 export const AUTH_ENDPOINT_PATTERN =
-  /\/auth\/(login|register|passwordless|passkey|2fa|validate|session\/exchange)\b|\/auth\/federated\/start\b/;
-
-/**
- * Read `parent_challenge_id` from the current URL's query string.
- * Returns `undefined` when not present so callers can short-circuit
- * the OIDC interceptor on non-OIDC mounts.
- *
- * Lowercases only the parameter KEYS (not values) so the
- * KSUID-shaped value isn't corrupted on the way through. (URL params
- * are case-sensitive per RFC 3986; some Passflow URLs use mixed
- * case like `appId=...`. The lowercase-keys treatment mirrors what
- * the bundled login-app was doing pre-SDK-migration.)
- */
-export const readParentChallengeIdFromURL = (): string | undefined => {
-  if (typeof window === 'undefined') return undefined;
-  const raw = new URLSearchParams(window.location.search);
-  // Lowercase only keys, preserve values (values are often
-  // case-sensitive — KSUIDs, JWTs, OIDC state, etc.).
-  const lower = new URLSearchParams(Array.from(raw, ([key, value]) => [key.toLowerCase(), value]));
-  const value = lower.get('parent_challenge_id');
-  return value || undefined;
-};
+  /\/auth\/(login|register|passwordless\/(start|complete)|passkey|2fa|validate|session\/exchange)\b|\/auth\/federated\/start\b/;
 
 // Captured at module evaluation — before React mounts and before any
 // consumer-side router can rewrite the URL. The provider's mount-time
@@ -575,14 +568,60 @@ export type OIDCExchangeContextValue = {
  * effects, which run before this one, and their state lands in the next
  * render. Navigating at mount would go through the default full-page
  * navigation to the unprefixed route.
+ *
+ * A PKCE federated landing (`?code=&user_state=`) is taken here too, from an
+ * effect: the instance is built during render, and StrictMode throws one away
+ * without running its effects, so core must not take the landing in its
+ * constructor. Taking it can end in that same 2FA navigation; returned is how
+ * it ended otherwise.
  */
 const useSecondFactorLanding = (
   landedWithTwoFactorToken: boolean,
   passflow: Passflow,
   navigate: NavigateFunction,
   twoFactorVerifyPath: string,
-) => {
+): FederatedLandingOutcome | undefined => {
   const [pending, setPending] = useState(false);
+  const [federatedLandingOutcome, setFederatedLandingOutcome] = useState<FederatedLandingOutcome>();
+
+  const takenRef = useRef(false);
+  const currentPassflowRef = useRef(passflow);
+  currentPassflowRef.current = passflow;
+
+  // Deps `[passflow]`: under app-id discovery the first instance has no app id
+  // and leaves the landing to the next one. The ref makes StrictMode's replay a
+  // no-op. No cleanup on purpose: settings can replace the instance while its
+  // exchange runs, and the events still fire on the store of the one that took
+  // the landing. The listener removes itself on its first outcome.
+  useEffect(() => {
+    if (takenRef.current) return;
+
+    const subscriber: PassflowSubscriber = {
+      onAuthChange: (eventType, payload) => {
+        if (eventType === PassflowEvent.TwoFactorRequired) {
+          passflow.unsubscribe(subscriber);
+          setPending(true);
+        } else if (eventType === PassflowEvent.Error) {
+          if ((payload as ErrorPayload | undefined)?.operation !== 'federated.redirect') return;
+          passflow.unsubscribe(subscriber);
+          setFederatedLandingOutcome('failed');
+        } else if (eventType === PassflowEvent.SignIn) {
+          const signIn = payload as PassflowEventPayload[PassflowEvent.SignIn] | undefined;
+          if (signIn?.source !== 'federated-landing') return;
+          passflow.unsubscribe(subscriber);
+          // A replaced instance's session start is a no-op, and the current one
+          // read storage before these tokens existed.
+          const current = currentPassflowRef.current;
+          if (current !== passflow && signIn.tokens) current.setTokens(signIn.tokens);
+          setFederatedLandingOutcome('signed-in');
+        }
+      },
+    };
+
+    passflow.subscribe(subscriber, [PassflowEvent.TwoFactorRequired, PassflowEvent.SignIn, PassflowEvent.Error]);
+    if (passflow.completeFederatedLanding()) takenRef.current = true;
+    else passflow.unsubscribe(subscriber);
+  }, [passflow]);
 
   // Once, on mount — the landing is a property of the page load.
   useEffect(() => {
@@ -598,6 +637,8 @@ const useSecondFactorLanding = (
     setPending(false);
     navigate({ to: twoFactorVerifyPath, replace: true });
   }, [pending, navigate, twoFactorVerifyPath]);
+
+  return federatedLandingOutcome;
 };
 
 export const OIDCExchangeContext = React.createContext<OIDCExchangeContextValue>({
@@ -636,7 +677,7 @@ export const PassflowProvider: FC<PassflowProviderProps> = ({
   // Read before core is constructed: core adopts `#tfa_token=` and strips it.
   const [landedWithTwoFactorToken] = useState(urlCarriesTwoFactorToken);
 
-  const passflow = useMemo(() => new Passflow(state), [state]);
+  const passflow = useMemo(() => new Passflow({ ...state, deferFederatedLanding: true }), [state]);
   useDisposeOnReplace(passflow);
 
   // OIDC AuthFlow integration: the interceptor injects
@@ -712,7 +753,12 @@ export const PassflowProvider: FC<PassflowProviderProps> = ({
 
   const [flowTwoFactorVerifyPath, setFlowTwoFactorVerifyPath] = useState<string | null>(null);
   const resolvedTwoFactorVerifyPath = flowTwoFactorVerifyPath ?? twoFactorVerifyPath ?? routes.two_factor_verify.path;
-  useSecondFactorLanding(landedWithTwoFactorToken, passflow, navigate, resolvedTwoFactorVerifyPath);
+  const federatedLandingOutcome = useSecondFactorLanding(
+    landedWithTwoFactorToken,
+    passflow,
+    navigate,
+    resolvedTwoFactorVerifyPath,
+  );
 
   const navigationValue = useMemo(
     () => ({
@@ -721,8 +767,9 @@ export const PassflowProvider: FC<PassflowProviderProps> = ({
       router,
       twoFactorVerifyPath: resolvedTwoFactorVerifyPath,
       setTwoFactorVerifyPath: setFlowTwoFactorVerifyPath,
+      federatedLandingOutcome,
     }),
-    [navigate, handleSetNavigate, router, resolvedTwoFactorVerifyPath],
+    [navigate, handleSetNavigate, router, resolvedTwoFactorVerifyPath, federatedLandingOutcome],
   );
 
   const oidcExchangeValue = useMemo<OIDCExchangeContextValue>(

@@ -3,6 +3,7 @@
 import type { FC } from 'react';
 import * as Yup from 'yup';
 import type { SuccessAuthRedirect } from '@/types';
+import { VerifyChallengeApproval } from './verify-challenge-approval';
 import { VerifyChallengeOTPManual } from './verify-challenge-otp-manual';
 import { VerifyChallengeOTPRedirect } from './verify-challenge-otp-redirect';
 
@@ -47,7 +48,11 @@ export const VerifyChallengeOTP: FC<TVerifyChallengeOTP> = ({
     identity_value: '',
     challenge_type: '',
     type: '',
+    flow: '',
   });
+
+  // The approving device never completes the link itself, so nothing below applies to it.
+  if (get('flow') === 'approval') return <VerifyChallengeApproval challengeId={get('challenge_id')} otp={get('otp')} />;
 
   const typeChallenge = get('type');
 

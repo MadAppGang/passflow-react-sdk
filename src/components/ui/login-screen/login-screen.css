@@ -326,3 +326,43 @@
   flex-direction: column;
   gap: var(--passflow-spacing-2);
 }
+
+.passflow-login-screen-alert-row {
+  width: 100%;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: var(--passflow-spacing-2);
+  font-size: var(--passflow-caption);
+}
+
+.passflow-login-screen-details {
+  width: 100%;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--passflow-spacing-2);
+}
+
+.passflow-login-screen-details-row {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--passflow-spacing-4);
+}
+
+.passflow-login-screen-details-label {
+  flex-shrink: 0;
+  color: var(--passflow-secondary-text-color);
+  font-size: var(--passflow-caption);
+  font-weight: var(--passflow-medium);
+}
+
+.passflow-login-screen-details-value {
+  margin: 0;
+  color: var(--passflow-text-color);
+  font-size: var(--passflow-caption);
+  font-weight: var(--passflow-semibold);
+  text-align: right;
+  overflow-wrap: anywhere;
+}

@@ -10,6 +10,8 @@ export type RouterType = 'default' | 'react-router' | 'tanstack-router' | 'woute
 
 export type NavigateFunction = (options: NavigateOptions) => void;
 
+export type FederatedLandingOutcome = 'signed-in' | 'failed';
+
 export type NavigationContextType = {
   navigate: NavigateFunction;
   setNavigate: (navigate: NavigateFunction | null) => void;
@@ -24,6 +26,8 @@ export type NavigationContextType = {
   twoFactorVerifyPath?: string;
   /** Registers the 2FA route of a mounted flow; `null` withdraws it. */
   setTwoFactorVerifyPath?: (path: string | null) => void;
+  /** How a PKCE federated redirect that landed on this page ended. A second factor owed is not an outcome here. */
+  federatedLandingOutcome?: FederatedLandingOutcome;
 };
 
 export const defaultNavigate: NavigateFunction = ({ to, search, replace }) => {

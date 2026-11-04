@@ -21,7 +21,7 @@ import {
 import { routes, useSearchSource } from '@/context';
 import { withError } from '@/hocs';
 import { useAppSettings, useNavigation, usePassflow, useProvider, useSignIn } from '@/hooks';
-import type { SuccessAuthRedirect } from '@/types';
+import type { FederatedLanding, SuccessAuthRedirect } from '@/types';
 import {
   type AuthMethods,
   authRedirectErrorFrom,
@@ -34,6 +34,7 @@ import {
   getUrlWithTokens,
   isValidUrl,
   routeToSecondFactor,
+  urlWithoutParentChallenge,
   useUrlParams,
 } from '@/utils';
 
@@ -75,6 +76,7 @@ export type TSignIn = {
   successAuthRedirect?: SuccessAuthRedirect;
   relyingPartyId?: string;
   federatedDisplayMode?: 'modal' | 'redirect';
+  federatedLanding?: FederatedLanding;
   signUpPath?: string;
   verifyOTPPath?: string;
   verifyMagicLinkPath?: string;
@@ -85,6 +87,7 @@ export type TSignIn = {
 export const SignInForm: FC<TSignIn> = ({
   successAuthRedirect,
   relyingPartyId = window.location.hostname,
+  federatedLanding,
   signUpPath = routes.signup.path,
   verifyOTPPath = routes.verify_otp.path,
   verifyMagicLinkPath = routes.verify_magic_link.path,
@@ -104,7 +107,7 @@ export const SignInForm: FC<TSignIn> = ({
     error: errorApp,
     loginAppTheme,
   } = useAppSettings();
-  const { federatedWithRedirect } = useProvider(successAuthRedirect, createTenantForNewUser);
+  const { federatedWithRedirect } = useProvider(successAuthRedirect, createTenantForNewUser, federatedLanding);
 
   if (isErrorApp) throw new Error(errorApp);
 
@@ -176,12 +179,13 @@ export const SignInForm: FC<TSignIn> = ({
     const response = await fetch(payload, 'passwordless');
     if (!response) return;
 
-    const passwordlessResponse = response as PassflowPasswordlessResponse;
+    // The match code is shown only by the tab holding it: it never goes in a URL.
+    const { match_code: _matchCode, ...startAnswer } = response as PassflowPasswordlessResponse;
     const params = new URLSearchParams(searchSource.read());
     const newParams = queryString.stringify({
       ...Object.fromEntries(params.entries()),
       ...payload,
-      ...passwordlessResponse,
+      ...startAnswer,
       type: 'passwordless',
       challenge_type: challengeType,
       create_tenant: createTenantForNewUser,
@@ -313,6 +317,7 @@ export const SignInForm: FC<TSignIn> = ({
         onPasskey: () => void handlePasskey(),
         onProvider: handleProvider,
         onReset: reset,
+        onStartAgain: () => window.location.assign(urlWithoutParentChallenge(window.location.href)),
       }}
     />
   );

@@ -94,8 +94,18 @@ export const serverMessageFor = (error: unknown): string | null => {
   return trimmed === '' ? null : trimmed;
 };
 
-/** A hook's display error: the server's message for an allow-listed id, else the fixed copy for the operation. */
+/** A parent challenge the server refused: each id has its own copy, and only starting again can help. */
+const REFUSED_PARENT_COPY: ReadonlyMap<unknown, string> = new Map([
+  ['error.auth.flow.parent.expired', 'This sign-in request has expired. Start again.'],
+  ['error.auth.flow.parent.not.found', "We couldn't find this sign-in request. Start again."],
+  ['error.auth.flow.parent.completed', 'This sign-in request was already completed. Start again.'],
+]);
+
+/** A hook's display error: a refused parent's copy, the server's message for an allow-listed id, else the operation's fixed copy. */
 export const authErrorFrom = (error: unknown, flow: AuthFlow, operation: AuthOperation): AuthUiError => {
+  const refusedParent = REFUSED_PARENT_COPY.get(readField(readServerError(error), 'id'));
+  if (refusedParent !== undefined) return { message: refusedParent, scope: 'form', startAgain: true };
+
   const message = serverMessageFor(error);
   return message === null ? authErrorFor(flow, operation) : { message, scope: 'form' };
 };
@@ -132,6 +142,82 @@ export const emailCodeErrorMessage = (error: unknown): string => {
     return emailCodeUnavailableMessage;
   }
   return emailCodeRestartMessage;
+};
+
+// The tab waiting on a cross-device sign-in.
+export const passwordlessWaitDeniedMessage = 'This sign-in was denied. Start again.';
+export const passwordlessLinkExpiredMessage = 'This link expired. Start again.';
+export const passwordlessWaitCompletedMessage = 'This sign-in was already used. Start again.';
+export const passwordlessSignInFailedMessage = 'Sign-in failed. Start again.';
+
+// The device approving a cross-device sign-in.
+export const approvalInvalidMessage = 'This link is not valid. Start again from the page where you signed in.';
+export const approvalUnavailableMessage = 'This sign-in cannot be approved here. Start again.';
+export const approvalAlreadyDecidedMessage = 'This sign-in was already decided.';
+export const approvalAttemptsMessage = 'Too many wrong codes. This sign-in was denied. Start again.';
+export const approvalConnectionMessage = 'Check your connection and try again.';
+export const approvalUnknownErrorMessage = 'Something went wrong. Try again later.';
+export const approvalApprovedMessage = 'Approved. Return to the tab that started sign-in. You can close this tab.';
+export const approvalDeniedMessage = 'Denied. No one was signed in. You can close this tab.';
+
+export type ApprovalError = {
+  message: string;
+  /** Nothing more can be done on this screen: the form goes away. */
+  terminal: boolean;
+};
+
+const approvalMatchMessage = (attemptsLeft?: number): string => {
+  if (attemptsLeft === undefined) return 'That code does not match.';
+  return `That code does not match. ${attemptsLeft} ${attemptsLeft === 1 ? 'try' : 'tries'} left.`;
+};
+
+/** A wrong code on the approve screen: the tries left must be read again before showing the message. */
+export const isApprovalMatchError = (error: unknown): boolean =>
+  readField(readServerError(error), 'id') === 'error.auth.passwordless.approval.match.invalid';
+
+/**
+ * Error copy for the approve screen. `attemptsLeft` is the count re-read after the rejection. A plain core error with
+ * no response body arrives as id `error.passwordless.approval`, status 0: nothing was decided, so the screen stays.
+ */
+export const approvalErrorFrom = (error: unknown, attemptsLeft?: number): ApprovalError => {
+  const serverError = readServerError(error);
+  const id = readField(serverError, 'id');
+
+  switch (id) {
+    case 'error.auth.passwordless.approval.invalid':
+      return { message: approvalInvalidMessage, terminal: true };
+    case 'error.auth.passwordless.approval.unavailable':
+      return { message: approvalUnavailableMessage, terminal: true };
+    case 'error.otp.expired':
+      return { message: passwordlessLinkExpiredMessage, terminal: true };
+    case 'error.otp.already.used':
+      return { message: approvalAlreadyDecidedMessage, terminal: true };
+    case 'error.auth.passwordless.approval.match.invalid':
+      return { message: approvalMatchMessage(attemptsLeft), terminal: false };
+    case 'error.auth.passwordless.approval.attempts':
+      return { message: approvalAttemptsMessage, terminal: true };
+  }
+
+  if (id === 'error.passwordless.approval' || readField(serverError, 'status') === 0) {
+    return { message: approvalConnectionMessage, terminal: false };
+  }
+  return { message: approvalUnknownErrorMessage, terminal: false };
+};
+
+/**
+ * A failed passwordless completion. A row that only another device can approve has its own copy. A failed exchange comes
+ * after the row was spent, so retrying cannot work, even with no response (id `error.pkce.exchange`, status 0). Core
+ * rejects a network failure or raw 429 on the completion itself as id `error.passwordless.complete`: the code was not
+ * refused, so the user can try again.
+ */
+export const passwordlessCompleteErrorMessage = (error: unknown): string => {
+  const serverError = readServerError(error);
+  const id = readField(serverError, 'id');
+
+  if (id === 'error.auth.passwordless.approval.unavailable') return approvalUnavailableMessage;
+  if (id === 'error.pkce.exchange') return passwordlessSignInFailedMessage;
+  if (id === 'error.passwordless.complete' || readField(serverError, 'status') === 0) return approvalConnectionMessage;
+  return verificationRequestErrorMessage;
 };
 
 export const resetLinkInvalidMessage = 'This link is invalid or has expired. Request a new one.';

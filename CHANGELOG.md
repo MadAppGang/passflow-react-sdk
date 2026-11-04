@@ -2,6 +2,25 @@
 
 All notable changes to `@passflow/react` are documented in this file.
 
+## [0.19.0] - 2026-11-04
+
+### Added
+
+- Cross-device magic-link sign-in. With PKCE on, the tab that asked for the link shows a 4-digit code and finishes sign-in itself once the link is approved. The device that opens the link shows the request details, asks for that code, and offers Approve and Deny. Resend replaces the request, and the tab waits on the new one.
+- `federatedLanding` prop on `Passflow` (`'app'` by default, or `'login-page'`). With `'login-page'`, PKCE on and no `parent_challenge_id`, a federated sign-in returns to the login page, which finishes it and forwards to the app with tokens, once. `useProvider` takes the same value as its third argument.
+- `federatedLandingOutcome` on `NavigationContext`: `'signed-in'` or `'failed'` after a federated landing.
+- `LoginScreen` states `passwordless-waiting` and `passwordless-approval`, each with Storybook stories. Also exported: the `FederatedLanding` and `FederatedLandingOutcome` types, and the approval message helpers from the utils.
+
+### Changed
+
+- Requires `@passflow/core` `^0.24.0`.
+- Federated PKCE landings now run from a committed effect through core's `deferFederatedLanding`, so they hold under React 18 StrictMode.
+
+### Fixed
+
+- A refused parent challenge (`error.auth.flow.parent.expired`, `.not.found`, `.completed`) shows its own message on the form instead of marking the credential fields invalid. Start again reloads the page without `parent_challenge_id`.
+- `match_code` from a passwordless start is no longer put in the query of the verify screen.
+
 ## [0.18.0] - 2026-11-03
 
 ### Added

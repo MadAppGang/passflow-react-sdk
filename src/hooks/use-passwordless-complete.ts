@@ -1,6 +1,6 @@
 import type { PassflowPasswordlessSignInCompletePayload, PassflowValidationResponse } from '@passflow/core';
 import { useCallback, useState } from 'react';
-import { verificationRequestErrorMessage } from '@/utils';
+import { passwordlessCompleteErrorMessage } from '@/utils';
 import { usePassflow } from './use-passflow';
 
 export type UsePasswordlessCompleteProps = () => {
@@ -28,7 +28,7 @@ export const usePasswordlessComplete: UsePasswordlessCompleteProps = () => {
       } catch (error) {
         console.error('[passflow] passwordless verification failed', error);
         setIsError(true);
-        setErrorMessage(verificationRequestErrorMessage);
+        setErrorMessage(passwordlessCompleteErrorMessage(error));
         return null;
       } finally {
         setIsLoading(false);
