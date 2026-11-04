@@ -27,7 +27,9 @@ export default defineConfig({
         // Externalized packages import React natively, past the aliases below, so every
         // runtime package that imports React is inlined (from the lockfile's snapshots).
         // react-dom-18 stays external: resolve-react18.ts covers its require('react').
+        // @passflow/core is inlined so its import of axios goes through the alias below.
         inline: [
+          /\/node_modules\/@passflow\/core\//,
           /\/node_modules\/(@floating-ui|@radix-ui|@tanstack\/react-router|@tanstack\/react-store|@testing-library\/react)\//,
           /\/node_modules\/(input-otp|react-error-boundary|react-hook-form|react-international-phone)\//,
           /\/node_modules\/(react-remove-scroll|react-remove-scroll-bar|react-router|react-style-singleton)\//,

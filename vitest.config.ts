@@ -20,6 +20,9 @@ export default defineConfig({
     setupFiles: ['./src/test/setup.ts'],
     // tests/unit holds black-box tests that import the package by its public name.
     include: ['src/**/*.test.ts', 'src/**/*.test.tsx', 'tests/unit/**/*.test.ts', 'tests/unit/**/*.test.tsx'],
+    // Inlined so core's import of axios goes through the alias below. Externalized, core
+    // loads a second axios natively and the harness's stubbed adapter never reaches it.
+    server: { deps: { inline: [/\/node_modules\/@passflow\/core\//] } },
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html'],
