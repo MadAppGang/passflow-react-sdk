@@ -21,7 +21,7 @@ export const info = (overrides: Record<string, unknown> = {}) => ({
   ...overrides,
 });
 
-export const setupPasswordless = async (page: Page, options: { pkce?: boolean; magic?: boolean } = {}) => {
+export const setupPasswordless = async (page: Page, options: { pkce?: boolean; magic?: boolean; createTenant?: boolean } = {}) => {
   await page.route('**/auth/redirect/check', (route) =>
     route.fulfill({ json: { redirect_url: route.request().postDataJSON().redirect_url } }),
   );
@@ -34,7 +34,7 @@ export const setupPasswordless = async (page: Page, options: { pkce?: boolean; m
         active: true,
         pkce_enabled: options.pkce ?? true,
         force_passwordless_login: false,
-        defaults: { redirect: successUrl },
+        defaults: { redirect: successUrl, create_tenant_for_new_user: options.createTenant },
         auth_strategies: [
           { strategy: { identity: 'email', challenge: 'password', transport: 'none' }, type: 'internal' },
           {

@@ -14,6 +14,9 @@ vi.mock('@/hooks', () => ({
   usePasswordlessComplete: () => ({ fetch: complete, isError: false, error: '', isLoading: false }),
 }));
 
+vi.mock('@/hooks/use-passflow', () => ({ usePassflow: () => passflow }));
+vi.mock('@/hooks/use-navigation', () => ({ useNavigation: () => ({ navigate }) }));
+
 import { VerifyChallengeOTPManual } from '../verify-challenge-otp-manual';
 import { VerifyChallengeOTPRedirect } from '../verify-challenge-otp-redirect';
 

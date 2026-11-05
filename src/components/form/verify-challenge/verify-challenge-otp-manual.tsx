@@ -9,9 +9,9 @@ import type {
 import { type FC, useEffect, useId, useState } from 'react';
 import { SignInEndingScreen } from '@/components/form/signed-in';
 import { Button, FieldOtp, Icon } from '@/components/ui';
-import { routes, useSearchSource } from '@/context';
-import { useAppSettings, useNavigation, usePassflow, usePasswordlessComplete, useSignIn, useSignInEnding } from '@/hooks';
-import { routeToSecondFactor, useUrlParams } from '@/utils';
+import { useAppSettings, useNavigation, usePasswordlessComplete, useSignIn, useSignInEnding } from '@/hooks';
+import { useSecondFactorRoute } from '@/hooks/use-second-factor-route';
+import { useUrlParams } from '@/utils';
 import { Wrapper } from '../wrapper';
 import { TimerButton } from './timer-button';
 
@@ -45,18 +45,17 @@ export const VerifyChallengeOTPManual: FC<VerifyChallengeOTPManualProps> = ({
   shouldAutoFocus,
   successAuthRedirect,
   signUpPath,
-  twoFactorVerifyPath = routes.two_factor_verify.path,
+  twoFactorVerifyPath,
 }) => {
-  const passflow = usePassflow();
+  const routeToSecondFactor = useSecondFactorRoute(twoFactorVerifyPath);
   const { createTenantForNewUser, currentStyles, loginAppTheme } = useAppSettings();
   const { navigate } = useNavigation();
-  const searchSource = useSearchSource();
   const { fetch: refetch } = useSignIn();
   const { fetch: fetchPasswordlessComplete, isError, error } = usePasswordlessComplete();
   const [valueOTP, setValueOTP] = useState('');
   const [paramsError, setParamsError] = useState<string | null>(null);
   const { ending, retry, finishSignIn } = useSignInEnding();
-  const { set } = useUrlParams();
+  const { get, set } = useUrlParams();
   const otpId = useId();
   const otpErrorId = `${otpId}-error`;
 
@@ -64,11 +63,13 @@ export const VerifyChallengeOTPManual: FC<VerifyChallengeOTPManualProps> = ({
 
   const onClickResendHandler = async () => {
     if (type && identity && identityValue && challengeType) {
+      const inviteToken = get('invite_token');
       const payload: PassflowPasswordlessSignInPayload = {
         create_tenant: createTenantForNewUser,
         challenge_type: challengeType as InternalStrategyChallenge,
         redirect_url: successAuthRedirect ?? '',
         ...(identity === 'email' ? { email: identityValue } : { phone: identityValue }),
+        ...(inviteToken ? { invite_token: inviteToken } : {}),
       };
 
       const refetchResponse = (await refetch(payload, type)) as PassflowPasswordlessResponse;
@@ -91,13 +92,13 @@ export const VerifyChallengeOTPManual: FC<VerifyChallengeOTPManualProps> = ({
         const response = await fetchPasswordlessComplete(payload);
         if (response) {
           // The code completed the first factor only: no tokens yet.
-          if (routeToSecondFactor(passflow, navigate, twoFactorVerifyPath, searchSource.read())) return;
+          if (routeToSecondFactor()) return;
           await finishSignIn(response.redirect_url);
         }
       };
       void fetchData();
     }
-  }, [valueOTP, numInputs, fetchPasswordlessComplete, challengeId, navigate, passflow, twoFactorVerifyPath]);
+  }, [valueOTP, numInputs, fetchPasswordlessComplete, challengeId]);
 
   if (paramsError) throw new Error(paramsError);
 

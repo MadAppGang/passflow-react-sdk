@@ -9,7 +9,7 @@ import type { PassflowSendPasswordResetEmailPayload } from '@passflow/core';
 import { useUrlParams, verificationLinkErrorMessage } from '@/utils';
 
 const searchParamsForgotPasswordSuccessSchema = Yup.object().shape({
-  identity: Yup.string().oneOf(['email', 'phone']).required(),
+  identity: Yup.string().oneOf(['email', 'phone', 'username']).required(),
   identityValue: Yup.string().required(),
   redirectUrl: Yup.string().nullable(),
 });
@@ -20,8 +20,8 @@ export const ForgotPasswordSuccess = () => {
   const { get } = useUrlParams();
 
   const params = {
-    identity: get('email') ? 'email' : get('phone') ? 'phone' : null,
-    identityValue: get('email') ? get('email') : get('phone') ? get('phone') : null,
+    identity: get('email') ? 'email' : get('phone') ? 'phone' : get('username') ? 'username' : null,
+    identityValue: get('email') || get('phone') || get('username') || null,
     redirectUrl: get('redirect_url'),
   };
 
@@ -36,6 +36,7 @@ export const ForgotPasswordSuccess = () => {
     const resendPayload = {
       ...(params.identity === 'email' ? { email: params.identityValue } : undefined),
       ...(params.identity === 'phone' ? { phone: params.identityValue } : undefined),
+      ...(params.identity === 'username' ? { username: params.identityValue } : undefined),
       ...(params.redirectUrl ? { redirect_url: params.redirectUrl } : {}),
     };
 
@@ -44,7 +45,7 @@ export const ForgotPasswordSuccess = () => {
 
   return (
     <Wrapper
-      title={`Check your ${params.identity}`}
+      title={`Check your ${params.identity === 'phone' ? 'phone' : 'email'}`}
       className='passflow-forgot-password-success-wrapper'
       customCss={currentStyles?.custom_css}
       customLogo={currentStyles?.logo_url}
@@ -52,7 +53,12 @@ export const ForgotPasswordSuccess = () => {
     >
       <div className='passflow-forgot-password-success-container'>
         <p className='passflow-forgot-password-success-text'>
-          We sent a link to {params.identity === 'phone' ? 'phone number' : 'email address'}{' '}
+          We sent a link to{' '}
+          {params.identity === 'phone'
+            ? 'phone number'
+            : params.identity === 'email'
+              ? 'email address'
+              : 'the email address for'}{' '}
           <strong className='passflow-forgot-password-success-text--strong'>{params.identityValue}</strong>. Click the link to
           reset your password.
         </p>
@@ -64,7 +70,7 @@ export const ForgotPasswordSuccess = () => {
           // eslint-disable-next-line @typescript-eslint/no-misused-promises
           onClick={onClickResendHandler}
         >
-          Resend {params.identity === 'email' ? 'email' : 'SMS'}
+          Resend {params.identity === 'phone' ? 'SMS' : 'email'}
         </Button>
       </div>
     </Wrapper>

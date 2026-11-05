@@ -5,6 +5,7 @@ import { SignInEndingScreen } from '@/components/form/signed-in';
 import { Button, LoginScreen } from '@/components/ui';
 import { routes, useSearchSource } from '@/context';
 import { useAppSettings, useNavigation, usePassflow, useSignIn, useSignInEnding } from '@/hooks';
+import { useSecondFactorRoute } from '@/hooks/use-second-factor-route';
 import { Wrapper } from '../wrapper';
 import '@/styles/index.css';
 import {
@@ -12,7 +13,6 @@ import {
   passwordlessSignInFailedMessage,
   passwordlessWaitCompletedMessage,
   passwordlessWaitDeniedMessage,
-  routeToSecondFactor,
   signInSearch,
   useUrlParams,
 } from '@/utils';
@@ -29,6 +29,7 @@ const WAIT_FAILURE_MESSAGES = {
 };
 
 const useResendPayload = () => {
+  const { createTenantForNewUser } = useAppSettings();
   const { get } = useUrlParams({
     identity: '',
     identity_value: '',
@@ -40,6 +41,7 @@ const useResendPayload = () => {
   const identity = get('email') ? 'email' : get('phone') ? 'phone' : undefined;
   const identityValue = get('email') ? get('email') : get('phone') ? get('phone') : undefined;
   const redirectUrl = get('redirect_url');
+  const inviteToken = get('invite_token');
 
   return {
     identity,
@@ -50,7 +52,9 @@ const useResendPayload = () => {
       ...(identity === 'email' ? { email: identityValue } : undefined),
       ...(identity === 'phone' ? { phone: identityValue } : undefined),
       challenge_type: get('challenge_type'),
+      create_tenant: createTenantForNewUser,
       redirect_url: redirectUrl,
+      ...(inviteToken ? { invite_token: inviteToken } : {}),
     } as PassflowPasswordlessSignInPayload,
   };
 };
@@ -110,7 +114,8 @@ const MagicLinkWaiting: FC<MagicLinkWaitingProps> = ({ challengeId, matchCode, s
   // The wait below starts once, and settings can arrive after it.
   const appDefault = useRef<string | undefined>(undefined);
   appDefault.current = appSettings?.defaults?.redirect;
-  const { navigate, twoFactorVerifyPath = routes.two_factor_verify.path } = useNavigation();
+  const { navigate } = useNavigation();
+  const routeToSecondFactor = useSecondFactorRoute();
   const { fetch: refetch, isLoading: isResending, isError: isResendError, error: resendError } = useSignIn();
   const searchSource = useSearchSource();
   const { redirectUrl, type, resendPayload } = useResendPayload();
@@ -129,8 +134,7 @@ const MagicLinkWaiting: FC<MagicLinkWaitingProps> = ({ challengeId, matchCode, s
         if (result.status === 'signed-in') {
           await finishSignIn(redirectUrl, appDefault.current);
         } else if (result.status === 'second-factor-required') {
-          if (!routeToSecondFactor(passflow, navigate, twoFactorVerifyPath, searchSource.read()))
-            setFailure(passwordlessSignInFailedMessage);
+          if (!routeToSecondFactor()) setFailure(passwordlessSignInFailedMessage);
         } else {
           setFailure(WAIT_FAILURE_MESSAGES[result.status]);
         }

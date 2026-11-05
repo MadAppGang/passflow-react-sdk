@@ -2,6 +2,17 @@
 
 All notable changes to `@passflow/react` are documented in this file.
 
+## [0.20.3] - 2026-11-05
+
+### Fixed
+
+- Resending an email link or OTP now keeps the invite from the first attempt. An invite-only app refused the resend for a new user.
+- Resending an email link now asks for a tenant when the first attempt did. It used to ask for none.
+- Forgot password with a username now reaches its success screen, and its resend goes by username. The screen used to show an error after the reset had been sent.
+- The forgot-password success screen names the identity just submitted, not an `email` or `phone` left in the page URL.
+- An opened email link sends its completion once under React StrictMode. It used to send it twice in development.
+- An opened email link or a reloaded waiting tab that owes a second factor now stays in the flow on a hash router or under a path prefix. A provider-level `twoFactorVerifyPath` now also applies to the OTP screens.
+
 ## [0.20.2] - 2026-11-05
 
 ### Fixed
