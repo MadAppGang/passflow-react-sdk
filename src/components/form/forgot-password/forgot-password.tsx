@@ -88,6 +88,7 @@ export const ForgotPassword: FC<TForgotPassword> = ({
 
     if (status) {
       const currentSearchParams = new URLSearchParams(searchSource.read());
+      currentSearchParams.delete('redirect_url');
       const newParams = queryString.stringify({
         ...Object.fromEntries(currentSearchParams.entries()),
         ...payload,

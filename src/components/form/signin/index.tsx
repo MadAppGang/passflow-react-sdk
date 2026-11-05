@@ -181,6 +181,8 @@ export const SignInForm: FC<TSignIn> = ({
     // The match code is shown only by the tab holding it: it never goes in a URL.
     const { match_code: _matchCode, ...startAnswer } = response as PassflowPasswordlessResponse;
     const params = new URLSearchParams(searchSource.read());
+    // The attempt's own address is the one sent at start, not one left on this page's URL.
+    params.delete('redirect_url');
     const newParams = queryString.stringify({
       ...Object.fromEntries(params.entries()),
       ...payload,
