@@ -81,13 +81,14 @@ export const ForgotPassword: FC<TForgotPassword> = ({
       ...(isEmail && { email: values.email_or_username }),
       ...(isUsername && { username: values.email_or_username }),
       ...(isPhone && { phone: validatedPhone.phoneNumber }),
-      redirect_url: successResetRedirect ?? appSettings?.defaults?.redirect,
+      ...(successResetRedirect && { redirect_url: successResetRedirect }),
     } as PassflowSendPasswordResetEmailPayload;
 
     const status = await fetch(payload);
 
     if (status) {
       const currentSearchParams = new URLSearchParams(searchSource.read());
+      currentSearchParams.delete('redirect_url');
       const newParams = queryString.stringify({
         ...Object.fromEntries(currentSearchParams.entries()),
         ...payload,

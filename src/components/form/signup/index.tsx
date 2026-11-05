@@ -148,11 +148,10 @@ export const SignUpForm: FC<TSignUp> = ({
   };
 
   const submitPasskey = async () => {
-    const redirectUrl = successAuthRedirect ?? appSettings?.defaults?.redirect ?? '';
     const payload = {
       relying_party_id: relyingPartyId,
       create_tenant: createTenantForNewUser,
-      redirect_url: redirectUrl,
+      redirect_url: successAuthRedirect ?? '',
       ...(inviteToken ? { invite_token: inviteToken } : {}),
       scopes,
     } as PassflowPasskeyRegisterStartPayload;
@@ -166,7 +165,7 @@ export const SignUpForm: FC<TSignUp> = ({
       ...userPayload,
       challenge_type: challengeType,
       create_tenant: createTenantForNewUser,
-      redirect_url: successAuthRedirect ?? appSettings?.defaults?.redirect,
+      ...(successAuthRedirect ? { redirect_url: successAuthRedirect } : {}),
       ...(inviteToken ? { invite_token: inviteToken } : {}),
     } as PassflowPasswordlessSignInPayload;
 
@@ -176,6 +175,8 @@ export const SignUpForm: FC<TSignUp> = ({
     // The match code is shown only by the tab holding it: it never goes in a URL.
     const { match_code: _matchCode, ...startAnswer } = response as PassflowPasswordlessResponse;
     const params = new URLSearchParams(searchSource.read());
+    // The attempt's own address is the one sent at start, not one left on this page's URL.
+    params.delete('redirect_url');
     const newParams = queryString.stringify({
       ...Object.fromEntries(params.entries()),
       ...payload,

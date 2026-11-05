@@ -106,7 +106,7 @@ for (const destination of ['redirect', 'success', '2fa'] as const) {
             : response,
       }),
     );
-    // No redirect_url exercises the waiting success branch, independently of app defaults.
+    // A `redirect_url` left on the sign-in page is not the attempt's address, so both cases end on the app's default.
     await beginMagicLink(page, 'signin', destination === 'redirect' ? '?redirect_url=' + encodeURIComponent(successUrl) : '');
     await expect(page.getByText(MATCH_CODE, { exact: true })).toBeVisible();
     approved = true;

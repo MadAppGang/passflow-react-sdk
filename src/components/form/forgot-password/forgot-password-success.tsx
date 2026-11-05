@@ -11,7 +11,7 @@ import { useUrlParams, verificationLinkErrorMessage } from '@/utils';
 const searchParamsForgotPasswordSuccessSchema = Yup.object().shape({
   identity: Yup.string().oneOf(['email', 'phone']).required(),
   identityValue: Yup.string().required(),
-  redirectUrl: Yup.string().required(),
+  redirectUrl: Yup.string().nullable(),
 });
 
 export const ForgotPasswordSuccess = () => {
@@ -36,7 +36,7 @@ export const ForgotPasswordSuccess = () => {
     const resendPayload = {
       ...(params.identity === 'email' ? { email: params.identityValue } : undefined),
       ...(params.identity === 'phone' ? { phone: params.identityValue } : undefined),
-      redirect_url: params.redirectUrl,
+      ...(params.redirectUrl ? { redirect_url: params.redirectUrl } : {}),
     };
 
     await refetch(resendPayload as PassflowSendPasswordResetEmailPayload);
