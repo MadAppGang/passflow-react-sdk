@@ -256,7 +256,7 @@ The whole sign-in experience on its own pages: sign-in, sign-up, one-time codes,
 
 | Prop | Type | Description |
 |------|------|-------------|
-| successAuthRedirect | string | URL to redirect after successful authentication |
+| successAuthRedirect | string | URL to redirect after successful authentication. A full URL must be in the app's redirect URLs. |
 | federatedDisplayMode | "modal" \| "redirect" | Federated authentication display mode |
 | pathPrefix | string | Where the flow lives, such as `/auth`. Optional: worked out from the first URL |
 | routerType | "browser" \| "hash" \| "memory" | The history the flow keeps. Default `browser` |

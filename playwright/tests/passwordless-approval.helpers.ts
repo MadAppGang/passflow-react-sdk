@@ -22,6 +22,9 @@ export const info = (overrides: Record<string, unknown> = {}) => ({
 });
 
 export const setupPasswordless = async (page: Page, options: { pkce?: boolean; magic?: boolean } = {}) => {
+  await page.route('**/auth/redirect/check', (route) =>
+    route.fulfill({ json: { redirect_url: route.request().postDataJSON().redirect_url } }),
+  );
   await page.route('**/settings', (route) => route.fulfill({ json: settings }));
   await page.route('**/settings/password', (route) => route.fulfill({ json: settings.password_policy }));
   await page.route('**/app/settings', (route) =>

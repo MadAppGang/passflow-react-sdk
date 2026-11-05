@@ -28,6 +28,7 @@ const signUp = vi.fn();
 vi.mock('@/hooks', () => ({
   usePassflow: () => passflow,
   useNavigation: () => ({ navigate }),
+  useSignInEnding: () => ({ ending: 'none', retry: vi.fn(), finishSignIn: async (target: string) => navigate({ to: target }) }),
   useProvider: () => ({ federatedWithRedirect: vi.fn(), federatedWithPopup: vi.fn() }),
   useAppSettings: () => ({
     appSettings: { auth_strategies: [], defaults: { redirect: '/dashboard' } },

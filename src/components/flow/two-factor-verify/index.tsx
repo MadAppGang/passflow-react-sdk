@@ -1,13 +1,14 @@
 import type { FC } from 'react';
 import { useCallback, useEffect, useState } from 'react';
+import { SignInEndingScreen } from '@/components/form/signed-in';
 import { TwoFactorRecoveryForm, TwoFactorVerifyForm } from '@/components/form/two-factor-verify';
 import { hasFollowedOIDCRedirect } from '@/components/provider/passflow-provider';
 import { LoginScreen } from '@/components/ui';
 import { routes, useSearchSource } from '@/context';
-import { useNavigation, usePassflow } from '@/hooks';
+import { useNavigation, usePassflow, useSignInEnding } from '@/hooks';
 import { useTwoFactorEnrollment } from '@/hooks/use-two-factor-enrollment';
 import type { SuccessAuthRedirect } from '@/types';
-import { getUrlWithTokens, isValidUrl, signInSearch } from '@/utils';
+import { signInSearch } from '@/utils';
 import { getTwoFactorEnrollmentScreenProps } from './screen';
 
 import '@/styles/index.css';
@@ -21,6 +22,7 @@ export const TwoFactorVerifyFlow: FC<TwoFactorVerifyFlowProps> = ({ successAuthR
   const [mode, setMode] = useState<'verify' | 'recovery'>('verify');
   const { navigate } = useNavigation();
   const passflow = usePassflow();
+  const { ending, retry, finishSignIn } = useSignInEnding();
   const searchSource = useSearchSource();
   // Read once: a screen must not blank when core's 5 minute pending state expires under it.
   const [pendingOnLanding] = useState(() => passflow.isTwoFactorVerificationRequired());
@@ -38,12 +40,13 @@ export const TwoFactorVerifyFlow: FC<TwoFactorVerifyFlowProps> = ({ successAuthR
     if (hasFollowedOIDCRedirect()) return;
 
     try {
-      const target = successAuthRedirect ?? (await passflow.getAppSettings()).defaults?.redirect;
-      if (!target) return;
-      if (!isValidUrl(target)) navigate({ to: target });
-      else window.location.href = await getUrlWithTokens(passflow, target);
+      // With nowhere to go the user stays: the screen is already the finished one, which says they are signed in.
+      await finishSignIn(
+        successAuthRedirect,
+        successAuthRedirect ? undefined : (await passflow.getAppSettings()).defaults?.redirect,
+      );
     } catch {
-      // No target to go to: the user stays on the finished screen, signed in.
+      // No target to go to: as above.
     }
   };
 
@@ -55,6 +58,10 @@ export const TwoFactorVerifyFlow: FC<TwoFactorVerifyFlowProps> = ({ successAuthR
   }, [pendingOnLanding, goToSignIn]);
 
   if (!pendingOnLanding) return null;
+
+  // The finished screen already says the user is signed in; only a target that could not be used needs its own.
+  if (ending === 'checking' || ending === 'refused' || ending === 'unavailable')
+    return <SignInEndingScreen ending={ending} onRetry={retry} />;
 
   const screenProps = getTwoFactorEnrollmentScreenProps(enrollment, goToSignIn);
   if (screenProps) return <LoginScreen {...screenProps} />;

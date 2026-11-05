@@ -1,14 +1,8 @@
 import { useEffect, useState } from 'react';
+import { SignInEndingScreen } from '@/components/form/signed-in';
 import { routes, useSearchSource } from '@/context';
-import { useNavigation, usePassflow, usePasswordlessComplete } from '@/hooks';
-import {
-  getUrlWithTokens,
-  isValidUrl,
-  routeToSecondFactor,
-  verificationLinkErrorMessage,
-  verificationRequestErrorMessage,
-} from '@/utils';
-import { VerifyChallengeSuccess } from './verify-challenge-success';
+import { useNavigation, usePassflow, usePasswordlessComplete, useSignInEnding } from '@/hooks';
+import { routeToSecondFactor, verificationLinkErrorMessage, verificationRequestErrorMessage } from '@/utils';
 
 type VerifyChallengeOTPRedirectProps = {
   appId: string | null;
@@ -27,7 +21,7 @@ export const VerifyChallengeOTPRedirect = ({
   const { navigate } = useNavigation();
   const searchSource = useSearchSource();
   const [paramsError, setParamsError] = useState<string | null>(null);
-  const [showSuccessMessage, setShowSuccessMessage] = useState(false);
+  const { ending, retry, finishSignIn } = useSignInEnding();
   const { fetch, isError, error, isLoading } = usePasswordlessComplete();
 
   // Run once on mount - intentionally empty dependency array
@@ -46,12 +40,7 @@ export const VerifyChallengeOTPRedirect = ({
         if (response) {
           // The link completed the first factor only: no tokens yet.
           if (routeToSecondFactor(passflow, navigate, twoFactorVerifyPath, searchSource.read())) return;
-          if (response.redirect_url) {
-            if (!isValidUrl(response.redirect_url)) navigate({ to: response.redirect_url });
-            else window.location.href = await getUrlWithTokens(passflow, response.redirect_url);
-          } else {
-            setShowSuccessMessage(true);
-          }
+          await finishSignIn(response.redirect_url);
         } else {
           setParamsError(verificationRequestErrorMessage);
         }
@@ -66,7 +55,7 @@ export const VerifyChallengeOTPRedirect = ({
 
   if (paramsError) throw new Error(paramsError);
 
-  if (showSuccessMessage) return <VerifyChallengeSuccess />;
+  if (ending !== 'none') return <SignInEndingScreen ending={ending} onRetry={retry} />;
 
   return null;
 };

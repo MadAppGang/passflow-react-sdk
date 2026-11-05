@@ -1,5 +1,6 @@
-import type { Passflow } from '@passflow/core';
+import { isValidJWTFormat, type Passflow, parseToken } from '@passflow/core';
 import type { NavigateFunction } from '@/context';
+import { undefinedOnCatch } from './undefined-on-catch';
 
 /**
  * The search for a new sign-in or its 2FA step: the original one, without anything that belonged to this attempt. A
@@ -42,4 +43,30 @@ export const routeToSecondFactor = (
 export const urlCarriesTwoFactorToken = (): boolean => {
   if (typeof window === 'undefined' || !window.location.hash) return false;
   return new URLSearchParams(window.location.hash.substring(1)).has('tfa_token');
+};
+
+/**
+ * Whether the current URL is a non-PKCE federated return with tokens in the query. Read it before `@passflow/core` is
+ * constructed, because core adopts them and strips the query as it starts.
+ */
+export const urlCarriesAccessToken = (): boolean =>
+  typeof window !== 'undefined' && new URLSearchParams(window.location.search).has('access_token');
+
+/**
+ * The app a `#tfa_token=` landing belongs to: the one the token names in `aud`. A federated return carries no `appid`,
+ * and the server takes the token only under that app, so discovery (which answers with the default login app) would be
+ * wrong. Read for routing only: the server checks the signature and refuses any other pairing.
+ *
+ * Only on a page served by the API's own origin, the hosted login, which already takes its app from the URL. Any other
+ * page keeps its app whatever a link says.
+ */
+export const twoFactorTokenAppId = (apiUrl: string | undefined): string | undefined => {
+  if (!apiUrl || !urlCarriesTwoFactorToken()) return undefined;
+  const api = undefinedOnCatch((url: string) => new URL(url, window.location.href))(apiUrl);
+  if (api?.origin !== window.location.origin) return undefined;
+  const token = new URLSearchParams(window.location.hash.substring(1)).get('tfa_token') ?? '';
+  if (!isValidJWTFormat(token)) return undefined;
+  const audience: unknown = undefinedOnCatch(parseToken)(token)?.aud;
+  const appId = Array.isArray(audience) ? audience[0] : audience;
+  return typeof appId === 'string' && appId ? appId : undefined;
 };

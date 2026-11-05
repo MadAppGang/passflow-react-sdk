@@ -1347,39 +1347,6 @@ body {
   font-weight: var(--passflow-bold);
 }
 
-/* VERIFY CHALLENGE SUCCESS*/
-.passflow-verify-challenge-success-wrapper {
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: flex-start;
-  gap: 32px;
-}
-
-.passflow-verify-challenge-success-container {
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: flex-start;
-  gap: 8px;
-}
-
-.passflow-verify-challenge-success-text {
-  font-size: var(--passflow-h2);
-  font-weight: var(--passflow-bold);
-  color: var(--passflow-text-color);
-  text-align: center;
-}
-
-.passflow-verify-challenge-success-text-secondary {
-  font-size: var(--passflow-body-2);
-  font-weight: var(--passflow-medium);
-  color: var(--passflow-secondary-text-color);
-  text-align: center;
-}
-
 /* RESET PASSWORD */
 .passflow-reset-password-text {
   display: block;

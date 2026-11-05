@@ -15,10 +15,11 @@ import {
 import { NavigationContext, SearchContext, type SearchSource } from '@/context';
 import '@/styles/index.css';
 import { ErrorComponent } from '@/components/error';
+import { SignInEndingScreen } from '@/components/form/signed-in';
 import { withError } from '@/hocs';
-import { useNavigation, usePassflow } from '@/hooks';
+import { useNavigation, usePassflow, useSignInEnding } from '@/hooks';
 import type { FederatedLanding, SuccessAuthRedirect } from '@/types';
-import { authRedirectErrorFrom, getUrlErrors, getUrlWithTokens, passwordlessSignInFailedMessage } from '@/utils';
+import { authRedirectErrorFrom, getUrlErrors, passwordlessSignInFailedMessage } from '@/utils';
 import {
   createBrowserHistory,
   createHashHistory,
@@ -150,11 +151,15 @@ const PassflowRoutes: FC<PassflowRoutesProps> = ({
 
   // A landing that owes its second factor goes to this flow's own (prefixed)
   // 2FA route; PassflowProvider does the navigation.
-  const { setTwoFactorVerifyPath } = useNavigation();
+  const { setTwoFactorVerifyPath, setSignInPath } = useNavigation();
   useEffect(() => {
     setTwoFactorVerifyPath?.(paths.two_factor_verify);
     return () => setTwoFactorVerifyPath?.(null);
   }, [setTwoFactorVerifyPath, paths.two_factor_verify]);
+  useEffect(() => {
+    setSignInPath?.(paths.signin);
+    return () => setSignInPath?.(null);
+  }, [setSignInPath, paths.signin]);
 
   const match = matchScreen(location.pathname, prefix);
   // A path inside the flow that names no screen goes to sign-in, keeping its search
@@ -301,27 +306,34 @@ const PassflowWrapper: FC<PassflowProps> = ({
   const { location, navigate } = useFlowLocation(routerType, controlledLocation, controlledNavigate);
   const passflow = usePassflow();
   const { federatedLandingOutcome } = useContext(NavigationContext);
+  const { ending, retry, finishSignIn } = useSignInEnding();
 
   // Only a code this tab exchanged arms the forward, never the URL or another
   // sign-in. Settings are read here because `appSettings` state may still be null.
   const forwardedRef = useRef(false);
   // Only the outcome arms the forward; any `passflow` instance reads the tokens from storage, so a newer one changes nothing.
   useEffect(() => {
+    if (federatedLanding === 'login-page' && federatedLandingOutcome === 'tokens-in-url') void finishSignIn();
     if (federatedLanding !== 'login-page' || federatedLandingOutcome !== 'signed-in' || forwardedRef.current) return;
     forwardedRef.current = true;
 
     const forward = async () => {
       try {
-        const target = successAuthRedirect ?? (await passflow.getAppSettings()).defaults?.redirect;
-        if (target) window.location.href = await getUrlWithTokens(passflow, target);
+        await finishSignIn(
+          successAuthRedirect,
+          successAuthRedirect ? undefined : (await passflow.getAppSettings()).defaults?.redirect,
+        );
       } catch {
         // No target to forward to: the user stays signed in on this page.
+        await finishSignIn();
       }
     };
     void forward();
   }, [federatedLandingOutcome]);
 
   if (federatedLandingOutcome === 'failed') throw new Error(passwordlessSignInFailedMessage);
+
+  if (ending !== 'none') return <SignInEndingScreen ending={ending} onRetry={retry} />;
 
   if (errorUrlSuccess) {
     console.error('[passflow] authentication redirect returned an error', {

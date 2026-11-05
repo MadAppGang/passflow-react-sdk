@@ -28,5 +28,5 @@ The eight-box overflow and a used-link screen that said the same thing three tim
 ## Open
 
 - A link with no app id runs an anonymous `GET /settings` with no link bearer. Cookie mode runs core's `GET /user/me` from the constructor, also with no link bearer. Both are allowed exceptions to the link session's request list.
-- An attempt's own destination is not carried across 2FA, on purpose: read from the verify URL, it could send tokens to an attacker-chosen address. `redirectto` stays in the search and the hosted app turns it into `successAuthRedirect`; its validation in login-app was not checked from this repo.
+- An attempt's own destination is not carried across 2FA. The hosted app passes its target as `successAuthRedirect`, and `useSignInEnding` validates a target from the request with `checkRedirectUrl` before leaving.
 - `/two-factor-setup` and `TwoFactorSetupFlow` still exist; no link goes there.

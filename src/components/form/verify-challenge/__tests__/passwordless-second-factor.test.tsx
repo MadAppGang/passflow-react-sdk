@@ -8,6 +8,7 @@ const complete = vi.fn();
 vi.mock('@/hooks', () => ({
   usePassflow: () => passflow,
   useNavigation: () => ({ navigate }),
+  useSignInEnding: () => ({ ending: 'none', retry: vi.fn(), finishSignIn: async (target: string) => navigate({ to: target }) }),
   useAppSettings: () => ({ appSettings: null, createTenantForNewUser: false, currentStyles: null, loginAppTheme: null }),
   useSignIn: () => ({ fetch: vi.fn() }),
   usePasswordlessComplete: () => ({ fetch: complete, isError: false, error: '', isLoading: false }),

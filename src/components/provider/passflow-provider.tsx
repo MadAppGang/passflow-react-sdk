@@ -25,7 +25,7 @@ import {
   type RouterType,
   routes,
 } from '@/context';
-import { signInSearch, urlCarriesTwoFactorToken } from '@/utils/second-factor';
+import { signInSearch, twoFactorTokenAppId, urlCarriesAccessToken, urlCarriesTwoFactorToken } from '@/utils/second-factor';
 import { readParentChallengeIdFromURL } from '@/utils/url-params';
 import '@/styles/index.css';
 
@@ -568,7 +568,10 @@ export type OIDCExchangeContextValue = {
  * flow's router and its 2FA route register themselves in their own mount
  * effects, which run before this one, and their state lands in the next
  * render. Navigating at mount would go through the default full-page
- * navigation to the unprefixed route.
+ * navigation to the unprefixed route. App-id discovery would hold the flow back
+ * the same way, so a `#tfa_token=` landing on the hosted login never runs it: the
+ * app comes from the token. That app goes onto the URL here, where the hosted login
+ * reads it after a reload.
  *
  * A PKCE federated landing (`?code=&user_state=`) is taken here too, from an
  * effect: the instance is built during render, and StrictMode throws one away
@@ -581,6 +584,8 @@ const useSecondFactorLanding = (
   passflow: Passflow,
   navigate: NavigateFunction,
   twoFactorVerifyPath: string,
+  appIdFromToken: string | undefined,
+  landedWithAccessToken: boolean,
 ): FederatedLandingOutcome | undefined => {
   const [pending, setPending] = useState(false);
   const [federatedLandingOutcome, setFederatedLandingOutcome] = useState<FederatedLandingOutcome>();
@@ -626,6 +631,7 @@ const useSecondFactorLanding = (
 
   // Once, on mount — the landing is a property of the page load.
   useEffect(() => {
+    if (landedWithAccessToken && passflow.isAuthenticated()) setFederatedLandingOutcome('tokens-in-url');
     if (!landedWithTwoFactorToken) return;
     // A signed-in user owes no factor: a `#tfa_token=` link is not theirs to answer.
     if (passflow.isAuthenticated()) return;
@@ -636,8 +642,10 @@ const useSecondFactorLanding = (
   useEffect(() => {
     if (!pending) return;
     setPending(false);
-    navigate({ to: twoFactorVerifyPath, search: signInSearch(addressBarSearch.read()) || undefined, replace: true });
-  }, [pending, navigate, twoFactorVerifyPath]);
+    const search = new URLSearchParams(signInSearch(addressBarSearch.read()));
+    if (appIdFromToken) search.set('appid', appIdFromToken);
+    navigate({ to: twoFactorVerifyPath, search: search.toString() || undefined, replace: true });
+  }, [pending, navigate, twoFactorVerifyPath, appIdFromToken]);
 
   return federatedLandingOutcome;
 };
@@ -658,13 +666,17 @@ export const PassflowProvider: FC<PassflowProviderProps> = ({
   // off `PassflowConfig` — which is what `config` is spread into below.
   ...config
 }) => {
+  // Read before core is constructed: core adopts `#tfa_token=` and strips it.
+  const [appIdFromToken] = useState(() => (config.appId ? undefined : twoFactorTokenAppId(config.url)));
+
   // If appId is not provided, set isDiscoveringAppId to true to signal
   // that auto-discovery should happen (prevents showing error before discovery)
-  const needsDiscovery = !config.appId;
+  const needsDiscovery = !config.appId && !appIdFromToken;
 
   const [state, dispatch] = useReducer(passflowReducer, {
     ...initialState,
     ...config,
+    appId: config.appId || appIdFromToken,
     isDiscoveringAppId: needsDiscovery,
   });
 
@@ -677,6 +689,7 @@ export const PassflowProvider: FC<PassflowProviderProps> = ({
 
   // Read before core is constructed: core adopts `#tfa_token=` and strips it.
   const [landedWithTwoFactorToken] = useState(urlCarriesTwoFactorToken);
+  const [landedWithAccessToken] = useState(urlCarriesAccessToken);
 
   const passflow = useMemo(() => new Passflow({ ...state, deferFederatedLanding: true }), [state]);
   useDisposeOnReplace(passflow);
@@ -754,11 +767,14 @@ export const PassflowProvider: FC<PassflowProviderProps> = ({
 
   const [flowTwoFactorVerifyPath, setFlowTwoFactorVerifyPath] = useState<string | null>(null);
   const resolvedTwoFactorVerifyPath = flowTwoFactorVerifyPath ?? twoFactorVerifyPath ?? routes.two_factor_verify.path;
+  const [flowSignInPath, setFlowSignInPath] = useState<string | null>(null);
   const federatedLandingOutcome = useSecondFactorLanding(
     landedWithTwoFactorToken,
     passflow,
     navigate,
     resolvedTwoFactorVerifyPath,
+    appIdFromToken,
+    landedWithAccessToken,
   );
 
   const navigationValue = useMemo(
@@ -768,9 +784,11 @@ export const PassflowProvider: FC<PassflowProviderProps> = ({
       router,
       twoFactorVerifyPath: resolvedTwoFactorVerifyPath,
       setTwoFactorVerifyPath: setFlowTwoFactorVerifyPath,
+      signInPath: flowSignInPath ?? routes.signin.path,
+      setSignInPath: setFlowSignInPath,
       federatedLandingOutcome,
     }),
-    [navigate, handleSetNavigate, router, resolvedTwoFactorVerifyPath, federatedLandingOutcome],
+    [navigate, handleSetNavigate, router, resolvedTwoFactorVerifyPath, flowSignInPath, federatedLandingOutcome],
   );
 
   const oidcExchangeValue = useMemo<OIDCExchangeContextValue>(

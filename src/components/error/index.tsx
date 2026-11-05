@@ -1,7 +1,7 @@
 import type { FC } from 'react';
 import { LoginScreen } from '@/components/ui';
 import { useAppSettings, useNavigation } from '@/hooks';
-import { isValidUrl } from '@/utils';
+import { isSameOriginPath } from '@/utils';
 
 export type TError = {
   goBackRedirectTo: string;
@@ -14,10 +14,8 @@ export const ErrorComponent: FC<TError> = ({ error = defaultErrorMessage, goBack
   const { navigate } = useNavigation();
   const { currentStyles, loginAppTheme } = useAppSettings();
 
-  const handleGoBack = () => {
-    if (!isValidUrl(goBackRedirectTo)) navigate({ to: goBackRedirectTo });
-    else window.location.href = goBackRedirectTo;
-  };
+  // The target can come from the request, so this only ever follows a path on this origin.
+  const handleGoBack = () => navigate({ to: isSameOriginPath(goBackRedirectTo) ? goBackRedirectTo : '/' });
 
   return (
     <LoginScreen

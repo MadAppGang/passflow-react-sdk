@@ -123,6 +123,7 @@ export function installLandingEnvironment(options: { pathname?: string; search?:
     requests.push(request);
     if (request.path === '/app/settings') return settings.promise;
     if (request.path === '/auth/pkce_exchange') return exchange.promise;
+    if (request.path === '/auth/redirect/check') return { data: { redirect_url: request.body.redirect_url } };
     if (request.path === '/settings') return { data: passflowSettingsFixture };
     if (request.path === '/settings/password') return { data: passflowSettingsFixture.password_policy };
     if (endpoints.has(request.path)) return endpoints.get(request.path)!;
