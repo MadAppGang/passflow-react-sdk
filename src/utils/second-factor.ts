@@ -1,5 +1,6 @@
-import type { Passflow } from '@passflow/core';
+import { type Passflow, parseToken } from '@passflow/core';
 import type { NavigateFunction } from '@/context';
+import { undefinedOnCatch } from './undefined-on-catch';
 
 /**
  * The search for a new sign-in or its 2FA step: the original one, without anything that belonged to this attempt. A
@@ -42,4 +43,16 @@ export const routeToSecondFactor = (
 export const urlCarriesTwoFactorToken = (): boolean => {
   if (typeof window === 'undefined' || !window.location.hash) return false;
   return new URLSearchParams(window.location.hash.substring(1)).has('tfa_token');
+};
+
+/**
+ * The app a `#tfa_token=` landing belongs to: the one the token names in `aud`. A federated return carries no `appid`,
+ * and the server takes the token only under that app, so discovery (which answers with the default login app) would be
+ * wrong. Read for routing only: the server checks the signature and refuses any other pairing.
+ */
+export const twoFactorTokenAppId = (): string | undefined => {
+  if (!urlCarriesTwoFactorToken()) return undefined;
+  const token = new URLSearchParams(window.location.hash.substring(1)).get('tfa_token') ?? '';
+  const audience: string | string[] | undefined = undefinedOnCatch(parseToken)(token)?.aud;
+  return Array.isArray(audience) ? audience[0] : audience;
 };
