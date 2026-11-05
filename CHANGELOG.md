@@ -12,6 +12,7 @@ All notable changes to `@passflow/react` are documented in this file.
 ### Changed
 
 - Validate the redirect target before completing sign-in. Sign-in now goes through `checkRedirectUrl` before it leaves for a full URL passed in `successAuthRedirect`, and an error screen appears if that fails. Add the URLs you pass to the app's redirect URLs. Requires `@passflow/core` 0.26.0 and a server with `POST /auth/redirect/check`.
+- "Go back" on the error screen now only follows a path on the current origin. Any other target goes to `/`.
 - The 2FA finished screen now reads "You're signed in", and the old "Successful verification! But there is no redirect URL" screen is gone.
 
 ## [0.20.0] - 2026-11-05

@@ -60,7 +60,8 @@ export const TwoFactorVerifyFlow: FC<TwoFactorVerifyFlowProps> = ({ successAuthR
   if (!pendingOnLanding) return null;
 
   // The finished screen already says the user is signed in; only a target that could not be used needs its own.
-  if (ending === 'refused' || ending === 'unavailable') return <SignInEndingScreen ending={ending} onRetry={retry} />;
+  if (ending === 'checking' || ending === 'refused' || ending === 'unavailable')
+    return <SignInEndingScreen ending={ending} onRetry={retry} />;
 
   const screenProps = getTwoFactorEnrollmentScreenProps(enrollment, goToSignIn);
   if (screenProps) return <LoginScreen {...screenProps} />;

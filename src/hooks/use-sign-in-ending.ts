@@ -1,11 +1,12 @@
 import { useRef, useState } from 'react';
+import { hasFollowedOIDCRedirect } from '@/components/provider/passflow-provider';
 import { getUrlWithTokens, isSameOriginPath, isSignInPage } from '@/utils';
 import { useNavigation } from './use-navigation';
 import { usePassflow } from './use-passflow';
 
 const REDIRECT_NOT_REGISTERED = 'error.app.redirect.url.not.registered';
 
-export type SignInEnding = 'none' | 'signed-in' | 'refused' | 'unavailable';
+export type SignInEnding = 'none' | 'checking' | 'signed-in' | 'refused' | 'unavailable';
 
 /**
  * How every sign-in ends once the user holds tokens, in this order:
@@ -23,6 +24,7 @@ export const useSignInEnding = () => {
   const checkedTarget = useRef<string | null>(null);
 
   const leaveFor = async (target: string) => {
+    setEnding('checking');
     let address: string;
     try {
       address = await passflow.checkRedirectUrl(target);
@@ -34,6 +36,8 @@ export const useSignInEnding = () => {
   };
 
   const finishSignIn = async (requested?: string | null, appDefault?: string | null) => {
+    // An OIDC parent's redirect is already under way: a second navigation would break it.
+    if (hasFollowedOIDCRedirect()) return;
     const target = requested || appDefault;
     if (!target || isSignInPage(target, signInPath)) {
       setEnding('signed-in');

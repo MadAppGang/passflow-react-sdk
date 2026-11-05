@@ -11,6 +11,10 @@ const screens: Record<
   Exclude<SignInEnding, 'none'>,
   (onRetry: () => void) => Pick<LoginScreenProps, 'state'> & { title: string }
 > = {
+  checking: () => ({
+    title: 'Finishing your sign-in',
+    state: { kind: 'status', tone: 'working', message: 'One moment.', testId: 'sign-in-checking' },
+  }),
   'signed-in': () => ({
     title: SIGNED_IN_MESSAGE,
     state: { kind: 'status', tone: 'success', message: 'You can close this page.', testId: 'signed-in' },

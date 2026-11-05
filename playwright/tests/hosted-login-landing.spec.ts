@@ -140,6 +140,66 @@ const submit = async (page: Page, screen: 'signin' | 'signup', requested?: strin
   await page.getByRole('button', { name: screen === 'signin' ? 'Sign In' : 'Sign Up', exact: true }).click();
 };
 
+test('Go back on the error screen stays on this origin when the target is a full URL', async ({ page }) => {
+  await installEnding(page, REAL_APP);
+  const otherHost = 'https://other-host.example.test/';
+  let reached = false;
+  await page.route(`${otherHost}**`, (route) => {
+    reached = true;
+    return route.fulfill({ contentType: 'text/html', body: '<h1>Other host</h1>' });
+  });
+  await page.goto(`${appOrigin}/hosted/signin?appid=${STARTED_ON}&redirectto=${encodeURIComponent(`${otherHost}?error=failed`)}`);
+  await page.getByRole('button', { name: 'Go back' }).click();
+  await expect.poll(() => new URL(page.url()).pathname).toBe('/');
+  expect(page.url().startsWith(appOrigin)).toBe(true);
+  expect(reached).toBe(false);
+});
+
+test('the form is replaced while the target is checked, so it cannot be submitted again', async ({ page }) => {
+  await installEnding(page, undefined);
+  let release = () => {};
+  const held = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  let checks = 0;
+  await onCheck(page, async (route) => {
+    checks += 1;
+    await held;
+    await route.fulfill({ json: { redirect_url: REAL_APP } });
+  });
+  await page.route(`${REAL_APP}**`, (route) =>
+    route.fulfill({ contentType: 'text/html', body: '<h1>The real app</h1>' }),
+  );
+  await submit(page, 'signin', REAL_APP);
+  await expect(page.getByTestId('sign-in-checking')).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Sign In', exact: true })).toHaveCount(0);
+  release();
+  await expect(page.getByRole('heading', { name: 'The real app' })).toBeVisible();
+  expect(checks).toBe(1);
+});
+
+test('an OIDC sign-in that the provider already redirected is not checked or redirected again', async ({ page }) => {
+  await setupPasswordless(page, { pkce: false });
+  const parent = 'https://relying-party.example.test/cb';
+  let checks = 0;
+  await onCheck(page, async (route) => {
+    checks += 1;
+    await route.abort('failed');
+  });
+  // A slow relying party: the page is still here while its navigation is under way.
+  await page.route(`${parent}**`, async (route) => {
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+    await route.fulfill({ contentType: 'text/html', body: '<h1>Relying party</h1>' });
+  });
+  await page.route('**/auth/passwordless/complete', (route) => route.fulfill({ json: { ...tokens(), redirect_url: parent } }));
+  await page.goto(
+    `${appOrigin}/hosted/verify-challenge-otp?appid=${STARTED_ON}&app_id=${STARTED_ON}&challenge_id=row&otp=123456&parent_challenge_id=parent-row`,
+  );
+  await expect(page.getByRole('heading', { name: 'Relying party' })).toBeVisible();
+  expect(new URL(page.url()).hash).toBe('');
+  expect(checks).toBe(0);
+});
+
 // A non-PKCE federated return with no second factor: the server sends it to the login page with the tokens in the query.
 const tokenLanding = (host: 'hosted' | 'web', accessToken = tokens().access_token) =>
   `${appOrigin}/${host}/signin?${new URLSearchParams({

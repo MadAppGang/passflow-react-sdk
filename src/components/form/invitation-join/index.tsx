@@ -25,6 +25,7 @@ const InvitationJoinFlow: FC<TInvitationJoinFlow> = ({
   const { get } = useUrlParams();
   const passflow = usePassflow();
   const { fetch: joinInvite, isLoading, error, isError } = useJoinInvite();
+  const { ending, retry, finishSignIn } = useSignInEnding();
   const invitationToken = get('invite_token');
   const invitationTokenData = invitationToken ? undefinedOnCatch(parseToken)(invitationToken) : undefined;
   const parsedTokenCache = passflow.getParsedTokens();
@@ -57,7 +58,6 @@ const InvitationJoinFlow: FC<TInvitationJoinFlow> = ({
     await finishSignIn(redirectUrl ?? successAuthRedirect, appSettings?.defaults?.redirect);
   };
 
-  const { ending, retry, finishSignIn } = useSignInEnding();
   const navigateToSignIn = () => navigate({ to: signInPath, search: searchSource.read() });
   const navigateToSignUp = () => navigate({ to: signUpPath, search: searchSource.read() });
 
