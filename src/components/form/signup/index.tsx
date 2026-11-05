@@ -148,11 +148,10 @@ export const SignUpForm: FC<TSignUp> = ({
   };
 
   const submitPasskey = async () => {
-    const redirectUrl = successAuthRedirect ?? appSettings?.defaults?.redirect ?? '';
     const payload = {
       relying_party_id: relyingPartyId,
       create_tenant: createTenantForNewUser,
-      redirect_url: redirectUrl,
+      redirect_url: successAuthRedirect ?? '',
       ...(inviteToken ? { invite_token: inviteToken } : {}),
       scopes,
     } as PassflowPasskeyRegisterStartPayload;
@@ -166,7 +165,7 @@ export const SignUpForm: FC<TSignUp> = ({
       ...userPayload,
       challenge_type: challengeType,
       create_tenant: createTenantForNewUser,
-      redirect_url: successAuthRedirect ?? appSettings?.defaults?.redirect,
+      ...(successAuthRedirect ? { redirect_url: successAuthRedirect } : {}),
       ...(inviteToken ? { invite_token: inviteToken } : {}),
     } as PassflowPasswordlessSignInPayload;
 

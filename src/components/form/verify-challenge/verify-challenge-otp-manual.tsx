@@ -48,7 +48,7 @@ export const VerifyChallengeOTPManual: FC<VerifyChallengeOTPManualProps> = ({
   twoFactorVerifyPath = routes.two_factor_verify.path,
 }) => {
   const passflow = usePassflow();
-  const { appSettings, createTenantForNewUser, currentStyles, loginAppTheme } = useAppSettings();
+  const { createTenantForNewUser, currentStyles, loginAppTheme } = useAppSettings();
   const { navigate } = useNavigation();
   const searchSource = useSearchSource();
   const { fetch: refetch } = useSignIn();
@@ -67,7 +67,7 @@ export const VerifyChallengeOTPManual: FC<VerifyChallengeOTPManualProps> = ({
       const payload: PassflowPasswordlessSignInPayload = {
         create_tenant: createTenantForNewUser,
         challenge_type: challengeType as InternalStrategyChallenge,
-        redirect_url: successAuthRedirect ?? appSettings?.defaults?.redirect ?? '',
+        redirect_url: successAuthRedirect ?? '',
         ...(identity === 'email' ? { email: identityValue } : { phone: identityValue }),
       };
 

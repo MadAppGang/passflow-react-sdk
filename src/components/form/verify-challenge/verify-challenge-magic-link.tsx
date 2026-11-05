@@ -1,6 +1,6 @@
 /* eslint-disable no-nested-ternary */
 import type { PassflowPasswordlessResponse, PassflowPasswordlessSignInPayload } from '@passflow/core';
-import { type FC, useEffect, useMemo, useState } from 'react';
+import { type FC, useEffect, useMemo, useRef, useState } from 'react';
 import { SignInEndingScreen } from '@/components/form/signed-in';
 import { Button, LoginScreen } from '@/components/ui';
 import { routes, useSearchSource } from '@/context';
@@ -106,7 +106,10 @@ type MagicLinkWaitingProps = {
 /** This tab started the sign-in and holds its secret: it shows the code and takes the session once the link is approved. */
 const MagicLinkWaiting: FC<MagicLinkWaitingProps> = ({ challengeId, matchCode, signInPath, onResent }) => {
   const passflow = usePassflow();
-  const { currentStyles, loginAppTheme } = useAppSettings();
+  const { appSettings, currentStyles, loginAppTheme } = useAppSettings();
+  // The wait below starts once, and settings can arrive after it.
+  const appDefault = useRef<string | undefined>(undefined);
+  appDefault.current = appSettings?.defaults?.redirect;
   const { navigate, twoFactorVerifyPath = routes.two_factor_verify.path } = useNavigation();
   const { fetch: refetch, isLoading: isResending, isError: isResendError, error: resendError } = useSignIn();
   const searchSource = useSearchSource();
@@ -124,7 +127,7 @@ const MagicLinkWaiting: FC<MagicLinkWaitingProps> = ({ challengeId, matchCode, s
         if (signal.aborted) return;
 
         if (result.status === 'signed-in') {
-          await finishSignIn(redirectUrl);
+          await finishSignIn(redirectUrl, appDefault.current);
         } else if (result.status === 'second-factor-required') {
           if (!routeToSecondFactor(passflow, navigate, twoFactorVerifyPath, searchSource.read()))
             setFailure(passwordlessSignInFailedMessage);

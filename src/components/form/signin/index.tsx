@@ -171,7 +171,7 @@ export const SignInForm: FC<TSignIn> = ({
       ...userPayload,
       challenge_type: challengeType,
       create_tenant: createTenantForNewUser,
-      redirect_url: successAuthRedirect ?? appSettings?.defaults?.redirect,
+      ...(successAuthRedirect && { redirect_url: successAuthRedirect }),
       ...(inviteToken && { invite_token: inviteToken }),
     } as PassflowPasswordlessSignInPayload;
 
