@@ -10,7 +10,8 @@ export type RouterType = 'default' | 'react-router' | 'tanstack-router' | 'woute
 
 export type NavigateFunction = (options: NavigateOptions) => void;
 
-export type FederatedLandingOutcome = 'signed-in' | 'failed';
+/** `tokens-in-url`: a non-PKCE return that the server already sent to this page, so it has nowhere further to go. */
+export type FederatedLandingOutcome = 'signed-in' | 'tokens-in-url' | 'failed';
 
 export type NavigationContextType = {
   navigate: NavigateFunction;

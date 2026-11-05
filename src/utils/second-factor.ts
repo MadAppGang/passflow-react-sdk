@@ -46,6 +46,13 @@ export const urlCarriesTwoFactorToken = (): boolean => {
 };
 
 /**
+ * Whether the current URL is a non-PKCE federated return with tokens in the query. Read it before `@passflow/core` is
+ * constructed, because core adopts them and strips the query as it starts.
+ */
+export const urlCarriesAccessToken = (): boolean =>
+  typeof window !== 'undefined' && new URLSearchParams(window.location.search).has('access_token');
+
+/**
  * The app a `#tfa_token=` landing belongs to: the one the token names in `aud`. A federated return carries no `appid`,
  * and the server takes the token only under that app, so discovery (which answers with the default login app) would be
  * wrong. Read for routing only: the server checks the signature and refuses any other pairing.

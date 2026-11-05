@@ -1,6 +1,6 @@
 import type { Page, Route } from '@playwright/test';
 import { expect, test } from '../fixture';
-import { jwt } from './email-verification.helpers';
+import { jwt, tokens } from './email-verification.helpers';
 import { appOrigin, errorBody, setupPasswordless } from './passwordless-approval.helpers';
 
 // A federated return to the hosted login app: `/web/signin?user_state=...#tfa_token=...`, with no `appid`, on a provider
@@ -139,6 +139,50 @@ const submit = async (page: Page, screen: 'signin' | 'signup', requested?: strin
   await page.getByLabel('Password', { exact: true }).fill('Correct-horse-battery-9!');
   await page.getByRole('button', { name: screen === 'signin' ? 'Sign In' : 'Sign Up', exact: true }).click();
 };
+
+// A non-PKCE federated return with no second factor: the server sends it to the login page with the tokens in the query.
+const tokenLanding = (host: 'hosted' | 'web', accessToken = tokens().access_token) =>
+  `${appOrigin}/${host}/signin?${new URLSearchParams({
+    access_token: accessToken,
+    refresh_token: tokens().refresh_token,
+    user_state: NEVER_STORED,
+  })}`;
+
+const installDiscovery = (page: Page) =>
+  page.route('**/settings', (route) =>
+    route.fulfill({ json: { login_app: { app_id: DEFAULT_LOGIN_APP, scopes: ['openid'] } } }),
+  );
+
+test('a federated return with tokens on the hosted login ends on the signed-in screen, with a clean address bar', async ({ page }) => {
+  await installEnding(page, REAL_APP);
+  await installDiscovery(page);
+  let checks = 0;
+  await onCheck(page, async (route) => {
+    checks += 1;
+    await route.abort('failed');
+  });
+  await page.goto(tokenLanding('hosted'));
+  await expect(page.getByRole('heading', { name: SIGNED_IN })).toBeVisible();
+  const url = new URL(page.url());
+  expect(url.pathname).toBe('/hosted/signin');
+  expect(page.url()).not.toContain('access_token');
+  expect(url.hash).toBe('');
+  expect(checks).toBe(0);
+});
+
+test('a malformed token on the hosted login leaves the sign-in form', async ({ page }) => {
+  await installEnding(page, REAL_APP);
+  await installDiscovery(page);
+  await page.goto(tokenLanding('hosted', 'not-a-token'));
+  await expect(page.getByRole('heading', { name: 'Sign In to your account' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: SIGNED_IN })).toBeHidden();
+});
+
+test('a federated return with tokens on an embedded flow does not show the signed-in screen', async ({ page }) => {
+  await installEnding(page, REAL_APP);
+  await page.goto(tokenLanding('web'));
+  await expect(page.getByRole('heading', { name: SIGNED_IN })).toBeHidden();
+});
 
 for (const screen of ['signin', 'signup'] as const) {
   for (const [name, target] of [

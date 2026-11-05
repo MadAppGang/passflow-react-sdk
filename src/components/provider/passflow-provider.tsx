@@ -25,7 +25,7 @@ import {
   type RouterType,
   routes,
 } from '@/context';
-import { signInSearch, twoFactorTokenAppId, urlCarriesTwoFactorToken } from '@/utils/second-factor';
+import { signInSearch, twoFactorTokenAppId, urlCarriesAccessToken, urlCarriesTwoFactorToken } from '@/utils/second-factor';
 import { readParentChallengeIdFromURL } from '@/utils/url-params';
 import '@/styles/index.css';
 
@@ -585,6 +585,7 @@ const useSecondFactorLanding = (
   navigate: NavigateFunction,
   twoFactorVerifyPath: string,
   appIdFromToken: string | undefined,
+  landedWithAccessToken: boolean,
 ): FederatedLandingOutcome | undefined => {
   const [pending, setPending] = useState(false);
   const [federatedLandingOutcome, setFederatedLandingOutcome] = useState<FederatedLandingOutcome>();
@@ -630,6 +631,7 @@ const useSecondFactorLanding = (
 
   // Once, on mount — the landing is a property of the page load.
   useEffect(() => {
+    if (landedWithAccessToken && passflow.isAuthenticated()) setFederatedLandingOutcome('tokens-in-url');
     if (!landedWithTwoFactorToken) return;
     // A signed-in user owes no factor: a `#tfa_token=` link is not theirs to answer.
     if (passflow.isAuthenticated()) return;
@@ -687,6 +689,7 @@ export const PassflowProvider: FC<PassflowProviderProps> = ({
 
   // Read before core is constructed: core adopts `#tfa_token=` and strips it.
   const [landedWithTwoFactorToken] = useState(urlCarriesTwoFactorToken);
+  const [landedWithAccessToken] = useState(urlCarriesAccessToken);
 
   const passflow = useMemo(() => new Passflow({ ...state, deferFederatedLanding: true }), [state]);
   useDisposeOnReplace(passflow);
@@ -771,6 +774,7 @@ export const PassflowProvider: FC<PassflowProviderProps> = ({
     navigate,
     resolvedTwoFactorVerifyPath,
     appIdFromToken,
+    landedWithAccessToken,
   );
 
   const navigationValue = useMemo(

@@ -313,6 +313,7 @@ const PassflowWrapper: FC<PassflowProps> = ({
   const forwardedRef = useRef(false);
   // Only the outcome arms the forward; any `passflow` instance reads the tokens from storage, so a newer one changes nothing.
   useEffect(() => {
+    if (federatedLanding === 'login-page' && federatedLandingOutcome === 'tokens-in-url') void finishSignIn();
     if (federatedLanding !== 'login-page' || federatedLandingOutcome !== 'signed-in' || forwardedRef.current) return;
     forwardedRef.current = true;
 
