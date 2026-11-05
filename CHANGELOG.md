@@ -6,7 +6,12 @@ All notable changes to `@passflow/react` are documented in this file.
 
 ### Fixed
 
-- A federated sign-in that owes its second factor no longer ends on a bare 404 on the hosted login. The federated return carries `#tfa_token=` and no `appid`, so the provider ran app-id discovery: that held back the flow, so the landing navigated to the unprefixed `/two-factor-verify`, and it picked the default login app, under which the server refuses the token. With no app id configured, the provider now takes the app from the token's `aud` and skips discovery. It also adds `appid` to the 2FA URL, so a reload keeps the app. An `appId` prop still wins.
+- A federated sign-in that owes its second factor no longer ends on a bare 404 on the hosted login. The federated return carries `#tfa_token=` and no `appid`, so the provider ran app-id discovery: that held back the flow, so the landing navigated to the unprefixed `/two-factor-verify`, and it picked the default login app, under which the server refuses the token. On a page served by the API's own origin, with no app id configured, the provider now takes the app from the token's `aud` and skips discovery. It also adds `appid` to the 2FA URL, so a reload keeps the app. An `appId` prop still wins, and any other page behaves as before.
+- A sign-in with nowhere to go now says so. When the target is the sign-in page itself, or there is no target, the user sees "You're signed in" and stays, with no tokens in the address bar, instead of landing back on the sign-in form as if it had failed. This covers sign-in, sign-up, magic link, OTP, 2FA, invitation and password reset endings, and a federated landing on the login page. Any other target still gets the redirect.
+
+### Changed
+
+- The 2FA finished screen now reads "You're signed in", and the old "Successful verification! But there is no redirect URL" screen is gone.
 
 ## [0.20.0] - 2026-11-05
 

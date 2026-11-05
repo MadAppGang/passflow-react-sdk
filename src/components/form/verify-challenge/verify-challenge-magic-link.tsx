@@ -1,14 +1,13 @@
 /* eslint-disable no-nested-ternary */
 import type { PassflowPasswordlessResponse, PassflowPasswordlessSignInPayload } from '@passflow/core';
 import { type FC, useEffect, useMemo, useState } from 'react';
+import { SignedInScreen } from '@/components/form/signed-in';
 import { Button, LoginScreen } from '@/components/ui';
 import { routes, useSearchSource } from '@/context';
-import { useAppSettings, useNavigation, usePassflow, useSignIn } from '@/hooks';
+import { useAppSettings, useNavigation, usePassflow, useSignIn, useSignInEnding } from '@/hooks';
 import { Wrapper } from '../wrapper';
 import '@/styles/index.css';
 import {
-  getUrlWithTokens,
-  isValidUrl,
   passwordlessLinkExpiredMessage,
   passwordlessSignInFailedMessage,
   passwordlessWaitCompletedMessage,
@@ -17,7 +16,6 @@ import {
   signInSearch,
   useUrlParams,
 } from '@/utils';
-import { VerifyChallengeSuccess } from './verify-challenge-success';
 
 const challengeTypeFullString = {
   email: 'email address',
@@ -113,7 +111,7 @@ const MagicLinkWaiting: FC<MagicLinkWaitingProps> = ({ challengeId, matchCode, s
   const { fetch: refetch, isLoading: isResending, isError: isResendError, error: resendError } = useSignIn();
   const searchSource = useSearchSource();
   const { redirectUrl, type, resendPayload } = useResendPayload();
-  const [signedIn, setSignedIn] = useState(false);
+  const { signedIn, finishSignIn } = useSignInEnding();
   const [failure, setFailure] = useState<string | null>(null);
 
   useEffect(() => {
@@ -126,9 +124,7 @@ const MagicLinkWaiting: FC<MagicLinkWaitingProps> = ({ challengeId, matchCode, s
         if (signal.aborted) return;
 
         if (result.status === 'signed-in') {
-          if (!redirectUrl) setSignedIn(true);
-          else if (!isValidUrl(redirectUrl)) navigate({ to: redirectUrl });
-          else window.location.href = await getUrlWithTokens(passflow, redirectUrl);
+          await finishSignIn(redirectUrl);
         } else if (result.status === 'second-factor-required') {
           if (!routeToSecondFactor(passflow, navigate, twoFactorVerifyPath, searchSource.read()))
             setFailure(passwordlessSignInFailedMessage);
@@ -151,7 +147,7 @@ const MagicLinkWaiting: FC<MagicLinkWaitingProps> = ({ challengeId, matchCode, s
     if (answer) onResent(answer as PassflowPasswordlessResponse);
   };
 
-  if (signedIn) return <VerifyChallengeSuccess />;
+  if (signedIn) return <SignedInScreen />;
 
   const chrome = {
     customCss: currentStyles?.custom_css,

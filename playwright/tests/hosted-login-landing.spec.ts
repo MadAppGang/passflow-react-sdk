@@ -100,3 +100,67 @@ test('a plain visit with no app id and no token still discovers the app', async 
   expect(calls.apps).toEqual([]);
   await expect(page).toHaveURL((url) => url.pathname === '/hosted/signin');
 });
+
+// How a sign-in ends on the hosted login. Its default redirect is usually its own sign-in page.
+const OWN_SIGN_IN = `${appOrigin}/hosted/signin`;
+const REAL_APP = 'https://app.example.test/home';
+const SIGNED_IN = "You're signed in";
+
+const installEnding = async (page: Page, defaultRedirect: string | undefined) => {
+  await setupPasswordless(page, { pkce: false });
+  await page.route('**/app/settings', (route) =>
+    route.fulfill({
+      json: {
+        id: STARTED_ON,
+        active: true,
+        pkce_enabled: false,
+        force_passwordless_login: false,
+        registration_allowed: true,
+        defaults: { redirect: defaultRedirect },
+        auth_strategies: [{ strategy: { identity: 'email', challenge: 'password', transport: 'none' }, type: 'internal' }],
+      },
+    }),
+  );
+  const tokens = { access_token: jwt({ type: 'access' }), refresh_token: jwt({ type: 'refresh' }) };
+  await page.route('**/auth/login', (route) => route.fulfill({ json: tokens }));
+  await page.route('**/auth/register', (route) => route.fulfill({ json: tokens }));
+  await page.route(`${REAL_APP}**`, (route) => route.fulfill({ contentType: 'text/html', body: '<h1>The real app</h1>' }));
+};
+
+const submit = async (page: Page, screen: 'signin' | 'signup') => {
+  await page.goto(`${appOrigin}/hosted/${screen}?appid=${STARTED_ON}`);
+  await page.getByLabel('Email', { exact: true }).fill('mailbox@example.com');
+  await page.getByLabel('Password', { exact: true }).fill('Correct-horse-battery-9!');
+  await page.getByRole('button', { name: screen === 'signin' ? 'Sign In' : 'Sign Up', exact: true }).click();
+};
+
+for (const screen of ['signin', 'signup'] as const) {
+  for (const [name, target] of [
+    ['its own sign-in page', OWN_SIGN_IN],
+    ['its own sign-in page with a query and a trailing slash', `${OWN_SIGN_IN}/?from=settings`],
+    ['nowhere', undefined],
+  ] as const) {
+    test(`${screen} with ${name} as the target ends on the signed-in screen, with no tokens in the address bar`, async ({ page }) => {
+      await installEnding(page, target);
+      await submit(page, screen);
+      await expect(page.getByRole('heading', { name: SIGNED_IN })).toBeVisible();
+      expect(new URL(page.url()).hash).toBe('');
+      expect(page.url()).not.toContain('access_token');
+    });
+  }
+
+  test(`${screen} with a real redirect still goes there, tokens included`, async ({ page }) => {
+    await installEnding(page, REAL_APP);
+    await submit(page, screen);
+    await expect(page.getByRole('heading', { name: 'The real app' })).toBeVisible();
+    expect(new URL(page.url()).hash).toContain('access_token=');
+  });
+}
+
+test('the same path on another host is a real redirect, not the sign-in page', async ({ page }) => {
+  const elsewhere = 'https://app.example.test/hosted/signin';
+  await installEnding(page, elsewhere);
+  await page.route(`${elsewhere}**`, (route) => route.fulfill({ contentType: 'text/html', body: '<h1>The real app</h1>' }));
+  await submit(page, 'signin');
+  await expect(page.getByRole('heading', { name: 'The real app' })).toBeVisible();
+});

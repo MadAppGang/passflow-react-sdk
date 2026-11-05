@@ -260,7 +260,7 @@ for (const story of [
       await expect(page.getByRole('status').filter({ hasText: 'Checking your sign-in...' })).toBeVisible();
       await expect(page.getByRole('button')).toHaveCount(0);
     } else if (story === 'StatusSignedIn') {
-      await expect(page.getByText('You are signed in.', { exact: true })).toBeVisible();
+      await expect(page.getByText("You're signed in", { exact: true })).toBeVisible();
       await expect(page.getByRole('button')).toHaveCount(0);
     } else {
       const back = page.getByRole('button', { name: 'Back to sign in', exact: true });

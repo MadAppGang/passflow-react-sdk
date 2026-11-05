@@ -26,6 +26,10 @@ export type NavigationContextType = {
   twoFactorVerifyPath?: string;
   /** Registers the 2FA route of a mounted flow; `null` withdraws it. */
   setTwoFactorVerifyPath?: (path: string | null) => void;
+  /** The sign-in page: a sign-in whose target is this page has nowhere to go. A mounted `PassflowFlow` registers its own. */
+  signInPath?: string;
+  /** Registers the sign-in page of a mounted flow; `null` withdraws it. */
+  setSignInPath?: (path: string | null) => void;
   /** How a PKCE federated redirect that landed on this page ended. A second factor owed is not an outcome here. */
   federatedLandingOutcome?: FederatedLandingOutcome;
 };

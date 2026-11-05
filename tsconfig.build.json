@@ -20,6 +20,7 @@
     "src/app.tsx",
     "src/main.tsx",
     "src/dev-tanstack-host.tsx",
+    "src/dev-hosted-login.tsx",
     "src/test/**",
     "src/**/__tests__/**",
     "src/**/*.test.*",

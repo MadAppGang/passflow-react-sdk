@@ -1,4 +1,4 @@
-import { type Passflow, parseToken } from '@passflow/core';
+import { isValidJWTFormat, type Passflow, parseToken } from '@passflow/core';
 import type { NavigateFunction } from '@/context';
 import { undefinedOnCatch } from './undefined-on-catch';
 
@@ -49,10 +49,17 @@ export const urlCarriesTwoFactorToken = (): boolean => {
  * The app a `#tfa_token=` landing belongs to: the one the token names in `aud`. A federated return carries no `appid`,
  * and the server takes the token only under that app, so discovery (which answers with the default login app) would be
  * wrong. Read for routing only: the server checks the signature and refuses any other pairing.
+ *
+ * Only on a page served by the API's own origin, the hosted login, which already takes its app from the URL. Any other
+ * page keeps its app whatever a link says.
  */
-export const twoFactorTokenAppId = (): string | undefined => {
-  if (!urlCarriesTwoFactorToken()) return undefined;
+export const twoFactorTokenAppId = (apiUrl: string | undefined): string | undefined => {
+  if (!apiUrl || !urlCarriesTwoFactorToken()) return undefined;
+  const api = undefinedOnCatch((url: string) => new URL(url, window.location.href))(apiUrl);
+  if (api?.origin !== window.location.origin) return undefined;
   const token = new URLSearchParams(window.location.hash.substring(1)).get('tfa_token') ?? '';
-  const audience: string | string[] | undefined = undefinedOnCatch(parseToken)(token)?.aud;
-  return Array.isArray(audience) ? audience[0] : audience;
+  if (!isValidJWTFormat(token)) return undefined;
+  const audience: unknown = undefinedOnCatch(parseToken)(token)?.aud;
+  const appId = Array.isArray(audience) ? audience[0] : audience;
+  return typeof appId === 'string' && appId ? appId : undefined;
 };

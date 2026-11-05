@@ -1,11 +1,12 @@
 import { type InvitationToken, parseToken } from '@passflow/core';
 import { type FC, useEffect } from 'react';
 import { ErrorComponent } from '@/components/error';
+import { SignedInScreen } from '@/components/form/signed-in';
 import { LoginScreen } from '@/components/ui';
 import { routes, useSearchSource } from '@/context';
 import { withError } from '@/hocs';
-import { useAppSettings, useJoinInvite, useNavigation, usePassflow } from '@/hooks';
-import { getUrlWithTokens, invitationLinkErrorMessage, isValidUrl, undefinedOnCatch, useUrlParams } from '@/utils';
+import { useAppSettings, useJoinInvite, useNavigation, usePassflow, useSignInEnding } from '@/hooks';
+import { invitationLinkErrorMessage, undefinedOnCatch, useUrlParams } from '@/utils';
 
 export type TInvitationJoinFlow = {
   successAuthRedirect?: string;
@@ -53,13 +54,14 @@ const InvitationJoinFlow: FC<TInvitationJoinFlow> = ({
     const joined = await joinInvite(invitationToken);
     if (!joined) return;
 
-    const successJoinPath = redirectUrl ?? successAuthRedirect ?? appSettings?.defaults?.redirect ?? '';
-    if (!isValidUrl(successJoinPath)) navigate({ to: successJoinPath });
-    else window.location.href = await getUrlWithTokens(passflow, successJoinPath);
+    await finishSignIn(redirectUrl ?? successAuthRedirect ?? appSettings?.defaults?.redirect);
   };
 
+  const { signedIn, finishSignIn } = useSignInEnding();
   const navigateToSignIn = () => navigate({ to: signInPath, search: searchSource.read() });
   const navigateToSignUp = () => navigate({ to: signUpPath, search: searchSource.read() });
+
+  if (signedIn) return <SignedInScreen />;
 
   return (
     <LoginScreen

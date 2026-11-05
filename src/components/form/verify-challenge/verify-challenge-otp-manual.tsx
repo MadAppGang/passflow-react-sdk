@@ -7,13 +7,13 @@ import type {
 /* eslint-disable no-void */
 /* eslint-disable complexity */
 import { type FC, useEffect, useId, useState } from 'react';
+import { SignedInScreen } from '@/components/form/signed-in';
 import { Button, FieldOtp, Icon } from '@/components/ui';
 import { routes, useSearchSource } from '@/context';
-import { useAppSettings, useNavigation, usePassflow, usePasswordlessComplete, useSignIn } from '@/hooks';
-import { getUrlWithTokens, isValidUrl, routeToSecondFactor, useUrlParams } from '@/utils';
+import { useAppSettings, useNavigation, usePassflow, usePasswordlessComplete, useSignIn, useSignInEnding } from '@/hooks';
+import { routeToSecondFactor, useUrlParams } from '@/utils';
 import { Wrapper } from '../wrapper';
 import { TimerButton } from './timer-button';
-import { VerifyChallengeSuccess } from './verify-challenge-success';
 
 import '@/styles/index.css';
 
@@ -55,7 +55,7 @@ export const VerifyChallengeOTPManual: FC<VerifyChallengeOTPManualProps> = ({
   const { fetch: fetchPasswordlessComplete, isError, error } = usePasswordlessComplete();
   const [valueOTP, setValueOTP] = useState('');
   const [paramsError, setParamsError] = useState<string | null>(null);
-  const [showSuccessMessage, setShowSuccessMessage] = useState(false);
+  const { signedIn, finishSignIn } = useSignInEnding();
   const { set } = useUrlParams();
   const otpId = useId();
   const otpErrorId = `${otpId}-error`;
@@ -92,12 +92,7 @@ export const VerifyChallengeOTPManual: FC<VerifyChallengeOTPManualProps> = ({
         if (response) {
           // The code completed the first factor only: no tokens yet.
           if (routeToSecondFactor(passflow, navigate, twoFactorVerifyPath, searchSource.read())) return;
-          if (response.redirect_url) {
-            if (!isValidUrl(response.redirect_url)) navigate({ to: response.redirect_url });
-            else window.location.href = await getUrlWithTokens(passflow, response.redirect_url);
-          } else {
-            setShowSuccessMessage(true);
-          }
+          await finishSignIn(response.redirect_url);
         }
       };
       void fetchData();
@@ -106,7 +101,7 @@ export const VerifyChallengeOTPManual: FC<VerifyChallengeOTPManualProps> = ({
 
   if (paramsError) throw new Error(paramsError);
 
-  if (showSuccessMessage) return <VerifyChallengeSuccess />;
+  if (signedIn) return <SignedInScreen />;
 
   const onClickNavigateBack = () => navigate({ to: signUpPath });
 

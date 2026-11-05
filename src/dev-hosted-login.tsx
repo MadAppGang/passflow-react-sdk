@@ -6,7 +6,7 @@ import { PassflowProvider } from './components/provider';
 
 export const HostedLogin = () => (
   <PassflowProvider
-    appId={new URLSearchParams(window.location.search).get('appid') ?? undefined}
+    appId={new URLSearchParams(window.location.search).get('appid') || undefined}
     url={window.location.origin}
     scopes={['offline', 'openid', 'profile']}
   >

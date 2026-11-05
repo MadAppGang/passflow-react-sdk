@@ -49,6 +49,7 @@ export { getIdentityLabel, getPasswordlessData, getValidationErrorsLabel } from 
 export { getUrlErrors } from './get-url-errors';
 export { getUrlWithTokens, type TokenUrlFormat } from './get-url-with-tokens';
 export { getInvitationAuthChrome, type InvitationAuthIntent } from './invitation-auth-chrome';
+export { isSignInPage } from './is-sign-in-page';
 export { routeToSecondFactor, signInSearch, urlCarriesTwoFactorToken } from './second-factor';
 export { TwoFactorLoopPrevention } from './two-factor-loop-prevention';
 export { undefinedOnCatch } from './undefined-on-catch';

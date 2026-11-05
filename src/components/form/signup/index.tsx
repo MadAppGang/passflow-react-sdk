@@ -11,6 +11,7 @@ import queryString from 'query-string';
 import type { FC } from 'react';
 import { useMemo } from 'react';
 import { ErrorComponent } from '@/components/error';
+import { SignedInScreen } from '@/components/form/signed-in';
 import { hasFollowedOIDCRedirect } from '@/components/provider/passflow-provider';
 import {
   type LoginCredentialsValues,
@@ -21,7 +22,7 @@ import {
 } from '@/components/ui';
 import { routes, useSearchSource } from '@/context';
 import { withError } from '@/hocs';
-import { useAppSettings, useNavigation, usePassflow, useProvider, useSignUp } from '@/hooks';
+import { useAppSettings, useNavigation, usePassflow, useProvider, useSignInEnding, useSignUp } from '@/hooks';
 import type { DefaultMethod, FederatedLanding, SuccessAuthRedirect } from '@/types';
 import {
   type AuthMethods,
@@ -31,8 +32,6 @@ import {
   getInvitationAuthChrome,
   getPasswordlessData,
   getUrlErrors,
-  getUrlWithTokens,
-  isValidUrl,
   routeToSecondFactor,
   urlWithoutParentChallenge,
   useUrlParams,
@@ -99,6 +98,7 @@ export const SignUpForm: FC<TSignUp> = ({
 }) => {
   const passflow = usePassflow();
   const { navigate } = useNavigation();
+  const { signedIn, finishSignIn } = useSignInEnding();
   const searchSource = useSearchSource();
   const {
     appSettings,
@@ -134,9 +134,7 @@ export const SignUpForm: FC<TSignUp> = ({
     if (routeToSecondFactor(passflow, navigate, twoFactorVerifyPath ?? routes.two_factor_verify.path, searchSource.read()))
       return;
     if (oidcMayOwnRedirect && hasFollowedOIDCRedirect()) return;
-    const redirectUrl = successAuthRedirect ?? appSettings?.defaults?.redirect ?? '';
-    if (!isValidUrl(redirectUrl)) navigate({ to: redirectUrl });
-    else window.location.href = await getUrlWithTokens(passflow, redirectUrl);
+    await finishSignIn(successAuthRedirect ?? appSettings?.defaults?.redirect);
   };
 
   const submitPassword = async (userPayload: PassflowUserPayload) => {
@@ -239,6 +237,8 @@ export const SignUpForm: FC<TSignUp> = ({
     customLogoAlt: `${loginAppTheme?.application_name ?? 'Application'} logo`,
     removeBranding: loginAppTheme?.remove_passflow_logo,
   };
+
+  if (signedIn) return <SignedInScreen />;
 
   const { step } = emailCode;
 

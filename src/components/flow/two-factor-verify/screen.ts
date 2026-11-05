@@ -1,3 +1,4 @@
+import { SIGNED_IN_MESSAGE } from '@/components/form/signed-in';
 import {
   getTwoFactorRecoveryCodesScreen,
   getTwoFactorSetupCodeScreen,
@@ -117,7 +118,7 @@ export const getTwoFactorEnrollmentScreenProps = (
     case 'finished':
       return {
         chrome: { title: TITLE },
-        state: { kind: 'status', tone: 'success', message: 'You are signed in.', testId: 'two-factor-finished' },
+        state: { kind: 'status', tone: 'success', message: SIGNED_IN_MESSAGE, testId: 'two-factor-finished' },
       };
   }
 };

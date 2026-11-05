@@ -10,6 +10,7 @@ import queryString from 'query-string';
 import type { FC } from 'react';
 import { useMemo } from 'react';
 import { ErrorComponent } from '@/components/error';
+import { SignedInScreen } from '@/components/form/signed-in';
 import { hasFollowedOIDCRedirect, readParentChallengeIdFromURL } from '@/components/provider/passflow-provider';
 import {
   type LoginCredentialsValues,
@@ -20,7 +21,7 @@ import {
 } from '@/components/ui';
 import { routes, useSearchSource } from '@/context';
 import { withError } from '@/hocs';
-import { useAppSettings, useNavigation, usePassflow, useProvider, useSignIn } from '@/hooks';
+import { useAppSettings, useNavigation, usePassflow, useProvider, useSignIn, useSignInEnding } from '@/hooks';
 import type { FederatedLanding, SuccessAuthRedirect } from '@/types';
 import {
   type AuthMethods,
@@ -31,8 +32,6 @@ import {
   getInvitationAuthChrome,
   getPasswordlessData,
   getUrlErrors,
-  getUrlWithTokens,
-  isValidUrl,
   routeToSecondFactor,
   urlWithoutParentChallenge,
   useUrlParams,
@@ -96,6 +95,7 @@ export const SignInForm: FC<TSignIn> = ({
 }) => {
   const passflow = usePassflow();
   const { navigate } = useNavigation();
+  const { signedIn, finishSignIn } = useSignInEnding();
   const searchSource = useSearchSource();
   const {
     appSettings,
@@ -139,9 +139,7 @@ export const SignInForm: FC<TSignIn> = ({
     if (routeToSecondFactor(passflow, navigate, twoFactorVerifyPath ?? routes.two_factor_verify.path, searchSource.read()))
       return;
     if (oidcLayerOwnsRedirect()) return;
-    const redirectUrl = successAuthRedirect ?? appSettings?.defaults?.redirect ?? '';
-    if (!isValidUrl(redirectUrl)) navigate({ to: redirectUrl });
-    else window.location.href = await getUrlWithTokens(passflow, redirectUrl);
+    await finishSignIn(successAuthRedirect ?? appSettings?.defaults?.redirect);
   };
 
   const submitPassword = async (userPayload: PassflowSignInPayload) => {
@@ -248,6 +246,8 @@ export const SignInForm: FC<TSignIn> = ({
     customLogoAlt: `${loginAppTheme?.application_name ?? 'Application'} logo`,
     removeBranding: loginAppTheme?.remove_passflow_logo,
   };
+
+  if (signedIn) return <SignedInScreen />;
 
   const { step } = emailCode;
 

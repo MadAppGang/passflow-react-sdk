@@ -1,12 +1,13 @@
 import { parseToken, type Token } from '@passflow/core';
 import type { FC } from 'react';
 import * as Yup from 'yup';
+import { SignedInScreen } from '@/components/form/signed-in';
 import { hasFollowedOIDCRedirect } from '@/components/provider/passflow-provider';
 import { LoginScreen, type LoginScreenChrome, type LoginScreenState } from '@/components/ui';
 import { routes, useSearchSource } from '@/context';
-import { useAppSettings, useNavigation, usePassflow, useResetPassword } from '@/hooks';
+import { useAppSettings, useNavigation, usePassflow, useResetPassword, useSignInEnding } from '@/hooks';
 import type { SuccessAuthRedirect } from '@/types';
-import { getUrlWithTokens, isValidUrl, routeToSecondFactor, undefinedOnCatch, useUrlParams } from '@/utils';
+import { routeToSecondFactor, undefinedOnCatch, useUrlParams } from '@/utils';
 import '@/styles/index.css';
 
 const searchParamsResetPasswordSchema = Yup.object().shape({
@@ -37,6 +38,7 @@ export const ResetPassword: FC<TResetPassword> = ({
   const passflow = usePassflow();
   const { fetch, error, isError, isLoading, isPasswordSaved, emailCode } = useResetPassword();
   const { navigate } = useNavigation();
+  const { signedIn, finishSignIn } = useSignInEnding();
   const searchSource = useSearchSource();
   const { get } = useUrlParams();
   const { appSettings, passwordPolicy, currentStyles, isError: isErrorApp, error: errorApp, loginAppTheme } = useAppSettings();
@@ -61,10 +63,9 @@ export const ResetPassword: FC<TResetPassword> = ({
   const completeSignIn = async (answerRedirectUrl?: string) => {
     if (routeToSecondFactor(passflow, navigate, twoFactorVerifyPath, searchSource.read())) return;
     if (hasFollowedOIDCRedirect()) return;
-    const redirectUrl =
-      answerRedirectUrl ?? resetTokenData?.redirect_url ?? successAuthRedirect ?? appSettings?.defaults?.redirect ?? '';
-    if (!isValidUrl(redirectUrl)) navigate({ to: redirectUrl });
-    else window.location.href = await getUrlWithTokens(passflow, redirectUrl);
+    await finishSignIn(
+      answerRedirectUrl ?? resetTokenData?.redirect_url ?? successAuthRedirect ?? appSettings?.defaults?.redirect,
+    );
   };
 
   const savePassword = async (password: string) => {
@@ -129,6 +130,8 @@ export const ResetPassword: FC<TResetPassword> = ({
               submitLabel: isContinuation ? 'Create account' : 'Save new password',
               onSubmit: (password) => void savePassword(password),
             };
+
+  if (signedIn) return <SignedInScreen />;
 
   const heading: Pick<LoginScreenChrome, 'title' | 'subtitle'> =
     step.kind === 'code'

@@ -40,6 +40,7 @@ export {
   type UseSessionExpiredResult,
   useSessionExpired,
 } from './use-session-expired';
+export { useSignInEnding } from './use-sign-in-ending';
 export { type UseSignInProps, useSignIn } from './use-signin';
 export { type UseSignUpProps, useSignUp } from './use-signup';
 export { type UseTrustedDevicesProps, useTrustedDevices } from './use-trusted-devices';
