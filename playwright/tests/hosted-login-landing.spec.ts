@@ -187,24 +187,26 @@ for (const flow of ['signin', 'signup'] as const) {
   });
 }
 
-test('a redirect_url left on the sign-in page is not carried into an email link', async ({ page }) => {
-  await setupPasswordless(page);
-  let checks = 0;
-  await onCheck(page, async (route) => {
-    checks += 1;
-    await route.abort('failed');
+for (const flow of ['signin', 'signup'] as const) {
+  test(`a redirect_url left on the ${flow} page is not carried into an email link`, async ({ page }) => {
+    await setupPasswordless(page);
+    let checks = 0;
+    await onCheck(page, async (route) => {
+      checks += 1;
+      await route.abort('failed');
+    });
+    await page.route('**/auth/passwordless/start', (route) =>
+      route.fulfill({ json: { challenge_id: 'row', expires_at: expiresAt, match_code: MATCH_CODE } }),
+    );
+    await page.route('**/auth/passwordless/status', (route) => route.fulfill({ json: { status: 'approved', code: 'authz-code' } }));
+    await page.route('**/auth/pkce_exchange', (route) => route.fulfill({ json: tokens() }));
+    await page.goto(`${appOrigin}/hosted/${flow}?appid=${STARTED_ON}&redirect_url=${encodeURIComponent(REAL_APP)}`);
+    await page.getByLabel('Email', { exact: true }).fill('mailbox@example.com');
+    await page.getByRole('button', { name: new RegExp(`^Sign ${flow === 'signup' ? 'Up' : 'In'} with email link$`) }).click();
+    await expect(page.getByRole('heading', { name: 'Authentication complete' })).toBeVisible();
+    expect(checks).toBe(0);
   });
-  await page.route('**/auth/passwordless/start', (route) =>
-    route.fulfill({ json: { challenge_id: 'row', expires_at: expiresAt, match_code: MATCH_CODE } }),
-  );
-  await page.route('**/auth/passwordless/status', (route) => route.fulfill({ json: { status: 'approved', code: 'authz-code' } }));
-  await page.route('**/auth/pkce_exchange', (route) => route.fulfill({ json: tokens() }));
-  await page.goto(`${appOrigin}/hosted/signin?appid=${STARTED_ON}&redirect_url=${encodeURIComponent(REAL_APP)}`);
-  await page.getByLabel('Email', { exact: true }).fill('mailbox@example.com');
-  await page.getByRole('button', { name: /^Sign In with email link$/ }).click();
-  await expect(page.getByRole('heading', { name: 'Authentication complete' })).toBeVisible();
-  expect(checks).toBe(0);
-});
+}
 
 test('an opened email link whose answer is the sign-in page ends on the signed-in screen, with no check', async ({ page }) => {
   await installEnding(page, undefined);
@@ -229,7 +231,10 @@ test('forgot password with no target names no address, reaches its success scree
     bodies.push(route.request().postDataJSON());
     return route.fulfill({ json: { success: true } });
   });
-  await page.goto(`${appOrigin}/hosted/forgot-password?appid=${STARTED_ON}&default_method=email_or_username`);
+  // A `redirect_url` left on the page must not reach the resend either.
+  await page.goto(
+    `${appOrigin}/hosted/forgot-password?appid=${STARTED_ON}&default_method=email_or_username&redirect_url=${encodeURIComponent(REAL_APP)}`,
+  );
   await page.getByRole('textbox').first().fill('mailbox@example.com');
   await page.getByRole('button', { name: 'Send reset instructions' }).click();
   await expect(page.getByText('Check your email')).toBeVisible();
