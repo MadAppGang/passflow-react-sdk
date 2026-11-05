@@ -11,7 +11,7 @@ All notable changes to `@passflow/react` are documented in this file.
 
 ### Changed
 
-- With no target given, an email link, OTP or password reset now ends where the server's answer says: the app's first registered redirect URL, or the server's default if the app has none. Put the URL you want first in the list. A tab waiting for its link to be approved ends on the default redirect from the app's settings.
+- With no target given, an email link, OTP or password reset now ends where the server's answer says: the app's first registered redirect URL, or the server's default if the app has none. Put the URL you want first in the list. This changes the ending for an app that lists the server's default with another URL ahead of it: users now go to that first URL. A tab waiting for its link to be approved ends on the default redirect from the app's settings.
 - A `redirect_url` left on the sign-in or forgot-password page URL is no longer carried into the attempt. Pass `successAuthRedirect` or `successResetRedirect` instead.
 
 ## [0.20.1] - 2026-11-05
