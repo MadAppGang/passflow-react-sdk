@@ -1,7 +1,7 @@
 import { type InvitationToken, parseToken } from '@passflow/core';
 import { type FC, useEffect } from 'react';
 import { ErrorComponent } from '@/components/error';
-import { SignedInScreen } from '@/components/form/signed-in';
+import { SignInEndingScreen } from '@/components/form/signed-in';
 import { LoginScreen } from '@/components/ui';
 import { routes, useSearchSource } from '@/context';
 import { withError } from '@/hocs';
@@ -54,14 +54,14 @@ const InvitationJoinFlow: FC<TInvitationJoinFlow> = ({
     const joined = await joinInvite(invitationToken);
     if (!joined) return;
 
-    await finishSignIn(redirectUrl ?? successAuthRedirect ?? appSettings?.defaults?.redirect);
+    await finishSignIn(redirectUrl ?? successAuthRedirect, appSettings?.defaults?.redirect);
   };
 
-  const { signedIn, finishSignIn } = useSignInEnding();
+  const { ending, retry, finishSignIn } = useSignInEnding();
   const navigateToSignIn = () => navigate({ to: signInPath, search: searchSource.read() });
   const navigateToSignUp = () => navigate({ to: signUpPath, search: searchSource.read() });
 
-  if (signedIn) return <SignedInScreen />;
+  if (ending !== 'none') return <SignInEndingScreen ending={ending} onRetry={retry} />;
 
   return (
     <LoginScreen

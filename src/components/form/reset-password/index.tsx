@@ -1,7 +1,7 @@
 import { parseToken, type Token } from '@passflow/core';
 import type { FC } from 'react';
 import * as Yup from 'yup';
-import { SignedInScreen } from '@/components/form/signed-in';
+import { SignInEndingScreen } from '@/components/form/signed-in';
 import { hasFollowedOIDCRedirect } from '@/components/provider/passflow-provider';
 import { LoginScreen, type LoginScreenChrome, type LoginScreenState } from '@/components/ui';
 import { routes, useSearchSource } from '@/context';
@@ -38,7 +38,7 @@ export const ResetPassword: FC<TResetPassword> = ({
   const passflow = usePassflow();
   const { fetch, error, isError, isLoading, isPasswordSaved, emailCode } = useResetPassword();
   const { navigate } = useNavigation();
-  const { signedIn, finishSignIn } = useSignInEnding();
+  const { ending, retry, finishSignIn } = useSignInEnding();
   const searchSource = useSearchSource();
   const { get } = useUrlParams();
   const { appSettings, passwordPolicy, currentStyles, isError: isErrorApp, error: errorApp, loginAppTheme } = useAppSettings();
@@ -64,7 +64,8 @@ export const ResetPassword: FC<TResetPassword> = ({
     if (routeToSecondFactor(passflow, navigate, twoFactorVerifyPath, searchSource.read())) return;
     if (hasFollowedOIDCRedirect()) return;
     await finishSignIn(
-      answerRedirectUrl ?? resetTokenData?.redirect_url ?? successAuthRedirect ?? appSettings?.defaults?.redirect,
+      answerRedirectUrl ?? resetTokenData?.redirect_url ?? successAuthRedirect,
+      appSettings?.defaults?.redirect,
     );
   };
 
@@ -131,7 +132,7 @@ export const ResetPassword: FC<TResetPassword> = ({
               onSubmit: (password) => void savePassword(password),
             };
 
-  if (signedIn) return <SignedInScreen />;
+  if (ending !== 'none') return <SignInEndingScreen ending={ending} onRetry={retry} />;
 
   const heading: Pick<LoginScreenChrome, 'title' | 'subtitle'> =
     step.kind === 'code'

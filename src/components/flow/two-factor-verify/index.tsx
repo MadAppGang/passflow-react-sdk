@@ -1,5 +1,6 @@
 import type { FC } from 'react';
 import { useCallback, useEffect, useState } from 'react';
+import { SignInEndingScreen } from '@/components/form/signed-in';
 import { TwoFactorRecoveryForm, TwoFactorVerifyForm } from '@/components/form/two-factor-verify';
 import { hasFollowedOIDCRedirect } from '@/components/provider/passflow-provider';
 import { LoginScreen } from '@/components/ui';
@@ -21,7 +22,7 @@ export const TwoFactorVerifyFlow: FC<TwoFactorVerifyFlowProps> = ({ successAuthR
   const [mode, setMode] = useState<'verify' | 'recovery'>('verify');
   const { navigate } = useNavigation();
   const passflow = usePassflow();
-  const { finishSignIn } = useSignInEnding();
+  const { ending, retry, finishSignIn } = useSignInEnding();
   const searchSource = useSearchSource();
   // Read once: a screen must not blank when core's 5 minute pending state expires under it.
   const [pendingOnLanding] = useState(() => passflow.isTwoFactorVerificationRequired());
@@ -40,7 +41,10 @@ export const TwoFactorVerifyFlow: FC<TwoFactorVerifyFlowProps> = ({ successAuthR
 
     try {
       // With nowhere to go the user stays: the screen is already the finished one, which says they are signed in.
-      await finishSignIn(successAuthRedirect ?? (await passflow.getAppSettings()).defaults?.redirect);
+      await finishSignIn(
+        successAuthRedirect,
+        successAuthRedirect ? undefined : (await passflow.getAppSettings()).defaults?.redirect,
+      );
     } catch {
       // No target to go to: as above.
     }
@@ -54,6 +58,9 @@ export const TwoFactorVerifyFlow: FC<TwoFactorVerifyFlowProps> = ({ successAuthR
   }, [pendingOnLanding, goToSignIn]);
 
   if (!pendingOnLanding) return null;
+
+  // The finished screen already says the user is signed in; only a target that could not be used needs its own.
+  if (ending === 'refused' || ending === 'unavailable') return <SignInEndingScreen ending={ending} onRetry={retry} />;
 
   const screenProps = getTwoFactorEnrollmentScreenProps(enrollment, goToSignIn);
   if (screenProps) return <LoginScreen {...screenProps} />;

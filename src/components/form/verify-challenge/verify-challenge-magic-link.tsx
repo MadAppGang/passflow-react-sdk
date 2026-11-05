@@ -1,7 +1,7 @@
 /* eslint-disable no-nested-ternary */
 import type { PassflowPasswordlessResponse, PassflowPasswordlessSignInPayload } from '@passflow/core';
 import { type FC, useEffect, useMemo, useState } from 'react';
-import { SignedInScreen } from '@/components/form/signed-in';
+import { SignInEndingScreen } from '@/components/form/signed-in';
 import { Button, LoginScreen } from '@/components/ui';
 import { routes, useSearchSource } from '@/context';
 import { useAppSettings, useNavigation, usePassflow, useSignIn, useSignInEnding } from '@/hooks';
@@ -111,7 +111,7 @@ const MagicLinkWaiting: FC<MagicLinkWaitingProps> = ({ challengeId, matchCode, s
   const { fetch: refetch, isLoading: isResending, isError: isResendError, error: resendError } = useSignIn();
   const searchSource = useSearchSource();
   const { redirectUrl, type, resendPayload } = useResendPayload();
-  const { signedIn, finishSignIn } = useSignInEnding();
+  const { ending, retry, finishSignIn } = useSignInEnding();
   const [failure, setFailure] = useState<string | null>(null);
 
   useEffect(() => {
@@ -147,7 +147,7 @@ const MagicLinkWaiting: FC<MagicLinkWaitingProps> = ({ challengeId, matchCode, s
     if (answer) onResent(answer as PassflowPasswordlessResponse);
   };
 
-  if (signedIn) return <SignedInScreen />;
+  if (ending !== 'none') return <SignInEndingScreen ending={ending} onRetry={retry} />;
 
   const chrome = {
     customCss: currentStyles?.custom_css,

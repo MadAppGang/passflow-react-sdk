@@ -4,12 +4,19 @@
 import { PassflowFlow } from '@/components/flow';
 import { PassflowProvider } from './components/provider';
 
+const params = new URLSearchParams(window.location.search);
+
 export const HostedLogin = () => (
   <PassflowProvider
-    appId={new URLSearchParams(window.location.search).get('appid') || undefined}
+    appId={params.get('appid') || undefined}
     url={window.location.origin}
     scopes={['offline', 'openid', 'profile']}
   >
-    <PassflowFlow pathPrefix='/hosted' federatedDisplayMode='redirect' federatedLanding='login-page' />
+    <PassflowFlow
+      pathPrefix='/hosted'
+      successAuthRedirect={params.get('redirectto') || undefined}
+      federatedDisplayMode='redirect'
+      federatedLanding='login-page'
+    />
   </PassflowProvider>
 );

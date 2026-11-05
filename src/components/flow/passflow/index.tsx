@@ -15,7 +15,7 @@ import {
 import { NavigationContext, SearchContext, type SearchSource } from '@/context';
 import '@/styles/index.css';
 import { ErrorComponent } from '@/components/error';
-import { SignedInScreen } from '@/components/form/signed-in';
+import { SignInEndingScreen } from '@/components/form/signed-in';
 import { withError } from '@/hocs';
 import { useNavigation, usePassflow, useSignInEnding } from '@/hooks';
 import type { FederatedLanding, SuccessAuthRedirect } from '@/types';
@@ -306,7 +306,7 @@ const PassflowWrapper: FC<PassflowProps> = ({
   const { location, navigate } = useFlowLocation(routerType, controlledLocation, controlledNavigate);
   const passflow = usePassflow();
   const { federatedLandingOutcome } = useContext(NavigationContext);
-  const { signedIn, finishSignIn } = useSignInEnding();
+  const { ending, retry, finishSignIn } = useSignInEnding();
 
   // Only a code this tab exchanged arms the forward, never the URL or another
   // sign-in. Settings are read here because `appSettings` state may still be null.
@@ -318,7 +318,10 @@ const PassflowWrapper: FC<PassflowProps> = ({
 
     const forward = async () => {
       try {
-        await finishSignIn(successAuthRedirect ?? (await passflow.getAppSettings()).defaults?.redirect);
+        await finishSignIn(
+          successAuthRedirect,
+          successAuthRedirect ? undefined : (await passflow.getAppSettings()).defaults?.redirect,
+        );
       } catch {
         // No target to forward to: the user stays signed in on this page.
         await finishSignIn();
@@ -329,7 +332,7 @@ const PassflowWrapper: FC<PassflowProps> = ({
 
   if (federatedLandingOutcome === 'failed') throw new Error(passwordlessSignInFailedMessage);
 
-  if (signedIn) return <SignedInScreen />;
+  if (ending !== 'none') return <SignInEndingScreen ending={ending} onRetry={retry} />;
 
   if (errorUrlSuccess) {
     console.error('[passflow] authentication redirect returned an error', {

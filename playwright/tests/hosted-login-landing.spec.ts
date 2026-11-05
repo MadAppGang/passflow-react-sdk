@@ -124,11 +124,17 @@ const installEnding = async (page: Page, defaultRedirect: string | undefined) =>
   const tokens = { access_token: jwt({ type: 'access' }), refresh_token: jwt({ type: 'refresh' }) };
   await page.route('**/auth/login', (route) => route.fulfill({ json: tokens }));
   await page.route('**/auth/register', (route) => route.fulfill({ json: tokens }));
+  await page.route('**/auth/redirect/check', (route) =>
+    route.fulfill({ json: { redirect_url: route.request().postDataJSON().redirect_url } }),
+  );
   await page.route(`${REAL_APP}**`, (route) => route.fulfill({ contentType: 'text/html', body: '<h1>The real app</h1>' }));
 };
 
-const submit = async (page: Page, screen: 'signin' | 'signup') => {
-  await page.goto(`${appOrigin}/hosted/${screen}?appid=${STARTED_ON}`);
+const onCheck = (page: Page, respond: (route: Route) => Promise<void>) => page.route('**/auth/redirect/check', respond);
+
+const submit = async (page: Page, screen: 'signin' | 'signup', requested?: string) => {
+  const redirectTo = requested ? `&redirectto=${encodeURIComponent(requested)}` : '';
+  await page.goto(`${appOrigin}/hosted/${screen}?appid=${STARTED_ON}${redirectTo}`);
   await page.getByLabel('Email', { exact: true }).fill('mailbox@example.com');
   await page.getByLabel('Password', { exact: true }).fill('Correct-horse-battery-9!');
   await page.getByRole('button', { name: screen === 'signin' ? 'Sign In' : 'Sign Up', exact: true }).click();
@@ -149,18 +155,160 @@ for (const screen of ['signin', 'signup'] as const) {
     });
   }
 
-  test(`${screen} with a real redirect still goes there, tokens included`, async ({ page }) => {
+  test(`${screen}: the app's default redirect goes there, tokens included, with no check`, async ({ page }) => {
     await installEnding(page, REAL_APP);
+    let checks = 0;
+    await onCheck(page, async (route) => {
+      checks += 1;
+      await route.abort('failed');
+    });
     await submit(page, screen);
     await expect(page.getByRole('heading', { name: 'The real app' })).toBeVisible();
     expect(new URL(page.url()).hash).toContain('access_token=');
+    expect(checks).toBe(0);
+  });
+
+  test(`${screen}: a requested target that is the sign-in page ends on the signed-in screen, with no check`, async ({ page }) => {
+    await installEnding(page, REAL_APP);
+    let checks = 0;
+    await onCheck(page, async (route) => {
+      checks += 1;
+      await route.abort('failed');
+    });
+    await submit(page, screen, OWN_SIGN_IN);
+    await expect(page.getByRole('heading', { name: SIGNED_IN })).toBeVisible();
+    expect(checks).toBe(0);
   });
 }
 
+test('a registered target goes to the address the server returns, not the one given', async ({ page }) => {
+  const requested = 'https://app.example.test/HOME/../home';
+  await installEnding(page, undefined);
+  const bodies: unknown[] = [];
+  await onCheck(page, async (route) => {
+    bodies.push(route.request().postDataJSON());
+    await route.fulfill({ json: { redirect_url: REAL_APP } });
+  });
+  await submit(page, 'signin', requested);
+  await expect(page.getByRole('heading', { name: 'The real app' })).toBeVisible();
+  expect(new URL(page.url()).pathname).toBe('/home');
+  expect(bodies).toEqual([{ redirect_url: requested }]);
+});
+
+for (const screen of ['signin', 'signup'] as const) {
+  test(`${screen}: a refused target shows the error page and sends nothing`, async ({ page }) => {
+    await installEnding(page, undefined);
+    const left: string[] = [];
+    page.on('request', (request) => {
+      if (request.url().startsWith(REAL_APP)) left.push(request.url());
+    });
+    await onCheck(page, (route) =>
+      route.fulfill({
+        status: 400,
+        json: errorBody('error.app.redirect.url.not.registered', 'Not registered', 400, '/auth/redirect/check'),
+      }),
+    );
+    await submit(page, screen, REAL_APP);
+    await expect(page.getByTestId('sign-in-refused')).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Try again' })).toHaveCount(0);
+    expect(left).toEqual([]);
+    expect(page.url()).not.toContain('access_token');
+  });
+}
+
+for (const [name, fail] of [
+  ['a server error', (route: Route) => route.fulfill({ status: 500, json: errorBody('error.internal', 'x', 500, '/auth/redirect/check') })],
+  ['no route on the server', (route: Route) => route.fulfill({ status: 404, body: '404 page not found' })],
+  ['a network error', (route: Route) => route.abort('failed')],
+] as const) {
+  test(`${name} on the check sends nothing, and a retry can finish`, async ({ page }) => {
+    await installEnding(page, undefined);
+    let calls = 0;
+    await onCheck(page, async (route) => {
+      calls += 1;
+      if (calls === 1) await fail(route);
+      else await route.fulfill({ json: { redirect_url: REAL_APP } });
+    });
+    await submit(page, 'signin', REAL_APP);
+    await expect(page.getByTestId('sign-in-unavailable')).toBeVisible();
+    expect(page.url()).not.toContain('access_token');
+    await page.getByRole('button', { name: 'Try again' }).click();
+    await expect(page.getByRole('heading', { name: 'The real app' })).toBeVisible();
+  });
+}
+
+for (const [name, target] of [
+  ['a script address', 'javascript:document.title="ran"'],
+  ['an address with no scheme', '//app.example.test/home'],
+] as const) {
+  test(`${name} goes to the check, and refused it does nothing`, async ({ page }) => {
+    await installEnding(page, undefined);
+    const bodies: unknown[] = [];
+    await onCheck(page, async (route) => {
+      bodies.push(route.request().postDataJSON());
+      await route.fulfill({
+        status: 400,
+        json: errorBody('error.app.redirect.url.not.registered', 'Not registered', 400, '/auth/redirect/check'),
+      });
+    });
+    await submit(page, 'signin', target);
+    await expect(page.getByTestId('sign-in-refused')).toBeVisible();
+    expect(bodies).toEqual([{ redirect_url: target }]);
+    expect(await page.title()).not.toBe('ran');
+  });
+}
+
+test('a requested path on this origin navigates without a check', async ({ page }) => {
+  await installEnding(page, undefined);
+  let calls = 0;
+  await onCheck(page, async (route) => {
+    calls += 1;
+    await route.abort('failed');
+  });
+  await submit(page, 'signin', '/hosted/signup');
+  await expect(page).toHaveURL((url) => url.pathname === '/hosted/signup' && url.hash === '');
+  expect(calls).toBe(0);
+});
+
+test('a requested target equal to the default is still checked: the source decides, not the value', async ({ page }) => {
+  await installEnding(page, REAL_APP);
+  await onCheck(page, (route) =>
+    route.fulfill({
+      status: 400,
+      json: errorBody('error.app.redirect.url.not.registered', 'Not registered', 400, '/auth/redirect/check'),
+    }),
+  );
+  await submit(page, 'signin', REAL_APP);
+  await expect(page.getByTestId('sign-in-refused')).toBeVisible();
+});
+
+test('after a 2FA code, a refused target shows the error page and sends nothing', async ({ page }) => {
+  await installEnding(page, undefined);
+  await page.route('**/auth/login', (route) =>
+    route.fulfill({ json: { requires_2fa: true, tfa_token: tfaToken, challenge_id: 'factor', totp_digits: 6 } }),
+  );
+  await page.route('**/auth/2fa/enrollment', (route) => route.fulfill({ json: { enrollment: 'verify', totp_digits: 6 } }));
+  await page.route('**/auth/2fa/challenge', (route) => route.fulfill({ json: { challenge_id: 'factor' } }));
+  await page.route('**/auth/2fa/verify', (route) =>
+    route.fulfill({ json: { access_token: jwt({ type: 'access' }), refresh_token: jwt({ type: 'refresh' }) } }),
+  );
+  await onCheck(page, (route) =>
+    route.fulfill({
+      status: 400,
+      json: errorBody('error.app.redirect.url.not.registered', 'Not registered', 400, '/auth/redirect/check'),
+    }),
+  );
+  await submit(page, 'signin', REAL_APP);
+  await page.getByRole('textbox').first().click();
+  await page.keyboard.type('123456');
+  await expect(page.getByTestId('sign-in-refused')).toBeVisible();
+  expect(page.url()).not.toContain('access_token');
+});
+
 test('the same path on another host is a real redirect, not the sign-in page', async ({ page }) => {
   const elsewhere = 'https://app.example.test/hosted/signin';
-  await installEnding(page, elsewhere);
+  await installEnding(page, undefined);
   await page.route(`${elsewhere}**`, (route) => route.fulfill({ contentType: 'text/html', body: '<h1>The real app</h1>' }));
-  await submit(page, 'signin');
+  await submit(page, 'signin', elsewhere);
   await expect(page.getByRole('heading', { name: 'The real app' })).toBeVisible();
 });

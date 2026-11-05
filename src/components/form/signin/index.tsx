@@ -10,7 +10,7 @@ import queryString from 'query-string';
 import type { FC } from 'react';
 import { useMemo } from 'react';
 import { ErrorComponent } from '@/components/error';
-import { SignedInScreen } from '@/components/form/signed-in';
+import { SignInEndingScreen } from '@/components/form/signed-in';
 import { hasFollowedOIDCRedirect, readParentChallengeIdFromURL } from '@/components/provider/passflow-provider';
 import {
   type LoginCredentialsValues,
@@ -95,7 +95,7 @@ export const SignInForm: FC<TSignIn> = ({
 }) => {
   const passflow = usePassflow();
   const { navigate } = useNavigation();
-  const { signedIn, finishSignIn } = useSignInEnding();
+  const { ending, retry, finishSignIn } = useSignInEnding();
   const searchSource = useSearchSource();
   const {
     appSettings,
@@ -139,7 +139,7 @@ export const SignInForm: FC<TSignIn> = ({
     if (routeToSecondFactor(passflow, navigate, twoFactorVerifyPath ?? routes.two_factor_verify.path, searchSource.read()))
       return;
     if (oidcLayerOwnsRedirect()) return;
-    await finishSignIn(successAuthRedirect ?? appSettings?.defaults?.redirect);
+    await finishSignIn(successAuthRedirect, appSettings?.defaults?.redirect);
   };
 
   const submitPassword = async (userPayload: PassflowSignInPayload) => {
@@ -247,7 +247,7 @@ export const SignInForm: FC<TSignIn> = ({
     removeBranding: loginAppTheme?.remove_passflow_logo,
   };
 
-  if (signedIn) return <SignedInScreen />;
+  if (ending !== 'none') return <SignInEndingScreen ending={ending} onRetry={retry} />;
 
   const { step } = emailCode;
 

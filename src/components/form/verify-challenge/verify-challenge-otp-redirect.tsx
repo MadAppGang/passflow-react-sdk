@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { SignedInScreen } from '@/components/form/signed-in';
+import { SignInEndingScreen } from '@/components/form/signed-in';
 import { routes, useSearchSource } from '@/context';
 import { useNavigation, usePassflow, usePasswordlessComplete, useSignInEnding } from '@/hooks';
 import { routeToSecondFactor, verificationLinkErrorMessage, verificationRequestErrorMessage } from '@/utils';
@@ -21,7 +21,7 @@ export const VerifyChallengeOTPRedirect = ({
   const { navigate } = useNavigation();
   const searchSource = useSearchSource();
   const [paramsError, setParamsError] = useState<string | null>(null);
-  const { signedIn, finishSignIn } = useSignInEnding();
+  const { ending, retry, finishSignIn } = useSignInEnding();
   const { fetch, isError, error, isLoading } = usePasswordlessComplete();
 
   // Run once on mount - intentionally empty dependency array
@@ -55,7 +55,7 @@ export const VerifyChallengeOTPRedirect = ({
 
   if (paramsError) throw new Error(paramsError);
 
-  if (signedIn) return <SignedInScreen />;
+  if (ending !== 'none') return <SignInEndingScreen ending={ending} onRetry={retry} />;
 
   return null;
 };

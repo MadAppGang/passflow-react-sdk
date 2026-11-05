@@ -7,7 +7,7 @@ import type {
 /* eslint-disable no-void */
 /* eslint-disable complexity */
 import { type FC, useEffect, useId, useState } from 'react';
-import { SignedInScreen } from '@/components/form/signed-in';
+import { SignInEndingScreen } from '@/components/form/signed-in';
 import { Button, FieldOtp, Icon } from '@/components/ui';
 import { routes, useSearchSource } from '@/context';
 import { useAppSettings, useNavigation, usePassflow, usePasswordlessComplete, useSignIn, useSignInEnding } from '@/hooks';
@@ -55,7 +55,7 @@ export const VerifyChallengeOTPManual: FC<VerifyChallengeOTPManualProps> = ({
   const { fetch: fetchPasswordlessComplete, isError, error } = usePasswordlessComplete();
   const [valueOTP, setValueOTP] = useState('');
   const [paramsError, setParamsError] = useState<string | null>(null);
-  const { signedIn, finishSignIn } = useSignInEnding();
+  const { ending, retry, finishSignIn } = useSignInEnding();
   const { set } = useUrlParams();
   const otpId = useId();
   const otpErrorId = `${otpId}-error`;
@@ -101,7 +101,7 @@ export const VerifyChallengeOTPManual: FC<VerifyChallengeOTPManualProps> = ({
 
   if (paramsError) throw new Error(paramsError);
 
-  if (signedIn) return <SignedInScreen />;
+  if (ending !== 'none') return <SignInEndingScreen ending={ending} onRetry={retry} />;
 
   const onClickNavigateBack = () => navigate({ to: signUpPath });
 
