@@ -14,6 +14,7 @@ import { useDisposeOnReplace } from '@/components/provider/use-dispose-on-replac
 import { ContinuingStatus } from '@/components/ui/continuing-status';
 import {
   AuthProvider,
+  addressBarSearch,
   defaultNavigate,
   type FederatedLandingOutcome,
   initialState,
@@ -24,7 +25,7 @@ import {
   type RouterType,
   routes,
 } from '@/context';
-import { urlCarriesTwoFactorToken } from '@/utils/second-factor';
+import { signInSearch, urlCarriesTwoFactorToken } from '@/utils/second-factor';
 import { readParentChallengeIdFromURL } from '@/utils/url-params';
 import '@/styles/index.css';
 
@@ -635,7 +636,7 @@ const useSecondFactorLanding = (
   useEffect(() => {
     if (!pending) return;
     setPending(false);
-    navigate({ to: twoFactorVerifyPath, replace: true });
+    navigate({ to: twoFactorVerifyPath, search: signInSearch(addressBarSearch.read()) || undefined, replace: true });
   }, [pending, navigate, twoFactorVerifyPath]);
 
   return federatedLandingOutcome;

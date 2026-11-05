@@ -28,4 +28,13 @@ export type {
   LoginSecondFactorMethod,
   LoginSecondFactorState,
   LoginStatusState,
+  LoginTwoFactorCodeAlert,
+  LoginTwoFactorCodeAlternate,
+  LoginTwoFactorCodeFactor,
+  LoginTwoFactorCodeState,
+  LoginTwoFactorRecoveryCodesState,
+  LoginTwoFactorSetupCodeState,
+  LoginTwoFactorSetupStartState,
+  LoginTwoFactorSetupState,
+  LoginTwoFactorTrustDevice,
 } from './types';

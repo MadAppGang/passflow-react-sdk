@@ -3,7 +3,7 @@ import type { FC } from 'react';
 import * as Yup from 'yup';
 import { hasFollowedOIDCRedirect } from '@/components/provider/passflow-provider';
 import { LoginScreen, type LoginScreenChrome, type LoginScreenState } from '@/components/ui';
-import { routes } from '@/context';
+import { routes, useSearchSource } from '@/context';
 import { useAppSettings, useNavigation, usePassflow, useResetPassword } from '@/hooks';
 import type { SuccessAuthRedirect } from '@/types';
 import { getUrlWithTokens, isValidUrl, routeToSecondFactor, undefinedOnCatch, useUrlParams } from '@/utils';
@@ -37,6 +37,7 @@ export const ResetPassword: FC<TResetPassword> = ({
   const passflow = usePassflow();
   const { fetch, error, isError, isLoading, isPasswordSaved, emailCode } = useResetPassword();
   const { navigate } = useNavigation();
+  const searchSource = useSearchSource();
   const { get } = useUrlParams();
   const { appSettings, passwordPolicy, currentStyles, isError: isErrorApp, error: errorApp, loginAppTheme } = useAppSettings();
 
@@ -58,7 +59,7 @@ export const ResetPassword: FC<TResetPassword> = ({
 
   // A user with 2FA is signed in only once the second factor passes; an OIDC parent's redirect wins over ours.
   const completeSignIn = async (answerRedirectUrl?: string) => {
-    if (routeToSecondFactor(passflow, navigate, twoFactorVerifyPath)) return;
+    if (routeToSecondFactor(passflow, navigate, twoFactorVerifyPath, searchSource.read())) return;
     if (hasFollowedOIDCRedirect()) return;
     const redirectUrl =
       answerRedirectUrl ?? resetTokenData?.redirect_url ?? successAuthRedirect ?? appSettings?.defaults?.redirect ?? '';

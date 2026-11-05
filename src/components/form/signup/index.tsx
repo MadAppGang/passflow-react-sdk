@@ -131,7 +131,8 @@ export const SignUpForm: FC<TSignUp> = ({
   // The server can answer a sign-up with a 2FA token in place of tokens, as it
   // does a sign-in, so the 2FA screen comes before any success redirect.
   const completeRegistration = async ({ oidcMayOwnRedirect = false } = {}) => {
-    if (routeToSecondFactor(passflow, navigate, twoFactorVerifyPath ?? routes.two_factor_verify.path)) return;
+    if (routeToSecondFactor(passflow, navigate, twoFactorVerifyPath ?? routes.two_factor_verify.path, searchSource.read()))
+      return;
     if (oidcMayOwnRedirect && hasFollowedOIDCRedirect()) return;
     const redirectUrl = successAuthRedirect ?? appSettings?.defaults?.redirect ?? '';
     if (!isValidUrl(redirectUrl)) navigate({ to: redirectUrl });

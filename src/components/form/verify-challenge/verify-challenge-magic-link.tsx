@@ -14,6 +14,7 @@ import {
   passwordlessWaitCompletedMessage,
   passwordlessWaitDeniedMessage,
   routeToSecondFactor,
+  signInSearch,
   useUrlParams,
 } from '@/utils';
 import { VerifyChallengeSuccess } from './verify-challenge-success';
@@ -97,13 +98,6 @@ const MagicLinkSent: FC = () => {
   );
 };
 
-/** The search for a new sign-in: the original one, without anything that belonged to this attempt. */
-const startAgainSearch = (search: string): string => {
-  const params = new URLSearchParams(search);
-  for (const key of ['challenge_id', 'expires_at', 'match_code', 'otp', 'flow']) params.delete(key);
-  return params.toString();
-};
-
 type MagicLinkWaitingProps = {
   challengeId: string;
   matchCode: string;
@@ -136,7 +130,8 @@ const MagicLinkWaiting: FC<MagicLinkWaitingProps> = ({ challengeId, matchCode, s
           else if (!isValidUrl(redirectUrl)) navigate({ to: redirectUrl });
           else window.location.href = await getUrlWithTokens(passflow, redirectUrl);
         } else if (result.status === 'second-factor-required') {
-          if (!routeToSecondFactor(passflow, navigate, twoFactorVerifyPath)) setFailure(passwordlessSignInFailedMessage);
+          if (!routeToSecondFactor(passflow, navigate, twoFactorVerifyPath, searchSource.read()))
+            setFailure(passwordlessSignInFailedMessage);
         } else {
           setFailure(WAIT_FAILURE_MESSAGES[result.status]);
         }
@@ -176,7 +171,7 @@ const MagicLinkWaiting: FC<MagicLinkWaitingProps> = ({ challengeId, matchCode, s
           testId: 'passwordless-wait-failure',
           primaryAction: {
             label: 'Start again',
-            onClick: () => navigate({ to: signInPath, search: startAgainSearch(searchSource.read()) }),
+            onClick: () => navigate({ to: signInPath, search: signInSearch(searchSource.read()) }),
           },
         }}
       />

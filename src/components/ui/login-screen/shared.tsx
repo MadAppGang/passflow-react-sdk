@@ -1,9 +1,23 @@
 import type { FC, PropsWithChildren } from 'react';
+import { useEffect, useRef } from 'react';
 import { Icon } from '../icon';
 import type { LoginScreenNotice as LoginScreenNoticeProps } from './types';
 
-export const LoginAlert: FC<{ message?: string | null; id?: string }> = ({ message, id }) => {
+/** `error` is the default; `info` is a neutral note that is not announced as an alert. */
+export const LoginAlert: FC<{ message?: string | null; id?: string; tone?: 'error' | 'info' }> = ({
+  message,
+  id,
+  tone = 'error',
+}) => {
   if (!message) return null;
+
+  if (tone === 'info') {
+    return (
+      <div id={id} className='passflow-login-screen-note' role='status'>
+        {message}
+      </div>
+    );
+  }
 
   return (
     <div id={id} className='passflow-form-error' role='alert'>
@@ -11,6 +25,19 @@ export const LoginAlert: FC<{ message?: string | null; id?: string }> = ({ messa
       <span className='passflow-form-error-text'>{message}</span>
     </div>
   );
+};
+
+/** For a code input locked while a request is in flight: gives focus back when the request ends. */
+export const useFocusAfterBusy = (busy: boolean) => {
+  const inputRef = useRef<HTMLInputElement>(null);
+  const wasBusy = useRef(busy);
+
+  useEffect(() => {
+    if (wasBusy.current && !busy) inputRef.current?.focus();
+    wasBusy.current = busy;
+  }, [busy]);
+
+  return inputRef;
 };
 
 export const LoginDivider: FC<{ label: string }> = ({ label }) => (

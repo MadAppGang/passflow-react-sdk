@@ -2,6 +2,16 @@ import type { Passflow } from '@passflow/core';
 import type { NavigateFunction } from '@/context';
 
 /**
+ * The search for a new sign-in or its 2FA step: the original one, without anything that belonged to this attempt. A
+ * reset token must not reach the verify URL, and the attempt's own destination is not carried across 2FA.
+ */
+export const signInSearch = (search: string): string => {
+  const params = new URLSearchParams(search);
+  for (const key of ['challenge_id', 'expires_at', 'match_code', 'otp', 'flow', 'token', 'redirect_url']) params.delete(key);
+  return params.toString();
+};
+
+/**
  * Sends a sign-in that still owes its second factor to the 2FA screen.
  *
  * Every sign-in path can end this way: the server answers with a 2FA token in
@@ -9,15 +19,17 @@ import type { NavigateFunction } from '@/context';
  * `isTwoFactorVerificationRequired()` reads true. The caller must then stop:
  * no success redirect, and no `getUrlWithTokens` — there are no tokens yet.
  *
+ * @param search the current search; what `signInSearch` keeps goes onto the 2FA URL
  * @returns true when it navigated, so the caller returns without redirecting
  */
 export const routeToSecondFactor = (
   passflow: Pick<Passflow, 'isTwoFactorVerificationRequired'>,
   navigate: NavigateFunction,
   twoFactorVerifyPath: string,
+  search = '',
 ): boolean => {
   if (!passflow.isTwoFactorVerificationRequired()) return false;
-  navigate({ to: twoFactorVerifyPath });
+  navigate({ to: twoFactorVerifyPath, search: signInSearch(search) || undefined });
   return true;
 };
 

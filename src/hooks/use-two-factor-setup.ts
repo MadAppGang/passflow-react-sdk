@@ -1,5 +1,6 @@
 import type { TwoFactorConfirmResponse, TwoFactorSetupResponse } from '@passflow/core';
 import { useCallback, useState } from 'react';
+import { enrollmentFailureFrom, twoFactorRateLimitedMessage, twoFactorWrongCodeMessage } from '@/utils/auth-error';
 import { usePassflow } from './use-passflow';
 
 export type TwoFactorSetupStep = 'idle' | 'setup' | 'complete';
@@ -14,6 +15,14 @@ export type UseTwoFactorSetupProps = () => {
   isLoading: boolean;
   isError: boolean;
   error: string;
+};
+
+/** A rate limit on the link page's confirm is a 400 with an id, so the status alone cannot tell. */
+const setupErrorMessage = (e: unknown): string => {
+  const failure = enrollmentFailureFrom(e);
+  if (failure === 'rate_limited') return twoFactorRateLimitedMessage;
+  if (failure === 'wrong_code') return twoFactorWrongCodeMessage;
+  return (e as Error).message;
 };
 
 /**
@@ -39,8 +48,7 @@ export const useTwoFactorSetup: UseTwoFactorSetupProps = () => {
       return response;
     } catch (e) {
       setIsError(true);
-      const err = e as Error;
-      setError(err.message);
+      setError(setupErrorMessage(e));
       return null;
     } finally {
       setIsLoading(false);
@@ -59,8 +67,7 @@ export const useTwoFactorSetup: UseTwoFactorSetupProps = () => {
         return response;
       } catch (e) {
         setIsError(true);
-        const err = e as Error;
-        setError(err.message);
+        setError(setupErrorMessage(e));
         return null;
       } finally {
         setIsLoading(false);

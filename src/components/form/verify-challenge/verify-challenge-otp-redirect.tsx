@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { routes } from '@/context';
+import { routes, useSearchSource } from '@/context';
 import { useNavigation, usePassflow, usePasswordlessComplete } from '@/hooks';
 import {
   getUrlWithTokens,
@@ -25,6 +25,7 @@ export const VerifyChallengeOTPRedirect = ({
 }: VerifyChallengeOTPRedirectProps) => {
   const passflow = usePassflow();
   const { navigate } = useNavigation();
+  const searchSource = useSearchSource();
   const [paramsError, setParamsError] = useState<string | null>(null);
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
   const { fetch, isError, error, isLoading } = usePasswordlessComplete();
@@ -44,7 +45,7 @@ export const VerifyChallengeOTPRedirect = ({
 
         if (response) {
           // The link completed the first factor only: no tokens yet.
-          if (routeToSecondFactor(passflow, navigate, twoFactorVerifyPath)) return;
+          if (routeToSecondFactor(passflow, navigate, twoFactorVerifyPath, searchSource.read())) return;
           if (response.redirect_url) {
             if (!isValidUrl(response.redirect_url)) navigate({ to: response.redirect_url });
             else window.location.href = await getUrlWithTokens(passflow, response.redirect_url);

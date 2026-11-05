@@ -55,6 +55,7 @@ body {
    * a component that hard-codes `"Inter", sans-serif` is a second one.
    */
   --passflow-font-family: "Inter", sans-serif;
+  --passflow-font-family-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
   --passflow-h1: 2rem;
   --passflow-h2: 1.5rem;
   --passflow-body-1: 1rem;
@@ -176,7 +177,7 @@ body {
 }
 
 .passflow-button--clean {
-  background-color: var(--passflow-white);
+  background-color: transparent;
   border: none;
 }
 
@@ -960,6 +961,7 @@ body {
   align-items: center;
   justify-content: center;
   gap: 6px;
+  max-width: 100%;
 }
 
 .passflow-verify-otp-error {
@@ -1434,11 +1436,6 @@ body {
   align-items: center;
   gap: 12px;
   width: 100%;
-}
-
-.passflow-button-setup-2fa {
-  min-width: 140px;
-  white-space: nowrap;
 }
 
 .passflow-form-info {

@@ -1,6 +1,6 @@
 import type { TwoFactorMethod } from '@passflow/core';
 import type { FC } from 'react';
-import { useEffect, useId, useState } from 'react';
+import { useEffect, useId, useRef, useState } from 'react';
 import { FieldOtp } from '@/components/ui';
 import { useTwoFactorChallenge } from '@/hooks/use-two-factor-challenge';
 import { MethodSelector } from './method-selector';
@@ -26,8 +26,12 @@ export const TwoFactorChallenge: FC<TwoFactorChallengeProps> = ({
   const otpLabelId = `${otpId}-label`;
   const otpErrorId = `${otpId}-error`;
 
-  // Request challenge on mount
+  // Once per method: every request spends budget, so StrictMode's second effect must not send another.
+  // Starts at null because `firstFactorMethod` may be undefined and must still request on mount.
+  const requested = useRef<string | undefined | null>(null);
   useEffect(() => {
+    if (requested.current === firstFactorMethod) return;
+    requested.current = firstFactorMethod;
     requestChallenge(firstFactorMethod);
   }, [requestChallenge, firstFactorMethod]);
 
