@@ -2,6 +2,13 @@ import { type PassflowPasswordPolicySettings, Providers } from '@passflow/core';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { type FC, useState } from 'react';
 import { expect, fn, userEvent, within } from 'storybook/test';
+import { getTwoFactorEnrollmentScreenProps } from '@/components/flow/two-factor-verify/screen';
+import {
+  getTwoFactorRecoveryCodesScreen,
+  getTwoFactorSetupCodeScreen,
+  getTwoFactorSetupStartScreen,
+} from '@/components/form/two-factor-setup/setup-screen';
+import type { TwoFactorEnrollmentScreen } from '@/hooks/use-two-factor-enrollment';
 import {
   approvalAlreadyDecidedMessage,
   approvalApprovedMessage,
@@ -17,6 +24,17 @@ import {
   passwordlessWaitCompletedMessage,
   passwordlessWaitDeniedMessage,
 } from '@/utils';
+import {
+  twoFactorBackToSignInLabel,
+  twoFactorRateLimitedMessage,
+  twoFactorSendFailedMessage,
+  twoFactorSetupCodeChangedMessage,
+  twoFactorSetupSavedNewCodeMessage,
+  twoFactorSignInOverMessage,
+  twoFactorTryAgainMessage,
+  twoFactorWrongCodeMessage,
+  twoFactorWrongRecoveryCodeMessage,
+} from '@/utils/auth-error';
 import { LoginScreen } from './login-screen';
 import type {
   LoginConsentState,
@@ -28,6 +46,7 @@ import type {
   LoginPasswordlessWaitingState,
   LoginScreenChrome,
   LoginScreenProps,
+  LoginTwoFactorCodeState,
 } from './types';
 
 const passwordPolicy: PassflowPasswordPolicySettings = {
@@ -71,6 +90,16 @@ const handlers = {
   onResendLink: fn(),
   onApproveSignIn: fn(),
   onDenySignIn: fn(),
+  onTwoFactorCodeChange: fn(),
+  onTwoFactorSubmit: fn(),
+  onTrustDevice: fn(),
+  onUseRecoveryCode: fn(),
+  onUseAuthenticator: fn(),
+  onSetupStart: fn(),
+  onSetupCode: fn(),
+  onCopyRecoveryCodes: fn(),
+  onSavedRecoveryCodes: fn(),
+  onSendSetupLink: fn(),
 };
 
 type MethodOptions = {
@@ -1220,4 +1249,497 @@ export const PasswordlessApprovalLoadFailed: Story = {
     },
     { title: 'Sign-in request' },
   ),
+};
+
+// Two-factor sign-in: code entry for both factors, enrolment and the recovery codes. These screens use plain chrome,
+// with no app settings, logo or custom CSS. The copy here is what the forms pass; the library has none of its own.
+// Setup, recovery codes and status stories are built by the runtime's own screen functions.
+
+const backToSignIn = { label: twoFactorBackToSignInLabel, onClick: handlers.onBackToSignIn };
+
+const totpChrome: LoginScreenChrome = {
+  title: 'Two-Factor Authentication',
+  subtitle: 'Enter the 6-digit code from your authenticator app',
+};
+
+const recoveryChrome: LoginScreenChrome = {
+  title: 'Use Recovery Code',
+  subtitle: 'Enter one of your recovery codes',
+};
+
+const twoFactorCommon = {
+  kind: 'two-factor-code',
+  trustDevice: { label: 'Trust this device', checked: false, onChange: handlers.onTrustDevice },
+  canSubmit: false,
+  submitLabel: 'Verify',
+  busyLabel: 'Verifying...',
+  testId: 'two-factor-code',
+  onCodeChange: handlers.onTwoFactorCodeChange,
+  onSubmit: handlers.onTwoFactorSubmit,
+} as const;
+
+const totpCode = (overrides: Partial<LoginTwoFactorCodeState> = {}): LoginTwoFactorCodeState => ({
+  ...twoFactorCommon,
+  factor: { type: 'totp', digits: 6 },
+  label: 'Verification code',
+  code: '',
+  alternate: { prompt: 'Lost your device?', label: 'Use recovery code', onClick: handlers.onUseRecoveryCode },
+  ...overrides,
+});
+
+const recoveryCode = (overrides: Partial<LoginTwoFactorCodeState> = {}): LoginTwoFactorCodeState => ({
+  ...twoFactorCommon,
+  factor: { type: 'recovery', placeholder: 'XXXX-XXXX' },
+  label: 'Recovery Code',
+  code: '',
+  alternate: { prompt: 'Have your device?', label: 'Use authenticator code', onClick: handlers.onUseAuthenticator },
+  ...overrides,
+});
+
+const sessionOverAlert = { message: twoFactorSignInOverMessage, tone: 'info' } as const;
+const rateLimitedAlert = { message: twoFactorRateLimitedMessage, tone: 'error' } as const;
+
+/** The boxes are empty, so Verify waits for the code. */
+export const TwoFactorCodeTotp: Story = {
+  args: story(totpCode({ autoFocus: true }), totpChrome),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.getByRole('textbox', { name: 'Verification code' })).toHaveFocus();
+    await expect(canvas.getByRole('button', { name: 'Verify' })).toBeDisabled();
+  },
+};
+
+/** The boxes follow the server's `totp_digits`. */
+export const TwoFactorCodeTotpEightDigits: Story = {
+  args: story(totpCode({ factor: { type: 'totp', digits: 8 } }), {
+    ...totpChrome,
+    subtitle: 'Enter the 8-digit code from your authenticator app',
+  }),
+};
+
+/** A whole code, with the device trusted. */
+export const TwoFactorCodeTotpReady: Story = {
+  args: story(
+    totpCode({
+      code: '123456',
+      canSubmit: true,
+      trustDevice: { label: 'Trust this device', checked: true, onChange: handlers.onTrustDevice },
+    }),
+    totpChrome,
+  ),
+  play: async ({ canvasElement }) => {
+    await userEvent.click(within(canvasElement).getByRole('button', { name: 'Verify' }));
+    await expect(handlers.onTwoFactorSubmit).toHaveBeenCalled();
+  },
+};
+
+/** The enrolment was saved but the held code went stale: the subtitle says what to do. */
+export const TwoFactorCodeTotpSetupSaved: Story = {
+  args: story(totpCode(), {
+    ...totpChrome,
+    subtitle: twoFactorSetupSavedNewCodeMessage,
+  }),
+};
+
+/** The code is being checked: everything is locked. */
+export const TwoFactorCodeTotpBusy: Story = {
+  args: story(totpCode({ code: '123456', canSubmit: true, busy: true }), totpChrome),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.getByRole('textbox', { name: 'Verification code' })).toBeDisabled();
+    await expect(canvas.getByRole('button', { name: 'Verifying...' })).toBeDisabled();
+    await expect(canvas.getByRole('button', { name: 'Use recovery code' })).toBeDisabled();
+  },
+};
+
+/** The server rejected the code: stay and try again. */
+export const TwoFactorCodeTotpWrongCode: Story = {
+  args: story(
+    totpCode({
+      code: '123456',
+      canSubmit: true,
+      alert: { message: twoFactorWrongCodeMessage, tone: 'error' },
+    }),
+    totpChrome,
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.getByRole('textbox', { name: 'Verification code' })).toHaveAttribute('aria-invalid', 'true');
+    await expect(canvas.getByRole('alert')).toHaveTextContent(twoFactorWrongCodeMessage);
+  },
+};
+
+/** No further code can be taken: no Verify, no alternate, only the way out. */
+export const TwoFactorCodeTotpLocked: Story = {
+  args: story(totpCode({ locked: true, alert: sessionOverAlert, secondaryAction: backToSignIn }), totpChrome),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.getByRole('textbox', { name: 'Verification code' })).toBeDisabled();
+    await expect(canvas.queryByRole('button', { name: 'Verify' })).toBeNull();
+    await expect(canvas.queryByRole('button', { name: 'Use recovery code' })).toBeNull();
+    await expect(canvas.getByRole('button', { name: 'Back to sign in' })).toBeEnabled();
+    await expect(canvas.getByRole('status')).toHaveTextContent(twoFactorSignInOverMessage);
+  },
+};
+
+/** Locked, with no way out passed: nothing but the message. */
+export const TwoFactorCodeTotpLockedNoAction: Story = {
+  args: story(totpCode({ locked: true, alert: sessionOverAlert }), totpChrome),
+};
+
+export const TwoFactorCodeTotpRateLimited: Story = {
+  args: story(totpCode({ locked: true, alert: rateLimitedAlert, secondaryAction: backToSignIn }), totpChrome),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.getByRole('alert')).toHaveTextContent(twoFactorRateLimitedMessage);
+    await expect(canvas.queryByRole('button', { name: 'Verify' })).toBeNull();
+  },
+};
+
+export const TwoFactorCodeTotpDarkTheme: Story = {
+  args: story(totpCode(), totpChrome),
+  globals: { theme: 'Dark' },
+};
+
+export const TwoFactorCodeRecovery: Story = {
+  args: story(recoveryCode(), recoveryChrome),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.getByRole('textbox', { name: 'Recovery Code' })).toHaveAttribute('placeholder', 'XXXX-XXXX');
+    await expect(canvas.getByRole('button', { name: 'Verify' })).toBeDisabled();
+  },
+};
+
+export const TwoFactorCodeRecoveryBusy: Story = {
+  args: story(recoveryCode({ code: 'ABCD-EFGH', canSubmit: true, busy: true }), recoveryChrome),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.getByRole('textbox', { name: 'Recovery Code' })).toBeDisabled();
+    await expect(canvas.getByRole('button', { name: 'Verifying...' })).toBeDisabled();
+  },
+};
+
+export const TwoFactorCodeRecoveryWrongCode: Story = {
+  args: story(
+    recoveryCode({ code: 'ABCD-EFGH', canSubmit: true, alert: { message: twoFactorWrongRecoveryCodeMessage, tone: 'error' } }),
+    recoveryChrome,
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.getByRole('textbox', { name: 'Recovery Code' })).toHaveAttribute('aria-invalid', 'true');
+    await expect(canvas.getByRole('alert')).toHaveTextContent(twoFactorWrongRecoveryCodeMessage);
+  },
+};
+
+export const TwoFactorCodeRecoveryLocked: Story = {
+  args: story(recoveryCode({ locked: true, alert: sessionOverAlert, secondaryAction: backToSignIn }), recoveryChrome),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.getByRole('textbox', { name: 'Recovery Code' })).toBeDisabled();
+    await expect(canvas.queryByRole('button', { name: 'Verify' })).toBeNull();
+    await expect(canvas.queryByRole('button', { name: 'Use authenticator code' })).toBeNull();
+  },
+};
+
+export const TwoFactorCodeRecoveryRateLimited: Story = {
+  args: story(recoveryCode({ locked: true, alert: rateLimitedAlert, secondaryAction: backToSignIn }), recoveryChrome),
+};
+
+export const TwoFactorCodeRecoveryDarkTheme: Story = {
+  args: story(recoveryCode(), recoveryChrome),
+  globals: { theme: 'Dark' },
+};
+
+const TwoFactorCodePlayground: FC = () => {
+  const [code, setCode] = useState('');
+  const [trusted, setTrusted] = useState(false);
+
+  return (
+    <LoginScreen
+      chrome={totpChrome}
+      state={totpCode({
+        code,
+        canSubmit: code.length === 6,
+        trustDevice: { label: 'Trust this device', checked: trusted, onChange: setTrusted },
+        onCodeChange: setCode,
+      })}
+    />
+  );
+};
+
+export const TwoFactorCodeInteractive: Story = {
+  args: story(totpCode(), totpChrome),
+  render: () => <TwoFactorCodePlayground />,
+};
+
+const setupStart = (overrides: Partial<Parameters<typeof getTwoFactorSetupStartScreen>[0]> = {}): LoginScreenProps =>
+  getTwoFactorSetupStartScreen({ busy: false, secondaryAction: backToSignIn, onStart: handlers.onSetupStart, ...overrides });
+
+/** A QR-shaped sample PNG that encodes nothing, so the image state needs no network. */
+const sampleQrCode =
+  'iVBORw0KGgoAAAANSUhEUgAAABkAAAAZAQAAAADskrjOAAAAfUlEQVR42mNgZDnAwFArFM/A4PruIgODSyeIqAMSNQZAMYaPQNkFd2QbGCrTzBkY5h1Sa2B4aO7fwFD1nbmBIddIo4FhR8+TBoYrJ7gYGCS9dzAwuDNeAOqQn9bAwPhHHmiymA3Q5EVngMQLpgYGl4OeDQy1KaYMDIwMTxgASlUlaQXOc6AAAAAASUVORK5CYII=';
+
+const sampleSecret = 'JBSWY3DPEHPK3PXPJBSWY3DPEHPK3PXP';
+
+type SetupCodeProps = Parameters<typeof getTwoFactorSetupCodeScreen>[0];
+
+const setupCode = ({
+  data,
+  ...overrides
+}: Partial<Omit<SetupCodeProps, 'data'>> & { data?: Partial<SetupCodeProps['data']> } = {}): LoginScreenProps =>
+  getTwoFactorSetupCodeScreen({
+    data: { secret: sampleSecret, qr_code: sampleQrCode, totp_digits: 6, ...data } as SetupCodeProps['data'],
+    busy: false,
+    secondaryAction: backToSignIn,
+    onSubmit: handlers.onSetupCode,
+    ...overrides,
+  });
+
+/** Nothing has been asked of the server yet: the tap on Get Started is what spends a request. */
+export const TwoFactorSetupStart: Story = {
+  args: setupStart(),
+  play: async ({ canvasElement }) => {
+    await userEvent.click(within(canvasElement).getByRole('button', { name: 'Get Started' }));
+    await expect(handlers.onSetupStart).toHaveBeenCalled();
+  },
+};
+
+export const TwoFactorSetupStartBusy: Story = {
+  args: setupStart({ busy: true }),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.getByRole('button', { name: 'Loading...' })).toBeDisabled();
+    await expect(canvas.getByRole('button', { name: twoFactorBackToSignInLabel })).toBeDisabled();
+  },
+};
+
+export const TwoFactorSetupStartError: Story = {
+  args: setupStart({ error: twoFactorTryAgainMessage }),
+  play: async ({ canvasElement }) => {
+    await expect(within(canvasElement).getByRole('alert')).toHaveTextContent(twoFactorTryAgainMessage);
+  },
+};
+
+/** `TwoFactorSetupForm` given `onCancel`: Cancel, not a way back to sign in. */
+export const TwoFactorSetupStartCancel: Story = {
+  args: setupStart({ secondaryAction: { label: 'Cancel', onClick: handlers.onBackToSignIn } }),
+};
+
+/** QR, the secret behind a toggle, and a code to confirm. A whole code does not submit by itself. */
+export const TwoFactorSetupCode: Story = {
+  args: setupCode(),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.getByRole('img', { name: '2FA QR Code' })).toBeVisible();
+    await expect(canvas.queryByText(sampleSecret)).toBeNull();
+    await userEvent.type(canvas.getByRole('textbox'), '123456');
+    await expect(handlers.onSetupCode).not.toHaveBeenCalled();
+    await expect(canvas.getByRole('button', { name: 'Confirm & Enable' })).toBeEnabled();
+  },
+};
+
+export const TwoFactorSetupCodeSecretShown: Story = {
+  args: setupCode(),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await userEvent.click(canvas.getByRole('button', { name: "Can't scan? Enter code manually" }));
+    await expect(canvas.getByText(sampleSecret)).toBeVisible();
+    await expect(canvas.getByRole('button', { name: 'Hide manual code' })).toBeVisible();
+  },
+};
+
+/** The server sent no image: no broken `<img>` and no toggle, the secret is simply there. */
+export const TwoFactorSetupCodeEmptyQr: Story = {
+  args: setupCode({ data: { qr_code: '' } }),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.queryByRole('img', { name: '2FA QR Code' })).toBeNull();
+    await expect(canvas.queryByRole('button', { name: "Can't scan? Enter code manually" })).toBeNull();
+    await expect(canvas.getByText(sampleSecret)).toBeVisible();
+  },
+};
+
+export const TwoFactorSetupCodeEightDigits: Story = {
+  args: setupCode({ data: { totp_digits: 8 } }),
+};
+
+export const TwoFactorSetupCodeBusy: Story = {
+  args: setupCode({ busy: true }),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.getByRole('textbox')).toBeDisabled();
+    await expect(canvas.getByRole('button', { name: 'Confirming...' })).toBeDisabled();
+    await expect(canvas.getByRole('button', { name: twoFactorBackToSignInLabel })).toBeDisabled();
+  },
+};
+
+export const TwoFactorSetupCodeError: Story = {
+  args: setupCode({ error: twoFactorWrongCodeMessage }),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.getByRole('textbox')).toHaveAttribute('aria-invalid', 'true');
+    await expect(canvas.getByRole('alert')).toHaveTextContent(twoFactorWrongCodeMessage);
+  },
+};
+
+/** A notice, not a failure: nothing typed is wrong, so the empty field stays valid and there is no red alert. */
+export const TwoFactorSetupCodeChanged: Story = {
+  args: setupCode({ notice: twoFactorSetupCodeChangedMessage }),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.getByRole('status')).toHaveTextContent(twoFactorSetupCodeChangedMessage);
+    await expect(canvas.queryByRole('alert')).toBeNull();
+    await expect(canvas.getByRole('textbox')).not.toHaveAttribute('aria-invalid', 'true');
+  },
+};
+
+export const TwoFactorSetupCodeDarkTheme: Story = {
+  args: setupCode(),
+  globals: { theme: 'Dark' },
+};
+
+const TwoFactorSetupPlayground: FC = () => {
+  const [replaced, setReplaced] = useState(false);
+
+  return (
+    <LoginScreen
+      {...setupCode({
+        data: { secret: replaced ? 'NEWSECRETNEWSECRET' : sampleSecret },
+        notice: replaced ? twoFactorSetupCodeChangedMessage : undefined,
+        onSubmit: () => setReplaced(true),
+      })}
+    />
+  );
+};
+
+/** The server asked for a new setup: a new secret, a notice, and the typed code clears. */
+export const TwoFactorSetupCodeReplaced: Story = {
+  args: setupCode(),
+  render: () => <TwoFactorSetupPlayground />,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await userEvent.type(canvas.getByRole('textbox'), '123456');
+    await userEvent.click(canvas.getByRole('button', { name: 'Confirm & Enable' }));
+    await expect(canvas.getByRole('status')).toHaveTextContent(twoFactorSetupCodeChangedMessage);
+    await expect(canvas.getByRole('textbox')).toHaveValue('');
+  },
+};
+
+const recoveryCodes = (overrides: Partial<Parameters<typeof getTwoFactorRecoveryCodesScreen>[0]> = {}): LoginScreenProps => {
+  const screen = getTwoFactorRecoveryCodesScreen({
+    codes: ['A1B2-C3D4', 'E5F6-G7H8', 'I9J0-K1L2', 'M3N4-O5P6', 'Q7R8-S9T0', 'U1V2-W3X4', 'Y5Z6-A7B8', 'C9D0-E1F2'],
+    busy: false,
+    onContinue: handlers.onSavedRecoveryCodes,
+    ...overrides,
+  });
+  // The runtime's copy writes to the clipboard, which a story must not do.
+  return { ...screen, state: { ...screen.state, onCopy: handlers.onCopyRecoveryCodes } as LoginScreenProps['state'] };
+};
+
+export const TwoFactorRecoveryCodes: Story = {
+  args: recoveryCodes(),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.getAllByRole('listitem')).toHaveLength(8);
+    await userEvent.click(canvas.getByRole('button', { name: 'Copy to Clipboard' }));
+    await expect(handlers.onCopyRecoveryCodes).toHaveBeenCalled();
+  },
+};
+
+/** The sign-in is finishing: Continue is locked, and the codes can still be copied. */
+export const TwoFactorRecoveryCodesBusy: Story = {
+  args: recoveryCodes({ busy: true }),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.getByRole('button', { name: 'Finishing sign-in...' })).toBeDisabled();
+    await expect(canvas.getByRole('button', { name: 'Copy to Clipboard' })).toBeEnabled();
+  },
+};
+
+/** Finishing failed: the codes stay, so they are not lost, and Continue can be tried again. */
+export const TwoFactorRecoveryCodesError: Story = {
+  args: recoveryCodes({ error: twoFactorTryAgainMessage }),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.getByRole('alert')).toHaveTextContent(twoFactorTryAgainMessage);
+    await expect(canvas.getAllByRole('listitem')).toHaveLength(8);
+    await expect(canvas.getByRole('button', { name: "I've Saved These Codes" })).toBeEnabled();
+  },
+};
+
+export const TwoFactorRecoveryCodesDarkTheme: Story = {
+  args: recoveryCodes(),
+  globals: { theme: 'Dark' },
+};
+
+/** What the flow draws for an enrolment state. Only `verify` has no screen, and no story asks for it. */
+const enrollmentScreen = (screen: TwoFactorEnrollmentScreen) =>
+  getTwoFactorEnrollmentScreenProps(
+    {
+      screen,
+      read: handlers.onRetry,
+      sendLink: handlers.onSendSetupLink,
+      begin: handlers.onSetupStart,
+      confirm: handlers.onSetupCode,
+      finish: handlers.onSavedRecoveryCodes,
+      end: fn(),
+      complete: fn(),
+    },
+    handlers.onBackToSignIn,
+  ) as LoginScreenProps;
+
+/** The screen waits on a request: only a progress message. */
+export const StatusWorking: Story = {
+  args: enrollmentScreen({ kind: 'loading' }),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.getByRole('status')).toHaveTextContent('Checking your sign-in...');
+    await expect(canvas.queryByRole('button')).toBeNull();
+  },
+};
+
+/** A way back beside the primary action. This is the email link screen before anything is sent. */
+export const StatusWithSecondaryAction: Story = {
+  args: enrollmentScreen({ kind: 'email_link', sent: false, sends: 0, busy: false }),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await userEvent.click(canvas.getByRole('button', { name: twoFactorBackToSignInLabel }));
+    await expect(handlers.onBackToSignIn).toHaveBeenCalled();
+  },
+};
+
+/** The primary action's request is in flight: both actions are locked. */
+export const StatusBusyPrimary: Story = {
+  args: enrollmentScreen({ kind: 'email_link', sent: false, sends: 1, busy: true }),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.getByRole('button', { name: 'Sending...' })).toBeDisabled();
+    await expect(canvas.getByRole('button', { name: twoFactorBackToSignInLabel })).toBeDisabled();
+  },
+};
+
+/** The notice stays and the failure shows beside it, with the primary action still there. */
+export const StatusWithError: Story = {
+  args: enrollmentScreen({ kind: 'email_link', sent: true, sends: 2, busy: false, error: twoFactorSendFailedMessage }),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.getByRole('status')).toHaveTextContent('Check your email');
+    await expect(canvas.getByRole('alert')).toHaveTextContent(twoFactorSendFailedMessage);
+    await expect(canvas.getByRole('button', { name: 'Send again' })).toBeEnabled();
+  },
+};
+
+/** The taps are used up: only the way back is left. */
+export const StatusSecondaryActionOnly: Story = {
+  args: enrollmentScreen({ kind: 'email_link', sent: true, sends: 3, busy: false }),
+};
+
+/** A failed read: the retry, and the way back beside it. */
+export const StatusRetryWithSecondaryAction: Story = {
+  args: enrollmentScreen({ kind: 'read_failed' }),
+};
+
+/** A finished sign-in with nowhere to send the user. */
+export const StatusSignedIn: Story = {
+  args: enrollmentScreen({ kind: 'finished' }),
 };

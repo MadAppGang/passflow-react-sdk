@@ -76,7 +76,16 @@ describe('REQ-12 REQ-13 committed federated landing uses real exchange outcomes'
         await waitFor(() => expect(observed.settingsReady).toBe(true));
       }
       await network.releaseExchange(factorAnswer());
-      await waitFor(() => expect(observed.navigations).toEqual([{ to: '/web/two-factor-verify', replace: true }]));
+      // Architecture §3: carry app context from the initial landing onto verification.
+      await waitFor(() =>
+        expect(observed.navigations).toEqual([
+          {
+            to: '/web/two-factor-verify',
+            search: new URLSearchParams({ appid: appId, redirectto: target }).toString(),
+            replace: true,
+          },
+        ]),
+      );
       if (order === 'exchange-first') await network.releaseSettings();
       await waitFor(() => expect(observed.current!.isTwoFactorVerificationRequired()).toBe(true));
       expect(observed.current!.isAuthenticated()).toBe(false);

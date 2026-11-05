@@ -1,61 +1,44 @@
-import type { TwoFactorError } from '@/types/two-factor-errors';
+import type { TwoFactorError, TwoFactorErrorType } from '@/types/two-factor-errors';
+import {
+  enrollmentFailureFrom,
+  serverErrorIdFrom,
+  twoFactorNotEnabledMessage,
+  twoFactorRateLimitedMessage,
+  twoFactorSignInOverMessage,
+  twoFactorTryAgainMessage,
+  twoFactorWrongCodeMessage,
+} from './auth-error';
+
+const errorTypeOf = (error: unknown): TwoFactorErrorType => {
+  if (serverErrorIdFrom(error) === 'error.2fa.not_enabled') return 'not_enabled';
+
+  switch (enrollmentFailureFrom(error)) {
+    case 'over':
+      return 'expired';
+    case 'rate_limited':
+      return 'rate_limited';
+    case 'wrong_code':
+      return 'invalid_code';
+    default:
+      return 'generic';
+  }
+};
 
 /**
- * Error message patterns for classification
+ * Classify a 2FA error from the error itself, not its message: the server localises messages.
  */
-const ERROR_PATTERNS = {
-  expired: ['2FA verification expired or not required', 'verification expired', 'session expired', 'verification not required'],
-  not_enabled: ['Two-factor authentication is not enabled for this user', '2FA is not enabled', 'two-factor not enabled'],
-  invalid_code: ['invalid code', 'incorrect code', 'code mismatch', 'wrong code', 'invalid 2fa code'],
-} as const;
-
-/**
- * Classify 2FA error based on error message
- *
- * @param errorMessage - Error message from SDK
- * @returns Classified error with handling strategy
- */
-export function classifyTwoFactorError(errorMessage: string): TwoFactorError {
-  const normalizedMessage = errorMessage.toLowerCase();
-
-  // Check for expired session (recoverable, auto-redirect)
-  if (ERROR_PATTERNS.expired.some((pattern) => normalizedMessage.includes(pattern.toLowerCase()))) {
-    return {
-      type: 'expired',
-      message: errorMessage,
-      isRecoverable: true,
-      shouldAutoRedirect: true,
-    };
-  }
-
-  // Check for 2FA not enabled (non-recoverable, NO auto-redirect)
-  if (ERROR_PATTERNS.not_enabled.some((pattern) => normalizedMessage.includes(pattern.toLowerCase()))) {
-    return {
-      type: 'not_enabled',
-      message: errorMessage,
-      isRecoverable: false,
-      shouldAutoRedirect: false,
-    };
-  }
-
-  // Check for invalid code (recoverable, allow retry)
-  if (ERROR_PATTERNS.invalid_code.some((pattern) => normalizedMessage.includes(pattern.toLowerCase()))) {
-    return {
-      type: 'invalid_code',
-      message: errorMessage,
-      isRecoverable: true,
-      shouldAutoRedirect: false,
-    };
-  }
-
-  // Generic error (treat as recoverable with retry)
+export function classifyTwoFactorError(error: unknown): TwoFactorError {
+  const type = errorTypeOf(error);
   return {
-    type: 'generic',
-    message: errorMessage,
-    isRecoverable: true,
-    shouldAutoRedirect: false,
+    type,
+    message: (error as Error | null)?.message ?? twoFactorTryAgainMessage,
+    isRecoverable: type !== 'not_enabled',
   };
 }
+
+/** No further code can be taken on the screen: only the way back to sign in is left. */
+export const isTerminalTwoFactorError = (type: TwoFactorErrorType | undefined): boolean =>
+  type === 'not_enabled' || type === 'expired' || type === 'rate_limited';
 
 /**
  * Get user-friendly error message based on error type
@@ -63,11 +46,13 @@ export function classifyTwoFactorError(errorMessage: string): TwoFactorError {
 export function getUserFriendlyErrorMessage(error: TwoFactorError): string {
   switch (error.type) {
     case 'expired':
-      return 'Your session has expired. Redirecting to sign in...';
+      return twoFactorSignInOverMessage;
+    case 'rate_limited':
+      return twoFactorRateLimitedMessage;
     case 'not_enabled':
-      return 'Two-factor authentication is not enabled for your account. Please contact your administrator to enable 2FA.';
+      return twoFactorNotEnabledMessage;
     case 'invalid_code':
-      return 'Invalid code. Please check your authenticator app and try again.';
+      return twoFactorWrongCodeMessage;
     default:
       return error.message;
   }

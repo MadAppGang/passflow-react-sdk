@@ -34,11 +34,10 @@ export const useTwoFactorVerify: UseTwoFactorVerifyProps = () => {
   }, [passflow]);
 
   const handleError = useCallback((e: unknown) => {
-    const err = e as Error;
-    const classified = classifyTwoFactorError(err.message);
+    const classified = classifyTwoFactorError(e);
 
     setIsError(true);
-    setError(err.message);
+    setError(classified.message);
     setErrorType(classified.type);
     setErrorDetails(classified);
   }, []);

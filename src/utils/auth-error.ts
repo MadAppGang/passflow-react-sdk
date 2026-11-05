@@ -251,3 +251,73 @@ export const newPasswordErrorMessage = (error: unknown): string => {
   if (typeof status === 'number' && status >= 400 && status < 500) return resetLinkInvalidMessage;
   return newPasswordUnavailableMessage;
 };
+
+// First-time 2FA enrolment and the verify screens.
+export const twoFactorSignInOverMessage = 'Your sign-in has ended. Sign in again.';
+export const twoFactorSetupSavedSignInMessage = 'Your setup is saved. Sign in again.';
+export const twoFactorSetupSavedNewCodeMessage =
+  'Your setup is saved. Enter a new code from your authenticator app to finish signing in.';
+export const twoFactorSetupCodeChangedMessage = 'Your setup code changed. Scan this new QR code.';
+export const twoFactorRateLimitedMessage = 'Too many attempts. Sign in again later.';
+export const twoFactorWrongCodeMessage = 'Invalid code. Please check your authenticator app and try again.';
+export const twoFactorWrongRecoveryCodeMessage = 'Invalid recovery code.';
+export const twoFactorNotEnabledMessage =
+  'Two-factor authentication is not enabled for your account. Please contact your administrator to enable 2FA.';
+export const twoFactorSendFailedMessage = 'We could not send the setup email. Try again later or contact your administrator.';
+export const twoFactorTryAgainMessage = 'Something went wrong. Try again.';
+export const twoFactorLinkAlreadyUsedMessage = 'This link was already used. Sign in.';
+export const twoFactorBackToSignInLabel = 'Back to sign in';
+export const twoFactorSignInLabel = 'Sign in';
+
+export type EnrollmentFailure =
+  | 'over'
+  | 'rate_limited'
+  | 'wrong_code'
+  | 'setup_incomplete'
+  | 'not_allowed'
+  | 'send_failed'
+  | 'unavailable'
+  | 'other';
+
+/** The id of a server error, in a `PassflowError` or a raw axios rejection's object body. */
+export const serverErrorIdFrom = (error: unknown): unknown => readField(readServerError(error), 'id');
+
+/** The HTTP status of a server error. `readServerError` skips a raw 429's string body, so its response is read too. */
+export const serverErrorStatusFrom = (error: unknown): unknown =>
+  readField(readServerError(error), 'status') ?? readField(readField(error, 'response'), 'status');
+
+/** The refused parents: a retry gets the same answer. */
+const OVER_PARENT_IDS: ReadonlySet<unknown> = new Set([
+  'error.auth.flow.parent.not.found',
+  'error.auth.flow.parent.expired',
+  'error.auth.flow.parent.completed',
+  'error.auth.flow.parent.kind',
+  'error.auth.flow.parent.pkce.missing',
+]);
+
+/** Core throws these with no id or status once its 5 minute pending state has gone. */
+const OVER_MESSAGES: ReadonlySet<unknown> = new Set([
+  '2FA verification expired or not required. User must sign in first.',
+  'No TFA token found. User must sign in first.',
+]);
+
+/**
+ * What a failed confirm, verify, begin or send means for the sign-in. The order matters: several ids answer 401 and do
+ * not mean the sign-in ended. Network errors, core's format errors and a `TypeError` from a string body are `other`.
+ */
+export const enrollmentFailureFrom = (error: unknown): EnrollmentFailure => {
+  const id = serverErrorIdFrom(error);
+  const status = serverErrorStatusFrom(error);
+
+  if (status === 429 || id === 'error.2fa.rate_limit_exceeded') return 'rate_limited';
+  if (id === 'error.api.request.2fa_code.invalid' || id === 'error.2fa.recovery_code.invalid') return 'wrong_code';
+  if (id === 'error.2fa.setup.incomplete') return 'setup_incomplete';
+  if (id === 'error.2fa.enrollment.not_allowed') return 'not_allowed';
+  if (id === 'error.2fa.setup_link.send_failed') return 'send_failed';
+  if (status === 501 || id === 'error.not.implemented') return 'unavailable';
+  if (id === 'error.2fa.not_enabled' || id === 'error.2fa.storage.error') return 'other';
+  if (OVER_PARENT_IDS.has(id)) return 'over';
+  if (status === 401 || id === 'PKCE_VERIFIER_MISSING' || id === 'error.pkce.exchange') return 'over';
+  if (OVER_MESSAGES.has(readField(error, 'message'))) return 'over';
+  return 'other';
+};

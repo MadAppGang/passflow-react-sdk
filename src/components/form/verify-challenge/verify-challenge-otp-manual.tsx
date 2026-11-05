@@ -8,7 +8,7 @@ import type {
 /* eslint-disable complexity */
 import { type FC, useEffect, useId, useState } from 'react';
 import { Button, FieldOtp, Icon } from '@/components/ui';
-import { routes } from '@/context';
+import { routes, useSearchSource } from '@/context';
 import { useAppSettings, useNavigation, usePassflow, usePasswordlessComplete, useSignIn } from '@/hooks';
 import { getUrlWithTokens, isValidUrl, routeToSecondFactor, useUrlParams } from '@/utils';
 import { Wrapper } from '../wrapper';
@@ -50,6 +50,7 @@ export const VerifyChallengeOTPManual: FC<VerifyChallengeOTPManualProps> = ({
   const passflow = usePassflow();
   const { appSettings, createTenantForNewUser, currentStyles, loginAppTheme } = useAppSettings();
   const { navigate } = useNavigation();
+  const searchSource = useSearchSource();
   const { fetch: refetch } = useSignIn();
   const { fetch: fetchPasswordlessComplete, isError, error } = usePasswordlessComplete();
   const [valueOTP, setValueOTP] = useState('');
@@ -90,7 +91,7 @@ export const VerifyChallengeOTPManual: FC<VerifyChallengeOTPManualProps> = ({
         const response = await fetchPasswordlessComplete(payload);
         if (response) {
           // The code completed the first factor only: no tokens yet.
-          if (routeToSecondFactor(passflow, navigate, twoFactorVerifyPath)) return;
+          if (routeToSecondFactor(passflow, navigate, twoFactorVerifyPath, searchSource.read())) return;
           if (response.redirect_url) {
             if (!isValidUrl(response.redirect_url)) navigate({ to: response.redirect_url });
             else window.location.href = await getUrlWithTokens(passflow, response.redirect_url);

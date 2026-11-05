@@ -1,21 +1,21 @@
-import type { FC, FormEvent } from 'react';
-import { useId, useState } from 'react';
-import { Button, FieldOtp, Icon, Switch } from '@/components/ui';
+import { type FC, useEffect, useRef, useState } from 'react';
+import { LoginScreen } from '@/components/ui';
 import { useTwoFactorVerify } from '@/hooks';
-import { getUserFriendlyErrorMessage, TwoFactorLoopPrevention } from '@/utils';
-import { Wrapper } from '../wrapper';
+import { getUserFriendlyErrorMessage, isTerminalTwoFactorError, twoFactorBackToSignInLabel } from '@/utils';
 
 import '@/styles/index.css';
 
 type TwoFactorVerifyFormProps = {
   onSuccess?: () => void;
   onUseRecovery?: () => void;
+  /** The server ended the sign-in, or locked it for too many attempts. The form still shows why when this is not handled. */
+  onEnded?: (type: 'expired' | 'rate_limited') => void;
+  /** The way out once no further code can be taken. */
+  onBackToSignIn?: () => void;
   title?: string;
   subtitle?: string;
   numInputs?: number;
   shouldAutoFocus?: boolean;
-  signInPath?: string;
-  twoFactorSetupPath?: string;
   /** Label of the "trust this device" option, unticked by default. */
   trustDeviceLabel?: string;
 };
@@ -26,19 +26,18 @@ const completionOptions = (trustDevice: boolean) => (trustDevice ? { trustDevice
 export const TwoFactorVerifyForm: FC<TwoFactorVerifyFormProps> = ({
   onSuccess,
   onUseRecovery,
+  onEnded,
+  onBackToSignIn,
   title = 'Two-Factor Authentication',
   subtitle,
   numInputs,
   shouldAutoFocus = true,
-  signInPath,
-  twoFactorSetupPath,
   trustDeviceLabel = 'Trust this device',
 }) => {
   const [code, setCode] = useState('');
   const [trustDevice, setTrustDevice] = useState(false);
   const { verify, isLoading, isError, errorDetails, reset } = useTwoFactorVerify();
-  const otpId = useId();
-  const otpErrorId = `${otpId}-error`;
+  const errorType = errorDetails?.type;
 
   // Get TOTP digits (defaults to 6 if not provided)
   const totpDigits = numInputs ?? 6;
@@ -46,190 +45,54 @@ export const TwoFactorVerifyForm: FC<TwoFactorVerifyFormProps> = ({
   // Compute subtitle dynamically based on totpDigits
   const computedSubtitle = subtitle ?? `Enter the ${totpDigits}-digit code from your authenticator app`;
 
-  const handleChange = (value: string) => {
-    reset();
-    setCode(value);
-  };
+  // Once per error, whatever the caller's callback identity does.
+  const onEndedRef = useRef(onEnded);
+  onEndedRef.current = onEnded;
+  useEffect(() => {
+    if (errorType === 'expired' || errorType === 'rate_limited') onEndedRef.current?.(errorType);
+  }, [errorType]);
 
-  const handleSubmit = async (e: FormEvent) => {
-    e.preventDefault();
-    const result = await verify(code, completionOptions(trustDevice));
-    if (result) {
-      onSuccess?.();
-    }
+  const submit = async (value: string) => {
+    const result = await verify(value, completionOptions(trustDevice));
+    if (result) onSuccess?.();
   };
 
   // Auto-submit when code is complete
-  const handleOtpChange = async (value: string) => {
-    handleChange(value);
-    if (value.length === totpDigits) {
-      const result = await verify(value, completionOptions(trustDevice));
-      if (result) {
-        onSuccess?.();
-      }
-    }
+  const handleCodeChange = (value: string) => {
+    reset();
+    setCode(value);
+    if (value.length === totpDigits) void submit(value);
   };
 
-  const handleBackToSignIn = () => {
-    TwoFactorLoopPrevention.reset();
-    window.location.href = signInPath || '/signin';
-  };
-
-  const handleSetup2FA = () => {
-    // Navigate to 2FA setup page
-    window.location.href = twoFactorSetupPath || '/two-factor-setup';
-  };
-
-  // Check if loop detected
-  const isLoopDetected = !TwoFactorLoopPrevention.canRedirect();
-
-  // Render different UI based on error type
-  const renderErrorContent = () => {
-    if (!isError || !errorDetails) return null;
-
-    // Loop detected - critical error
-    if (isLoopDetected) {
-      return (
-        <div className='passflow-form-error passflow-form-error--critical'>
-          <Icon size='medium' id='warning' type='general' className='icon-warning' />
-          <div className='passflow-form-error-content'>
-            <span id={otpErrorId} className='passflow-form-error-text'>
-              {TwoFactorLoopPrevention.getLoopDetectedMessage()}
-            </span>
-            {signInPath && (
-              <Button
-                type='button'
-                size='medium'
-                variant='secondary'
-                onClick={handleBackToSignIn}
-                className='passflow-button-back-to-signin'
-              >
-                Back to Sign In
-              </Button>
-            )}
-          </div>
-        </div>
-      );
-    }
-
-    // 2FA not enabled - needs setup
-    if (errorDetails.type === 'not_enabled') {
-      return (
-        <div className='passflow-form-error passflow-form-error--persistent'>
-          <Icon size='medium' id='warning' type='general' className='icon-warning' />
-          <div className='passflow-form-error-content'>
-            <span id={otpErrorId} className='passflow-form-error-text'>
-              You need to set up two-factor authentication first.
-            </span>
-            <div className='passflow-form-error-actions'>
-              {twoFactorSetupPath && (
-                <Button
-                  type='button'
-                  size='medium'
-                  variant='primary'
-                  onClick={handleSetup2FA}
-                  className='passflow-button-setup-2fa'
-                >
-                  Set Up 2FA
-                </Button>
-              )}
-              {signInPath && (
-                <Button
-                  type='button'
-                  size='medium'
-                  variant='secondary'
-                  onClick={handleBackToSignIn}
-                  className='passflow-button-back-to-signin'
-                >
-                  Back to Sign In
-                </Button>
-              )}
-            </div>
-          </div>
-        </div>
-      );
-    }
-
-    // Expired session - show redirect message
-    if (errorDetails.type === 'expired') {
-      return (
-        <div className='passflow-form-info'>
-          <Icon size='small' id='info' type='general' className='icon-info' />
-          <span id={otpErrorId} className='passflow-form-info-text'>
-            {getUserFriendlyErrorMessage(errorDetails)}
-          </span>
-        </div>
-      );
-    }
-
-    // Invalid code or generic - allow retry
-    return (
-      <div className='passflow-form-error'>
-        <Icon size='small' id='warning' type='general' className='icon-warning' />
-        <span id={otpErrorId} className='passflow-form-error-text'>
-          {getUserFriendlyErrorMessage(errorDetails)}
-        </span>
-      </div>
-    );
-  };
-
-  // Disable input for non-recoverable errors
-  const isInputDisabled =
-    isLoading || errorDetails?.type === 'not_enabled' || errorDetails?.type === 'expired' || isLoopDetected;
-  const otpState = isInputDisabled ? 'disabled' : isError ? 'error' : 'default';
+  const locked = isTerminalTwoFactorError(errorType);
 
   return (
-    <Wrapper title={title} subtitle={computedSubtitle} className='passflow-2fa-verify'>
-      <form onSubmit={handleSubmit} className='passflow-form'>
-        <div className='passflow-form-container'>
-          {/* Above the code: the code submits itself on its last digit. */}
-          <div className='passflow-form-field'>
-            <Switch
-              label={trustDeviceLabel}
-              checked={trustDevice}
-              disabled={isInputDisabled}
-              onChange={(event) => setTrustDevice(event.target.checked)}
-            />
-          </div>
-          <div className='passflow-verify-otp-wrapper'>
-            <FieldOtp
-              id={otpId}
-              name='code'
-              length={totpDigits}
-              value={code}
-              onChange={handleOtpChange}
-              state={otpState}
-              label='Verification code'
-              describedBy={isError && errorDetails ? otpErrorId : undefined}
-              autoFocus={shouldAutoFocus && !isInputDisabled}
-            />
-          </div>
-          {renderErrorContent()}
-        </div>
-
-        {!isInputDisabled && (
-          <Button
-            size='big'
-            type='submit'
-            variant='primary'
-            disabled={code.length !== totpDigits || isLoading}
-            className='passflow-button-signin'
-          >
-            {isLoading ? 'Verifying...' : 'Verify'}
-          </Button>
-        )}
-
-        {onUseRecovery && !isInputDisabled && (
-          <div className='passflow-form-actions'>
-            <p className='passflow-dont-have-account'>
-              Lost your device?{' '}
-              <Button type='button' size='small' variant='link' onClick={onUseRecovery}>
-                Use recovery code
-              </Button>
-            </p>
-          </div>
-        )}
-      </form>
-    </Wrapper>
+    <LoginScreen
+      chrome={{ title, subtitle: computedSubtitle }}
+      state={{
+        kind: 'two-factor-code',
+        factor: { type: 'totp', digits: totpDigits },
+        label: 'Verification code',
+        code,
+        trustDevice: { label: trustDeviceLabel, checked: trustDevice, onChange: setTrustDevice },
+        busy: isLoading,
+        canSubmit: code.length === totpDigits,
+        locked,
+        alert:
+          isError && errorDetails
+            ? { message: getUserFriendlyErrorMessage(errorDetails), tone: errorType === 'expired' ? 'info' : 'error' }
+            : undefined,
+        submitLabel: 'Verify',
+        busyLabel: 'Verifying...',
+        alternate: onUseRecovery
+          ? { prompt: 'Lost your device?', label: 'Use recovery code', onClick: onUseRecovery }
+          : undefined,
+        secondaryAction: locked && onBackToSignIn ? { label: twoFactorBackToSignInLabel, onClick: onBackToSignIn } : undefined,
+        autoFocus: shouldAutoFocus,
+        testId: 'two-factor-verify',
+        onCodeChange: handleCodeChange,
+        onSubmit: () => void submit(code),
+      }}
+    />
   );
 };

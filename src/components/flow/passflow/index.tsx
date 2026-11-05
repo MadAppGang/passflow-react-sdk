@@ -272,13 +272,7 @@ const FlowScreenView: FC<FlowScreenViewProps> = ({
     case 'invitation':
       return <InvitationJoin successAuthRedirect={successAuthRedirect} signInPath={paths.signin} signUpPath={paths.signup} />;
     case 'two_factor_verify':
-      return (
-        <TwoFactorVerifyFlow
-          successAuthRedirect={successAuthRedirect}
-          signInPath={paths.signin}
-          twoFactorSetupPath={paths.two_factor_setup}
-        />
-      );
+      return <TwoFactorVerifyFlow successAuthRedirect={successAuthRedirect} signInPath={paths.signin} />;
     case 'two_factor_setup':
       return (
         <TwoFactorSetupFlow

@@ -25,11 +25,16 @@ export {
   passwordlessWaitCompletedMessage,
   passwordlessWaitDeniedMessage,
   serverMessageFor,
+  twoFactorBackToSignInLabel,
+  twoFactorLinkAlreadyUsedMessage,
+  twoFactorRateLimitedMessage,
+  twoFactorSignInLabel,
+  twoFactorWrongRecoveryCodeMessage,
   verificationLinkErrorMessage,
   verificationRequestErrorMessage,
 } from './auth-error';
 export { classifyDeviceError, DeviceApiError, deviceErrorOfType } from './classify-device-error';
-export { classifyTwoFactorError, getUserFriendlyErrorMessage } from './classify-two-factor-error';
+export { classifyTwoFactorError, getUserFriendlyErrorMessage, isTerminalTwoFactorError } from './classify-two-factor-error';
 export { cn } from './cn';
 export * from './dayjs';
 export {
@@ -44,7 +49,7 @@ export { getIdentityLabel, getPasswordlessData, getValidationErrorsLabel } from 
 export { getUrlErrors } from './get-url-errors';
 export { getUrlWithTokens, type TokenUrlFormat } from './get-url-with-tokens';
 export { getInvitationAuthChrome, type InvitationAuthIntent } from './invitation-auth-chrome';
-export { routeToSecondFactor, urlCarriesTwoFactorToken } from './second-factor';
+export { routeToSecondFactor, signInSearch, urlCarriesTwoFactorToken } from './second-factor';
 export { TwoFactorLoopPrevention } from './two-factor-loop-prevention';
 export { undefinedOnCatch } from './undefined-on-catch';
 export {

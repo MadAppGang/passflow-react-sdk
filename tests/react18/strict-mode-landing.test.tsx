@@ -3,6 +3,8 @@ import React from 'react';
 import { renderToString } from 'react-dom/server';
 import { afterEach, describe, expect, it } from 'vitest';
 import {
+  appId,
+  target,
   factorAnswer,
   installLandingEnvironment,
   LandingTree,
@@ -43,7 +45,12 @@ describe('REQ-15 React 18.3.1 committed-effect landing (vitest.react18.config.ts
     renderLanding({ observed, flow: false, factorPath: '/web/two-factor-verify' }, true);
     await network.releaseExchange(factorAnswer());
     await network.releaseSettings();
-    await waitFor(() => expect(observed.navigations).toEqual([{ to: '/web/two-factor-verify', replace: true }]));
+    // Architecture §3 applies to React 18's StrictMode handoff too.
+    await waitFor(() => expect(observed.navigations).toEqual([{
+      to: '/web/two-factor-verify',
+      search: new URLSearchParams({ appid: appId, redirectto: target }).toString(),
+      replace: true,
+    }]));
     expect(observed.current!.isTwoFactorVerificationRequired()).toBe(true);
     expect(network.forwards).toEqual([]);
     expect(network.requests.filter((request) => request.path === '/auth/pkce_exchange')).toHaveLength(1);

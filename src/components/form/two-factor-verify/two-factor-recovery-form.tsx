@@ -1,18 +1,24 @@
-import type { ChangeEvent, FC, FormEvent } from 'react';
-import { useState } from 'react';
-import { Button, Icon, Switch } from '@/components/ui';
+import { type FC, useEffect, useRef, useState } from 'react';
+import { LoginScreen } from '@/components/ui';
 import { useTwoFactorVerify } from '@/hooks';
-import { cn, getUserFriendlyErrorMessage, TwoFactorLoopPrevention } from '@/utils';
-import { Wrapper } from '../wrapper';
+import {
+  getUserFriendlyErrorMessage,
+  isTerminalTwoFactorError,
+  twoFactorBackToSignInLabel,
+  twoFactorWrongRecoveryCodeMessage,
+} from '@/utils';
 
 import '@/styles/index.css';
 
 type TwoFactorRecoveryFormProps = {
   onSuccess?: () => void;
   onBack?: () => void;
+  /** The server ended the sign-in, or locked it for too many attempts. The form still shows why when this is not handled. */
+  onEnded?: (type: 'expired' | 'rate_limited') => void;
+  /** The way out once no further code can be taken. */
+  onBackToSignIn?: () => void;
   title?: string;
   subtitle?: string;
-  signInPath?: string;
   /** Label of the "trust this device" option, unticked by default. */
   trustDeviceLabel?: string;
 };
@@ -23,162 +29,64 @@ const completionOptions = (trustDevice: boolean) => (trustDevice ? { trustDevice
 export const TwoFactorRecoveryForm: FC<TwoFactorRecoveryFormProps> = ({
   onSuccess,
   onBack,
+  onEnded,
+  onBackToSignIn,
   title = 'Use Recovery Code',
   subtitle = 'Enter one of your recovery codes',
-  signInPath,
   trustDeviceLabel = 'Trust this device',
 }) => {
   const [code, setCode] = useState('');
   const [trustDevice, setTrustDevice] = useState(false);
-  const { useRecoveryCode, isLoading, isError, errorDetails, reset } = useTwoFactorVerify();
+  const { useRecoveryCode: redeemRecoveryCode, isLoading, isError, errorDetails, reset } = useTwoFactorVerify();
+  const errorType = errorDetails?.type;
 
-  const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
+  // Once per error, whatever the caller's callback identity does.
+  const onEndedRef = useRef(onEnded);
+  onEndedRef.current = onEnded;
+  useEffect(() => {
+    if (errorType === 'expired' || errorType === 'rate_limited') onEndedRef.current?.(errorType);
+  }, [errorType]);
+
+  const handleCodeChange = (value: string) => {
     reset();
     // Normalize: uppercase and remove spaces
-    setCode(e.target.value.toUpperCase().replace(/\s/g, ''));
+    setCode(value.toUpperCase().replace(/\s/g, ''));
   };
 
-  const handleSubmit = async (e: FormEvent) => {
-    e.preventDefault();
-    const result = await useRecoveryCode(code, completionOptions(trustDevice));
-    if (result) {
-      onSuccess?.();
-    }
+  const handleSubmit = async () => {
+    const result = await redeemRecoveryCode(code, completionOptions(trustDevice));
+    if (result) onSuccess?.();
   };
 
-  const handleBackToSignIn = () => {
-    TwoFactorLoopPrevention.reset();
-    window.location.href = signInPath || '/signin';
-  };
-
-  // Check if loop detected
-  const isLoopDetected = !TwoFactorLoopPrevention.canRedirect();
-
-  // Render error content (same logic as verify form)
-  const renderErrorContent = () => {
-    if (!isError || !errorDetails) return null;
-
-    if (isLoopDetected) {
-      return (
-        <div className='passflow-form-error passflow-form-error--critical'>
-          <Icon size='medium' id='warning' type='general' className='icon-warning' />
-          <div className='passflow-form-error-content'>
-            <span className='passflow-form-error-text'>{TwoFactorLoopPrevention.getLoopDetectedMessage()}</span>
-            {signInPath && (
-              <Button
-                type='button'
-                size='medium'
-                variant='secondary'
-                onClick={handleBackToSignIn}
-                className='passflow-button-back-to-signin'
-              >
-                Back to Sign In
-              </Button>
-            )}
-          </div>
-        </div>
-      );
-    }
-
-    if (errorDetails.type === 'not_enabled') {
-      return (
-        <div className='passflow-form-error passflow-form-error--persistent'>
-          <Icon size='medium' id='warning' type='general' className='icon-warning' />
-          <div className='passflow-form-error-content'>
-            <span className='passflow-form-error-text'>{getUserFriendlyErrorMessage(errorDetails)}</span>
-            {signInPath && (
-              <Button
-                type='button'
-                size='medium'
-                variant='secondary'
-                onClick={handleBackToSignIn}
-                className='passflow-button-back-to-signin'
-              >
-                Back to Sign In
-              </Button>
-            )}
-          </div>
-        </div>
-      );
-    }
-
-    if (errorDetails.type === 'expired') {
-      return (
-        <div className='passflow-form-info'>
-          <Icon size='small' id='info' type='general' className='icon-info' />
-          <span className='passflow-form-info-text'>{getUserFriendlyErrorMessage(errorDetails)}</span>
-        </div>
-      );
-    }
-
-    return (
-      <div className='passflow-form-error'>
-        <Icon size='small' id='warning' type='general' className='icon-warning' />
-        <span className='passflow-form-error-text'>{getUserFriendlyErrorMessage(errorDetails)}</span>
-      </div>
-    );
-  };
-
-  const isInputDisabled =
-    isLoading || errorDetails?.type === 'not_enabled' || errorDetails?.type === 'expired' || isLoopDetected;
+  const locked = isTerminalTwoFactorError(errorType);
+  const errorMessage = errorDetails
+    ? errorType === 'invalid_code'
+      ? twoFactorWrongRecoveryCodeMessage
+      : getUserFriendlyErrorMessage(errorDetails)
+    : '';
 
   return (
-    <Wrapper title={title} subtitle={subtitle} className='passflow-2fa-recovery'>
-      <form onSubmit={handleSubmit} className='passflow-form'>
-        <div className='passflow-form-container'>
-          <div className='passflow-form-field'>
-            <Switch
-              label={trustDeviceLabel}
-              checked={trustDevice}
-              disabled={isInputDisabled}
-              onChange={(event) => setTrustDevice(event.target.checked)}
-            />
-          </div>
-          <div className='passflow-form-field'>
-            <label htmlFor='recovery-code' className={cn('passflow-field-label', isError && 'passflow-field-label--error')}>
-              Recovery Code
-            </label>
-            <input
-              id='recovery-code'
-              type='text'
-              value={code}
-              onChange={handleChange}
-              placeholder='XXXX-XXXX'
-              className={cn(
-                'passflow-field passflow-field--text passflow-field--focused',
-                isError && 'passflow-field--error',
-                isInputDisabled && 'passflow-field--disabled',
-              )}
-              autoComplete='off'
-              disabled={isInputDisabled}
-            />
-            {renderErrorContent()}
-          </div>
-        </div>
-
-        {!isInputDisabled && (
-          <Button
-            size='big'
-            type='submit'
-            variant='primary'
-            disabled={code.length < 8 || isLoading}
-            className='passflow-button-signin'
-          >
-            {isLoading ? 'Verifying...' : 'Verify'}
-          </Button>
-        )}
-
-        {onBack && !isInputDisabled && (
-          <div className='passflow-form-actions'>
-            <p className='passflow-dont-have-account'>
-              Have your device?{' '}
-              <Button type='button' size='small' variant='link' onClick={onBack}>
-                Use authenticator code
-              </Button>
-            </p>
-          </div>
-        )}
-      </form>
-    </Wrapper>
+    <LoginScreen
+      chrome={{ title, subtitle }}
+      state={{
+        kind: 'two-factor-code',
+        factor: { type: 'recovery', placeholder: 'XXXX-XXXX' },
+        label: 'Recovery Code',
+        code,
+        trustDevice: { label: trustDeviceLabel, checked: trustDevice, onChange: setTrustDevice },
+        busy: isLoading,
+        canSubmit: code.length >= 8,
+        locked,
+        alert:
+          isError && errorDetails ? { message: errorMessage, tone: errorType === 'expired' ? 'info' : 'error' } : undefined,
+        submitLabel: 'Verify',
+        busyLabel: 'Verifying...',
+        alternate: onBack ? { prompt: 'Have your device?', label: 'Use authenticator code', onClick: onBack } : undefined,
+        secondaryAction: locked && onBackToSignIn ? { label: twoFactorBackToSignInLabel, onClick: onBackToSignIn } : undefined,
+        testId: 'two-factor-recovery',
+        onCodeChange: handleCodeChange,
+        onSubmit: () => void handleSubmit(),
+      }}
+    />
   );
 };

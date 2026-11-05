@@ -2,6 +2,38 @@
 
 All notable changes to `@passflow/react` are documented in this file.
 
+## [0.20.0] - 2026-11-05
+
+### Breaking
+
+- The server must have the enrolment route (`GET /auth/2fa/enrollment`) before an app takes this version. A server without it answers 404, and every 2FA sign-in stops at "We could not continue your sign-in. Try again."
+- Removed props: `signInPath` on `TwoFactorVerifyForm` and `TwoFactorRecoveryForm` (use `onBackToSignIn`), `twoFactorSetupPath` on `TwoFactorVerifyForm` and `TwoFactorVerifyFlow`, `useV2Flow` on `TwoFactorVerifyFlow`.
+- Removed fields: `retryCountdown` on `useTwoFactorSetupMagicLink`'s return, `shouldAutoRedirect` on `TwoFactorError`.
+- The wrapper classes `passflow-2fa-verify`, `passflow-2fa-recovery` and `passflow-2fa-setup` are gone, so custom CSS on them stops matching. These screens now render through `LoginScreen`.
+- `TwoFactorSetupForm` no longer resets after `onComplete` when you pass one.
+
+### Added
+
+- First-time 2FA enrolment on the verify screen. The screen reads the server's enrolment state before asking for a code, then shows one of: the code entry, for an enrolled user; an emailed setup link, sent only on a tap with up to three sends; setup on the spot, with QR, secret, code and recovery codes, finishing with the same code; or "contact your administrator".
+- `LoginScreen` states `two-factor-code`, `two-factor-setup` and `two-factor-recovery-codes`, each with Storybook stories. `LoginStatus` gains a secondary action, a busy primary action, an error line and a `working` tone. Also exported: their types, `signInSearch` and `isTerminalTwoFactorError`.
+- `onEnded` and `onBackToSignIn` on `TwoFactorVerifyForm` and `TwoFactorRecoveryForm`, `onBackToSignIn` on `TwoFactorSetupForm`, and the `rate_limited` type on `TwoFactorErrorType`.
+
+### Changed
+
+- Requires `@passflow/core` `^0.25.0`.
+- The setup link page uses the same look as direct setup and calls only what a link session may call. A used link says so and offers sign-in. Link error screens have the heading "We could not open this link".
+- The sign-in search (`appid`, `parent_challenge_id`) now carries across the second factor screens, without attempt secrets such as `otp` or `token`.
+- `.passflow-button--clean` has a transparent background, not white, so its text can be read in the dark theme.
+- Code boxes narrow to fit their container, so six-digit boxes are 47.67px wide rather than 48px.
+
+### Fixed
+
+- The dead Set Up 2FA link on the verify screen is gone. It left a new user on a required app with no way forward.
+- Eight-digit TOTP codes no longer run past the card.
+- A rate limit on any of these screens shows its own message, not the server's fixed "15 minutes" text.
+- A verify or recovery form whose sign-in has ended now says so and offers sign-in. Its "Redirecting to sign in..." message never redirected.
+- `TwoFactorChallenge` sends one challenge under React StrictMode, not two, so it no longer spends two of the three budget units.
+
 ## [0.19.0] - 2026-11-04
 
 ### Added

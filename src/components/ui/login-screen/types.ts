@@ -199,6 +199,111 @@ export type LoginSecondFactorState = {
   onMethodChange?: () => void;
 };
 
+/** Which factor `two-factor-code` asks for: authenticator boxes, or a recovery code field. */
+export type LoginTwoFactorCodeFactor = { type: 'totp'; digits: number } | { type: 'recovery'; placeholder?: string };
+
+/** The line under the code. `error` marks the code invalid; `info` does not. */
+export type LoginTwoFactorCodeAlert = {
+  message: string;
+  tone: 'error' | 'info';
+};
+
+/** The "trust this device" option. */
+export type LoginTwoFactorTrustDevice = {
+  label: string;
+  checked: boolean;
+  onChange: (checked: boolean) => void;
+};
+
+/** The other factor: `prompt` is a sentence, `label` the link that follows it. */
+export type LoginTwoFactorCodeAlternate = {
+  prompt: string;
+  label: string;
+  onClick: () => void;
+};
+
+/** Code entry at sign-in, for the verify and recovery forms. The code is controlled and all copy comes through props. */
+export type LoginTwoFactorCodeState = {
+  kind: 'two-factor-code';
+  factor: LoginTwoFactorCodeFactor;
+  /** Names the code field. */
+  label: string;
+  code: string;
+  trustDevice: LoginTwoFactorTrustDevice;
+  /** A check is in flight: the code, the switch and every action are locked, and Verify shows `busyLabel`. */
+  busy?: boolean;
+  canSubmit: boolean;
+  /** No further code can be taken: the code and the switch are disabled, and Verify and `alternate` are gone. */
+  locked?: boolean;
+  alert?: LoginTwoFactorCodeAlert;
+  submitLabel: string;
+  busyLabel: string;
+  alternate?: LoginTwoFactorCodeAlternate;
+  /** The way out. It stays when `locked`. */
+  secondaryAction?: LoginScreenAction;
+  autoFocus?: boolean;
+  testId?: string;
+  onCodeChange: (code: string) => void;
+  onSubmit: () => void;
+};
+
+/** Enrolment before anything was requested from the server. */
+export type LoginTwoFactorSetupStartState = {
+  kind: 'two-factor-setup';
+  step: 'start';
+  startLabel: string;
+  busyLabel: string;
+  busy?: boolean;
+  error?: string | null;
+  secondaryAction?: LoginScreenAction;
+  testId?: string;
+  onStart: () => void;
+};
+
+/** Enrolment with a secret: scan it or type it, then confirm a code. A new `secret` clears the typed code. */
+export type LoginTwoFactorSetupCodeState = {
+  kind: 'two-factor-setup';
+  step: 'code';
+  /** Bare base64 PNG. When empty, no image shows and the secret is always visible. */
+  qrCode: string;
+  qrAlt: string;
+  secret: string;
+  /** Introduces the secret wherever it is visible. */
+  secretLabel: string;
+  showSecretLabel: string;
+  hideSecretLabel: string;
+  /** Digits in the code, from the server's `totp_digits`. */
+  digits: number;
+  /** Names the code field. */
+  codeLabel: string;
+  submitLabel: string;
+  busyLabel: string;
+  busy?: boolean;
+  alert?: LoginTwoFactorCodeAlert;
+  secondaryAction?: LoginScreenAction;
+  testId?: string;
+  onSubmit: (code: string) => void;
+};
+
+export type LoginTwoFactorSetupState = LoginTwoFactorSetupStartState | LoginTwoFactorSetupCodeState;
+
+/** The recovery codes, shown once after enrolment. */
+export type LoginTwoFactorRecoveryCodesState = {
+  kind: 'two-factor-recovery-codes';
+  /** That the codes will not be shown again. */
+  warning: string;
+  codes: string[];
+  copyLabel: string;
+  continueLabel: string;
+  busyLabel: string;
+  /** `onContinue` is in flight: Continue is locked, the codes can still be copied. */
+  busy?: boolean;
+  error?: string | null;
+  testId?: string;
+  onCopy: () => void;
+  onContinue: () => void;
+};
+
 export type LoginInvitationState = {
   kind: 'invitation';
   identity?: string | null;
@@ -253,18 +358,25 @@ export type LoginConsentState = {
 
 export type LoginStatusState = {
   kind: 'status';
-  /** `info` is a neutral notice, such as "check your email"; it keeps the normal logo. */
-  tone: 'success' | 'error' | 'disabled' | 'info';
+  /**
+   * `info` is a neutral notice, such as "check your email"; it keeps the normal logo. `working` is a progress message,
+   * for a request the screen waits on.
+   */
+  tone: 'success' | 'error' | 'disabled' | 'info' | 'working';
   message: string;
   detail?: string;
+  /** A failure beside the message, under any tone, such as a send that failed on an `info` notice. */
+  error?: string | null;
   recoverable?: boolean;
   retryLabel?: string;
   testId?: string;
   onRetry?: () => void;
-  primaryAction?: {
-    label: string;
-    onClick: () => void;
+  primaryAction?: LoginScreenAction & {
+    /** Its request is in flight: the action and `secondaryAction` are locked. Pass the in-flight wording as `label`. */
+    busy?: boolean;
   };
+  /** The way back out, such as `Back to sign in`. It shows beside `primaryAction`, the retry, or alone. */
+  secondaryAction?: LoginScreenAction;
 };
 
 /**
@@ -324,6 +436,9 @@ export type LoginScreenState =
   | LoginPasskeyProgressState
   | LoginDeviceApprovalState
   | LoginSecondFactorState
+  | LoginTwoFactorCodeState
+  | LoginTwoFactorSetupState
+  | LoginTwoFactorRecoveryCodesState
   | LoginInvitationState
   | LoginGeneralErrorState
   | LoginConsentState

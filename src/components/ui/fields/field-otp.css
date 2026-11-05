@@ -8,6 +8,12 @@
  * spacing the boxes have always had. Colour, radius and type come from
  * `--passflow-*` tokens.
  *
+ * The size is the most a box takes. The server picks the digit count, so the
+ * row never grows past its container: the boxes narrow to fit, and keep their
+ * height and gap. Each level between the container and the boxes carries a
+ * `max-width: 100%`, because a flex parent that aligns its items sizes them to
+ * their content, and the content is the full-size row.
+ *
  * Each box keeps the `passflow-field-otp` class the old per-box inputs had,
  * so an app's custom CSS aimed at the boxes still applies.
  */
@@ -15,6 +21,7 @@
 .passflow-field-otp-group {
   --passflow-field-otp-size: 48px;
   --passflow-field-otp-gap: 10px;
+  max-width: 100%;
 }
 
 .passflow-field-otp-group--disabled {
@@ -34,6 +41,7 @@
   align-items: center;
   justify-content: center;
   width: var(--passflow-field-otp-size);
+  min-width: 0;
   height: var(--passflow-field-otp-size);
   border-radius: var(--passflow-radius);
   background-color: var(--passflow-input-background-color);
@@ -80,4 +88,5 @@
   display: inline-flex;
   flex-direction: column;
   gap: 6px;
+  max-width: 100%;
 }

@@ -136,7 +136,8 @@ export const SignInForm: FC<TSignIn> = ({
   };
 
   const completeAuthentication = async () => {
-    if (routeToSecondFactor(passflow, navigate, twoFactorVerifyPath ?? routes.two_factor_verify.path)) return;
+    if (routeToSecondFactor(passflow, navigate, twoFactorVerifyPath ?? routes.two_factor_verify.path, searchSource.read()))
+      return;
     if (oidcLayerOwnsRedirect()) return;
     const redirectUrl = successAuthRedirect ?? appSettings?.defaults?.redirect ?? '';
     if (!isValidUrl(redirectUrl)) navigate({ to: redirectUrl });

@@ -1,10 +1,16 @@
 import type { FC } from 'react';
 import { useEffect } from 'react';
 import { TwoFactorSetupForm } from '@/components/form/two-factor-setup';
-import { Wrapper } from '@/components/form/wrapper';
-import { Button, Icon } from '@/components/ui';
-import { routes } from '@/context';
+import { LoginScreen, type LoginStatusState } from '@/components/ui';
+import { routes, useSearchSource } from '@/context';
 import { type UseTwoFactorSetupMagicLinkReturn, useNavigation, useTwoFactorSetupMagicLink } from '@/hooks';
+import {
+  signInSearch,
+  twoFactorBackToSignInLabel,
+  twoFactorLinkAlreadyUsedMessage,
+  twoFactorRateLimitedMessage,
+  twoFactorSignInLabel,
+} from '@/utils';
 
 import '@/styles/index.css';
 
@@ -45,6 +51,46 @@ const tokenFromUrl = (): string => {
   }
 };
 
+const ERROR_SUBTITLES: Partial<Record<MagicLinkError['code'], string>> = {
+  EXPIRED_TOKEN: 'This link has expired',
+  INVALID_TOKEN: 'This link is invalid',
+  REVOKED_TOKEN: 'This link has been revoked',
+  SERVER_ERROR: 'Something went wrong',
+};
+
+type ErrorStateOptions = {
+  isRetrying: boolean;
+  onRetry: () => void;
+  onSignIn: () => void;
+};
+
+const errorState = (error: MagicLinkError, { isRetrying, onRetry, onSignIn }: ErrorStateOptions): LoginStatusState => {
+  const base = { kind: 'status', tone: 'error', testId: 'two-factor-link-error' } as const;
+  const signIn = { label: twoFactorSignInLabel, onClick: onSignIn };
+  const backToSignIn = { label: twoFactorBackToSignInLabel, onClick: onSignIn };
+
+  switch (error.code) {
+    case 'ALREADY_USED':
+      return { ...base, message: twoFactorLinkAlreadyUsedMessage, primaryAction: signIn };
+    case 'RATE_LIMITED':
+      return { ...base, message: twoFactorRateLimitedMessage, primaryAction: signIn };
+    case 'SERVER_ERROR':
+      return {
+        ...base,
+        message: error.message,
+        primaryAction: { label: isRetrying ? 'Retrying...' : 'Try Again', busy: isRetrying, onClick: onRetry },
+        secondaryAction: backToSignIn,
+      };
+    default:
+      return {
+        ...base,
+        message: error.message,
+        detail: 'Please contact your administrator to request a new magic link.',
+        secondaryAction: backToSignIn,
+      };
+  }
+};
+
 /**
  * Flow component for magic link 2FA setup
  *
@@ -67,144 +113,45 @@ export const TwoFactorSetupMagicLinkFlow: FC<TwoFactorSetupMagicLinkFlowProps> =
 }) => {
   const token = tokenProp ?? tokenFromUrl();
   const { navigate } = useNavigation();
+  const searchSource = useSearchSource();
 
-  // Validate magic link token
-  const { isLoading, isRetrying, isValidated, error, retry, retryCountdown } = useTwoFactorSetupMagicLink(token);
+  const { isLoading, isRetrying, isValidated, error, retry } = useTwoFactorSetupMagicLink(token);
 
-  /**
-   * Handle validation error
-   */
   useEffect(() => {
     if (error) {
       onError?.(error);
     }
   }, [error, onError]);
 
-  /**
-   * Handle successful 2FA setup completion
-   */
+  const goToSignIn = () => navigate({ to: signInPath, search: signInSearch(searchSource.read()) });
+
   const handleSetupComplete = () => {
     onSuccess?.();
-
-    if (redirectOnSuccess) {
-      // Redirect to sign-in page
-      navigate({
-        to: signInPath,
-      });
-    }
+    if (redirectOnSuccess) goToSignIn();
   };
 
-  /**
-   * Handle setup cancellation
-   */
-  const handleCancel = () => {
-    navigate({ to: signInPath });
-  };
-
-  /**
-   * Render: Loading state
-   */
   if (isLoading) {
     return (
-      <Wrapper
-        title='Validating Magic Link'
-        subtitle='Please wait while we verify your link...'
-        className='passflow-2fa-magic-link-loading'
-      >
-        <div className='passflow-loading-container' role='status' aria-live='polite' aria-busy='true'>
-          <Icon id='logo' type='general' size='large' className='passflow-loading-spinner' />
-          <p className='passflow-loading-text'>Validating your magic link...</p>
-        </div>
-      </Wrapper>
+      <LoginScreen
+        chrome={{ title: 'Validating Magic Link', subtitle: 'Please wait while we verify your link...' }}
+        state={{ kind: 'status', tone: 'working', message: 'Validating your magic link...', testId: 'two-factor-link-loading' }}
+      />
     );
   }
 
-  /**
-   * Render: Error state
-   */
   if (error) {
-    const isRetryable = error.code === 'SERVER_ERROR' || error.code === 'RATE_LIMITED';
-    const isRateLimited = error.code === 'RATE_LIMITED' && retryCountdown !== null && retryCountdown > 0;
-
     return (
-      <Wrapper
-        title='Magic Link Validation Failed'
-        subtitle={getErrorSubtitle(error.code)}
-        className='passflow-2fa-magic-link-error'
-      >
-        <div className='passflow-error-container' role='alert' aria-live='assertive'>
-          <div className='passflow-error-icon'>
-            <Icon id='warning' type='general' size='large' />
-          </div>
-
-          <p className='passflow-error-message' id='error-message'>
-            {error.message}
-          </p>
-
-          <div className='passflow-error-actions'>
-            {isRetryable && (
-              <Button
-                size='big'
-                type='button'
-                variant='primary'
-                onClick={retry}
-                disabled={isRateLimited || isRetrying}
-                aria-describedby='error-message'
-              >
-                {isRetrying ? 'Retrying...' : isRateLimited ? `Try again in ${formatCountdown(retryCountdown)}` : 'Try Again'}
-              </Button>
-            )}
-
-            <Button size='big' type='button' variant='secondary' onClick={() => navigate({ to: signInPath })}>
-              Back to Sign In
-            </Button>
-          </div>
-
-          {!isRetryable && (
-            <p className='passflow-error-help-text'>Please contact your administrator to request a new magic link.</p>
-          )}
-        </div>
-      </Wrapper>
+      <LoginScreen
+        chrome={{ title: 'We could not open this link', subtitle: ERROR_SUBTITLES[error.code] }}
+        state={errorState(error, { isRetrying, onRetry: () => void retry(), onSignIn: goToSignIn })}
+      />
     );
   }
 
-  /**
-   * Render: Success state - show 2FA setup form
-   */
   if (isValidated) {
-    return <TwoFactorSetupForm onComplete={handleSetupComplete} onCancel={handleCancel} />;
+    return <TwoFactorSetupForm onComplete={handleSetupComplete} onBackToSignIn={goToSignIn} />;
   }
 
   // Fallback (should not reach here)
   return null;
 };
-
-/**
- * Get user-friendly subtitle for error codes
- */
-function getErrorSubtitle(code: string): string {
-  switch (code) {
-    case 'EXPIRED_TOKEN':
-      return 'This magic link has expired';
-    case 'INVALID_TOKEN':
-      return 'This magic link is invalid';
-    case 'REVOKED_TOKEN':
-      return 'This magic link has been revoked';
-    case 'RATE_LIMITED':
-      return 'Too many attempts';
-    case 'SERVER_ERROR':
-      return 'Something went wrong';
-    default:
-      return 'An error occurred';
-  }
-}
-
-/**
- * Format countdown seconds as MM:SS
- */
-function formatCountdown(seconds: number | null): string {
-  if (seconds === null) return '';
-  const mins = Math.floor(seconds / 60);
-  const secs = seconds % 60;
-  return `${mins}:${secs.toString().padStart(2, '0')}`;
-}

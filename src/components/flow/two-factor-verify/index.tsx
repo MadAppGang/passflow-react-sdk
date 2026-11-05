@@ -1,124 +1,81 @@
 import type { FC } from 'react';
-import { useEffect, useState } from 'react';
-import { TwoFactorChallenge } from '@/components/form/two-factor-challenge';
+import { useCallback, useEffect, useState } from 'react';
 import { TwoFactorRecoveryForm, TwoFactorVerifyForm } from '@/components/form/two-factor-verify';
 import { hasFollowedOIDCRedirect } from '@/components/provider/passflow-provider';
-import { routes } from '@/context';
-import { useNavigation, usePassflow, useTwoFactorVerify } from '@/hooks';
+import { LoginScreen } from '@/components/ui';
+import { routes, useSearchSource } from '@/context';
+import { useNavigation, usePassflow } from '@/hooks';
+import { useTwoFactorEnrollment } from '@/hooks/use-two-factor-enrollment';
 import type { SuccessAuthRedirect } from '@/types';
-import { getUrlWithTokens, isValidUrl, TwoFactorLoopPrevention } from '@/utils';
+import { getUrlWithTokens, isValidUrl, signInSearch } from '@/utils';
+import { getTwoFactorEnrollmentScreenProps } from './screen';
 
 import '@/styles/index.css';
 
 type TwoFactorVerifyFlowProps = {
   successAuthRedirect?: SuccessAuthRedirect;
   signInPath?: string;
-  twoFactorSetupPath?: string;
-  useV2Flow?: boolean;
 };
 
-export const TwoFactorVerifyFlow: FC<TwoFactorVerifyFlowProps> = ({
-  successAuthRedirect,
-  signInPath = routes.signin.path,
-  twoFactorSetupPath = routes.two_factor_setup?.path ?? '/two-factor-setup',
-  useV2Flow = false,
-}) => {
+export const TwoFactorVerifyFlow: FC<TwoFactorVerifyFlowProps> = ({ successAuthRedirect, signInPath = routes.signin.path }) => {
   const [mode, setMode] = useState<'verify' | 'recovery'>('verify');
-  const [shouldBlockRender, setShouldBlockRender] = useState(false);
   const { navigate } = useNavigation();
   const passflow = usePassflow();
-  const { errorType } = useTwoFactorVerify();
+  const searchSource = useSearchSource();
+  // Read once: a screen must not blank when core's 5 minute pending state expires under it.
+  const [pendingOnLanding] = useState(() => passflow.isTwoFactorVerificationRequired());
 
-  // Handle initial verification requirement check
-  useEffect(() => {
-    if (!passflow.isTwoFactorVerificationRequired()) {
-      // Only redirect if we can safely do so (no loop detected)
-      if (TwoFactorLoopPrevention.canRedirect()) {
-        TwoFactorLoopPrevention.incrementRedirect();
-        navigate({ to: signInPath });
-        setShouldBlockRender(true);
-      } else {
-        // Loop detected - let component render error state
-        setShouldBlockRender(false);
-      }
-    }
-  }, [passflow, navigate, signInPath]);
+  const goToSignIn = useCallback(
+    () => navigate({ to: signInPath, search: signInSearch(searchSource.read()) }),
+    [navigate, signInPath, searchSource],
+  );
 
-  // Handle error-based redirect
-  useEffect(() => {
-    if (errorType === 'expired') {
-      // Session expired - safe to redirect if no loop detected
-      if (TwoFactorLoopPrevention.canRedirect()) {
-        TwoFactorLoopPrevention.incrementRedirect();
-        TwoFactorLoopPrevention.setLastErrorType('expired');
-
-        // Brief delay for user to see "redirecting" message
-        setTimeout(() => {
-          navigate({ to: signInPath });
-        }, 1500);
-      }
-    } else if (errorType === 'not_enabled') {
-      // Configuration error - DO NOT redirect
-      // Track error but don't increment redirect count
-      TwoFactorLoopPrevention.setLastErrorType('not_enabled');
-    }
-  }, [errorType, navigate, signInPath]);
-
-  const handleSuccess = async () => {
-    // Reset loop prevention on successful auth
-    TwoFactorLoopPrevention.reset();
-
+  const continueSignIn = async () => {
     // `/auth/2fa/*` is an interceptor-matched endpoint, so an OIDC login that
     // required a second factor has already been dispatched back to the RP by
     // the time this runs. Navigating again would cancel that in flight — see
     // `hasFollowedOIDCRedirect`.
     if (hasFollowedOIDCRedirect()) return;
 
-    if (successAuthRedirect) {
-      if (!isValidUrl(successAuthRedirect)) {
-        navigate({ to: successAuthRedirect });
-      } else {
-        window.location.href = await getUrlWithTokens(passflow, successAuthRedirect);
-      }
+    try {
+      const target = successAuthRedirect ?? (await passflow.getAppSettings()).defaults?.redirect;
+      if (!target) return;
+      if (!isValidUrl(target)) navigate({ to: target });
+      else window.location.href = await getUrlWithTokens(passflow, target);
+    } catch {
+      // No target to go to: the user stays on the finished screen, signed in.
     }
   };
 
-  const handleUseRecovery = () => {
-    setMode('recovery');
-  };
+  const enrollment = useTwoFactorEnrollment({ onFinished: () => void continueSignIn() });
 
-  const handleBackToVerify = () => {
-    setMode('verify');
-  };
+  // This cannot loop: the sign-in screen sends the user back here only with a pending sign-in.
+  useEffect(() => {
+    if (!pendingOnLanding) goToSignIn();
+  }, [pendingOnLanding, goToSignIn]);
 
-  // Don't render if we're redirecting
-  if (shouldBlockRender) {
-    return null;
-  }
+  if (!pendingOnLanding) return null;
 
-  // Don't render if verification not required and no loop detected
-  if (!passflow.isTwoFactorVerificationRequired() && TwoFactorLoopPrevention.canRedirect()) {
-    return null;
-  }
+  const screenProps = getTwoFactorEnrollmentScreenProps(enrollment, goToSignIn);
+  if (screenProps) return <LoginScreen {...screenProps} />;
 
-  // V2 flow with multi-method support
-  if (useV2Flow) {
-    return <TwoFactorChallenge onSuccess={handleSuccess} />;
-  }
+  const { screen } = enrollment;
 
-  // Legacy V1 flow
-  return (
-    <>
-      {mode === 'verify' ? (
-        <TwoFactorVerifyForm
-          onSuccess={handleSuccess}
-          onUseRecovery={handleUseRecovery}
-          signInPath={signInPath}
-          twoFactorSetupPath={twoFactorSetupPath}
-        />
-      ) : (
-        <TwoFactorRecoveryForm onSuccess={handleSuccess} onBack={handleBackToVerify} signInPath={signInPath} />
-      )}
-    </>
+  return mode === 'verify' ? (
+    <TwoFactorVerifyForm
+      subtitle={screen.kind === 'verify' ? screen.notice : undefined}
+      numInputs={screen.kind === 'verify' ? screen.digits : undefined}
+      onSuccess={enrollment.complete}
+      onUseRecovery={() => setMode('recovery')}
+      onEnded={enrollment.end}
+      onBackToSignIn={goToSignIn}
+    />
+  ) : (
+    <TwoFactorRecoveryForm
+      onSuccess={enrollment.complete}
+      onBack={() => setMode('verify')}
+      onEnded={enrollment.end}
+      onBackToSignIn={goToSignIn}
+    />
   );
 };

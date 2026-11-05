@@ -165,6 +165,13 @@
   gap: var(--passflow-spacing-3);
 }
 
+.passflow-login-screen-code,
+.passflow-login-screen-code-input,
+.passflow-2fa-secret-code,
+.passflow-2fa-recovery-code {
+  font-family: var(--passflow-font-family-mono);
+}
+
 .passflow-login-screen-code {
   box-sizing: border-box;
   width: 100%;
@@ -172,7 +179,6 @@
   border-radius: 6px;
   background-color: var(--passflow-input-background-color);
   color: var(--passflow-text-color);
-  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
   font-size: var(--passflow-h1);
   font-weight: var(--passflow-bold);
   letter-spacing: 0.12em;
@@ -181,7 +187,6 @@
 }
 
 .passflow-login-screen-code-input {
-  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
   font-size: var(--passflow-body-1);
   letter-spacing: 0.12em;
   text-align: center;
@@ -365,4 +370,79 @@
   font-weight: var(--passflow-semibold);
   text-align: right;
   overflow-wrap: anywhere;
+}
+
+.passflow-login-screen-note {
+  box-sizing: border-box;
+  width: 100%;
+  padding: var(--passflow-spacing-3);
+  border-radius: var(--passflow-radius);
+  background-color: var(--passflow-input-background-color);
+  color: var(--passflow-text-color);
+  font-size: var(--passflow-caption);
+  font-weight: var(--passflow-medium);
+  line-height: 1.5;
+  text-align: center;
+}
+
+/* White in every theme: a QR code on a dark surface does not scan. */
+.passflow-2fa-qr-container {
+  box-sizing: border-box;
+  width: calc(var(--passflow-surface-width) / 2);
+  max-width: 100%;
+  padding: var(--passflow-spacing-2);
+  border-radius: var(--passflow-radius);
+  background-color: var(--passflow-white);
+}
+
+.passflow-2fa-qr-image {
+  display: block;
+  width: 100%;
+  height: auto;
+  image-rendering: pixelated;
+}
+
+.passflow-2fa-secret {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: var(--passflow-spacing-2);
+}
+
+.passflow-2fa-secret-code,
+.passflow-2fa-recovery-code {
+  display: block;
+  box-sizing: border-box;
+  padding: var(--passflow-spacing-2);
+  border-radius: var(--passflow-radius);
+  background-color: var(--passflow-input-background-color);
+  color: var(--passflow-text-color);
+  font-size: var(--passflow-body-2);
+  font-weight: var(--passflow-medium);
+  text-align: center;
+  overflow-wrap: anywhere;
+  user-select: all;
+}
+
+.passflow-2fa-warning {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: var(--passflow-spacing-1);
+}
+
+.passflow-2fa-warning-text {
+  color: var(--passflow-warning);
+  font-size: var(--passflow-caption);
+  font-weight: var(--passflow-medium);
+}
+
+.passflow-2fa-recovery-codes {
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--passflow-spacing-2);
 }

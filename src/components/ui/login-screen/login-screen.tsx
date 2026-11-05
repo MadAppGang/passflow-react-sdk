@@ -13,6 +13,9 @@ import { LoginPasswordlessWaiting } from './passwordless-waiting';
 import { LoginSecondFactor } from './second-factor';
 import { LoginScreenShell } from './shell';
 import { LoginStatus } from './status';
+import { LoginTwoFactorCode } from './two-factor-code';
+import { LoginTwoFactorRecoveryCodes } from './two-factor-recovery-codes';
+import { LoginTwoFactorSetup } from './two-factor-setup';
 import type { LoginScreenProps } from './types';
 
 export const LoginScreen: FC<LoginScreenProps> = ({ chrome, state }) => {
@@ -36,6 +39,12 @@ export const LoginScreen: FC<LoginScreenProps> = ({ chrome, state }) => {
         return <LoginDeviceApproval {...state} />;
       case 'second-factor':
         return <LoginSecondFactor {...state} />;
+      case 'two-factor-code':
+        return <LoginTwoFactorCode {...state} />;
+      case 'two-factor-setup':
+        return <LoginTwoFactorSetup {...state} />;
+      case 'two-factor-recovery-codes':
+        return <LoginTwoFactorRecoveryCodes {...state} />;
       case 'invitation':
         return <LoginInvitation {...state} />;
       case 'general-error':
