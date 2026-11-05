@@ -187,6 +187,22 @@ for (const flow of ['signin', 'signup'] as const) {
   });
 }
 
+test('an opened email link whose answer is the sign-in page ends on the signed-in screen, with no check', async ({ page }) => {
+  await installEnding(page, undefined);
+  let checks = 0;
+  await onCheck(page, async (route) => {
+    checks += 1;
+    await route.abort('failed');
+  });
+  await page.route('**/auth/passwordless/complete', (route) =>
+    route.fulfill({ json: { ...tokens(), redirect_url: OWN_SIGN_IN } }),
+  );
+  await page.goto(`${appOrigin}/hosted/verify-challenge-otp?appid=${STARTED_ON}&app_id=${STARTED_ON}&challenge_id=row&otp=123456`);
+  await expect(page.getByRole('heading', { name: SIGNED_IN })).toBeVisible();
+  expect(page.url()).not.toContain('access_token');
+  expect(checks).toBe(0);
+});
+
 test('forgot password with no target names no address, reaches its success screen and can resend', async ({ page }) => {
   await setupPasswordless(page);
   const bodies: Record<string, unknown>[] = [];

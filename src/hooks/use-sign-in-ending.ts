@@ -22,6 +22,9 @@ export const useSignInEnding = () => {
   const { navigate, signInPath } = useNavigation();
   const [ending, setEnding] = useState<SignInEnding>('none');
   const checkedTarget = useRef<string | null>(null);
+  // A screen that starts its request on mount holds this render's closure, from before the flow registered its path.
+  const latestSignInPath = useRef(signInPath);
+  latestSignInPath.current = signInPath;
 
   const leaveFor = async (target: string) => {
     setEnding('checking');
@@ -39,7 +42,7 @@ export const useSignInEnding = () => {
     // An OIDC parent's redirect is already under way: a second navigation would break it.
     if (hasFollowedOIDCRedirect()) return;
     const target = requested || appDefault;
-    if (!target || isSignInPage(target, signInPath)) {
+    if (!target || isSignInPage(target, latestSignInPath.current)) {
       setEnding('signed-in');
     } else if (isSameOriginPath(target)) {
       navigate({ to: target });

@@ -7,6 +7,7 @@ All notable changes to `@passflow/react` are documented in this file.
 ### Fixed
 
 - Email link, OTP and forgot-password no longer fail to start on an app that doesn't list the server's default redirect in its redirect URLs. These calls now name an address only when the request gave one (`successAuthRedirect`, `successResetRedirect`), and the server picks otherwise. The same applies to passkey sign-up and the OTP resend.
+- An opened email link whose answer is the sign-in page now shows "You're signed in". It used to treat that page as another address, which sent the user back to the sign-in form or showed an error.
 
 ### Changed
 
