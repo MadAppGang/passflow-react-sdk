@@ -33,4 +33,4 @@ none — one stage: npm `latest`.
 - Pre-release / `next` dist-tag process: unknown. TODO: settle when a pre-release is first needed.
 - Monitoring after release: none known. TODO: ask Jack whether any consumer (login-app) must be bumped as part of "done".
 
-verified: 2026-11-04 @ release of 0.19.0
+verified: 2026-11-05 @ release of 0.20.1
