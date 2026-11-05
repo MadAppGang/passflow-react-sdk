@@ -65,6 +65,15 @@ test.describe('resending to an invited user', () => {
     await expectResendKeepsInvite(page, bodies);
   });
 
+  test('email link resend asks for a tenant as the first start did', async ({ page }) => {
+    await setupPasswordless(page, { pkce: false, createTenant: true });
+    const bodies = await recordStarts(page);
+    await startInvited(page, /email link$/);
+    await expectResendKeepsInvite(page, bodies);
+    expect(bodies[0]?.create_tenant).toBe(true);
+    expect(bodies[1]?.create_tenant).toBe(true);
+  });
+
   test('a user with no invite sends none', async ({ page }) => {
     await setupPasswordless(page, { pkce: false });
     const bodies = await recordStarts(page);
@@ -89,6 +98,22 @@ test('forgot password with a username reaches its success screen and resends by 
   await page.getByRole('button', { name: 'Send reset instructions' }).click();
 
   await expect(page.getByRole('heading', { name: 'Check your email' })).toBeVisible();
+  await expect(page.getByText('We sent a link to the email address for')).toContainText('someuser');
+  await page.getByRole('button', { name: 'Resend email' }).click();
+  await expect.poll(() => sent).toEqual([{ username: 'someuser' }, { username: 'someuser' }]);
+});
+
+test('forgot password names the identity just submitted, not one left in the URL', async ({ page }) => {
+  await setupPasswordless(page);
+  const sent: unknown[] = [];
+  await page.route('**/auth/password/reset', (route) => {
+    sent.push(route.request().postDataJSON());
+    return route.fulfill({ json: { success: true } });
+  });
+  await page.goto(`${appOrigin}/hosted/forgot-password?appid=${APP}&default_method=email_or_username&email=old@example.com`);
+  await page.getByRole('textbox').first().fill('someuser');
+  await page.getByRole('button', { name: 'Send reset instructions' }).click();
+
   await expect(page.getByText('We sent a link to the email address for')).toContainText('someuser');
   await page.getByRole('button', { name: 'Resend email' }).click();
   await expect.poll(() => sent).toEqual([{ username: 'someuser' }, { username: 'someuser' }]);

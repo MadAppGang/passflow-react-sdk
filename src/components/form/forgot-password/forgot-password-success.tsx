@@ -54,7 +54,11 @@ export const ForgotPasswordSuccess = () => {
       <div className='passflow-forgot-password-success-container'>
         <p className='passflow-forgot-password-success-text'>
           We sent a link to{' '}
-          {params.identity === 'phone' ? 'phone number' : params.identity === 'email' ? 'email address' : 'the email address for'}{' '}
+          {params.identity === 'phone'
+            ? 'phone number'
+            : params.identity === 'email'
+              ? 'email address'
+              : 'the email address for'}{' '}
           <strong className='passflow-forgot-password-success-text--strong'>{params.identityValue}</strong>. Click the link to
           reset your password.
         </p>

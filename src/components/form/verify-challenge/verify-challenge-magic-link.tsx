@@ -29,6 +29,7 @@ const WAIT_FAILURE_MESSAGES = {
 };
 
 const useResendPayload = () => {
+  const { createTenantForNewUser } = useAppSettings();
   const { get } = useUrlParams({
     identity: '',
     identity_value: '',
@@ -51,6 +52,7 @@ const useResendPayload = () => {
       ...(identity === 'email' ? { email: identityValue } : undefined),
       ...(identity === 'phone' ? { phone: identityValue } : undefined),
       challenge_type: get('challenge_type'),
+      create_tenant: createTenantForNewUser,
       redirect_url: redirectUrl,
       ...(inviteToken ? { invite_token: inviteToken } : {}),
     } as PassflowPasswordlessSignInPayload,

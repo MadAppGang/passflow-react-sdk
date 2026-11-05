@@ -8,7 +8,6 @@ import { VerifyChallengeOTPManual } from './verify-challenge-otp-manual';
 import { VerifyChallengeOTPRedirect } from './verify-challenge-otp-redirect';
 
 import '@/styles/index.css';
-import { routes } from '@/context';
 import { useUrlParams, verificationLinkErrorMessage } from '@/utils';
 
 type TVerifyChallengeOTP = {
@@ -38,7 +37,7 @@ export const VerifyChallengeOTP: FC<TVerifyChallengeOTP> = ({
   numInputs,
   shouldAutoFocus,
   signUpPath,
-  twoFactorVerifyPath = routes.two_factor_verify.path,
+  twoFactorVerifyPath,
 }) => {
   const { get } = useUrlParams({
     otp: '',

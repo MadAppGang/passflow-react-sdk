@@ -11,7 +11,12 @@ type VerifyChallengeOTPRedirectProps = {
   twoFactorVerifyPath?: string;
 };
 
-export const VerifyChallengeOTPRedirect = ({ otp, challengeId, appId, twoFactorVerifyPath }: VerifyChallengeOTPRedirectProps) => {
+export const VerifyChallengeOTPRedirect = ({
+  otp,
+  challengeId,
+  appId,
+  twoFactorVerifyPath,
+}: VerifyChallengeOTPRedirectProps) => {
   const routeToSecondFactor = useSecondFactorRoute(twoFactorVerifyPath);
   const [paramsError, setParamsError] = useState<string | null>(null);
   const { ending, retry, finishSignIn } = useSignInEnding();
