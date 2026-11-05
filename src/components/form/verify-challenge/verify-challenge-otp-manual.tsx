@@ -56,7 +56,7 @@ export const VerifyChallengeOTPManual: FC<VerifyChallengeOTPManualProps> = ({
   const [valueOTP, setValueOTP] = useState('');
   const [paramsError, setParamsError] = useState<string | null>(null);
   const { ending, retry, finishSignIn } = useSignInEnding();
-  const { set } = useUrlParams();
+  const { get, set } = useUrlParams();
   const otpId = useId();
   const otpErrorId = `${otpId}-error`;
 
@@ -64,11 +64,13 @@ export const VerifyChallengeOTPManual: FC<VerifyChallengeOTPManualProps> = ({
 
   const onClickResendHandler = async () => {
     if (type && identity && identityValue && challengeType) {
+      const inviteToken = get('invite_token');
       const payload: PassflowPasswordlessSignInPayload = {
         create_tenant: createTenantForNewUser,
         challenge_type: challengeType as InternalStrategyChallenge,
         redirect_url: successAuthRedirect ?? '',
         ...(identity === 'email' ? { email: identityValue } : { phone: identityValue }),
+        ...(inviteToken ? { invite_token: inviteToken } : {}),
       };
 
       const refetchResponse = (await refetch(payload, type)) as PassflowPasswordlessResponse;

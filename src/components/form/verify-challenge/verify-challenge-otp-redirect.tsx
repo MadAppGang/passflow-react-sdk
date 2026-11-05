@@ -1,8 +1,8 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { SignInEndingScreen } from '@/components/form/signed-in';
-import { routes, useSearchSource } from '@/context';
-import { useNavigation, usePassflow, usePasswordlessComplete, useSignInEnding } from '@/hooks';
-import { routeToSecondFactor, verificationLinkErrorMessage, verificationRequestErrorMessage } from '@/utils';
+import { usePasswordlessComplete, useSignInEnding } from '@/hooks';
+import { useSecondFactorRoute } from '@/hooks/use-second-factor-route';
+import { verificationLinkErrorMessage, verificationRequestErrorMessage } from '@/utils';
 
 type VerifyChallengeOTPRedirectProps = {
   appId: string | null;
@@ -11,21 +11,18 @@ type VerifyChallengeOTPRedirectProps = {
   twoFactorVerifyPath?: string;
 };
 
-export const VerifyChallengeOTPRedirect = ({
-  otp,
-  challengeId,
-  appId,
-  twoFactorVerifyPath = routes.two_factor_verify.path,
-}: VerifyChallengeOTPRedirectProps) => {
-  const passflow = usePassflow();
-  const { navigate } = useNavigation();
-  const searchSource = useSearchSource();
+export const VerifyChallengeOTPRedirect = ({ otp, challengeId, appId, twoFactorVerifyPath }: VerifyChallengeOTPRedirectProps) => {
+  const routeToSecondFactor = useSecondFactorRoute(twoFactorVerifyPath);
   const [paramsError, setParamsError] = useState<string | null>(null);
   const { ending, retry, finishSignIn } = useSignInEnding();
-  const { fetch, isError, error, isLoading } = usePasswordlessComplete();
+  const { fetch, isError, error } = usePasswordlessComplete();
+  const requested = useRef(false);
 
-  // Run once on mount - intentionally empty dependency array
+  // Once per opened link: the code is single use, so StrictMode's second effect must not send it again.
   useEffect(() => {
+    if (requested.current) return;
+    requested.current = true;
+
     const fetchData = async () => {
       if (!appId || !otp || !challengeId) {
         const missingParameters = [!appId && 'app_id', !otp && 'otp', !challengeId && 'challenge_id'].filter(Boolean);
@@ -34,16 +31,14 @@ export const VerifyChallengeOTPRedirect = ({
         return;
       }
 
-      if (!isLoading) {
-        const response = await fetch({ otp, challenge_id: challengeId });
+      const response = await fetch({ otp, challenge_id: challengeId });
 
-        if (response) {
-          // The link completed the first factor only: no tokens yet.
-          if (routeToSecondFactor(passflow, navigate, twoFactorVerifyPath, searchSource.read())) return;
-          await finishSignIn(response.redirect_url);
-        } else {
-          setParamsError(verificationRequestErrorMessage);
-        }
+      if (response) {
+        // The link completed the first factor only: no tokens yet.
+        if (routeToSecondFactor()) return;
+        await finishSignIn(response.redirect_url);
+      } else {
+        setParamsError(verificationRequestErrorMessage);
       }
     };
 
