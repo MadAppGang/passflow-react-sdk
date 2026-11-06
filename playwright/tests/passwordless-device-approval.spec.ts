@@ -1,3 +1,4 @@
+import { SERVICE_UNAVAILABLE_MESSAGE } from '@passflow/core';
 import { expect, test } from '../fixture';
 import { approvalLabel, approvalUrl, info, MATCH_CODE, OTP, reject, setupPasswordless } from './passwordless-approval.helpers';
 
@@ -142,7 +143,7 @@ for (const failure of ['network', 'server'] as const) {
     await page.getByLabel(approvalLabel).fill(MATCH_CODE);
     await page.getByRole('button', { name: 'Approve', exact: true }).click();
     await expect(page.getByRole('alert')).toHaveText(
-      failure === 'network' ? 'Check your connection and try again.' : 'Something went wrong. Try again later.',
+      failure === 'network' ? SERVICE_UNAVAILABLE_MESSAGE : 'Something went wrong. Try again later.',
     );
     await expect(page.getByLabel(approvalLabel)).toBeEnabled();
     await expect(page.getByRole('button', { name: 'Deny', exact: true })).toBeEnabled();

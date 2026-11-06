@@ -1,3 +1,4 @@
+import { SERVICE_UNAVAILABLE_ERROR_ID, SERVICE_UNAVAILABLE_MESSAGE } from '@passflow/core';
 import type { AuthFlow, AuthOperation, AuthUiError } from '@/types';
 
 const AUTH_ERROR_COPY: Record<AuthFlow, Record<AuthOperation, AuthUiError>> = {
@@ -82,11 +83,13 @@ const readServerError = (error: unknown): unknown => {
 /**
  * The server's own message for an allow-listed error id, trimmed; `null` for anything else. Duck-typed on
  * `{ id, message }`, so it reads a `PassflowError`, a raw axios rejection's body, or a plain object such as a
- * redirect's query.
+ * redirect's query. A request that Passflow did not answer (no response, or a gateway 502/503/504 without a Passflow
+ * body) carries core's service-unavailable id and always gets core's fixed message.
  */
 export const serverMessageFor = (error: unknown): string | null => {
   const serverError = readServerError(error);
   const id = readField(serverError, 'id');
+  if (id === SERVICE_UNAVAILABLE_ERROR_ID) return SERVICE_UNAVAILABLE_MESSAGE;
   const message = readField(serverError, 'message');
   if (typeof id !== 'string' || !SERVER_MESSAGE_ERROR_IDS.has(id)) return null;
   if (typeof message !== 'string') return null;
@@ -128,9 +131,10 @@ export const emailCodeRestartMessage = "We couldn't verify the code. Go back and
 
 /**
  * Error copy for the emailed-code step (`/auth/validate`, resend): allow-listed ids (wrong, expired or spent code,
- * rate limit, ...) show the server message; `error.not.found` (unknown or spent challenge) asks for a new code; a
- * request that got no answer at all (offline, CORS, timeout) asks to retry; every other server answer (401, a missing
- * PKCE verifier, an unlisted 4xx or a 5xx) asks to start again, and the screen keeps its way back to the form.
+ * rate limit, ...) show the server message; Passflow being unavailable shows core's message; `error.not.found`
+ * (unknown or spent challenge) asks for a new code; a raw axios failure with no response (offline, CORS, timeout)
+ * asks to retry; every other server answer (401, a missing PKCE verifier, an unlisted 4xx or a 5xx) asks to start
+ * again, and the screen keeps its way back to the form.
  */
 export const emailCodeErrorMessage = (error: unknown): string => {
   const serverMessage = serverMessageFor(error);
@@ -176,8 +180,9 @@ export const isApprovalMatchError = (error: unknown): boolean =>
   readField(readServerError(error), 'id') === 'error.auth.passwordless.approval.match.invalid';
 
 /**
- * Error copy for the approve screen. `attemptsLeft` is the count re-read after the rejection. A plain core error with
- * no response body arrives as id `error.passwordless.approval`, status 0: nothing was decided, so the screen stays.
+ * Error copy for the approve screen. `attemptsLeft` is the count re-read after the rejection. A request Passflow did
+ * not answer carries core's service-unavailable id; a plain core error with no response body may also arrive as id
+ * `error.passwordless.approval` or with status 0. Nothing was decided in either case, so the screen stays.
  */
 export const approvalErrorFrom = (error: unknown, attemptsLeft?: number): ApprovalError => {
   const serverError = readServerError(error);
@@ -198,6 +203,7 @@ export const approvalErrorFrom = (error: unknown, attemptsLeft?: number): Approv
       return { message: approvalAttemptsMessage, terminal: true };
   }
 
+  if (id === SERVICE_UNAVAILABLE_ERROR_ID) return { message: SERVICE_UNAVAILABLE_MESSAGE, terminal: false };
   if (id === 'error.passwordless.approval' || readField(serverError, 'status') === 0) {
     return { message: approvalConnectionMessage, terminal: false };
   }
@@ -205,16 +211,18 @@ export const approvalErrorFrom = (error: unknown, attemptsLeft?: number): Approv
 };
 
 /**
- * A failed passwordless completion. A row that only another device can approve has its own copy. A failed exchange comes
- * after the row was spent, so retrying cannot work, even with no response (id `error.pkce.exchange`, status 0). Core
- * rejects a network failure or raw 429 on the completion itself as id `error.passwordless.complete`: the code was not
- * refused, so the user can try again.
+ * A failed passwordless completion. A row that only another device can approve has its own copy. Passflow being
+ * unavailable (core's service-unavailable id, on the completion or the exchange) shows core's message: nothing was
+ * refused, so the user can try again. A failed exchange that Passflow answered comes after the row was spent, so
+ * retrying cannot work (id `error.pkce.exchange`). A raw 429 on the completion itself arrives as id
+ * `error.passwordless.complete`: the code was not refused, so the user can try again.
  */
 export const passwordlessCompleteErrorMessage = (error: unknown): string => {
   const serverError = readServerError(error);
   const id = readField(serverError, 'id');
 
   if (id === 'error.auth.passwordless.approval.unavailable') return approvalUnavailableMessage;
+  if (id === SERVICE_UNAVAILABLE_ERROR_ID) return SERVICE_UNAVAILABLE_MESSAGE;
   if (id === 'error.pkce.exchange') return passwordlessSignInFailedMessage;
   if (id === 'error.passwordless.complete' || readField(serverError, 'status') === 0) return approvalConnectionMessage;
   return verificationRequestErrorMessage;
@@ -236,8 +244,9 @@ export const isPasswordSavedRateLimit = (error: unknown): boolean => {
 
 /**
  * Error copy for the new-password screen (reset link or registration continuation): allow-listed ids show the server
- * message; a refused or spent link (any other 4xx, an `error.token.*` id) asks for a new one; a server or network
- * failure asks to retry. The raw message of anything else is never shown.
+ * message; Passflow being unavailable shows core's message; a refused or spent link (any other 4xx, an `error.token.*`
+ * id) asks for a new one; any other server or network failure asks to retry. The raw message of anything else is
+ * never shown.
  */
 export const newPasswordErrorMessage = (error: unknown): string => {
   if (isPasswordSavedRateLimit(error)) return passwordSavedRateLimitedMessage;
