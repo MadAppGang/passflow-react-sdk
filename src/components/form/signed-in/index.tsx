@@ -1,3 +1,4 @@
+import { SERVICE_UNAVAILABLE_MESSAGE } from '@passflow/core';
 import type { FC } from 'react';
 import { LoginScreen, type LoginScreenProps } from '@/components/ui';
 import { useAppSettings } from '@/hooks';
@@ -38,6 +39,18 @@ const screens: Record<
       retryLabel: 'Try again',
       onRetry,
       testId: 'sign-in-unavailable',
+    },
+  }),
+  'service-unavailable': (onRetry) => ({
+    title: COULD_NOT_FINISH,
+    state: {
+      kind: 'status',
+      tone: 'error',
+      message: SERVICE_UNAVAILABLE_MESSAGE,
+      recoverable: true,
+      retryLabel: 'Try again',
+      onRetry,
+      testId: 'sign-in-service-unavailable',
     },
   }),
 };

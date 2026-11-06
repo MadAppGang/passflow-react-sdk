@@ -578,6 +578,12 @@ export type OIDCExchangeContextValue = {
  * without running its effects, so core must not take the landing in its
  * constructor. Taking it can end in that same 2FA navigation; returned is how
  * it ended otherwise.
+ *
+ * Tokens in the URL (`access_token=`) are taken from an effect for the same
+ * reason, and only once the app id is known: core verifies them against it in
+ * the background, and an instance with no app id would reject and strip them.
+ * The outcome arrives as `SignIn` with source `tokens-in-url`, or as `Error`
+ * with operation `tokens.from-url`, after which the sign-in form shows.
  */
 const useSecondFactorLanding = (
   landedWithTwoFactorToken: boolean,
@@ -585,7 +591,8 @@ const useSecondFactorLanding = (
   navigate: NavigateFunction,
   twoFactorVerifyPath: string,
   appIdFromToken: string | undefined,
-  landedWithAccessToken: boolean,
+  takeTokensFromUrl: boolean,
+  isDiscoveringAppId: boolean,
 ): FederatedLandingOutcome | undefined => {
   const [pending, setPending] = useState(false);
   const [federatedLandingOutcome, setFederatedLandingOutcome] = useState<FederatedLandingOutcome>();
@@ -629,9 +636,35 @@ const useSecondFactorLanding = (
     else passflow.unsubscribe(subscriber);
   }, [passflow]);
 
+  // Same shape as the federated landing above: once, on the instance that has
+  // the app id (or the last one, if discovery failed), with no cleanup.
+  const tokensTakenRef = useRef(false);
+  useEffect(() => {
+    if (!takeTokensFromUrl || isDiscoveringAppId || tokensTakenRef.current) return;
+    tokensTakenRef.current = true;
+
+    const subscriber: PassflowSubscriber = {
+      onAuthChange: (eventType, payload) => {
+        if (eventType === PassflowEvent.Error) {
+          if ((payload as ErrorPayload | undefined)?.operation !== 'tokens.from-url') return;
+          passflow.unsubscribe(subscriber);
+        } else if (eventType === PassflowEvent.SignIn) {
+          const signIn = payload as PassflowEventPayload[PassflowEvent.SignIn] | undefined;
+          if (signIn?.source !== 'tokens-in-url') return;
+          passflow.unsubscribe(subscriber);
+          const current = currentPassflowRef.current;
+          if (current !== passflow && signIn.tokens) current.setTokens(signIn.tokens);
+          setFederatedLandingOutcome('tokens-in-url');
+        }
+      },
+    };
+
+    passflow.subscribe(subscriber, [PassflowEvent.SignIn, PassflowEvent.Error]);
+    passflow.handleTokensRedirect();
+  }, [passflow, takeTokensFromUrl, isDiscoveringAppId]);
+
   // Once, on mount — the landing is a property of the page load.
   useEffect(() => {
-    if (landedWithAccessToken && passflow.isAuthenticated()) setFederatedLandingOutcome('tokens-in-url');
     if (!landedWithTwoFactorToken) return;
     // A signed-in user owes no factor: a `#tfa_token=` link is not theirs to answer.
     if (passflow.isAuthenticated()) return;
@@ -690,8 +723,17 @@ export const PassflowProvider: FC<PassflowProviderProps> = ({
   // Read before core is constructed: core adopts `#tfa_token=` and strips it.
   const [landedWithTwoFactorToken] = useState(urlCarriesTwoFactorToken);
   const [landedWithAccessToken] = useState(urlCarriesAccessToken);
+  const takeTokensFromUrl = landedWithAccessToken && config.parseQueryParams !== false;
 
-  const passflow = useMemo(() => new Passflow({ ...state, deferFederatedLanding: true }), [state]);
+  const passflow = useMemo(
+    () =>
+      new Passflow({
+        ...state,
+        deferFederatedLanding: true,
+        ...(landedWithAccessToken ? { parseQueryParams: false } : {}),
+      }),
+    [state, landedWithAccessToken],
+  );
   useDisposeOnReplace(passflow);
 
   // OIDC AuthFlow integration: the interceptor injects
@@ -774,7 +816,8 @@ export const PassflowProvider: FC<PassflowProviderProps> = ({
     navigate,
     resolvedTwoFactorVerifyPath,
     appIdFromToken,
-    landedWithAccessToken,
+    takeTokensFromUrl,
+    state.isDiscoveringAppId === true,
   );
 
   const navigationValue = useMemo(

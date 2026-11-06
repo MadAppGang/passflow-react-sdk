@@ -1,4 +1,6 @@
+import { generateKeyPairSync, type KeyObject, sign } from 'node:crypto';
 import type { Page, Route } from '@playwright/test';
+import { SERVICE_UNAVAILABLE_MESSAGE } from '@passflow/core';
 import { expect, test } from '../fixture';
 import { jwt, tokens } from './email-verification.helpers';
 import { appOrigin, errorBody, expiresAt, MATCH_CODE, setupPasswordless } from './passwordless-approval.helpers';
@@ -303,13 +305,37 @@ test('an OIDC sign-in that the provider already redirected is not checked or red
   expect(checks).toBe(0);
 });
 
+// Core verifies tokens from the URL against the server's published keys and issuer, and the app id: these sign them
+// the way the server does, and publish the key where core looks for it.
+const ISSUER = `${appOrigin}/`;
+const KEY_ID = 'landing-key';
+const serverKey = generateKeyPairSync('ec', { namedCurve: 'P-256' });
+const otherKey = generateKeyPairSync('ec', { namedCurve: 'P-256' });
+
+const signedJwt = (claims: Record<string, unknown>, key: KeyObject = serverKey.privateKey) => {
+  const header = Buffer.from(JSON.stringify({ alg: 'ES256', typ: 'JWT', kid: KEY_ID })).toString('base64url');
+  const payload = Buffer.from(
+    JSON.stringify({ sub: 'federated-user', iss: ISSUER, aud: [DEFAULT_LOGIN_APP], exp: 4102444800, ...claims }),
+  ).toString('base64url');
+  const signature = sign('sha256', Buffer.from(`${header}.${payload}`), { key, dsaEncoding: 'ieee-p1363' });
+  return `${header}.${payload}.${signature.toString('base64url')}`;
+};
+
+const signedTokens = (key?: KeyObject) => ({
+  access_token: signedJwt({ type: 'access' }, key),
+  refresh_token: signedJwt({ type: 'refresh' }, key),
+});
+
+const installServerKeys = async (page: Page) => {
+  await page.route('**/.well-known/openid-configuration', (route) => route.fulfill({ json: { issuer: ISSUER } }));
+  await page.route('**/.well-known/jwks.json', (route) =>
+    route.fulfill({ json: { keys: [{ ...serverKey.publicKey.export({ format: 'jwk' }), kid: KEY_ID, alg: 'ES256', use: 'sig' }] } }),
+  );
+};
+
 // A non-PKCE federated return with no second factor: the server sends it to the login page with the tokens in the query.
-const tokenLanding = (host: 'hosted' | 'web', accessToken = tokens().access_token) =>
-  `${appOrigin}/${host}/signin?${new URLSearchParams({
-    access_token: accessToken,
-    refresh_token: tokens().refresh_token,
-    user_state: NEVER_STORED,
-  })}`;
+const tokenLanding = (host: 'hosted' | 'web', landed: { access_token: string; refresh_token: string } = signedTokens()) =>
+  `${appOrigin}/${host}/signin?${new URLSearchParams({ ...landed, user_state: NEVER_STORED })}`;
 
 const installDiscovery = (page: Page) =>
   page.route('**/settings', (route) =>
@@ -319,6 +345,7 @@ const installDiscovery = (page: Page) =>
 test('a federated return with tokens on the hosted login ends on the signed-in screen, with a clean address bar', async ({ page }) => {
   await installEnding(page, REAL_APP);
   await installDiscovery(page);
+  await installServerKeys(page);
   let checks = 0;
   await onCheck(page, async (route) => {
     checks += 1;
@@ -336,10 +363,28 @@ test('a federated return with tokens on the hosted login ends on the signed-in s
 test('a malformed token on the hosted login leaves the sign-in form', async ({ page }) => {
   await installEnding(page, REAL_APP);
   await installDiscovery(page);
-  await page.goto(tokenLanding('hosted', 'not-a-token'));
+  await installServerKeys(page);
+  await page.goto(tokenLanding('hosted', { access_token: 'not-a-token', refresh_token: signedTokens().refresh_token }));
   await expect(page.getByRole('heading', { name: 'Sign In to your account' })).toBeVisible();
   await expect(page.getByRole('heading', { name: SIGNED_IN })).toBeHidden();
 });
+
+for (const [name, landed] of [
+  ['unsigned tokens', tokens()],
+  ['tokens signed with a key the server does not publish', signedTokens(otherKey.privateKey)],
+] as const) {
+  test(`${name} on the hosted login leave the sign-in form and a clean address bar`, async ({ page }) => {
+    await installEnding(page, REAL_APP);
+    await installDiscovery(page);
+    await installServerKeys(page);
+    await page.goto(tokenLanding('hosted', landed));
+    await expect(page.getByRole('heading', { name: 'Sign In to your account' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: SIGNED_IN })).toBeHidden();
+    expect(page.url()).not.toContain('access_token');
+    expect(page.url()).not.toContain('refresh_token');
+    expect(await page.evaluate(() => JSON.stringify(window.localStorage))).not.toContain(landed.access_token);
+  });
+}
 
 test('a federated return with tokens on an embedded flow does not show the signed-in screen', async ({ page }) => {
   await installEnding(page, REAL_APP);
@@ -423,10 +468,15 @@ for (const screen of ['signin', 'signup'] as const) {
   });
 }
 
-for (const [name, fail] of [
-  ['a server error', (route: Route) => route.fulfill({ status: 500, json: errorBody('error.internal', 'x', 500, '/auth/redirect/check') })],
-  ['no route on the server', (route: Route) => route.fulfill({ status: 404, body: '404 page not found' })],
-  ['a network error', (route: Route) => route.abort('failed')],
+for (const [name, fail, screen] of [
+  [
+    'a server error',
+    (route: Route) => route.fulfill({ status: 500, json: errorBody('error.internal', 'x', 500, '/auth/redirect/check') }),
+    'sign-in-unavailable',
+  ],
+  ['no route on the server', (route: Route) => route.fulfill({ status: 404, body: '404 page not found' }), 'sign-in-unavailable'],
+  ['a network error', (route: Route) => route.abort('failed'), 'sign-in-service-unavailable'],
+  ['a gateway 503 with no Passflow body', (route: Route) => route.fulfill({ status: 503, body: 'Service Unavailable' }), 'sign-in-service-unavailable'],
 ] as const) {
   test(`${name} on the check sends nothing, and a retry can finish`, async ({ page }) => {
     await installEnding(page, undefined);
@@ -437,12 +487,31 @@ for (const [name, fail] of [
       else await route.fulfill({ json: { redirect_url: REAL_APP } });
     });
     await submit(page, 'signin', REAL_APP);
-    await expect(page.getByTestId('sign-in-unavailable')).toBeVisible();
+    await expect(page.getByTestId(screen)).toBeVisible();
     expect(page.url()).not.toContain('access_token');
     await page.getByRole('button', { name: 'Try again' }).click();
     await expect(page.getByRole('heading', { name: 'The real app' })).toBeVisible();
   });
 }
+
+test('a check that gets no answer says Passflow is unavailable', async ({ page }) => {
+  await installEnding(page, undefined);
+  await onCheck(page, (route) => route.abort('failed'));
+  await submit(page, 'signin', REAL_APP);
+  await expect(page.getByTestId('sign-in-service-unavailable')).toContainText(SERVICE_UNAVAILABLE_MESSAGE);
+  await expect(page.getByText('We could not check where to send you. Try again.')).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'Try again' })).toBeVisible();
+  expect(page.url()).not.toContain('access_token');
+});
+
+test('a server error on the check keeps its own message', async ({ page }) => {
+  await installEnding(page, undefined);
+  await onCheck(page, (route) =>
+    route.fulfill({ status: 500, json: errorBody('error.internal', 'x', 500, '/auth/redirect/check') }),
+  );
+  await submit(page, 'signin', REAL_APP);
+  await expect(page.getByTestId('sign-in-unavailable')).toContainText('We could not check where to send you. Try again.');
+});
 
 for (const [name, target] of [
   ['a script address', 'javascript:document.title="ran"'],

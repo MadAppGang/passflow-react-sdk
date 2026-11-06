@@ -1,3 +1,4 @@
+import { SERVICE_UNAVAILABLE_ERROR_ID } from '@passflow/core';
 import { useRef, useState } from 'react';
 import { hasFollowedOIDCRedirect } from '@/components/provider/passflow-provider';
 import { getUrlWithTokens, isSameOriginPath, isSignInPage } from '@/utils';
@@ -6,16 +7,16 @@ import { usePassflow } from './use-passflow';
 
 const REDIRECT_NOT_REGISTERED = 'error.app.redirect.url.not.registered';
 
-export type SignInEnding = 'none' | 'checking' | 'signed-in' | 'refused' | 'unavailable';
+export type SignInEnding = 'none' | 'checking' | 'signed-in' | 'refused' | 'unavailable' | 'service-unavailable';
 
 /**
  * How every sign-in ends once the user holds tokens, in this order:
  * 1. With no target, or a target that is the sign-in page itself, the user stays and is told they are signed in.
  * 2. A path on this page's origin is a plain navigation. It carries no tokens.
  * 3. Anything else carries tokens. A target that came with the request (a prop, the URL, a token or a response) is
- *    validated by the server first and the user goes to the address it returns. If the server refuses, or cannot answer,
- *    nothing is sent: `ending` says which, and `retry` asks again. The app's own default redirect is its operator's
- *    configuration and is not checked. The source decides, not the value.
+ *    validated by the server first and the user goes to the address it returns. If the server refuses, fails, or
+ *    Passflow cannot be reached at all, nothing is sent: `ending` says which, and `retry` asks again. The app's own
+ *    default redirect is its operator's configuration and is not checked. The source decides, not the value.
  */
 export const useSignInEnding = () => {
   const passflow = usePassflow();
@@ -32,7 +33,10 @@ export const useSignInEnding = () => {
     try {
       address = await passflow.checkRedirectUrl(target);
     } catch (error) {
-      setEnding((error as { id?: string } | undefined)?.id === REDIRECT_NOT_REGISTERED ? 'refused' : 'unavailable');
+      const id = (error as { id?: string } | undefined)?.id;
+      if (id === REDIRECT_NOT_REGISTERED) setEnding('refused');
+      else if (id === SERVICE_UNAVAILABLE_ERROR_ID) setEnding('service-unavailable');
+      else setEnding('unavailable');
       return;
     }
     window.location.href = await getUrlWithTokens(passflow, address);
