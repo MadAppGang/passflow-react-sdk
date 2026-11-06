@@ -2,6 +2,14 @@
 
 All notable changes to `@passflow/react` are documented in this file.
 
+## [0.21.0] - 2026-11-07
+
+### Changed
+
+- Requires `@passflow/core` ^0.28.0 (was ^0.26.0). Its exports, re-exported here, now include `SERVICE_UNAVAILABLE_ERROR_ID` and `SERVICE_UNAVAILABLE_MESSAGE`.
+- When Passflow cannot be reached, or its gateway answers 502, 503 or 504, every sign-in screen now shows "Passflow is temporarily unavailable. Please try again in a moment." This covers sign-in and sign-up, the emailed code, the approve screen, the passwordless completion, the new password screen, invitations and the redirect check. Those screens used to show their own copy for a network failure. On the emailed code that copy asked the user to go back and start again.
+- Tokens a federated sign-in returns in the URL (`?access_token=`) are now verified by core before they are saved, against the server's published keys and the app id. The provider takes them once the app id is known, so a hosted login that discovers its app still ends on "You're signed in". A token that fails verification leaves the sign-in form and saves nothing.
+
 ## [0.20.3] - 2026-11-05
 
 ### Fixed
