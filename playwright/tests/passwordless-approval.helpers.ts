@@ -7,7 +7,8 @@ import settings from './responses/passflow-settings.json';
 export { appOrigin, errorBody, password, successUrl, tokens };
 export const MATCH_CODE = '4821';
 export const OTP = '613907';
-export const approvalLabel = 'Code shown on your other device';
+/** The waiting tab's instruction. It shows no number: the start answer's `match_code` only marks this tab as the starter. */
+export const WAITING_COPY = 'Open the link we sent on any device and choose Sign in.';
 export const expiresAt = '2099-11-04T17:12:00Z';
 export const info = (overrides: Record<string, unknown> = {}) => ({
   state: 'pending',
@@ -83,4 +84,10 @@ export const noSecretInUrl = (url: URL) => {
   expect([...url.searchParams.keys()].map((key) => key.toLowerCase())).not.toContain('match_code');
   expect(url.href).not.toContain(MATCH_CODE);
   expect([...url.searchParams.keys()]).not.toContain('code_challenge');
+};
+
+export const expectWaitingWithoutCode = async (page: Page) => {
+  await expect(page.getByText(WAITING_COPY, { exact: true })).toBeVisible();
+  await expect(page.getByTestId('passwordless-match-code')).toHaveCount(0);
+  await expect(page.getByText(MATCH_CODE, { exact: true })).toHaveCount(0);
 };

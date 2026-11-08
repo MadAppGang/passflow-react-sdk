@@ -1,10 +1,14 @@
 import { SERVICE_UNAVAILABLE_MESSAGE } from '@passflow/core';
+import type { Page } from '@playwright/test';
 import { expect, test } from '../fixture';
-import { approvalLabel, approvalUrl, info, MATCH_CODE, OTP, reject, setupPasswordless } from './passwordless-approval.helpers';
+import { approvalUrl, info, MATCH_CODE, OTP, reject, setupPasswordless } from './passwordless-approval.helpers';
 
 test.use({ locale: 'en-US', timezoneId: 'UTC', viewport: { width: 715, height: 900 } });
 
-test('REQ-5 REQ-18 approval never auto-validates, shows context without identity, and approves only after explicit click', async ({
+const signIn = (page: Page) => page.getByRole('button', { name: 'Sign in', exact: true });
+const notMe = (page: Page) => page.getByRole('button', { name: "This wasn't me", exact: true });
+
+test('REQ-5 REQ-18 approval never auto-validates, shows context without identity, and signs in only after one explicit click', async ({
   page,
 }) => {
   await setupPasswordless(page);
@@ -32,23 +36,20 @@ test('REQ-5 REQ-18 approval never auto-validates, shows context without identity
   await expect(page.getByText(/2026/)).toBeVisible();
   await expect(page.getByText(/mailbox@example.com|non-default-app@example.com/)).toHaveCount(0);
   await expect(page.getByText(MATCH_CODE, { exact: true })).toHaveCount(0);
+  await expect(page.getByRole('textbox')).toHaveCount(0);
+  await expect(page.locator('input[name="match_code"]')).toHaveCount(0);
+  await expect(signIn(page)).toBeEnabled();
+  await expect(notMe(page)).toBeEnabled();
   expect(decides).toEqual([]);
 
-  const input = page.getByLabel(approvalLabel);
-  await input.fill('abcd');
-  await expect(page.getByRole('button', { name: 'Approve', exact: true })).toBeDisabled();
-  await input.fill(MATCH_CODE);
-  await input.press('Tab');
-  await expect(page.getByRole('button', { name: 'Approve', exact: true })).toBeEnabled();
-  expect(decides).toEqual([]);
-  await page.getByRole('button', { name: 'Approve', exact: true }).click();
+  await signIn(page).click();
   await expect(page.getByText('Approved. Return to the tab that started sign-in. You can close this tab.')).toBeVisible();
-  expect(decides).toEqual([{ challenge_id: 'approval-row', otp: OTP, approve: true, match_code: MATCH_CODE }]);
+  expect(decides).toEqual([{ challenge_id: 'approval-row', otp: OTP, approve: true }]);
   expect(forbidden).toEqual([]);
   expect(await page.evaluate(() => localStorage.getItem('access'))).toBeNull();
 });
 
-test('REQ-5 REQ-6 Deny works without typing a match code and never signs in B', async ({ page }) => {
+test("REQ-5 REQ-6 This wasn't me denies in one click and never signs anyone in", async ({ page }) => {
   await setupPasswordless(page);
   await page.route('**/auth/passwordless/approval/info', (route) => route.fulfill({ json: info() }));
   const bodies: Record<string, unknown>[] = [];
@@ -57,32 +58,34 @@ test('REQ-5 REQ-6 Deny works without typing a match code and never signs in B', 
     await route.fulfill({ json: { state: 'denied' } });
   });
   await page.goto(approvalUrl());
-  await page.getByRole('button', { name: 'Deny', exact: true }).click();
+  await notMe(page).click();
   await expect(page.getByText('Denied. No one was signed in. You can close this tab.')).toBeVisible();
-  expect(bodies).toHaveLength(1);
-  const decision = bodies[0];
-  if (!decision) throw new Error('Expected one Deny request');
-  expect(decision).toMatchObject({ challenge_id: 'approval-row', otp: OTP, approve: false });
-  expect(decision.match_code ?? '').toBe('');
+  expect(bodies).toEqual([{ challenge_id: 'approval-row', otp: OTP, approve: false }]);
   expect(await page.evaluate(() => localStorage.getItem('access'))).toBeNull();
 });
 
-test('REQ-6 wrong match re-reads attempts_left instead of decrementing a local counter', async ({ page }) => {
+test('REQ-6 both answers are locked while one is in flight', async ({ page }) => {
   await setupPasswordless(page);
-  let infoReads = 0;
-  await page.route('**/auth/passwordless/approval/info', (route) =>
-    route.fulfill({ json: info({ attempts_left: ++infoReads === 1 ? 5 : 2 }) }),
-  );
-  await page.route('**/auth/passwordless/approval/decide', (route) =>
-    reject(route, 'error.auth.passwordless.approval.match.invalid'),
-  );
+  await page.route('**/auth/passwordless/approval/info', (route) => route.fulfill({ json: info() }));
+  let release: () => void = () => {};
+  const held = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  let decisions = 0;
+  await page.route('**/auth/passwordless/approval/decide', async (route) => {
+    decisions += 1;
+    await held;
+    await route.fulfill({ json: { state: 'approved' } });
+  });
   await page.goto(approvalUrl());
-  await page.getByLabel(approvalLabel).fill('0000');
-  await page.getByRole('button', { name: 'Approve', exact: true }).click();
-  await expect(page.getByRole('alert')).toHaveText('That code does not match. 2 tries left.');
-  expect(infoReads).toBeGreaterThanOrEqual(2);
-  await expect(page.getByLabel(approvalLabel)).toHaveValue('');
-  await expect(page.getByRole('button', { name: 'Deny', exact: true })).toBeEnabled();
+  await signIn(page).click();
+  await expect(page.getByTestId('passwordless-approval')).toHaveAttribute('aria-busy', 'true');
+  await expect(signIn(page)).toBeDisabled();
+  await expect(notMe(page)).toBeDisabled();
+  await expect(page.getByRole('status').filter({ hasText: 'Sending your answer…' })).toBeVisible();
+  release();
+  await expect(page.getByText('Approved. Return to the tab that started sign-in. You can close this tab.')).toBeVisible();
+  expect(decisions).toBe(1);
 });
 
 const terminalErrors = [
@@ -101,13 +104,10 @@ for (const [id, status, message] of terminalErrors) {
       );
       await page.route('**/auth/passwordless/approval/decide', (route) => reject(route, id, status));
       await page.goto(approvalUrl());
-      if (phase === 'decide') {
-        await page.getByLabel(approvalLabel).fill(MATCH_CODE);
-        await page.getByRole('button', { name: 'Approve', exact: true }).click();
-      }
+      if (phase === 'decide') await signIn(page).click();
       await expect(page.getByText(message, { exact: true })).toBeVisible();
-      await expect(page.getByLabel(approvalLabel)).toHaveCount(0);
-      await expect(page.getByRole('button', { name: 'Deny', exact: true })).toHaveCount(0);
+      await expect(signIn(page)).toHaveCount(0);
+      await expect(notMe(page)).toHaveCount(0);
     });
   }
 }
@@ -127,26 +127,25 @@ for (const state of ['approved', 'denied', 'completed', 'expired'] as const) {
         exact: true,
       }),
     ).toBeVisible();
-    await expect(page.getByLabel(approvalLabel)).toHaveCount(0);
+    await expect(signIn(page)).toHaveCount(0);
     expect(decisions).toBe(0);
   });
 }
 
 for (const failure of ['network', 'server'] as const) {
-  test(`REQ-6 ${failure} decision failure has recoverable copy and keeps Deny available`, async ({ page }) => {
+  test(`REQ-6 ${failure} decision failure is announced and keeps both answers available`, async ({ page }) => {
     await setupPasswordless(page);
     await page.route('**/auth/passwordless/approval/info', (route) => route.fulfill({ json: info({ location: null }) }));
     await page.route('**/auth/passwordless/approval/decide', (route) =>
       failure === 'network' ? route.abort('failed') : reject(route, 'error.server', 500),
     );
     await page.goto(approvalUrl());
-    await page.getByLabel(approvalLabel).fill(MATCH_CODE);
-    await page.getByRole('button', { name: 'Approve', exact: true }).click();
+    await signIn(page).click();
     await expect(page.getByRole('alert')).toHaveText(
       failure === 'network' ? SERVICE_UNAVAILABLE_MESSAGE : 'Something went wrong. Try again later.',
     );
-    await expect(page.getByLabel(approvalLabel)).toBeEnabled();
-    await expect(page.getByRole('button', { name: 'Deny', exact: true })).toBeEnabled();
+    await expect(signIn(page)).toBeEnabled();
+    await expect(notMe(page)).toBeEnabled();
     await expect(page.getByText('Lisbon', { exact: false })).toHaveCount(0);
   });
 }
