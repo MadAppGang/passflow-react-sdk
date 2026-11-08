@@ -48,9 +48,8 @@ describe('REQ-12 REQ-13 committed federated landing uses real exchange outcomes'
         expect(new URLSearchParams(window.location.search).get('redirectto')).toBe(target);
         if (mode === 'login-page') {
           await waitFor(() => expect(network!.forwards).toHaveLength(1));
-          const forwarded = new URL(network.forwards[0]);
-          expect(forwarded.origin + forwarded.pathname).toBe(target);
-          expect(decodeURIComponent(forwarded.href)).toContain(response.access_token);
+          // An SDK-mode app is sent to the address with nothing: its own SDK starts the sign-in.
+          expect(network.forwards[0]).toBe(target);
         } else expect(network.forwards).toEqual([]);
 
         // A rerender and later unrelated sign-in cannot consume the one-shot forward twice.
