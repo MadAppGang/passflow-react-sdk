@@ -3,6 +3,7 @@ import { useContext } from 'react';
 import { PassflowContext } from '@/context';
 import type { FederatedLanding } from '@/types';
 import { isValidUrl, readParentChallengeIdFromURL } from '@/utils';
+import { handOffScopes } from '@/utils/hand-off';
 import { usePassflow } from './use-passflow';
 
 const getFullRedirectUrl = (redirectUrl?: string): string => {
@@ -23,6 +24,9 @@ const getLoginPageLandingUrl = (appId: string, redirectUrl?: string): string => 
   return `${origin}${pathname.replace(/\/+$/, '') || '/'}?appid=${encodeURIComponent(appId)}${redirectTo}`;
 };
 
+const withoutUndefined = <T extends Record<string, unknown>>(value: T): Partial<T> =>
+  Object.fromEntries(Object.entries(value).filter(([, entry]) => entry !== undefined)) as Partial<T>;
+
 export type UseProviderProps = (
   redirectUrl?: string,
   createTenant?: boolean,
@@ -39,11 +43,21 @@ export const useProvider: UseProviderProps = (redirectUrl, createTenant, federat
   const landsOnLoginPage =
     federatedLanding === 'login-page' && Boolean(context?.state.appSettings?.pkce_enabled) && !readParentChallengeIdFromURL();
 
-  const payload = {
+  // The app's mode as the sign-in form already loaded it: the start must not wait for a settings read. In Simple mode
+  // the tokens go back to the app, so they get the scopes it asked for and its state. In SDK mode this sign-in only
+  // starts the hosted session, which then issues the app its code, so it uses the sign-in scopes. Unknown is not Simple
+  // for the state, which is echoed only in Simple mode.
+  const handOff = context?.state.handOff;
+  const pkceEnabled = context?.state.appSettings?.pkce_enabled;
+  const scopes = handOff && pkceEnabled !== true ? handOffScopes(handOff) : context?.state.scopes;
+
+  const payload = withoutUndefined({
     redirect_url: landsOnLoginPage && appId ? getLoginPageLandingUrl(appId, redirectUrl) : getFullRedirectUrl(redirectUrl),
-    scopes: context?.state.scopes,
+    scopes,
     create_tenant: createTenant,
-  };
+    state: pkceEnabled === false ? handOff?.state : undefined,
+    parent_challenge_id: readParentChallengeIdFromURL(),
+  });
 
   const federatedWithPopup = (provider: Providers, inviteToken?: string) =>
     passflow.federatedAuthWithPopup({ provider, invite_token: inviteToken, ...payload } as PassflowFederatedAuthPayload);
