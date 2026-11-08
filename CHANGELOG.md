@@ -2,6 +2,12 @@
 
 All notable changes to `@passflow/react` are documented in this file.
 
+## [0.24.0] - 2026-11-09
+
+### Changed
+
+- Fonts ship with the package. `style.css` no longer imports Google Fonts: Inter (variable, opsz and weight axes) and Gasoek One are served from `dist/fonts/` by relative `url()`, so a bundler that processes CSS (Vite, webpack) emits them on the app's own origin. No request goes to `fonts.googleapis.com` or `fonts.gstatic.com`, and a Content-Security-Policy needs only `font-src 'self'`. The family names are unchanged. Gasoek One ships its Latin subset only; it renders the "Secured by PASSFLOW" mark.
+
 ## [0.23.0] - 2026-11-08
 
 ### Changed
