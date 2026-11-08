@@ -58,7 +58,7 @@ describe('useConsent', () => {
   beforeEach(() => {
     fetchMock.mockReset();
     vi.stubGlobal('fetch', fetchMock);
-    stubLocation('?parent_challenge_id=abc');
+    stubLocation('?consent_challenge_id=abc');
   });
 
   afterEach(() => {
@@ -68,7 +68,7 @@ describe('useConsent', () => {
   });
 
   describe('loading the staged request', () => {
-    it('is invalid without a parent_challenge_id and never calls the server', async () => {
+    it('is invalid without a consent_challenge_id and never calls the server', async () => {
       stubLocation('');
       const { result } = renderHook(() => useConsent());
 
@@ -78,7 +78,7 @@ describe('useConsent', () => {
     });
 
     it('reads the request by id, same-origin and without credentials in a header', async () => {
-      stubLocation('?parent_challenge_id=a/b c');
+      stubLocation('?consent_challenge_id=a/b c');
       fetchMock.mockResolvedValueOnce(reply(info));
       const { result } = renderHook(() => useConsent());
 
