@@ -9,6 +9,8 @@ const baseExternal = [...Object.keys(dependencies), ...Object.keys(peerDependenc
 
 // https://vite.dev/config/
 export default defineConfig({
+  // style.css points at dist/fonts/ by a relative url(), so the consumer's bundler resolves it.
+  base: './',
   plugins: [
     react(),
     EnvironmentPlugin('all'),
@@ -35,6 +37,9 @@ export default defineConfig({
         assetFileNames: (assetInfo) => {
           if (assetInfo.name?.endsWith('.css')) {
             return 'style.css';
+          }
+          if (assetInfo.name?.endsWith('.woff2')) {
+            return 'fonts/[name][extname]';
           }
           return assetInfo.name;
         },

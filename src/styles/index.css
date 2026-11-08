@@ -1,5 +1,5 @@
 /* FONTS */
-@import url("https://fonts.googleapis.com/css2?family=Gasoek+One&family=Inter:opsz,wght@14..32,100..900&display=swap");
+@import "./fonts.css";
 
 /* RESET */
 @import "./reset.css";
@@ -51,7 +51,7 @@ body {
 
   /* Typography */
   /*
-   * The UI font. One source of truth for the family the `@import` above loads:
+   * The UI font. One source of truth for the family `fonts.css` declares:
    * a component that hard-codes `"Inter", sans-serif` is a second one.
    */
   --passflow-font-family: "Inter", sans-serif;
