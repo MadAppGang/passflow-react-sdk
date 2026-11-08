@@ -1,15 +1,11 @@
 import type { FC, FormEvent } from 'react';
-import { useEffect, useId, useRef, useState } from 'react';
 import { Button } from '../button';
-import { FieldOtp, type FieldOtpState } from '../fields/field-otp';
 import { LoginActionStack, LoginAlert, LoginProgress } from './shared';
 import type { LoginPasswordlessApprovalFormState, LoginPasswordlessApprovalState } from './types';
 
-const CODE_LENGTH = 4;
-
 /**
- * Approving a sign-in started on another device. Reaching four digits submits nothing: only Approve does. A failed
- * answer clears the typed code and gives focus back to it.
+ * Approving a sign-in started on any device, in one click. The request details are shown, and the two answers are
+ * equally prominent. While an answer is in flight both are locked.
  */
 const LoginPasswordlessApprovalForm: FC<LoginPasswordlessApprovalFormState> = ({
   appName,
@@ -23,30 +19,11 @@ const LoginPasswordlessApprovalForm: FC<LoginPasswordlessApprovalFormState> = ({
   onApprove,
   onDeny,
 }) => {
-  const [code, setCode] = useState('');
-  const inputRef = useRef<HTMLInputElement>(null);
-  const wasBusy = useRef(busy);
-  const inputId = useId();
-  const errorId = `${inputId}-error`;
-
-  // Compared during render, not in an effect, so the stale code is never drawn next to the error.
-  const [seenOutcome, setSeenOutcome] = useState({ busy, error });
-  if (seenOutcome.busy !== busy || seenOutcome.error !== error) {
-    setSeenOutcome({ busy, error });
-    if (!busy && error) setCode('');
-  }
-
-  useEffect(() => {
-    if (wasBusy.current && !busy) inputRef.current?.focus();
-    wasBusy.current = busy;
-  }, [busy]);
-
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (!busy && code.length === CODE_LENGTH) onApprove(code);
+    if (!busy) onApprove();
   };
 
-  const fieldState: FieldOtpState = busy ? 'disabled' : error ? 'error' : 'default';
   const details = [
     { label: 'Application', value: appName },
     { label: 'Browser', value: browser },
@@ -69,30 +46,17 @@ const LoginPasswordlessApprovalForm: FC<LoginPasswordlessApprovalFormState> = ({
           )}
         </dl>
         <p className='passflow-login-screen-text passflow-login-screen-centered-text'>
-          Approve only if you started signing in on another device and can see the code there now. If someone asked you for a
-          code, choose Deny.
+          Choose Sign in only if you just started signing in. If you didn't, choose This wasn't me.
         </p>
-        <FieldOtp
-          ref={inputRef}
-          id={inputId}
-          name='match_code'
-          length={CODE_LENGTH}
-          value={code}
-          onChange={setCode}
-          charset='numeric'
-          state={fieldState}
-          label='Code shown on your other device'
-          describedBy={error ? errorId : undefined}
-        />
-        <LoginAlert id={errorId} message={error} />
+        <LoginAlert message={error} />
       </div>
       {busy ? <LoginProgress message='Sending your answer…' /> : null}
       <LoginActionStack>
-        <Button size='big' variant='primary' type='submit' disabled={busy || code.length !== CODE_LENGTH}>
-          Approve
+        <Button size='big' variant='primary' type='submit' disabled={busy}>
+          Sign in
         </Button>
         <Button size='big' variant='warning' type='button' disabled={busy} onClick={onDeny}>
-          Deny
+          This wasn't me
         </Button>
       </LoginActionStack>
     </form>

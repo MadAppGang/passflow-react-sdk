@@ -116,6 +116,12 @@ type PassflowProviderProps = PassflowConfig & {
 export const AUTH_ENDPOINT_PATTERN =
   /\/auth\/(login|register|passwordless\/(start|complete)|passkey|2fa|validate|session\/exchange)\b|\/auth\/federated\/start\b/;
 
+/**
+ * The passwordless status poll. Under a parent, the approved answer is `{ redirect_url }`, which the interceptor
+ * follows. It is follow-only: the poll takes no parent, so its request body is never rewritten.
+ */
+export const PASSWORDLESS_STATUS_PATTERN = /\/auth\/passwordless\/status\b/;
+
 // Captured at module evaluation — before React mounts and before any
 // consumer-side router can rewrite the URL. The provider's mount-time
 // read stays primary (a consumer could mount the SDK long after boot,
@@ -200,6 +206,7 @@ const useOIDCInterceptor = (parentChallengeId: string | undefined): void => {
     }
 
     const isAuthURL = (url: string): boolean => AUTH_ENDPOINT_PATTERN.test(url);
+    const followsAnswer = (url: string): boolean => isAuthURL(url) || PASSWORDLESS_STATUS_PATTERN.test(url);
 
     const injectParentChallenge = (raw: string | null | undefined): string | undefined => {
       if (!raw) return undefined;
@@ -262,7 +269,7 @@ const useOIDCInterceptor = (parentChallengeId: string | undefined): void => {
 
         const response = await next(input, outInit);
 
-        if (response.ok && isAuthURL(url)) {
+        if (response.ok && followsAnswer(url)) {
           try {
             const cloned = response.clone();
             const text = await cloned.text();
@@ -283,7 +290,8 @@ const useOIDCInterceptor = (parentChallengeId: string | undefined): void => {
     const OriginalXHROpen = XMLHttpRequest.prototype.open;
     const OriginalXHRSend = XMLHttpRequest.prototype.send;
 
-    type XHRTracker = { method?: string; url?: string; isAuth?: boolean };
+    // `isAuth` gates the parent injection; `follows` gates following `redirect_url` in the answer.
+    type XHRTracker = { method?: string; url?: string; isAuth?: boolean; follows?: boolean };
     const tracker = new WeakMap<XMLHttpRequest, XHRTracker>();
 
     XMLHttpRequest.prototype.open = function (
@@ -297,10 +305,11 @@ const useOIDCInterceptor = (parentChallengeId: string | undefined): void => {
         method: method?.toUpperCase(),
         url: urlStr,
         isAuth: isAuthURL(urlStr),
+        follows: followsAnswer(urlStr),
       });
       this.addEventListener('load', () => {
         const meta = tracker.get(this);
-        if (!meta?.isAuth) return;
+        if (!meta?.follows) return;
         if (this.status >= 200 && this.status < 300) {
           // Server returns 200 + JSON body { redirect_url: "..." } when
           // an AuthFlow parent (OIDC, federated, future upgrade) needs
