@@ -389,6 +389,7 @@ type ExchangeState = 'idle' | 'exchanging' | 'upgrade_required' | 'fallback_to_l
 
 const useSessionExchangeOnMount = (
   parentChallengeId: string | undefined,
+  landedWithTwoFactorToken: boolean,
   passflow: Passflow,
   baseUrl: string | undefined,
   appId: string | undefined,
@@ -398,7 +399,8 @@ const useSessionExchangeOnMount = (
   const attemptedRef = useRef(false);
 
   useEffect(() => {
-    if (!parentChallengeId || attemptedRef.current) {
+    // A landing that owes its second factor finishes that sign-in: the 2FA screen, not an exchange of another session.
+    if (!parentChallengeId || landedWithTwoFactorToken || attemptedRef.current) {
       return;
     }
     // Never auto-exchange on the device verification page — that would approve
@@ -472,7 +474,8 @@ const useSessionExchangeOnMount = (
       try {
         let accessToken: string | undefined;
         try {
-          const tokens = await passflow.getTokens(false);
+          // Refreshed if it has expired: a stored session with a good refresh token is still a session.
+          const tokens = await passflow.getTokens(true);
           accessToken = tokens?.access_token;
         } catch {
           // No token in SDK storage — that's OK for cookie mode; the
@@ -594,8 +597,13 @@ export type OIDCExchangeContextValue = {
  * A PKCE federated landing (`?code=&user_state=`) is taken here too, from an
  * effect: the instance is built during render, and StrictMode throws one away
  * without running its effects, so core must not take the landing in its
- * constructor. Taking it can end in that same 2FA navigation; returned is how
- * it ended otherwise.
+ * constructor. So is the landing of a hosted sign-in in SDK mode (`?code=&state=`,
+ * started by `authRedirect()` in this tab), which core takes after the federated
+ * one. Taking either can end in that same 2FA navigation; returned is how it
+ * ended otherwise, and a refused landing is `'failed'`.
+ *
+ * Under an OIDC parent the 2FA landing goes on even with a stored session: the
+ * parent's sign-in is the one owing the factor.
  *
  * Tokens in the URL (`access_token=`) are taken from an effect for the same
  * reason, and only once the app id is known: core verifies them against it in
@@ -611,6 +619,7 @@ const useSecondFactorLanding = (
   appIdFromToken: string | undefined,
   takeTokensFromUrl: boolean,
   isDiscoveringAppId: boolean,
+  parentChallengeId: string | undefined,
 ): FederatedLandingOutcome | undefined => {
   const [pending, setPending] = useState(false);
   const [federatedLandingOutcome, setFederatedLandingOutcome] = useState<FederatedLandingOutcome>();
@@ -633,12 +642,13 @@ const useSecondFactorLanding = (
           passflow.unsubscribe(subscriber);
           setPending(true);
         } else if (eventType === PassflowEvent.Error) {
-          if ((payload as ErrorPayload | undefined)?.operation !== 'federated.redirect') return;
+          const operation = (payload as ErrorPayload | undefined)?.operation;
+          if (operation !== 'federated.redirect' && operation !== 'oidc.redirect') return;
           passflow.unsubscribe(subscriber);
           setFederatedLandingOutcome('failed');
         } else if (eventType === PassflowEvent.SignIn) {
           const signIn = payload as PassflowEventPayload[PassflowEvent.SignIn] | undefined;
-          if (signIn?.source !== 'federated-landing') return;
+          if (signIn?.source !== 'federated-landing' && signIn?.source !== 'oidc-landing') return;
           passflow.unsubscribe(subscriber);
           // A replaced instance's session start is a no-op, and the current one
           // read storage before these tokens existed.
@@ -684,8 +694,9 @@ const useSecondFactorLanding = (
   // Once, on mount — the landing is a property of the page load.
   useEffect(() => {
     if (!landedWithTwoFactorToken) return;
-    // A signed-in user owes no factor: a `#tfa_token=` link is not theirs to answer.
-    if (passflow.isAuthenticated()) return;
+    // A signed-in user owes no factor: a `#tfa_token=` link is not theirs to answer. Under an OIDC parent it is the
+    // parent's sign-in that owes it.
+    if (passflow.isAuthenticated() && !parentChallengeId) return;
     if (!passflow.isTwoFactorVerificationRequired()) passflow.handleTokensRedirect();
     if (passflow.isTwoFactorVerificationRequired()) setPending(true);
   }, []);
@@ -784,7 +795,13 @@ export const PassflowProvider: FC<PassflowProviderProps> = ({
   // whether to render login form vs auto-exchange. See ADR-2.
   const parentChallengeId = useMemo(() => readParentChallengeIdFromURL() ?? bootParentChallengeId, []);
   useOIDCInterceptor(parentChallengeId);
-  const { exchangeState, parentMeta } = useSessionExchangeOnMount(parentChallengeId, passflow, config.url, state.appId);
+  const { exchangeState, parentMeta } = useSessionExchangeOnMount(
+    parentChallengeId,
+    landedWithTwoFactorToken,
+    passflow,
+    config.url,
+    state.appId,
+  );
 
   // Auto-discover appId from /settings endpoint if not provided
   const discoveryAttemptedRef = useRef(false);
@@ -850,6 +867,7 @@ export const PassflowProvider: FC<PassflowProviderProps> = ({
     appIdFromToken,
     takeTokensFromUrl,
     state.isDiscoveringAppId === true,
+    parentChallengeId,
   );
 
   const navigationValue = useMemo(

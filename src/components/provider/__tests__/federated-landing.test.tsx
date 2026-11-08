@@ -1,16 +1,22 @@
 import { act, waitFor } from '@testing-library/react';
+import { useContext } from 'react';
 import { afterEach, describe, expect, it } from 'vitest';
+import { PassflowContext, type PassflowContextType } from '@/context';
 import {
   appId,
   authTokens,
+  deferred,
   factorAnswer,
+  type HttpReply,
   installLandingEnvironment,
   LandingTree,
   makeObserved,
   type Network,
+  oidcSlotKey,
   renderLanding,
   slotKey,
   target,
+  writeOidcSlot,
   writeSlot,
 } from './support/federated-harness';
 
@@ -145,6 +151,63 @@ describe('REQ-14 exchange errors become public failed outcome in either host mod
     );
     await waitFor(() => expect(observed.outcome).toBe('failed'));
     expect(observed.current!.isAuthenticated()).toBe(false);
+    expect(network.forwards).toEqual([]);
+  });
+});
+
+let context: PassflowContextType | undefined;
+const ContextProbe = () => {
+  context = useContext(PassflowContext);
+  return null;
+};
+
+describe('SDK-mode landing (authorization code with state)', () => {
+  const sdkLanding = `?code=oidc-code&state=sign-in-state&appid=${appId}`;
+
+  it('signs in on the instance that survives a replacement during the token call', async () => {
+    network = installLandingEnvironment({ search: sdkLanding });
+    writeOidcSlot({ state: 'sign-in-state' });
+    const token = deferred<HttpReply>();
+    network.endpoints.set('/oidc/token', token.promise);
+    const observed = makeObserved();
+    renderLanding({ observed, flow: false, children: <ContextProbe /> });
+    await network.releaseSettings();
+    await waitFor(() => expect(network!.requests.some((request) => request.path === '/oidc/token')).toBe(true));
+
+    const first = observed.current;
+    await act(async () => {
+      context!.dispatch({ type: 'SET_PASSFLOW_STATE', payload: { scopes: ['openid', 'email', 'id'] } });
+    });
+    expect(observed.current).not.toBe(first);
+
+    const response = authTokens();
+    await act(async () => {
+      token.resolve({ data: response });
+    });
+
+    await waitFor(() => expect(observed.outcome).toBe('signed-in'));
+    await waitFor(async () => {
+      expect(observed.current!.isAuthenticated()).toBe(true);
+      expect((await observed.current!.getTokens(false))?.access_token).toBe(response.access_token);
+    });
+    expect(sessionStorage.getItem(oidcSlotKey)).toBeNull();
+    expect(new URLSearchParams(window.location.search).has('code')).toBe(false);
+    expect(new URLSearchParams(window.location.search).has('state')).toBe(false);
+  });
+
+  it.each([
+    ['a state that is not this sign-in', { state: 'another-sign-in' }],
+    ['an expired proof key', { state: 'sign-in-state', expired: true }],
+  ])('a landing refused for %s fails, with no session', async (_case, slot) => {
+    network = installLandingEnvironment({ search: sdkLanding });
+    writeOidcSlot(slot);
+    const observed = makeObserved();
+    renderLanding({ observed, flow: false });
+    await network.releaseSettings();
+
+    await waitFor(() => expect(observed.outcome).toBe('failed'));
+    expect(observed.current!.isAuthenticated()).toBe(false);
+    expect(network.requests.some((request) => request.path === '/oidc/token')).toBe(false);
     expect(network.forwards).toEqual([]);
   });
 });

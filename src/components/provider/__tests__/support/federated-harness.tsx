@@ -1,4 +1,4 @@
-import { webcrypto } from 'node:crypto';
+import { generateKeyPairSync, sign, webcrypto } from 'node:crypto';
 import type { Passflow } from '@passflow/core';
 import { act, cleanup, render } from '@testing-library/react';
 import axios, { AxiosError, type AxiosResponse, type InternalAxiosRequestConfig } from 'axios';
@@ -53,8 +53,16 @@ export const writeSlot = () => {
   sessionStorage.setItem(slotKey, value);
   return value;
 };
-export type HttpRequest = { path: string; method: string; body: Record<string, unknown> };
+export type HttpRequest = { path: string; method: string; body: Record<string, unknown>; headers?: Record<string, string> };
 export type HttpReply = { data: unknown; status?: number };
+// JSON bodies, and the form bodies core's OIDC token call sends.
+const parseBody = (raw: string): Record<string, unknown> => {
+  try {
+    return JSON.parse(raw);
+  } catch {
+    return Object.fromEntries(new URLSearchParams(raw));
+  }
+};
 export type Network = ReturnType<typeof installLandingEnvironment>;
 
 export function installLandingEnvironment(options: { pathname?: string; search?: string } = {}) {
@@ -117,22 +125,23 @@ export function installLandingEnvironment(options: { pathname?: string; search?:
   const settings = deferred<HttpReply>();
   const exchange = deferred<HttpReply>();
   const settingsData = { ...appSettingsFixture, id: appId, pkce_enabled: true, defaults: { redirect: target } };
-  const endpoints = new Map<string, HttpReply>();
+  // A test's own answers win over the defaults below. A promise holds the answer back until the test settles it.
+  const endpoints = new Map<string, HttpReply | Promise<HttpReply>>();
   const originalAdapter = axios.defaults.adapter;
   const reply = async (request: HttpRequest): Promise<HttpReply> => {
     requests.push(request);
+    if (endpoints.has(request.path)) return endpoints.get(request.path)!;
     if (request.path === '/app/settings') return settings.promise;
     if (request.path === '/auth/pkce_exchange') return exchange.promise;
     if (request.path === '/auth/redirect/check') return { data: { redirect_url: request.body.redirect_url } };
     if (request.path === '/settings') return { data: passflowSettingsFixture };
     if (request.path === '/settings/password') return { data: passflowSettingsFixture.password_policy };
-    if (endpoints.has(request.path)) return endpoints.get(request.path)!;
     if (/session/.test(request.path)) return { data: { valid: true } };
     throw new Error('Unstubbed HTTP boundary: ' + request.method + ' ' + request.path);
   };
   axios.defaults.adapter = async (config: InternalAxiosRequestConfig) => {
     const url = new URL(config.url ?? '/', config.baseURL ?? 'https://auth.example.com');
-    const body = typeof config.data === 'string' ? JSON.parse(config.data) : (config.data ?? {});
+    const body = typeof config.data === 'string' ? parseBody(config.data) : (config.data ?? {});
     const result = await reply({ path: url.pathname, method: config.method ?? 'get', body });
     const response: AxiosResponse = {
       data: result.data,
@@ -152,7 +161,8 @@ export function installLandingEnvironment(options: { pathname?: string; search?:
     const result = await reply({
       path: url.pathname,
       method: init?.method ?? 'get',
-      body: typeof init?.body === 'string' ? JSON.parse(init.body) : {},
+      body: typeof init?.body === 'string' ? parseBody(init.body) : {},
+      headers: (init?.headers ?? {}) as Record<string, string>,
     });
     return new Response(JSON.stringify(result.data), {
       status: result.status ?? 200,
@@ -245,3 +255,40 @@ export function renderLanding(props: React.ComponentProps<typeof LandingTree>, s
   const tree = <LandingTree {...props} />;
   return render(strict ? <React.StrictMode>{tree}</React.StrictMode> : tree);
 }
+
+// Tokens the server signs, for landings core verifies against the published keys.
+const ISSUER = 'https://auth.example.com';
+const KEY_ID = 'landing-test-key';
+const serverKey = generateKeyPairSync('ec', { namedCurve: 'P-256' });
+export const signedJwt = (claims: Record<string, unknown>) => {
+  const header = Buffer.from(JSON.stringify({ alg: 'ES256', typ: 'JWT', kid: KEY_ID })).toString('base64url');
+  const payload = Buffer.from(
+    JSON.stringify({ sub: 'landing-test-user', iss: ISSUER, aud: [appId], exp: 4102444800, ...claims }),
+  ).toString('base64url');
+  const signature = sign('sha256', Buffer.from(`${header}.${payload}`), {
+    key: serverKey.privateKey,
+    dsaEncoding: 'ieee-p1363',
+  });
+  return `${header}.${payload}.${signature.toString('base64url')}`;
+};
+export const installServerKeys = (network: Network) => {
+  network.endpoints.set('/.well-known/openid-configuration', { data: { issuer: ISSUER } });
+  network.endpoints.set('/.well-known/jwks.json', {
+    data: { keys: [{ ...serverKey.publicKey.export({ format: 'jwk' }), kid: KEY_ID, alg: 'ES256', use: 'sig' }] },
+  });
+};
+
+// The slot core keeps for an SDK-mode sign-in started in this tab. No `openid`, so the answer needs no ID token.
+export const oidcSlotKey = 'passflow_oidc_pkce';
+export const writeOidcSlot = ({ state, expired = false }: { state: string; expired?: boolean }) =>
+  sessionStorage.setItem(
+    oidcSlotKey,
+    JSON.stringify({
+      verifier: `test-verifier-${'v'.repeat(43)}`,
+      state,
+      clientId: appId,
+      redirectUri: `${window.location.origin}/auth/signin`,
+      scopes: ['email'],
+      expiresAt: expired ? Date.now() - 1000 : Date.now() + 600_000,
+    }),
+  );

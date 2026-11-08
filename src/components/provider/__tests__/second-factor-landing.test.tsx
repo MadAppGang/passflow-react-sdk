@@ -1,9 +1,21 @@
 import { Passflow } from '@passflow/core';
-import { render, waitFor } from '@testing-library/react';
-import { type FC, useEffect } from 'react';
+import { act, render, waitFor } from '@testing-library/react';
+import { type FC, StrictMode, useEffect } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { useNavigation, usePassflow } from '@/hooks';
 import { PassflowProvider } from '../passflow-provider';
+import {
+  appId,
+  deferred,
+  type HttpReply,
+  installLandingEnvironment,
+  installServerKeys,
+  LandingProbe,
+  makeObserved,
+  type Network,
+  type Observed,
+  signedJwt,
+} from './support/federated-harness';
 
 // A federated sign-in on a non-PKCE app lands back on its redirect URL with
 // the 2FA token in the fragment and no tokens. These render the real provider
@@ -102,5 +114,114 @@ describe('PassflowProvider on a landing that owes its second factor', () => {
 
     await waitFor(() => expect(owesFactor).toBe(false));
     expect(navigate).not.toHaveBeenCalled();
+  });
+});
+
+describe('PassflowProvider on a 2FA landing under an OIDC parent', () => {
+  let fetched: string[];
+
+  beforeEach(() => {
+    sessionStorage.clear();
+    owesFactor = undefined;
+    fetched = [];
+    vi.stubGlobal('fetch', async (input: RequestInfo | URL) => {
+      fetched.push(new URL(typeof input === 'string' ? input : input instanceof URL ? input.href : input.url).pathname);
+      return new Response('{}', { status: 404, headers: { 'content-type': 'application/json' } });
+    });
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    vi.restoreAllMocks();
+    window.history.replaceState(null, '', '/');
+    sessionStorage.clear();
+  });
+
+  it('makes no session exchange request', async () => {
+    window.history.replaceState(null, '', `/web/signin?parent_challenge_id=parent-1#tfa_token=${TFA_TOKEN}`);
+    const navigate = vi.fn();
+
+    renderProvider(navigate);
+
+    await waitFor(() => expect(navigate).toHaveBeenCalledWith(expect.objectContaining({ to: '/two-factor-verify' })));
+    await new Promise((resolve) => setTimeout(resolve, 20));
+    expect(fetched).not.toContain('/auth/session/exchange');
+  });
+
+  it('reaches the 2FA screen with a stored hosted session', async () => {
+    vi.spyOn(Passflow.prototype, 'isAuthenticated').mockReturnValue(true);
+    window.history.replaceState(null, '', `/web/signin?parent_challenge_id=parent-1#tfa_token=${TFA_TOKEN}`);
+    const navigate = vi.fn();
+
+    renderProvider(navigate);
+
+    await waitFor(() => expect(navigate).toHaveBeenCalledWith(expect.objectContaining({ to: '/two-factor-verify' })));
+    expect(owesFactor).toBe(true);
+  });
+});
+
+// The hosted login with no app id: discovery finds it while the tokens wait in the fragment.
+const DiscoveringTree = ({ observed }: { observed: Observed }) => (
+  <PassflowProvider url='https://auth.example.com' navigate={(destination) => observed.navigations.push(destination)}>
+    <LandingProbe observed={observed} />
+  </PassflowProvider>
+);
+
+describe('PassflowProvider on a landing with tokens in the fragment', () => {
+  let network: Network | undefined;
+  afterEach(() => {
+    network?.restore();
+    network = undefined;
+  });
+
+  const land = () => {
+    const access = signedJwt({ type: 'access' });
+    const refresh = signedJwt({ type: 'refresh' });
+    network = installLandingEnvironment({
+      pathname: '/web/signin',
+      search: `#access_token=${access}&refresh_token=${refresh}&state=app-state`,
+    });
+    installServerKeys(network);
+    const discovery = deferred<HttpReply>();
+    network.endpoints.set('/settings', discovery.promise);
+    return { access, discovery };
+  };
+
+  const discover = async (discovery: ReturnType<typeof land>['discovery']) => {
+    await act(async () => {
+      discovery.resolve({ data: { login_app: { app_id: appId } } });
+    });
+  };
+
+  it.each([false, true])('a Simple app takes them on the surviving instance once (StrictMode %s)', async (strict) => {
+    const { access, discovery } = land();
+    const observed = makeObserved();
+    const tree = <DiscoveringTree observed={observed} />;
+    render(strict ? <StrictMode>{tree}</StrictMode> : tree);
+
+    await discover(discovery);
+    await network!.releaseSettings({ ...network!.settingsData, pkce_enabled: false });
+
+    await waitFor(async () => {
+      expect(observed.current!.isAuthenticated()).toBe(true);
+      expect((await observed.current!.getTokens(false))?.access_token).toBe(access);
+    });
+    expect(window.location.hash).not.toContain('access_token');
+    expect(network!.requests.filter((request) => request.path === '/.well-known/jwks.json')).toHaveLength(1);
+  });
+
+  it('an SDK app does not take them', async () => {
+    const { access, discovery } = land();
+    const observed = makeObserved();
+    render(<DiscoveringTree observed={observed} />);
+
+    await discover(discovery);
+    await network!.releaseSettings({ ...network!.settingsData, pkce_enabled: true });
+    await waitFor(() => expect(observed.settingsReady).toBe(true));
+    await act(async () => {});
+
+    expect(observed.current!.isAuthenticated()).toBe(false);
+    expect(window.location.hash).not.toContain('access_token');
+    expect(JSON.stringify(localStorage)).not.toContain(access);
   });
 });

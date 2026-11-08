@@ -1,5 +1,24 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { routeToSecondFactor, twoFactorTokenAppId, urlCarriesTwoFactorToken } from '../second-factor';
+import { routeToSecondFactor, twoFactorTokenAppId, urlCarriesAccessToken, urlCarriesTwoFactorToken } from '../second-factor';
+
+describe('urlCarriesAccessToken', () => {
+  afterEach(() => window.history.replaceState(null, '', '/'));
+
+  it('sees tokens in the fragment', () => {
+    window.history.replaceState(null, '', '/web/signin#access_token=a.b.c&state=x');
+    expect(urlCarriesAccessToken()).toBe(true);
+  });
+
+  it('sees tokens in the query', () => {
+    window.history.replaceState(null, '', '/web/signin?access_token=a.b.c');
+    expect(urlCarriesAccessToken()).toBe(true);
+  });
+
+  it('ignores a fragment with only a 2FA token', () => {
+    window.history.replaceState(null, '', '/web/signin#tfa_token=a.b.c');
+    expect(urlCarriesAccessToken()).toBe(false);
+  });
+});
 
 describe('routeToSecondFactor', () => {
   it('navigates to the 2FA route and reports it when a factor is owed', () => {
