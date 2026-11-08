@@ -17,10 +17,12 @@ import {
   addressBarSearch,
   defaultNavigate,
   type FederatedLandingOutcome,
+  type HandOff,
   initialState,
   type NavigateFunction,
   NavigationContext,
   PassflowContext,
+  type PassflowState,
   passflowReducer,
   type RouterType,
   routes,
@@ -42,6 +44,16 @@ export { readParentChallengeIdFromURL };
 export type PassflowUpgradeOptions = Omit<UpgradeProviderProps, 'children' | 'enabled' | 'backend'>;
 
 type PassflowProviderProps = PassflowConfig & {
+  /** See `PassflowConfig`. Read once, when the provider mounts. */
+  keyStoragePrefix?: PassflowConfig['keyStoragePrefix'];
+  /** See `PassflowConfig`. Read once, when the provider mounts. */
+  tokenExchange?: PassflowConfig['tokenExchange'];
+  /** See `PassflowConfig`. Read once, when the provider mounts. */
+  platform?: PassflowConfig['platform'];
+  /** See `PassflowConfig`. Read once, when the provider mounts. */
+  refreshCoordination?: PassflowConfig['refreshCoordination'];
+  /** See `PassflowConfig`. Read once, when the provider mounts. */
+  refreshStrikes?: PassflowConfig['refreshStrikes'];
   children: ReactNode;
   navigate?: NavigateFunction;
   router?: RouterType;
@@ -72,6 +84,12 @@ type PassflowProviderProps = PassflowConfig & {
    * is mounted elsewhere. Defaults to `routes.two_factor_verify.path`.
    */
   twoFactorVerifyPath?: string;
+  /**
+   * For the hosted login: the scopes and `state` the app that sent the user here asked for. They decide what goes
+   * back to the app after sign-in; unset `scopes` are filled from the app's configuration, else `openid profile id`.
+   * Read once, when the provider mounts. Leave unset when the flow is embedded in the app itself.
+   */
+  handOff?: HandOff;
 };
 
 /**
@@ -97,6 +115,12 @@ type PassflowProviderProps = PassflowConfig & {
  */
 export const AUTH_ENDPOINT_PATTERN =
   /\/auth\/(login|register|passwordless\/(start|complete)|passkey|2fa|validate|session\/exchange)\b|\/auth\/federated\/start\b/;
+
+/**
+ * The passwordless status poll. Under a parent, the approved answer is `{ redirect_url }`, which the interceptor
+ * follows. It is follow-only: the poll takes no parent, so its request body is never rewritten.
+ */
+export const PASSWORDLESS_STATUS_PATTERN = /\/auth\/passwordless\/status\b/;
 
 // Captured at module evaluation — before React mounts and before any
 // consumer-side router can rewrite the URL. The provider's mount-time
@@ -182,6 +206,7 @@ const useOIDCInterceptor = (parentChallengeId: string | undefined): void => {
     }
 
     const isAuthURL = (url: string): boolean => AUTH_ENDPOINT_PATTERN.test(url);
+    const followsAnswer = (url: string): boolean => isAuthURL(url) || PASSWORDLESS_STATUS_PATTERN.test(url);
 
     const injectParentChallenge = (raw: string | null | undefined): string | undefined => {
       if (!raw) return undefined;
@@ -244,7 +269,7 @@ const useOIDCInterceptor = (parentChallengeId: string | undefined): void => {
 
         const response = await next(input, outInit);
 
-        if (response.ok && isAuthURL(url)) {
+        if (response.ok && followsAnswer(url)) {
           try {
             const cloned = response.clone();
             const text = await cloned.text();
@@ -265,7 +290,8 @@ const useOIDCInterceptor = (parentChallengeId: string | undefined): void => {
     const OriginalXHROpen = XMLHttpRequest.prototype.open;
     const OriginalXHRSend = XMLHttpRequest.prototype.send;
 
-    type XHRTracker = { method?: string; url?: string; isAuth?: boolean };
+    // `isAuth` gates the parent injection; `follows` gates following `redirect_url` in the answer.
+    type XHRTracker = { method?: string; url?: string; isAuth?: boolean; follows?: boolean };
     const tracker = new WeakMap<XMLHttpRequest, XHRTracker>();
 
     XMLHttpRequest.prototype.open = function (
@@ -279,10 +305,11 @@ const useOIDCInterceptor = (parentChallengeId: string | undefined): void => {
         method: method?.toUpperCase(),
         url: urlStr,
         isAuth: isAuthURL(urlStr),
+        follows: followsAnswer(urlStr),
       });
       this.addEventListener('load', () => {
         const meta = tracker.get(this);
-        if (!meta?.isAuth) return;
+        if (!meta?.follows) return;
         if (this.status >= 200 && this.status < 300) {
           // Server returns 200 + JSON body { redirect_url: "..." } when
           // an AuthFlow parent (OIDC, federated, future upgrade) needs
@@ -371,6 +398,7 @@ type ExchangeState = 'idle' | 'exchanging' | 'upgrade_required' | 'fallback_to_l
 
 const useSessionExchangeOnMount = (
   parentChallengeId: string | undefined,
+  landedWithTwoFactorToken: boolean,
   passflow: Passflow,
   baseUrl: string | undefined,
   appId: string | undefined,
@@ -380,7 +408,8 @@ const useSessionExchangeOnMount = (
   const attemptedRef = useRef(false);
 
   useEffect(() => {
-    if (!parentChallengeId || attemptedRef.current) {
+    // A landing that owes its second factor finishes that sign-in: the 2FA screen, not an exchange of another session.
+    if (!parentChallengeId || landedWithTwoFactorToken || attemptedRef.current) {
       return;
     }
     // Never auto-exchange on the device verification page — that would approve
@@ -454,7 +483,8 @@ const useSessionExchangeOnMount = (
       try {
         let accessToken: string | undefined;
         try {
-          const tokens = await passflow.getTokens(false);
+          // Refreshed if it has expired: a stored session with a good refresh token is still a session.
+          const tokens = await passflow.getTokens(true);
           accessToken = tokens?.access_token;
         } catch {
           // No token in SDK storage — that's OK for cookie mode; the
@@ -576,8 +606,13 @@ export type OIDCExchangeContextValue = {
  * A PKCE federated landing (`?code=&user_state=`) is taken here too, from an
  * effect: the instance is built during render, and StrictMode throws one away
  * without running its effects, so core must not take the landing in its
- * constructor. Taking it can end in that same 2FA navigation; returned is how
- * it ended otherwise.
+ * constructor. So is the landing of a hosted sign-in in SDK mode (`?code=&state=`,
+ * started by `authRedirect()` in this tab), which core takes after the federated
+ * one. Taking either can end in that same 2FA navigation; returned is how it
+ * ended otherwise, and a refused landing is `'failed'`.
+ *
+ * Under an OIDC parent the 2FA landing goes on even with a stored session: the
+ * parent's sign-in is the one owing the factor.
  *
  * Tokens in the URL (`access_token=`) are taken from an effect for the same
  * reason, and only once the app id is known: core verifies them against it in
@@ -593,6 +628,7 @@ const useSecondFactorLanding = (
   appIdFromToken: string | undefined,
   takeTokensFromUrl: boolean,
   isDiscoveringAppId: boolean,
+  parentChallengeId: string | undefined,
 ): FederatedLandingOutcome | undefined => {
   const [pending, setPending] = useState(false);
   const [federatedLandingOutcome, setFederatedLandingOutcome] = useState<FederatedLandingOutcome>();
@@ -615,12 +651,13 @@ const useSecondFactorLanding = (
           passflow.unsubscribe(subscriber);
           setPending(true);
         } else if (eventType === PassflowEvent.Error) {
-          if ((payload as ErrorPayload | undefined)?.operation !== 'federated.redirect') return;
+          const operation = (payload as ErrorPayload | undefined)?.operation;
+          if (operation !== 'federated.redirect' && operation !== 'oidc.redirect') return;
           passflow.unsubscribe(subscriber);
           setFederatedLandingOutcome('failed');
         } else if (eventType === PassflowEvent.SignIn) {
           const signIn = payload as PassflowEventPayload[PassflowEvent.SignIn] | undefined;
-          if (signIn?.source !== 'federated-landing') return;
+          if (signIn?.source !== 'federated-landing' && signIn?.source !== 'oidc-landing') return;
           passflow.unsubscribe(subscriber);
           // A replaced instance's session start is a no-op, and the current one
           // read storage before these tokens existed.
@@ -666,8 +703,9 @@ const useSecondFactorLanding = (
   // Once, on mount — the landing is a property of the page load.
   useEffect(() => {
     if (!landedWithTwoFactorToken) return;
-    // A signed-in user owes no factor: a `#tfa_token=` link is not theirs to answer.
-    if (passflow.isAuthenticated()) return;
+    // A signed-in user owes no factor: a `#tfa_token=` link is not theirs to answer. Under an OIDC parent it is the
+    // parent's sign-in that owes it.
+    if (passflow.isAuthenticated() && !parentChallengeId) return;
     if (!passflow.isTwoFactorVerificationRequired()) passflow.handleTokensRedirect();
     if (passflow.isTwoFactorVerificationRequired()) setPending(true);
   }, []);
@@ -725,14 +763,38 @@ export const PassflowProvider: FC<PassflowProviderProps> = ({
   const [landedWithAccessToken] = useState(urlCarriesAccessToken);
   const takeTokensFromUrl = landedWithAccessToken && config.parseQueryParams !== false;
 
+  // Read once, at mount, like every other prop that seeds the reducer.
+  const [fixedConfig] = useState<PassflowConfig>(() => ({
+    keyStoragePrefix: config.keyStoragePrefix,
+    tokenExchange: config.tokenExchange,
+    platform: config.platform,
+    refreshCoordination: config.refreshCoordination,
+    refreshStrikes: config.refreshStrikes,
+  }));
+
+  // Rebuilt only when a field core reads changes. Settings arriving, discovery ending or an equal scopes array keep
+  // the instance, and with it core's cached settings read.
+  const scopesKey = state.scopes?.join(' ');
   const passflow = useMemo(
     () =>
       new Passflow({
-        ...state,
+        ...fixedConfig,
+        url: state.url,
+        appId: state.appId,
+        scopes: state.scopes,
+        createTenantForNewUser: state.createTenantForNewUser,
+        parseQueryParams: landedWithAccessToken ? false : state.parseQueryParams,
         deferFederatedLanding: true,
-        ...(landedWithAccessToken ? { parseQueryParams: false } : {}),
       }),
-    [state, landedWithAccessToken],
+    [
+      fixedConfig,
+      state.url,
+      state.appId,
+      scopesKey,
+      state.createTenantForNewUser,
+      state.parseQueryParams,
+      landedWithAccessToken,
+    ],
   );
   useDisposeOnReplace(passflow);
 
@@ -742,7 +804,13 @@ export const PassflowProvider: FC<PassflowProviderProps> = ({
   // whether to render login form vs auto-exchange. See ADR-2.
   const parentChallengeId = useMemo(() => readParentChallengeIdFromURL() ?? bootParentChallengeId, []);
   useOIDCInterceptor(parentChallengeId);
-  const { exchangeState, parentMeta } = useSessionExchangeOnMount(parentChallengeId, passflow, config.url, state.appId);
+  const { exchangeState, parentMeta } = useSessionExchangeOnMount(
+    parentChallengeId,
+    landedWithTwoFactorToken,
+    passflow,
+    config.url,
+    state.appId,
+  );
 
   // Auto-discover appId from /settings endpoint if not provided
   const discoveryAttemptedRef = useRef(false);
@@ -767,19 +835,15 @@ export const PassflowProvider: FC<PassflowProviderProps> = ({
 
               if (discoveredAppId) {
                 passflow.setAppId(discoveredAppId);
-                dispatch({
-                  type: 'SET_PASSFLOW_STATE',
-                  payload: {
-                    ...state,
-                    appId: discoveredAppId,
-                    scopes: settings.login_app?.scopes || settings.scopes || state.scopes,
-                    createTenantForNewUser:
-                      settings.login_app?.create_tenant_for_new_user ??
-                      settings.createTenantForNewUser ??
-                      state.createTenantForNewUser,
-                    isDiscoveringAppId: false,
-                  },
-                });
+                // Only what discovery found: a field it did not find keeps whatever is in the state now.
+                const discovered: Partial<PassflowState> = { appId: discoveredAppId, isDiscoveringAppId: false };
+                const scopes = settings.login_app?.scopes || settings.scopes;
+                // Under a hand-off the sign-in scopes follow the hand-off scopes rule, applied by the reducer.
+                if (state.handOff) dispatch({ type: 'SET_FOUND_SCOPES', found: scopes });
+                else if (scopes) discovered.scopes = scopes;
+                const createTenant = settings.login_app?.create_tenant_for_new_user ?? settings.createTenantForNewUser;
+                if (createTenant !== undefined) discovered.createTenantForNewUser = createTenant;
+                dispatch({ type: 'SET_PASSFLOW_STATE', payload: discovered });
                 return;
               }
             }
@@ -788,18 +852,12 @@ export const PassflowProvider: FC<PassflowProviderProps> = ({
 
         // All URLs failed
         console.warn('Failed to discover appId from /settings');
-        dispatch({
-          type: 'SET_PASSFLOW_STATE',
-          payload: {
-            ...state,
-            isDiscoveringAppId: false,
-          },
-        });
+        dispatch({ type: 'SET_PASSFLOW_STATE', payload: { isDiscoveringAppId: false } });
       };
 
       void discoverAppId();
     }
-  }, [needsDiscovery, state.isDiscoveringAppId, config.url, passflow, state]);
+  }, [needsDiscovery, state.isDiscoveringAppId, config.url, passflow]);
 
   const passflowValue = useMemo(() => ({ state, dispatch, passflow }), [state, passflow]);
 
@@ -818,6 +876,7 @@ export const PassflowProvider: FC<PassflowProviderProps> = ({
     appIdFromToken,
     takeTokensFromUrl,
     state.isDiscoveringAppId === true,
+    parentChallengeId,
   );
 
   const navigationValue = useMemo(

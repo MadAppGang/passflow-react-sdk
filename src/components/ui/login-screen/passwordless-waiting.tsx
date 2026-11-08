@@ -3,22 +3,13 @@ import { EmailCodeResendButton } from './email-code';
 import { LoginActionStack, LoginAlert } from './shared';
 import type { LoginPasswordlessWaitingState } from './types';
 
-export const LoginPasswordlessWaiting: FC<LoginPasswordlessWaitingState> = ({
-  matchCode,
-  error,
-  resend,
-  testId,
-  codeTestId,
-}) => (
+export const LoginPasswordlessWaiting: FC<LoginPasswordlessWaitingState> = ({ error, resend, testId }) => (
   <div className='passflow-form' data-testid={testId}>
     <div className='passflow-form-container passflow-login-screen-centered'>
       <div className='passflow-login-screen-notice' role='status'>
         <p className='passflow-login-screen-text passflow-login-screen-centered-text'>
-          Open the link we sent on any device and enter this code:
+          Open the link we sent on any device and choose Sign in.
         </p>
-        <div className='passflow-login-screen-code' data-testid={codeTestId}>
-          {matchCode}
-        </div>
       </div>
       <LoginAlert message={error} />
     </div>

@@ -1,6 +1,6 @@
 import type { AppSettings, LoginWebAppStyle, LoginWebAppTheme, PassflowPasswordPolicySettings } from '@passflow/core';
 import { useContext, useLayoutEffect, useRef, useState } from 'react';
-import { PassflowContext } from '@/context';
+import { PassflowContext, type PassflowState } from '@/context';
 import { applyLoginThemeStyles, type CompatibleLoginWebAppStyle } from '@/utils/login-theme';
 import { usePassflow } from './use-passflow';
 
@@ -37,151 +37,106 @@ export const useAppSettings: UseAppSettingsProps = () => {
   const { state, dispatch } = context;
 
   useLayoutEffect(() => {
-    if (!state.appSettings && !state.hasSettingsError && !isFetchingRef.current) {
-      const fetchAllSettings = async (): Promise<void> => {
-        isFetchingRef.current = true;
-        setIsLoading(true);
-        try {
-          // If appId is not provided, try to discover it from /settings endpoint
-          if (!passflow.appId && !state.isDiscoveringAppId) {
-            dispatch({
-              type: 'SET_PASSFLOW_STATE',
-              payload: {
-                ...state,
-                isDiscoveringAppId: true,
-              },
-            });
+    // The provider is still looking for the app id: settings read now would be the empty default.
+    if (state.isDiscoveringAppId) return;
+    if (state.appSettings || state.hasSettingsError || isFetchingRef.current) return;
 
-            try {
-              // Try relative path first (works with dev server proxy and same-origin production)
-              // Then fall back to absolute URL if configured
-              const urlsToTry = ['/settings'];
-              if (passflow.url) {
-                urlsToTry.push(`${passflow.url}/settings`);
-              }
+    const fetchAllSettings = async (): Promise<void> => {
+      isFetchingRef.current = true;
+      setIsLoading(true);
+      try {
+        // If appId is not provided, try to discover it from /settings endpoint
+        if (!passflow.appId) {
+          dispatch({ type: 'SET_PASSFLOW_STATE', payload: { isDiscoveringAppId: true } });
+          const discovered: Partial<PassflowState> = { isDiscoveringAppId: false };
 
-              let response: Response | null = null;
-              for (const url of urlsToTry) {
-                try {
-                  const r = await fetch(url);
-                  if (r.ok) {
-                    response = r;
-                    break;
-                  }
-                } catch {}
-              }
+          try {
+            // Try relative path first (works with dev server proxy and same-origin production)
+            // Then fall back to absolute URL if configured
+            const urlsToTry = ['/settings'];
+            if (passflow.url) {
+              urlsToTry.push(`${passflow.url}/settings`);
+            }
 
-              if (response?.ok) {
-                const settings = await response.json();
+            let response: Response | null = null;
+            for (const url of urlsToTry) {
+              try {
+                const r = await fetch(url);
+                if (r.ok) {
+                  response = r;
+                  break;
+                }
+              } catch {}
+            }
 
-                // Support both response formats:
-                // Production: { login_app: { app_id: "...", ... } }
-                // Dev: { appId: "..." }
-                const discoveredAppId = settings.login_app?.app_id || settings.appId;
+            if (response) {
+              const settings = await response.json();
 
-                if (discoveredAppId) {
-                  // Update the passflow instance with discovered appId using setAppId method
-                  passflow.setAppId(discoveredAppId);
+              // Support both response formats:
+              // Production: { login_app: { app_id: "...", ... } }
+              // Dev: { appId: "..." }
+              const discoveredAppId = settings.login_app?.app_id || settings.appId;
 
-                  // Collect state updates to apply in one dispatch
-                  const stateUpdates: Partial<typeof state> = {
-                    appId: discoveredAppId,
-                  };
+              if (discoveredAppId) {
+                passflow.setAppId(discoveredAppId);
+                discovered.appId = discoveredAppId;
 
-                  // Also update scopes if available and not already set
-                  if (!state.scopes) {
-                    const discoveredScopes = settings.login_app?.scopes || settings.scopes;
-                    if (discoveredScopes) {
-                      stateUpdates.scopes = discoveredScopes;
-                    }
-                  }
+                const discoveredScopes = settings.login_app?.scopes || settings.scopes;
+                if (state.handOff) dispatch({ type: 'SET_FOUND_SCOPES', found: discoveredScopes });
+                else if (!state.scopes && discoveredScopes) discovered.scopes = discoveredScopes;
 
-                  // Update createTenantForNewUser if available and not already set
-                  if (state.createTenantForNewUser === undefined) {
-                    const createTenant = settings.login_app?.create_tenant_for_new_user ?? settings.createTenantForNewUser;
-                    if (createTenant !== undefined) {
-                      stateUpdates.createTenantForNewUser = createTenant;
-                    }
-                  }
-
-                  // Apply discovered state updates
-                  dispatch({
-                    type: 'SET_PASSFLOW_STATE',
-                    payload: {
-                      ...state,
-                      ...stateUpdates,
-                      isDiscoveringAppId: false,
-                    },
-                  });
-                } else {
-                  dispatch({
-                    type: 'SET_PASSFLOW_STATE',
-                    payload: {
-                      ...state,
-                      isDiscoveringAppId: false,
-                    },
-                  });
+                const createTenant = settings.login_app?.create_tenant_for_new_user ?? settings.createTenantForNewUser;
+                if (state.createTenantForNewUser === undefined && createTenant !== undefined) {
+                  discovered.createTenantForNewUser = createTenant;
                 }
               }
-            } catch (discoveryError) {
-              console.warn('Failed to discover appId from /settings:', discoveryError);
-              // Continue with the flow - we'll handle missing appId later
-              dispatch({
-                type: 'SET_PASSFLOW_STATE',
-                payload: {
-                  ...state,
-                  isDiscoveringAppId: false,
-                },
-              });
             }
+          } catch (discoveryError) {
+            console.warn('Failed to discover appId from /settings:', discoveryError);
+            // Continue with the flow - we'll handle missing appId later
           }
 
-          let appSettings = {} as AppSettings;
-          if (passflow.appId) {
-            appSettings = await passflow.getAppSettings();
-          }
-
-          // Collect final state updates
-          const finalStateUpdates: Partial<typeof state> = {
-            appSettings,
-          };
-
-          if (!state.scopes) finalStateUpdates.scopes = appSettings.defaults?.scopes;
-          if (state.createTenantForNewUser === undefined)
-            finalStateUpdates.createTenantForNewUser = appSettings.defaults?.create_tenant_for_new_user;
-
-          let passwordPolicy = null;
-          if (appSettings.auth_strategies && hasPasswordStrategy(appSettings.auth_strategies)) {
-            passwordPolicy = await passflow.getPasswordPolicySettings();
-          }
-          finalStateUpdates.passwordPolicy = passwordPolicy;
-
-          dispatch({
-            type: 'SET_PASSFLOW_STATE',
-            payload: {
-              ...state,
-              ...finalStateUpdates,
-            },
-          });
-        } catch (e) {
-          setIsError(true);
-          const error = e as Error;
-          setErrorMessage(error.message);
-          // Set error flag in context to prevent infinite retry loop
-          dispatch({
-            type: 'SET_PASSFLOW_STATE',
-            payload: {
-              ...state,
-              hasSettingsError: true,
-            },
-          });
-        } finally {
-          setIsLoading(false);
-          isFetchingRef.current = false;
+          dispatch({ type: 'SET_PASSFLOW_STATE', payload: discovered });
         }
-      };
-      void fetchAllSettings();
-    }
+
+        // Discovery has finished. With no app id this is the bare default sign-in form, on empty settings.
+        let appSettings = {} as AppSettings;
+        if (passflow.appId) {
+          appSettings = await passflow.getAppSettings();
+        }
+
+        // Each dispatch carries only what it changes, so nothing written meanwhile is overwritten.
+        const finalStateUpdates: Partial<PassflowState> = { appSettings };
+
+        // Under a hand-off the reducer applies the found scopes to the current state: a value discovery wrote while
+        // this request was open stays.
+        const defaultScopes = appSettings.defaults?.scopes;
+        if (state.handOff) dispatch({ type: 'SET_FOUND_SCOPES', found: defaultScopes });
+        else if (!state.scopes && defaultScopes) finalStateUpdates.scopes = defaultScopes;
+        const defaultCreateTenant = appSettings.defaults?.create_tenant_for_new_user;
+        if (state.createTenantForNewUser === undefined && defaultCreateTenant !== undefined) {
+          finalStateUpdates.createTenantForNewUser = defaultCreateTenant;
+        }
+
+        let passwordPolicy = null;
+        if (appSettings.auth_strategies && hasPasswordStrategy(appSettings.auth_strategies)) {
+          passwordPolicy = await passflow.getPasswordPolicySettings();
+        }
+        finalStateUpdates.passwordPolicy = passwordPolicy;
+
+        dispatch({ type: 'SET_PASSFLOW_STATE', payload: finalStateUpdates });
+      } catch (e) {
+        setIsError(true);
+        const error = e as Error;
+        setErrorMessage(error.message);
+        // Set error flag in context to prevent infinite retry loop
+        dispatch({ type: 'SET_PASSFLOW_STATE', payload: { hasSettingsError: true } });
+      } finally {
+        setIsLoading(false);
+        isFetchingRef.current = false;
+      }
+    };
+    void fetchAllSettings();
   }, [dispatch, state.appSettings, state.hasSettingsError, state.isDiscoveringAppId, passflow]);
 
   const reset = () => {
@@ -189,13 +144,7 @@ export const useAppSettings: UseAppSettingsProps = () => {
     setErrorMessage('');
     setIsLoading(false);
     // Clear error flag in context to allow retry
-    dispatch({
-      type: 'SET_PASSFLOW_STATE',
-      payload: {
-        ...state,
-        hasSettingsError: false,
-      },
-    });
+    dispatch({ type: 'SET_PASSFLOW_STATE', payload: { hasSettingsError: false } });
   };
 
   // `custom_css` is not written here: each screen passes `currentStyles.custom_css`

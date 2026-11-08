@@ -8,7 +8,6 @@ import {
   approvalDeniedMessage,
   approvalErrorFrom,
   approvalInvalidMessage,
-  isApprovalMatchError,
   passwordlessLinkExpiredMessage,
 } from '@/utils';
 
@@ -32,8 +31,8 @@ const viewFromInfo = (info: PasswordlessApprovalInfo): ApprovalView => {
 
 /**
  * The device that opened an emailed link on a row only another device can sign in with. Opening it writes nothing: the
- * user reads the request, then approves with the code shown on the other device, or denies. Errors from these calls
- * are plain and carry no code, but are not logged here anyway, because this screen holds the OTP and the match code.
+ * user reads the request, then signs in or answers that it wasn't them, in one click. Errors from these calls are
+ * plain and carry no code, but are not logged here anyway, because this screen holds the OTP.
  */
 export const VerifyChallengeApproval: FC<VerifyChallengeApprovalProps> = ({ challengeId, otp }) => {
   const passflow = usePassflow();
@@ -67,24 +66,15 @@ export const VerifyChallengeApproval: FC<VerifyChallengeApprovalProps> = ({ chal
     };
   }, [challengeId, otp, loadAttempt]);
 
-  const attemptsLeftAfter = async (decideError: unknown): Promise<number | undefined> => {
-    if (!challengeId || !isApprovalMatchError(decideError)) return undefined;
-    try {
-      return (await passflow.getPasswordlessApproval(challengeId)).attempts_left;
-    } catch {
-      return undefined;
-    }
-  };
-
-  const decide = async (approve: boolean, matchCode?: string) => {
+  const decide = async (approve: boolean) => {
     if (!challengeId || !otp) return;
     setBusy(true);
     setError(null);
     try {
-      await passflow.decidePasswordlessApproval(challengeId, otp, approve, matchCode);
+      await passflow.decidePasswordlessApproval(challengeId, otp, approve);
       setView({ kind: 'decided', message: approve ? approvalApprovedMessage : approvalDeniedMessage });
     } catch (decideError) {
-      const { message, terminal } = approvalErrorFrom(decideError, await attemptsLeftAfter(decideError));
+      const { message, terminal } = approvalErrorFrom(decideError);
       if (terminal) setView({ kind: 'terminal', message });
       else setError(message);
     } finally {
@@ -108,7 +98,7 @@ export const VerifyChallengeApproval: FC<VerifyChallengeApprovalProps> = ({ chal
           error,
           busy,
           testId: 'passwordless-approval',
-          onApprove: (matchCode) => void decide(true, matchCode),
+          onApprove: () => void decide(true),
           onDeny: () => void decide(false),
         };
       }

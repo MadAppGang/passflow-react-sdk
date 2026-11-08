@@ -385,14 +385,11 @@ export type LoginStatusState = {
  */
 export type LoginPasswordlessWaitingState = {
   kind: 'passwordless-waiting';
-  /** The 4-digit code the approving device asks for. Only this tab ever shows it. */
-  matchCode: string;
   /** The answer to a failed resend. */
   error?: string | null;
   /** The label defaults to `Resend email`. */
   resend?: LoginEmailCodeResend;
   testId?: string;
-  codeTestId?: string;
 };
 
 /**
@@ -409,12 +406,12 @@ export type LoginPasswordlessApprovalFormState = {
   location: string | null;
   /** Ready to display. */
   requestedAt: string;
-  /** Why the last answer failed; clears the typed code. */
+  /** Why the last answer failed. */
   error?: string | null;
-  /** An answer is in flight: the code and both actions are locked. */
+  /** An answer is in flight: both actions are locked. */
   busy?: boolean;
   testId?: string;
-  onApprove: (code: string) => void;
+  onApprove: () => void;
   onDeny: () => void;
 };
 

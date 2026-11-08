@@ -2,6 +2,30 @@
 
 All notable changes to `@passflow/react` are documented in this file.
 
+## [0.23.0] - 2026-11-08
+
+### Changed
+
+- Requires `@passflow/core` ^0.29.0 (was ^0.28.0). Its `authRedirect()` is now async and follows the app's mode: in SDK mode hosted sign-in returns an authorization code, which core redeems with PKCE. Core accepts URL tokens only for apps in Simple mode.
+- After a sign-in that leaves for an external target, the hosted login reads the app's mode from `getAppSettings()`. A Simple-mode app gets its tokens in the URL fragment. An SDK-mode app, or an app whose settings don't say Simple, is sent to the address with nothing in it. If the settings can't be read, the screen shows "unavailable" with a retry, and nothing is sent.
+- New `PassflowProvider` prop `handOff: { scopes?, state? }`: the scopes and `state` the app asked for when it opened the hosted login. In Simple mode `refresh_token` goes to the app only when those scopes include `offline` or `offline_access`, and `state` is echoed in the fragment. Without `handOff`, `getUrlWithTokens` returns every stored token, as before.
+- A federated sign-in start carries `parent_challenge_id` from the page URL. In Simple mode it also carries the app's `state` and asks for the app's scopes. In SDK mode it asks for the sign-in scopes.
+- Email-link approval is one click: the approval page shows the app and where and when the sign-in started, with "Sign in" and "This wasn't me" equally prominent. There is no code to type, and the waiting tab shows none. This needs the matching Passflow server, which accepts an approval without a code. `LoginPasswordlessWaitingState.matchCode` is removed, and `LoginPasswordlessApprovalFormState.onApprove` takes no argument.
+- A waiting tab under an OIDC sign-in follows the `redirect_url` its status poll returns.
+
+### Added
+
+- The provider takes hosted sign-in code landings (`SignIn` source `oidc-landing`) and applies their tokens to the live instance. A refused landing (`Error` op `oidc.redirect`) sets `federatedLandingOutcome` to `'failed'`.
+- A landing with `#access_token=` in the fragment is recognised and waits for the app id, like `?access_token=`.
+
+### Fixed
+
+- The sign-in page could render empty when app settings arrived while the app id was still being discovered, or when a late settings write overwrote values set meanwhile.
+- The provider no longer rebuilds its `Passflow` instance when settings arrive or when the scopes are recomputed to the same set. `keyStoragePrefix`, `tokenExchange`, `platform`, `refreshCoordination` and `refreshStrikes` are read when the provider mounts.
+- `useAuthCloudRedirect` no longer leaves an unhandled promise rejection. Failures arrive as an `Error` event.
+- The hosted session exchange refreshes an expired access token before it asks for a code, so silent sign-in keeps working after the access token expires.
+- A `#tfa_token` landing makes no session-exchange request. Under an OIDC sign-in it shows the second-factor screen even when a hosted session already exists.
+
 ## [0.22.0] - 2026-11-08
 
 ### Changed

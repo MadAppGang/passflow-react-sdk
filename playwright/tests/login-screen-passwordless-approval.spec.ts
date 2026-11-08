@@ -9,10 +9,11 @@ const parentCopy = {
   RefusedParentCompleted: 'This sign-in request was already completed. Start again.',
   RefusedParentPasskeyOnly: 'This sign-in request has expired. Start again.',
 };
+const WAITING_COPY = 'Open the link we sent on any device and choose Sign in.';
 const messages: Record<string, string> = {
-  PasswordlessWaiting: 'Open the link we sent on any device and enter this code:',
-  PasswordlessWaitingResendReady: 'Open the link we sent on any device and enter this code:',
-  PasswordlessWaitingResendBusy: 'Open the link we sent on any device and enter this code:',
+  PasswordlessWaiting: WAITING_COPY,
+  PasswordlessWaitingResendReady: WAITING_COPY,
+  PasswordlessWaitingResendBusy: WAITING_COPY,
   PasswordlessWaitingResendFailed: "We couldn't send a new link. Try again.",
   PasswordlessWaitDenied: 'This sign-in was denied. Start again.',
   PasswordlessWaitExpired: 'This link expired. Start again.',
@@ -21,7 +22,7 @@ const messages: Record<string, string> = {
   PasswordlessApproval: 'Acme Portal',
   PasswordlessApprovalLoading: 'Loading the sign-in request…',
   PasswordlessApprovalNoLocation: 'Acme Portal',
-  PasswordlessApprovalWrongCode: 'That code does not match. 3 tries left.',
+  PasswordlessApprovalError: "We couldn't record your answer. Try again.",
   PasswordlessApprovalConnectionError: 'Check your connection and try again.',
   PasswordlessApprovalBusy: 'Acme Portal',
   PasswordlessApprovalApproved: 'Approved. Return to the tab that started sign-in. You can close this tab.',
@@ -37,7 +38,7 @@ const messages: Record<string, string> = {
 const approvalForms = new Set([
   'PasswordlessApproval',
   'PasswordlessApprovalNoLocation',
-  'PasswordlessApprovalWrongCode',
+  'PasswordlessApprovalError',
   'PasswordlessApprovalConnectionError',
   'PasswordlessApprovalBusy',
 ]);
@@ -82,7 +83,8 @@ for (const [story, message] of Object.entries(messages)) {
       }
     }
     if (story.startsWith('PasswordlessWaiting')) {
-      await expect(page.getByText('4821', { exact: true })).toBeVisible();
+      await expect(page.getByText(/^\d{4}$/)).toHaveCount(0);
+      await expect(page.getByTestId('passwordless-match-code')).toHaveCount(0);
       const resend = story.endsWith('ResendBusy')
         ? page.getByRole('button')
         : page.getByRole('button', { name: /^Resend email/ });
@@ -99,43 +101,36 @@ for (const [story, message] of Object.entries(messages)) {
       await expect(page.getByText('macOS', { exact: false })).toBeVisible();
       await expect(page.getByText('4 Nov 2026, 16:42', { exact: false })).toBeVisible();
       await expect(
-        page.getByText(
-          'Approve only if you started signing in on another device and can see the code there now. If someone asked you for a code, choose Deny.',
-        ),
+        page.getByText("Choose Sign in only if you just started signing in. If you didn't, choose This wasn't me."),
       ).toBeVisible();
-      const code = page.getByLabel('Code shown on your other device');
-      await expect(code).toBeVisible();
-      await expect(page.getByRole('button', { name: 'Deny', exact: true })).toBeVisible();
+      await expect(page.getByRole('textbox')).toHaveCount(0);
+      const signIn = page.getByRole('button', { name: 'Sign in', exact: true });
+      const notMe = page.getByRole('button', { name: "This wasn't me", exact: true });
+      await expect(signIn).toBeVisible();
+      await expect(notMe).toBeVisible();
+      await expect(signIn).toHaveAttribute('type', 'submit');
+      // Equally prominent: the two answers have the same size.
+      const [signInBox, notMeBox] = [await signIn.boundingBox(), await notMe.boundingBox()];
+      expect(signInBox && notMeBox).toBeTruthy();
+      expect(Math.abs((signInBox?.width ?? 0) - (notMeBox?.width ?? -1))).toBeLessThanOrEqual(1);
+      expect(Math.abs((signInBox?.height ?? 0) - (notMeBox?.height ?? -1))).toBeLessThanOrEqual(1);
       if (story === 'PasswordlessApprovalNoLocation') await expect(page.getByText('Lisbon, Portugal')).toHaveCount(0);
       else await expect(page.getByText('Lisbon, Portugal', { exact: false })).toBeVisible();
       if (story === 'PasswordlessApprovalBusy') {
-        await expect(code).toBeDisabled();
-        await expect(page.getByRole('button', { name: /Approv/ })).toBeDisabled();
-        await expect(page.getByRole('button', { name: 'Deny', exact: true })).toBeDisabled();
+        await expect(signIn).toBeDisabled();
+        await expect(notMe).toBeDisabled();
+        await expect(page.getByText('Sending your answer…')).toBeVisible();
       } else {
-        if (story === 'PasswordlessApproval') {
-          // Wait for the story's final interaction. Edit the full OTP as a user
-          // would: focusing selects its last box, rather than the whole value.
-          await expect(code).toHaveValue('4821');
-          await expect(page.getByRole('button', { name: 'Approve', exact: true })).toBeFocused();
-          await code.focus();
-          await code.press('Backspace');
-          await expect(code).toHaveValue('482');
-          await expect(page.getByRole('button', { name: 'Approve', exact: true })).toBeDisabled();
-          await code.press('1');
-          await expect(code).toHaveValue('4821');
-          await expect(page.getByRole('button', { name: 'Approve', exact: true })).toBeEnabled();
-        } else {
-          await code.fill('123');
-          await expect(page.getByRole('button', { name: 'Approve', exact: true })).toBeDisabled();
-          await code.fill('4821');
-          await expect(page.getByRole('button', { name: 'Approve', exact: true })).toBeEnabled();
-        }
+        await expect(signIn).toBeEnabled();
+        await expect(notMe).toBeEnabled();
+      }
+      if (story === 'PasswordlessApprovalError' || story === 'PasswordlessApprovalConnectionError') {
+        await expect(page.getByRole('alert')).toHaveText(message);
       }
       await expect(page.getByText(/jack@example.com|test\+1@test.com/)).toHaveCount(0);
     }
     if (story.startsWith('PasswordlessApproval') && !approvalForms.has(story)) {
-      await expect(page.getByLabel('Code shown on your other device')).toHaveCount(0);
+      await expect(page.getByRole('button', { name: 'Sign in', exact: true })).toHaveCount(0);
     }
     // Keep the theme-transition guard; bounded polling handles transient audit overlap.
     await page.waitForFunction(() =>

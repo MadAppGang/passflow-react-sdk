@@ -1,6 +1,6 @@
 import { renderHook } from '@testing-library/react';
 import type { FC, PropsWithChildren } from 'react';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { initialState, PassflowContext, type PassflowContextType } from '../../context/passflow-context';
 import { useProvider } from '../use-provider';
 
@@ -211,6 +211,73 @@ describe('useProvider', () => {
     });
   });
 
+  describe('hosted login', () => {
+    const signInScopes = ['openid', 'profile', 'id', 'offline'];
+    const hostedContext = (state: Partial<PassflowContextType['state']>): PassflowContextType => ({
+      ...mockContext,
+      state: { ...initialState, scopes: signInScopes, ...state },
+    });
+    const payloadOf = (context: PassflowContextType) => {
+      const { result } = renderHook(() => useProvider(), { wrapper: createWrapper(context) });
+      result.current.federatedWithRedirect('google' as any);
+      return mockPassflow.federatedAuthWithRedirect.mock.calls[0][0];
+    };
+
+    afterEach(() => {
+      (window.location as { search?: string }).search = '';
+    });
+
+    it('carries the parent sign-in from the URL', () => {
+      (window.location as { search?: string }).search = '?appid=app-1&parent_challenge_id=parent-1';
+
+      expect(payloadOf(mockContext).parent_challenge_id).toBe('parent-1');
+    });
+
+    it('Simple app with a hand-off: exactly the hand-off scopes, and the app state', () => {
+      const payload = payloadOf(
+        hostedContext({
+          appSettings: { pkce_enabled: false } as never,
+          handOff: { scopes: ['openid', 'email'], state: 'app-state' },
+        }),
+      );
+
+      expect(payload.scopes).toEqual(['openid', 'email']);
+      expect(payload.state).toBe('app-state');
+    });
+
+    it('Simple app with a hand-off and no requested scopes: the default hand-off scopes', () => {
+      const payload = payloadOf(hostedContext({ appSettings: { pkce_enabled: false } as never, handOff: {} }));
+
+      expect(payload.scopes).toEqual(['openid', 'profile', 'id']);
+    });
+
+    it('SDK app with a hand-off: the sign-in scopes, and no state', () => {
+      const payload = payloadOf(
+        hostedContext({
+          appSettings: { pkce_enabled: true } as never,
+          handOff: { scopes: ['openid', 'email'], state: 'app-state' },
+        }),
+      );
+
+      expect(payload.scopes).toEqual(signInScopes);
+      expect(Object.keys(payload)).not.toContain('state');
+    });
+
+    it('mode not loaded yet, with a hand-off: the hand-off scopes, and no state', () => {
+      const payload = payloadOf(hostedContext({ appSettings: null, handOff: { scopes: ['openid'], state: 'app-state' } }));
+
+      expect(payload.scopes).toEqual(['openid']);
+      expect(Object.keys(payload)).not.toContain('state');
+    });
+
+    it('without a hand-off: the state scopes, as before', () => {
+      const payload = payloadOf(hostedContext({ appSettings: { pkce_enabled: false } as never }));
+
+      expect(payload.scopes).toEqual(signInScopes);
+      expect(Object.keys(payload)).not.toContain('state');
+    });
+  });
+
   describe('edge cases', () => {
     it('handles empty redirect_url', () => {
       const { result } = renderHook(() => useProvider(''), {
@@ -238,11 +305,19 @@ describe('useProvider', () => {
 
       result.current.federatedWithPopup('google' as any);
 
-      expect(mockPassflow.federatedAuthWithPopup).toHaveBeenCalledWith(
-        expect.objectContaining({
-          scopes: undefined,
-        }),
-      );
+      expect(mockPassflow.federatedAuthWithPopup.mock.calls[0][0]).not.toHaveProperty('scopes');
+    });
+
+    it('sends no keys for values it does not have', () => {
+      const contextWithoutScopes = { ...mockContext, state: { ...initialState, scopes: undefined } };
+      const { result } = renderHook(() => useProvider(), { wrapper: createWrapper(contextWithoutScopes) });
+
+      result.current.federatedWithRedirect('google' as any);
+
+      const payload = mockPassflow.federatedAuthWithRedirect.mock.calls[0][0];
+      expect(Object.keys(payload)).not.toContain('scopes');
+      expect(Object.keys(payload)).not.toContain('state');
+      expect(Object.keys(payload)).not.toContain('parent_challenge_id');
     });
 
     it('handles undefined invite_token', () => {

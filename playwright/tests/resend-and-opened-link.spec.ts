@@ -1,7 +1,7 @@
 import type { Page } from '@playwright/test';
 import { expect, test } from '../fixture';
 import { jwt, tokens } from './email-verification.helpers';
-import { appOrigin, expiresAt, MATCH_CODE, setupPasswordless } from './passwordless-approval.helpers';
+import { appOrigin, expectWaitingWithoutCode, expiresAt, MATCH_CODE, setupPasswordless } from './passwordless-approval.helpers';
 
 const APP = 'app-the-user-started-on';
 const invite = jwt({ inviter_name: 'A', tenant_name: 'T', type: 'invite' });
@@ -50,7 +50,7 @@ test.describe('resending to an invited user', () => {
     await setupPasswordless(page);
     const bodies = await recordStarts(page);
     await startInvited(page, /email link$/);
-    await expect(page.getByText(MATCH_CODE, { exact: true })).toBeVisible();
+    await expectWaitingWithoutCode(page);
     await page.clock.runFor(61_000);
     await expectResendKeepsInvite(page, bodies);
   });
@@ -136,7 +136,7 @@ test.describe('a first factor that owes the second, on a screen that starts on m
     await setupPasswordless(page);
     await recordStarts(page);
     await startInvited(page, /email link$/);
-    await expect(page.getByText(MATCH_CODE, { exact: true })).toBeVisible();
+    await expectWaitingWithoutCode(page);
     await page.unroute('**/auth/passwordless/status');
     await page.route('**/auth/passwordless/status', (route) => route.fulfill({ json: { status: 'approved', code: 'authz' } }));
     await page.route('**/auth/pkce_exchange', (route) => route.fulfill({ json: owesSecondFactor() }));

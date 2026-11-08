@@ -1096,10 +1096,8 @@ const waitingChrome = { title: 'Check your email' };
 
 const waiting = (overrides: Partial<LoginPasswordlessWaitingState> = {}): LoginPasswordlessWaitingState => ({
   kind: 'passwordless-waiting',
-  matchCode: '4821',
   resend: { restartKey: 'challenge-1', onResend: handlers.onResendLink },
   testId: 'passwordless-waiting',
-  codeTestId: 'passwordless-match-code',
   ...overrides,
 });
 
@@ -1173,15 +1171,13 @@ const approval = (overrides: Partial<LoginPasswordlessApprovalFormState> = {}): 
   ...overrides,
 });
 
-/** The device that opened the link. Four digits submit nothing: only Approve does. */
+/** The device that opened the link. One click answers: Sign in or This wasn't me, equally prominent. */
 export const PasswordlessApproval: Story = {
   args: story(approval(), approvalChrome),
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    await userEvent.type(canvas.getByLabelText('Code shown on your other device'), '4821');
-    await expect(handlers.onApproveSignIn).not.toHaveBeenCalled();
-    await userEvent.click(canvas.getByRole('button', { name: 'Approve' }));
-    await expect(handlers.onApproveSignIn).toHaveBeenCalledWith('4821');
+    await userEvent.click(canvas.getByRole('button', { name: 'Sign in' }));
+    await expect(handlers.onApproveSignIn).toHaveBeenCalledWith();
   },
 };
 
@@ -1193,8 +1189,9 @@ export const PasswordlessApprovalNoLocation: Story = {
   args: story(approval({ location: null }), approvalChrome),
 };
 
-export const PasswordlessApprovalWrongCode: Story = {
-  args: story(approval({ error: 'That code does not match. 3 tries left.' }), approvalChrome),
+/** The last answer failed for a reason that may pass: the form stays and the reason is announced. */
+export const PasswordlessApprovalError: Story = {
+  args: story(approval({ error: "We couldn't record your answer. Try again." }), approvalChrome),
 };
 
 /** The server did not answer: nothing was decided, so the form stays. */

@@ -102,13 +102,12 @@ const MagicLinkSent: FC = () => {
 
 type MagicLinkWaitingProps = {
   challengeId: string;
-  matchCode: string;
   signInPath: string;
   onResent: (answer: PassflowPasswordlessResponse) => void;
 };
 
-/** This tab started the sign-in and holds its secret: it shows the code and takes the session once the link is approved. */
-const MagicLinkWaiting: FC<MagicLinkWaitingProps> = ({ challengeId, matchCode, signInPath, onResent }) => {
+/** This tab started the sign-in and holds its secret: it takes the session once the link is approved on any device. */
+const MagicLinkWaiting: FC<MagicLinkWaitingProps> = ({ challengeId, signInPath, onResent }) => {
   const passflow = usePassflow();
   const { appSettings, currentStyles, loginAppTheme } = useAppSettings();
   // The wait below starts once, and settings can arrive after it.
@@ -186,12 +185,10 @@ const MagicLinkWaiting: FC<MagicLinkWaitingProps> = ({ challengeId, matchCode, s
       chrome={{ ...chrome, title: 'Check your email' }}
       state={{
         kind: 'passwordless-waiting',
-        matchCode,
         error: isResendError ? resendError?.message : null,
         resend:
           type === 'passwordless' ? { restartKey: challengeId, busy: isResending, onResend: () => void resend() } : undefined,
         testId: 'passwordless-waiting',
-        codeTestId: 'passwordless-match-code',
       }}
     />
   );
@@ -208,6 +205,7 @@ export const VerifyChallengeMagicLink: FC<VerifyChallengeMagicLinkProps> = ({ si
   const [, setResendCount] = useState(0);
   const challengeId = get('challenge_id');
 
+  // A pending record is how this screen knows this tab started the sign-in.
   // Read once per challenge: core drops the record when the wait ends, and the outcome must stay on this screen.
   const pending = useMemo(() => (challengeId ? passflow.getPendingPasswordlessSignIn(challengeId) : undefined), [challengeId]);
 
@@ -216,7 +214,6 @@ export const VerifyChallengeMagicLink: FC<VerifyChallengeMagicLinkProps> = ({ si
   return (
     <MagicLinkWaiting
       challengeId={challengeId}
-      matchCode={pending.matchCode}
       signInPath={signInPath}
       onResent={(answer) => {
         set({ challenge_id: answer.challenge_id, expires_at: String(answer.expires_at) });

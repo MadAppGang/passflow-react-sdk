@@ -3,16 +3,26 @@
 // exactly as it does there. Keep it in step with login-app/src/App.tsx in the server repo. The one addition is `router=hash`,
 // which runs the same flow on a hash router, as a host may mount it.
 import { PassflowFlow } from '@/components/flow';
+import type { HandOff } from '@/context';
+import { handOffScopes, withScope } from '@/utils/hand-off';
 import { PassflowProvider } from './components/provider';
 
 const params = new URLSearchParams(window.location.search);
 const onHashRouter = params.get('router') === 'hash';
 
+// What the app asked for: `?scopes=` (comma-separated, as core's sign-in redirect writes it) and `?state=`.
+const requestedScopes = params.get('scopes')?.split(',').filter(Boolean);
+const handOff: HandOff = {
+  scopes: requestedScopes?.length ? requestedScopes : undefined,
+  state: params.get('state') ?? undefined,
+};
+
 export const HostedLogin = () => (
   <PassflowProvider
     appId={params.get('appid') || undefined}
     url={window.location.origin}
-    scopes={['offline', 'openid', 'profile']}
+    handOff={handOff}
+    scopes={withScope(handOffScopes(handOff) ?? [], 'offline')}
   >
     <PassflowFlow
       pathPrefix={onHashRouter ? undefined : '/hosted'}

@@ -167,8 +167,8 @@ importers:
   .:
     dependencies:
       '@passflow/core':
-        specifier: ^0.28.0
-        version: 0.28.0(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
+        specifier: ^0.29.0
+        version: 0.29.0(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
       '@radix-ui/react-dialog':
         specifier: ^1.3.1
         version: 1.3.1(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
@@ -995,8 +995,8 @@ packages:
     cpu: [x64]
     os: [win32]
 
-  '@passflow/core@0.28.0':
-    resolution: {integrity: sha512-1XvoXuHA6ljaUrpjTk9zs1yavCtUdeWv9Q2eSYlxgjZ214XZRsQgE+Hd8sqru3ZWpVTb3OGiTnRKaungmaO/MA==}
+  '@passflow/core@0.29.0':
+    resolution: {integrity: sha512-cs4XGbXGwW1X9JrS9B9w21vIq3o2DVImqoX3184kH9cpOyVcuat5LqWcupor/bIllB04MgUNMXQU7gIQqjeuew==}
     engines: {node: ^22.12.0 || ^24.0.0 || >=26.0.0}
 
   '@playwright/test@1.64.1':
@@ -3606,7 +3606,7 @@ snapshots:
   '@oxc-resolver/binding-win32-x64-msvc@11.21.2':
     optional: true
 
-  '@passflow/core@0.28.0(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)':
+  '@passflow/core@0.29.0(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)':
     dependencies:
       '@simplewebauthn/browser': 14.0.0
       axios: 1.21.0(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)

@@ -3,6 +3,7 @@ import { jwt } from './email-verification.helpers';
 import {
   appOrigin,
   beginMagicLink,
+  expectWaitingWithoutCode as expectWaiting,
   expiresAt,
   MATCH_CODE,
   noSecretInUrl,
@@ -10,12 +11,13 @@ import {
   setupPasswordless,
   successUrl,
   tokens,
+  WAITING_COPY,
 } from './passwordless-approval.helpers';
 
 test.use({ locale: 'en-US', timezoneId: 'UTC', viewport: { width: 715, height: 900 } });
 
 for (const flow of ['signin', 'signup'] as const) {
-  test(`REQ-1 REQ-18 ${flow} strips match_code but preserves challenge and other query context`, async ({ page }) => {
+  test(`REQ-1 REQ-18 ${flow} shows no code, strips match_code but preserves challenge and other query context`, async ({ page }) => {
     await setupPasswordless(page);
     await page.route('**/auth/passwordless/start', (route) =>
       route.fulfill({
@@ -28,7 +30,7 @@ for (const flow of ['signin', 'signup'] as const) {
     );
     await page.route('**/auth/passwordless/status', (route) => route.fulfill({ json: { status: 'pending' } }));
     await beginMagicLink(page, flow, '?keep=original&redirect_url=' + encodeURIComponent(successUrl));
-    await expect(page.getByText(MATCH_CODE, { exact: true })).toBeVisible();
+    await expectWaiting(page);
     const url = new URL(page.url());
     noSecretInUrl(url);
     expect(url.searchParams.get('challenge_id')).toBe('query-row');
@@ -68,8 +70,7 @@ for (const [outcome, message] of failures) {
     });
     await page.route('**/auth/pkce_exchange', (route) => route.abort('failed'));
     await beginMagicLink(page, 'signin', '?keep=preserved');
-    await expect(page.getByText('Open the link we sent on any device and enter this code:', { exact: false })).toBeVisible();
-    await expect(page.getByText(MATCH_CODE, { exact: true })).toBeVisible();
+    await expectWaiting(page);
     finish = true;
     await page.clock.runFor(3_100);
     await expect(page.getByText(message, { exact: true })).toBeVisible();
@@ -108,7 +109,7 @@ for (const destination of ['redirect', 'success', '2fa'] as const) {
     );
     // A `redirect_url` left on the sign-in page is not the attempt's address, so both cases end on the app's default.
     await beginMagicLink(page, 'signin', destination === 'redirect' ? '?redirect_url=' + encodeURIComponent(successUrl) : '');
-    await expect(page.getByText(MATCH_CODE, { exact: true })).toBeVisible();
+    await expectWaiting(page);
     approved = true;
     await page.clock.runFor(3_100);
     if (destination === '2fa') {
@@ -116,17 +117,19 @@ for (const destination of ['redirect', 'success', '2fa'] as const) {
       expect(await page.evaluate(() => localStorage.getItem('access'))).toBeNull();
     } else if (destination === 'redirect') {
       await expect(page.getByRole('heading', { name: 'Authentication complete' })).toBeVisible();
-      expect(decodeURIComponent(page.url())).toContain(response.access_token);
+      // An SDK-mode app gets the bare address; its own SDK starts the sign-in there.
+      expect(new URL(page.url()).hash).toBe('');
+      expect(decodeURIComponent(page.url())).not.toContain(response.access_token);
     } else {
       // Success is observable as a terminal screen and applied session; wording is not a new contract.
-      await expect(page.getByText(MATCH_CODE, { exact: true })).toHaveCount(0);
+      await expect(page.getByText(WAITING_COPY, { exact: true })).toHaveCount(0);
       await expect(page.getByRole('button', { name: /^Resend email/ })).toHaveCount(0);
       await expect.poll(() => page.evaluate(() => localStorage.getItem('access'))).toBe(response.access_token);
     }
   });
 }
 
-test('REQ-4 Resend replaces row and expiry, displays new code, polls the new row and does not surface cleanup abort', async ({
+test('REQ-4 Resend replaces row and expiry, shows no code, polls the new row and does not surface cleanup abort', async ({
   page,
 }) => {
   test.slow();
@@ -148,15 +151,15 @@ test('REQ-4 Resend replaces row and expiry, displays new code, polls the new row
     return route.fulfill({ json: { status: 'pending' } });
   });
   await beginMagicLink(page);
-  await expect(page.getByText(MATCH_CODE, { exact: true })).toBeVisible();
+  await expectWaiting(page);
   // Skip the cooldown without spending 30 seconds replaying every timer tick.
   await page.clock.fastForward(30_100);
   await page.getByRole('button', { name: /^Resend email/ }).click();
   await expect(page).toHaveURL(
     (url) => url.searchParams.get('challenge_id') === 'row-two' && url.searchParams.get('expires_at') === secondExpiry,
   );
-  await expect(page.getByText('7359', { exact: true })).toBeVisible();
-  await expect(page.getByText(MATCH_CODE, { exact: true })).toHaveCount(0);
+  await expectWaiting(page);
+  await expect(page.getByText('7359', { exact: true })).toHaveCount(0);
   await expect.poll(() => polls.includes('row-two')).toBe(true);
   const afterReplacement = polls.length;
   // Skip timer replay, but require a fresh poll so the old-row check is not vacuous.
@@ -185,7 +188,7 @@ for (const transport of ['network', '429', '500'] as const) {
     const response = tokens();
     await page.route('**/auth/pkce_exchange', (route) => route.fulfill({ json: response }));
     await beginMagicLink(page, 'signin', '?redirect_url=' + encodeURIComponent(successUrl));
-    await expect(page.getByText(MATCH_CODE, { exact: true })).toBeVisible();
+    await expectWaiting(page);
     await page.clock.runFor(3_100);
     await expect.poll(() => poll).toBeGreaterThanOrEqual(2);
     await expect(page.getByRole('heading', { name: 'Authentication complete' })).toBeVisible();
@@ -211,7 +214,7 @@ for (const legacy of ['non-pkce', 'old-server', 'other-tab'] as const) {
     });
     await beginMagicLink(page);
     if (legacy === 'other-tab') {
-      await expect(page.getByText(MATCH_CODE, { exact: true })).toBeVisible();
+      await expectWaiting(page);
       const waitingUrl = page.url();
       // No opener: this same-browser tab does not receive the initiating tab's sessionStorage.
       const otherTab = await page.context().newPage();
@@ -224,16 +227,14 @@ for (const legacy of ['non-pkce', 'old-server', 'other-tab'] as const) {
         });
         await otherTab.goto(waitingUrl);
         await expect(otherTab.getByRole('button', { name: /Resend/i })).toBeVisible();
-        await expect(
-          otherTab.getByText('Open the link we sent on any device and enter this code:', { exact: false }),
-        ).toHaveCount(0);
+        await expect(otherTab.getByText(WAITING_COPY, { exact: true })).toHaveCount(0);
         expect(otherPolls).toBe(0);
       } finally {
         await otherTab.close();
       }
     } else {
       await expect(page.getByRole('button', { name: /Resend/i })).toBeVisible();
-      await expect(page.getByText('Open the link we sent on any device and enter this code:', { exact: false })).toHaveCount(0);
+      await expect(page.getByText(WAITING_COPY, { exact: true })).toHaveCount(0);
       expect(polls).toBe(0);
     }
   });
@@ -257,3 +258,44 @@ for (const manual of [false, true]) {
     await expect(page.getByText('This sign-in cannot be approved here. Start again.', { exact: true })).toBeVisible();
   });
 }
+
+test('REQ-3 under a parent the waiting tab shows no code and follows the status redirect_url exactly once', async ({
+  page,
+}) => {
+  await page.clock.install();
+  await setupPasswordless(page);
+  const rpUrl = 'https://rp.example.com/callback?code=rp-authz-code';
+  let approved = false;
+  const starts: Record<string, unknown>[] = [];
+  const polls: Record<string, unknown>[] = [];
+  const rpHits: string[] = [];
+  const defaultHits: string[] = [];
+  await page.route('**/oidc/requests/**', (route) => route.fulfill({ status: 404, json: {} }));
+  await page.route('**/auth/passwordless/start', (route) => {
+    starts.push(route.request().postDataJSON());
+    return route.fulfill({ json: { challenge_id: 'parent-row', expires_at: expiresAt, match_code: MATCH_CODE } });
+  });
+  await page.route('**/auth/passwordless/status', (route) => {
+    polls.push(route.request().postDataJSON());
+    return route.fulfill({ json: approved ? { redirect_url: rpUrl } : { status: 'pending' } });
+  });
+  await page.route('https://rp.example.com/**', (route) => {
+    rpHits.push(route.request().url());
+    return route.fulfill({ contentType: 'text/html', body: '<h1>Relying party</h1>' });
+  });
+  page.on('request', (request) => {
+    if (request.url().startsWith(successUrl)) defaultHits.push(request.url());
+  });
+
+  await beginMagicLink(page, 'signin', '?parent_challenge_id=parent-1');
+  await expectWaiting(page);
+  expect(starts[0]?.parent_challenge_id).toBe('parent-1');
+
+  approved = true;
+  await page.clock.runFor(3_100);
+  await expect(page.getByRole('heading', { name: 'Relying party' })).toBeVisible();
+  expect(rpHits).toEqual([rpUrl]);
+  expect(defaultHits).toEqual([]);
+  expect(polls.length).toBeGreaterThan(0);
+  for (const body of polls) expect(body).not.toHaveProperty('parent_challenge_id');
+});

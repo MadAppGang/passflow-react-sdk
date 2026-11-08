@@ -46,11 +46,13 @@ export const urlCarriesTwoFactorToken = (): boolean => {
 };
 
 /**
- * Whether the current URL is a non-PKCE federated return with tokens in the query. Read it before `@passflow/core` is
- * constructed, because core adopts them and strips the query as it starts.
+ * Whether the current URL is a return with tokens in the query or the fragment. Read it before `@passflow/core` is
+ * constructed, because core adopts them and strips them as it starts.
  */
 export const urlCarriesAccessToken = (): boolean =>
-  typeof window !== 'undefined' && new URLSearchParams(window.location.search).has('access_token');
+  typeof window !== 'undefined' &&
+  (new URLSearchParams(window.location.search).has('access_token') ||
+    new URLSearchParams(window.location.hash.substring(1)).has('access_token'));
 
 /**
  * The app a `#tfa_token=` landing belongs to: the one the token names in `aud`. A federated return carries no `appid`,
