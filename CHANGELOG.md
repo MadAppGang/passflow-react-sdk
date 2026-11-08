@@ -2,6 +2,21 @@
 
 All notable changes to `@passflow/react` are documented in this file.
 
+## [0.25.0] - 2026-11-09
+
+### Changed
+
+- Requires `@passflow/core` ^0.30.1 (was ^0.29.0), for `passflow.hostedUpgrade`.
+- Under an OIDC parent (`parent_challenge_id` in the URL) the provider always calls `/auth/session/exchange`, with the hosted session cookie only: it sends no `Authorization` header and refreshes no stored token first. The `prompt=login` and stored-token `max_age` checks the SDK made before the exchange are removed; the server judges the hosted session and answers 403 when it falls short.
+- Exchange answers: 401 or 400 shows the sign-in form (`login_required` to the app under `prompt=none`). A 403 under `prompt=none` sends `interaction_required` to the app. A 403 naming `acr_values` or `max_age` opens the step-up dialog on `passflow.hostedUpgrade` and retries the exchange once; if the step-up is cancelled or fails, the app gets `unmet_authentication_requirements` when `acr_values` was asked, and the sign-in form shows when only `max_age` was. A 403 naming neither shows the sign-in form.
+- Errors sent to the app follow the request's `response_mode`: a query-string redirect, or a POST form for `form_post`.
+- While the step-up dialog is open under a parent, the "continuing" status shows behind it instead of the sign-in form.
+
+### Added
+
+- `{ form_post: { action, fields } }` answers from auth endpoints and the exchange are submitted as a hidden POST form, so apps registered with `response_mode=form_post` receive their code.
+- `UpgradeProvider` prop `facade`: the upgrade facade to install and elevate through (default `passflow.upgrade`). `PassflowProvider` passes `passflow.hostedUpgrade` under a parent challenge, turns the upgrade dialog on there, and does not patch `fetch` for it.
+
 ## [0.24.0] - 2026-11-09
 
 ### Changed
