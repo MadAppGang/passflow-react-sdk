@@ -17,6 +17,7 @@ import {
   addressBarSearch,
   defaultNavigate,
   type FederatedLandingOutcome,
+  type HandOff,
   initialState,
   type NavigateFunction,
   NavigationContext,
@@ -83,6 +84,12 @@ type PassflowProviderProps = PassflowConfig & {
    * is mounted elsewhere. Defaults to `routes.two_factor_verify.path`.
    */
   twoFactorVerifyPath?: string;
+  /**
+   * For the hosted login: the scopes and `state` the app that sent the user here asked for. They decide what goes
+   * back to the app after sign-in; unset `scopes` are filled from the app's configuration, else `openid profile id`.
+   * Read once, when the provider mounts. Leave unset when the flow is embedded in the app itself.
+   */
+  handOff?: HandOff;
 };
 
 /**
@@ -805,7 +812,9 @@ export const PassflowProvider: FC<PassflowProviderProps> = ({
                 // Only what discovery found: a field it did not find keeps whatever is in the state now.
                 const discovered: Partial<PassflowState> = { appId: discoveredAppId, isDiscoveringAppId: false };
                 const scopes = settings.login_app?.scopes || settings.scopes;
-                if (scopes) discovered.scopes = scopes;
+                // Under a hand-off the sign-in scopes follow the hand-off scopes rule, applied by the reducer.
+                if (state.handOff) dispatch({ type: 'SET_FOUND_SCOPES', found: scopes });
+                else if (scopes) discovered.scopes = scopes;
                 const createTenant = settings.login_app?.create_tenant_for_new_user ?? settings.createTenantForNewUser;
                 if (createTenant !== undefined) discovered.createTenantForNewUser = createTenant;
                 dispatch({ type: 'SET_PASSFLOW_STATE', payload: discovered });

@@ -82,7 +82,8 @@ export const useAppSettings: UseAppSettingsProps = () => {
                 discovered.appId = discoveredAppId;
 
                 const discoveredScopes = settings.login_app?.scopes || settings.scopes;
-                if (!state.scopes && discoveredScopes) discovered.scopes = discoveredScopes;
+                if (state.handOff) dispatch({ type: 'SET_FOUND_SCOPES', found: discoveredScopes });
+                else if (!state.scopes && discoveredScopes) discovered.scopes = discoveredScopes;
 
                 const createTenant = settings.login_app?.create_tenant_for_new_user ?? settings.createTenantForNewUser;
                 if (state.createTenantForNewUser === undefined && createTenant !== undefined) {
@@ -107,8 +108,11 @@ export const useAppSettings: UseAppSettingsProps = () => {
         // Each dispatch carries only what it changes, so nothing written meanwhile is overwritten.
         const finalStateUpdates: Partial<PassflowState> = { appSettings };
 
+        // Under a hand-off the reducer applies the found scopes to the current state: a value discovery wrote while
+        // this request was open stays.
         const defaultScopes = appSettings.defaults?.scopes;
-        if (!state.scopes && defaultScopes) finalStateUpdates.scopes = defaultScopes;
+        if (state.handOff) dispatch({ type: 'SET_FOUND_SCOPES', found: defaultScopes });
+        else if (!state.scopes && defaultScopes) finalStateUpdates.scopes = defaultScopes;
         const defaultCreateTenant = appSettings.defaults?.create_tenant_for_new_user;
         if (state.createTenantForNewUser === undefined && defaultCreateTenant !== undefined) {
           finalStateUpdates.createTenantForNewUser = defaultCreateTenant;

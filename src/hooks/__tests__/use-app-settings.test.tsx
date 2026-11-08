@@ -4,6 +4,7 @@ import { StrictMode, useContext } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { PassflowProvider } from '@/components/provider/passflow-provider';
 import { PassflowContext, type PassflowContextType } from '@/context';
+import { handOffScopes, withScope } from '@/utils/hand-off';
 import { appSettingsFixture, passflowSettingsFixture, stubBrowserApis } from '../../../tests/unit/support/passflow-fixtures';
 import { useAppSettings } from '../use-app-settings';
 
@@ -303,5 +304,127 @@ describe('PassflowProvider construction-time options', () => {
       observed.context!.dispatch({ type: 'SET_PASSFLOW_STATE', payload: { scopes: ['openid', 'profile', 'offline'] } });
     });
     expect(core.constructions.length).toBe(built + 1);
+  });
+});
+
+// What the hosted login passes: the scopes the app asked for, and sign-in scopes with `offline`.
+const HostedProvider = ({ appId, requested }: { appId?: string; requested?: string[] }) => {
+  const handOff = { scopes: requested, state: 'app-state' };
+  return (
+    <PassflowProvider
+      appId={appId}
+      url='https://auth.example.com'
+      handOff={handOff}
+      scopes={withScope(handOffScopes(handOff) ?? [], 'offline')}
+    >
+      <Probe />
+    </PassflowProvider>
+  );
+};
+
+const discoveryAnswers = (body: unknown) => {
+  answerFetch = async (path) => (path === '/settings' ? { status: 200, body } : { status: 404 });
+};
+
+describe('hand-off scopes', () => {
+  it('discovery fills unset hand-off scopes from the login app, with id, and sign-in scopes with offline', async () => {
+    discoveryAnswers({ login_app: { app_id: 'discovered-app', scopes: ['openid', 'email', 'profile'] } });
+    core.appSettings = async () => ({ ...appSettingsFixture, defaults: { scopes: ['openid', 'phone'] } });
+
+    render(<HostedProvider />);
+
+    await waitFor(() => expect(observed.context?.state.appSettings).not.toBeNull());
+    expect(observed.context?.state.handOff).toEqual({ scopes: ['openid', 'email', 'profile', 'id'], state: 'app-state' });
+    expect(observed.context?.state.scopes).toEqual(['openid', 'email', 'profile', 'id', 'offline']);
+  });
+
+  it('discovery leaves requested hand-off scopes alone', async () => {
+    discoveryAnswers({ login_app: { app_id: 'discovered-app', scopes: ['openid', 'email', 'profile'] } });
+
+    render(<HostedProvider requested={['openid']} />);
+
+    await waitFor(() => expect(observed.context?.state.appSettings).not.toBeNull());
+    expect(observed.context?.state.appId).toBe('discovered-app');
+    expect(observed.context?.state.handOff?.scopes).toEqual(['openid']);
+    expect(observed.context?.state.scopes).toEqual(['openid', 'offline']);
+  });
+
+  it('a failed discovery leaves the default hand-off scopes', async () => {
+    render(<HostedProvider />);
+
+    await waitFor(() => expect(observed.context?.state.appSettings).toEqual({}));
+    expect(observed.context?.state.handOff?.scopes).toBeUndefined();
+    expect(handOffScopes(observed.context?.state.handOff)).toEqual(['openid', 'profile', 'id']);
+    expect(observed.context?.state.scopes).toEqual(['openid', 'profile', 'id', 'offline']);
+  });
+
+  it('without a hand-off, discovered login-app scopes replace the configured ones as before', async () => {
+    discoveryAnswers({ login_app: { app_id: 'discovered-app', scopes: ['openid', 'email'] } });
+
+    render(
+      <PassflowProvider url='https://auth.example.com' scopes={['openid', 'profile']}>
+        <Probe />
+      </PassflowProvider>,
+    );
+
+    await waitFor(() => expect(observed.context?.state.appSettings).not.toBeNull());
+    expect(observed.context?.state.scopes).toEqual(['openid', 'email']);
+    expect(observed.context?.state.handOff).toBeUndefined();
+  });
+
+  it('without a hand-off, settings defaults fill only unset scopes as before', async () => {
+    core.appSettings = async () => ({ ...appSettingsFixture, defaults: { scopes: ['openid', 'phone'] } });
+
+    render(
+      <PassflowProvider appId='known-app' url='https://auth.example.com'>
+        <Probe />
+      </PassflowProvider>,
+    );
+
+    await waitFor(() => expect(observed.context?.state.appSettings).not.toBeNull());
+    expect(observed.context?.state.scopes).toEqual(['openid', 'phone']);
+  });
+
+  it('on an app link, settings defaults fill the hand-off scopes; an unchanged sign-in set builds no new instance', async () => {
+    core.appSettings = async () => ({ ...appSettingsFixture, defaults: { scopes: ['openid', 'profile'] } });
+
+    render(<HostedProvider appId='known-app' />);
+    const built = core.constructions.length;
+
+    await waitFor(() => expect(observed.context?.state.appSettings).not.toBeNull());
+    expect(observed.context?.state.handOff?.scopes).toEqual(['openid', 'profile', 'id']);
+    expect(observed.context?.state.scopes).toEqual(['openid', 'profile', 'id', 'offline']);
+    expect(core.constructions.length).toBe(built);
+  });
+
+  it('on an app link, settings defaults that change the sign-in set build one new instance', async () => {
+    core.appSettings = async () => ({ ...appSettingsFixture, defaults: { scopes: ['openid', 'email', 'profile'] } });
+
+    render(<HostedProvider appId='known-app' />);
+    const built = core.constructions.length;
+
+    await waitFor(() => expect(observed.context?.state.appSettings).not.toBeNull());
+    expect(observed.context?.state.scopes).toEqual(['openid', 'email', 'profile', 'id', 'offline']);
+    expect(core.constructions.length).toBe(built + 1);
+  });
+
+  it('scopes found while the settings request was pending are not overwritten by the defaults', async () => {
+    const settings = deferred<unknown>();
+    core.appSettings = () => settings.promise;
+
+    render(<HostedProvider appId='known-app' />);
+    await waitFor(() => expect(core.settingsCalls).toEqual(['known-app']));
+
+    await act(async () => {
+      observed.context!.dispatch({ type: 'SET_FOUND_SCOPES', found: ['openid', 'email'] });
+    });
+    await act(async () => {
+      settings.resolve({ ...appSettingsFixture, defaults: { scopes: ['openid', 'phone'] } });
+    });
+
+    await waitFor(() => expect(observed.context?.state.appSettings).not.toBeNull());
+    expect(observed.context?.state.handOff?.scopes).toEqual(['openid', 'email', 'id']);
+    expect(observed.context?.state.scopes).toEqual(['openid', 'email', 'id', 'offline']);
+    expect(observed.context?.state.appId).toBe('known-app');
   });
 });

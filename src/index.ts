@@ -7,6 +7,7 @@ export * from './components/form';
 export type { PassflowUpgradeOptions, UpgradeProviderProps } from './components/provider';
 export { PassflowProvider, UpgradeProvider } from './components/provider';
 export * from './components/ui';
+export type { HandOff } from './context/passflow-context';
 // Assurance upgrade (step-up): the context types and the free-function adapters.
 export {
   INERT_UPGRADE_CONTEXT,

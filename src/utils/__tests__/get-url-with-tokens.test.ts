@@ -110,3 +110,54 @@ describe('getUrlWithTokens', () => {
     expect(result).toBe('https://example.com/callback#');
   });
 });
+
+describe('getUrlWithTokens with a hand-off', () => {
+  const stored = () => ({
+    access_token: 'access123',
+    refresh_token: 'refresh456',
+    id_token: 'id789',
+    scopes: ['openid', 'offline'],
+  });
+  const passflowWith = (tokens: ReturnType<typeof stored>) =>
+    ({ getTokens: vi.fn().mockResolvedValue(tokens) }) as unknown as Passflow;
+  const fragment = (url: string) => new URLSearchParams(url.split('#')[1]);
+
+  it('without a hand-off includes the refresh token as before', async () => {
+    const result = await getUrlWithTokens(passflowWith(stored()), 'https://example.com/cb');
+    expect(result).toBe('https://example.com/cb#access_token=access123&refresh_token=refresh456&id_token=id789');
+  });
+
+  it('drops the refresh token when the requested scopes have no offline', async () => {
+    const result = await getUrlWithTokens(passflowWith(stored()), 'https://example.com/cb', 'hash', { scopes: ['openid'] });
+    expect(fragment(result).has('refresh_token')).toBe(false);
+    expect(fragment(result).get('access_token')).toBe('access123');
+    expect(fragment(result).get('id_token')).toBe('id789');
+  });
+
+  it('drops the refresh token under the default hand-off scopes', async () => {
+    const result = await getUrlWithTokens(passflowWith(stored()), 'https://example.com/cb', 'hash', {});
+    expect(fragment(result).has('refresh_token')).toBe(false);
+  });
+
+  it.each(['offline', 'offline_access'])('keeps the refresh token when the requested scopes include %s', async (scope) => {
+    const result = await getUrlWithTokens(passflowWith(stored()), 'https://example.com/cb', 'hash', {
+      scopes: ['openid', scope],
+    });
+    expect(fragment(result).get('refresh_token')).toBe('refresh456');
+  });
+
+  it('appends the state, encoded', async () => {
+    const result = await getUrlWithTokens(passflowWith(stored()), 'https://example.com/cb', 'hash', {
+      scopes: ['openid'],
+      state: 'a b&c=d',
+    });
+    expect(result).toContain('&state=a%20b%26c%3Dd');
+    expect(fragment(result).get('state')).toBe('a b&c=d');
+  });
+
+  it('leaves the stored tokens untouched', async () => {
+    const tokens = stored();
+    await getUrlWithTokens(passflowWith(tokens), 'https://example.com/cb', 'hash', { scopes: ['openid'] });
+    expect(tokens).toEqual(stored());
+  });
+});
