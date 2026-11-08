@@ -7,6 +7,7 @@ import {
   type PassflowEventPayload,
   type PassflowSubscriber,
   registerFetchMiddleware,
+  requiredAcrLevel,
 } from '@passflow/core';
 import React, { type FC, type ReactNode, useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react';
 import { UpgradeProvider, type UpgradeProviderProps } from '@/components/provider/upgrade-provider';
@@ -27,6 +28,7 @@ import {
   type RouterType,
   routes,
 } from '@/context';
+import { submitFormPost } from '@/utils/form-post';
 import { signInSearch, twoFactorTokenAppId, urlCarriesAccessToken, urlCarriesTwoFactorToken } from '@/utils/second-factor';
 import { readParentChallengeIdFromURL } from '@/utils/url-params';
 import '@/styles/index.css';
@@ -182,10 +184,11 @@ export const hasFollowedOIDCRedirect = (): boolean => oidcRedirectFollowed;
  *
  *   1. Injects `parent_challenge_id` on every Passflow auth POST
  *      body (when one is present on the SDK's host URL).
- *   2. Watches Passflow auth responses for a JSON
- *      `{ redirect_url: "..." }` and, when present, calls
- *      `window.location.assign(redirect_url)` to follow the
- *      server-side dispatch.
+ *   2. Watches Passflow auth responses for a JSON answer and executes
+ *      it: `{ redirect_url: "..." }` is followed with
+ *      `window.location.assign(redirect_url)`, and
+ *      `{ form_post: { action, fields } }` is submitted as a hidden POST
+ *      form (OIDC response_mode=form_post).
  *
  * Why both fetch and XHR: `@passflow/core` uses axios, which on the
  * browser delegates to XMLHttpRequest. Other consumer code (and the
@@ -223,12 +226,29 @@ const useOIDCInterceptor = (parentChallengeId: string | undefined): void => {
     const followRedirectURL = (raw: string | null | undefined): void => {
       if (!raw) return;
       try {
-        const obj = JSON.parse(raw) as { redirect_url?: unknown };
+        const obj = JSON.parse(raw) as {
+          redirect_url?: unknown;
+          form_post?: { action?: unknown; fields?: unknown } | null;
+        };
+        // Claim the navigation BEFORE starting it. `assign` and `submit` do not
+        // stop JavaScript: the credential form's own success handler runs right
+        // after this and would otherwise navigate on top of us. See
+        // `hasFollowedOIDCRedirect` for why that is fatal, not cosmetic.
+        const formPost = obj.form_post;
+        if (
+          typeof formPost === 'object' &&
+          formPost !== null &&
+          typeof formPost.action === 'string' &&
+          formPost.action &&
+          typeof formPost.fields === 'object' &&
+          formPost.fields !== null
+        ) {
+          // response_mode=form_post: the RP takes the code as a POST body.
+          oidcRedirectFollowed = true;
+          submitFormPost(formPost.action, formPost.fields as Record<string, string>);
+          return;
+        }
         if (typeof obj.redirect_url === 'string' && obj.redirect_url) {
-          // Claim the navigation BEFORE starting it. `assign` does not stop
-          // JavaScript: the credential form's own success handler runs right
-          // after this and would otherwise navigate on top of us. See
-          // `hasFollowedOIDCRedirect` for why that is fatal, not cosmetic.
           oidcRedirectFollowed = true;
           window.location.assign(obj.redirect_url);
         }
@@ -311,9 +331,9 @@ const useOIDCInterceptor = (parentChallengeId: string | undefined): void => {
         const meta = tracker.get(this);
         if (!meta?.follows) return;
         if (this.status >= 200 && this.status < 300) {
-          // Server returns 200 + JSON body { redirect_url: "..." } when
-          // an AuthFlow parent (OIDC, federated, future upgrade) needs
-          // the SPA to navigate. See ADR-2.
+          // Server returns 200 + JSON body { redirect_url } or
+          // { form_post: { action, fields } } when an AuthFlow parent
+          // (OIDC, federated) needs the SPA to navigate.
           followRedirectURL(typeof this.responseText === 'string' ? this.responseText : null);
         }
       });
@@ -353,49 +373,114 @@ type ParentChallengeMeta = {
   redirect_uri?: string;
   state?: string;
   response_mode?: string;
-  // Server-side fields the SDK consults to decide whether to render
-  // the login form vs auto-exchange. The OP at /oidc/authorize is
-  // stateless (cookie-blind by design — see ADR-2); the SDK enforces
-  // prompt directives because the SDK holds the session.
+  // The OIDC directives the parent carries. `prompt=login` and `max_age` are
+  // enforced by the server at /auth/session/exchange, which answers 403 when
+  // the hosted session does not satisfy them; `prompt=none` is the SDK's to
+  // honour, because only the SDK can decide not to render a form.
   oidc_prompt_login?: boolean;
   oidc_prompt_none?: boolean;
   max_age?: number;
 };
 
 /**
- * Token-exchange-on-mount probe per ADR-2 Leg 2. When a parent
- * challenge is present in the URL AND the SDK has an existing
- * session AND the parent allows exchange (no `prompt=login`,
- * `max_age` not exceeded), POST the access token to
- * /auth/session/exchange so the OP can issue a fresh authorization
- * code for the RP without re-prompting the user.
+ * Where the exchange-on-mount probe stands.
  *
- * Decision-making is the SDK's; the server enforces too (defence in
- * depth — see `auth_util.EvaluatePolicy`).
- *
- * Today the response branches are:
- *
- *   - 200 { redirect_url } → the interceptor's fetch wrapper follows
- *     the redirect (sole owner of redirect_url navigation; this hook
- *     must never navigate on OK responses — see the res.ok branch).
- *   - 403 { error: "upgrade_required", ... } → falls through to the
- *     login form. Factor elevation on an existing session is
- *     `UpgradeProvider`'s flow, not this probe's.
- *   - 401 → clear stale tokens, fall through to login form.
- *
- * On any decision-point that ends with "render login form," the
- * SDK consumer's existing PassflowFlow render path picks up
- * naturally.
- */
-/**
- * `'upgrade_required'` is vestigial and kept deliberately (§8.4): it is
- * unreachable today — the 403 branch below sets `'fallback_to_login'` — and
- * removing a member from an exported union would be a type-level breaking
- * change for anyone reading `OIDCExchangeContextValue`. Assurance elevation is
- * now `UpgradeProvider`'s job, not a placeholder's.
+ *   - `idle`: nothing attempted yet (no parent, or the app id is unknown).
+ *   - `exchanging`: the exchange is in flight, or it answered and the browser is
+ *     on its way back to the relying party.
+ *   - `upgrade_required`: the hosted session needs a step-up before it can be
+ *     exchanged, and the step-up dialog is open.
+ *   - `fallback_to_login`: no usable hosted session; the sign-in form renders.
  */
 type ExchangeState = 'idle' | 'exchanging' | 'upgrade_required' | 'fallback_to_login';
 
+/** The 403 body of /auth/session/exchange: what the hosted session falls short of. */
+type ExchangeRefusal = { acr_values?: unknown; max_age?: unknown };
+
+/** An OIDC error sent back to the relying party instead of rendering a form. */
+type RelyingPartyError = 'login_required' | 'interaction_required' | 'unmet_authentication_requirements';
+
+const relyingPartyErrorDescriptions: Record<RelyingPartyError, string> = {
+  login_required: 'user is not authenticated',
+  interaction_required: 'user interaction is required',
+  unmet_authentication_requirements: 'the authentication requirements could not be met',
+};
+
+/**
+ * Sends an OIDC error to the parent's `redirect_uri`, in the parent's
+ * `response_mode`: a hidden POST form for `form_post`, a query-string
+ * navigation otherwise. Returns false when the metadata has no `redirect_uri`
+ * (its fetch failed), leaving the caller to render the form.
+ */
+const answerRelyingParty = (meta: ParentChallengeMeta | undefined, error: RelyingPartyError): boolean => {
+  if (!meta?.redirect_uri) return false;
+  const fields: Record<string, string> = { error, error_description: relyingPartyErrorDescriptions[error] };
+  if (meta.state) fields.state = meta.state;
+  if (meta.response_mode === 'form_post') {
+    submitFormPost(meta.redirect_uri, fields);
+    return true;
+  }
+  const dest = new URL(meta.redirect_uri);
+  for (const [key, value] of Object.entries(fields)) dest.searchParams.set(key, value);
+  window.location.assign(dest.toString());
+  return true;
+};
+
+/**
+ * Does a 200 from the exchange carry an answer the OIDC interceptor executes
+ * (`redirect_url` or `form_post`)? The interceptor is the sole owner of that
+ * navigation: it reads the response before this hook does, and a second
+ * navigation from here would re-present the single-use authorization code.
+ */
+const carriesAnswer = async (res: Response): Promise<boolean> => {
+  try {
+    const body = (await res.json()) as { redirect_url?: unknown; form_post?: unknown };
+    return Boolean(body.redirect_url) || Boolean(body.form_post);
+  } catch {
+    return false;
+  }
+};
+
+const readRefusal = async (res: Response): Promise<ExchangeRefusal> => {
+  try {
+    const body = (await res.json()) as ExchangeRefusal | null;
+    return body ?? {};
+  } catch {
+    return {};
+  }
+};
+
+/**
+ * Exchange-on-mount: when a parent challenge is on the URL, ask
+ * /auth/session/exchange whether the hosted session cookie can answer it
+ * without a sign-in form. The request carries the cookie only
+ * (`credentials: 'include'`), never stored tokens; the server is the sole judge
+ * of the session, including `prompt=login` and `max_age`.
+ *
+ * The answers:
+ *
+ *   - 200 `{ redirect_url }` or `{ form_post }` → the OIDC interceptor executes
+ *     it; the hook stays `exchanging` so no form flashes while the page leaves.
+ *     A 200 with neither renders the form.
+ *   - 401 / 400 → no usable hosted session: the form, or `login_required` to
+ *     the relying party under `prompt=none`.
+ *   - 403 → the session falls short. Under `prompt=none` that is
+ *     `interaction_required` to the relying party. Otherwise a body naming
+ *     `acr_values` or `max_age` opens the step-up dialog through
+ *     `passflow.hostedUpgrade` (`upgrade_required`); a body naming neither
+ *     renders the form.
+ *     - Step-up succeeds → exactly one more exchange. A 200 answer completes;
+ *       a 401 renders the form; anything else sends
+ *       `unmet_authentication_requirements` to the relying party.
+ *     - Step-up is cancelled or fails → when the refusal named `acr_values`
+ *       the relying party gets `unmet_authentication_requirements`, since a
+ *       fresh sign-in through the form would not meet it either; when it named
+ *       only `max_age`, the form renders so the user can sign in again.
+ *   - Any other status, or a network error → the form.
+ *
+ * An error for the relying party needs the parent's `redirect_uri`; without
+ * it the form renders instead.
+ */
 const useSessionExchangeOnMount = (
   parentChallengeId: string | undefined,
   landedWithTwoFactorToken: boolean,
@@ -425,148 +510,96 @@ const useSessionExchangeOnMount = (
     }
     attemptedRef.current = true;
 
+    const base = baseUrl ?? '';
+
+    const exchange = (): Promise<Response> =>
+      fetch(`${base}/auth/session/exchange`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+          // App middleware reads X-Passflow-ClientID; without it the
+          // request gets 400 "Application ID is missing from request".
+          'X-Passflow-ClientID': appId,
+        },
+        body: JSON.stringify({ parent_challenge_id: parentChallengeId }),
+      });
+
     const run = async () => {
-      // Fetch parent metadata upfront — we need OIDC `prompt` /
-      // `max_age` directives to make the right decision regardless
-      // of session state.
+      // The parent's metadata: where an error for the relying party goes
+      // (`redirect_uri`, `state`, `response_mode`), whether it asked for
+      // `prompt=none`, and the app name for the continuing status.
       let meta: ParentChallengeMeta | undefined;
       try {
-        const base = baseUrl ?? '';
-        const url = `${base}/oidc/requests/${encodeURIComponent(parentChallengeId)}`;
-        const res = await fetch(url);
+        const res = await fetch(`${base}/oidc/requests/${encodeURIComponent(parentChallengeId)}`);
         if (res.ok) {
           meta = (await res.json()) as ParentChallengeMeta;
           setParentMeta(meta);
         }
       } catch {
-        // Network error fetching parent → fall through to login form;
-        // the user's POST will fail loudly enough.
+        // Network error fetching the parent: no relying-party answer is
+        // possible, but the exchange still decides between leaving and the form.
       }
 
-      // prompt=login on parent → render login form with banner.
-      // The login interceptor will pick up parent_challenge_id and
-      // dispatch normally. (Check this BEFORE attempting exchange —
-      // even with a session, prompt=login means we must re-prompt.)
-      if (meta?.oidc_prompt_login) {
-        setExchangeState('fallback_to_login');
-        return;
-      }
+      const showForm = () => setExchangeState('fallback_to_login');
+      const answerOrShowForm = (error: RelyingPartyError) => {
+        if (!answerRelyingParty(meta, error)) showForm();
+      };
 
-      // max_age check: if parent set max_age, compare against the SDK's
-      // known auth_time on the access token. When the access token's
-      // auth_time is older than max_age (in seconds), the parent
-      // demands re-auth.
-      if (meta?.max_age && meta.max_age > 0) {
-        const parsed = passflow.getParsedTokens?.();
-        const accessPayload = parsed?.access_token?.payload as { auth_time?: number } | undefined;
-        const idPayload = parsed?.id_token?.payload as { auth_time?: number } | undefined;
-        const authTime = accessPayload?.auth_time ?? idPayload?.auth_time;
-        if (authTime && typeof authTime === 'number') {
-          const ageSeconds = Math.floor(Date.now() / 1000) - authTime;
-          if (ageSeconds > meta.max_age) {
-            setExchangeState('fallback_to_login');
-            return;
-          }
-        }
-      }
-
-      // Attempt exchange. Use credentials: 'include' so the cookie-mode
-      // access token (HttpOnly) accompanies the request even when the
-      // SDK has no token in localStorage. Server's middleware.Token
-      // falls back from Authorization header to cookie automatically.
-      //
-      // We always attempt the exchange (don't gate on isAuthenticated()
-      // because in cookie mode the SDK can't see the HttpOnly access
-      // token — the server is the authority). If the server returns 401
-      // we know there's no session and we fall through to login.
       setExchangeState('exchanging');
       try {
-        let accessToken: string | undefined;
-        try {
-          // Refreshed if it has expired: a stored session with a good refresh token is still a session.
-          const tokens = await passflow.getTokens(true);
-          accessToken = tokens?.access_token;
-        } catch {
-          // No token in SDK storage — that's OK for cookie mode; the
-          // server will read from cookie. We still call /auth/session/
-          // exchange and let the server's token middleware decide.
-        }
-        const base = baseUrl ?? '';
-        const headers: Record<string, string> = {
-          'Content-Type': 'application/json',
-        };
-        if (accessToken) {
-          headers.Authorization = `Bearer ${accessToken}`;
-        }
-        if (appId) {
-          // App middleware reads X-Passflow-ClientID; without it the
-          // request gets 400 "Application ID is missing from request".
-          headers['X-Passflow-ClientID'] = appId;
-        }
-        const res = await fetch(`${base}/auth/session/exchange`, {
-          method: 'POST',
-          credentials: 'include',
-          headers,
-          body: JSON.stringify({ parent_challenge_id: parentChallengeId }),
-        });
+        const res = await exchange();
         if (res.ok) {
-          // Redirect-following for OK auth responses is owned SOLELY
-          // by useOIDCInterceptor's fetch wrapper (this request
-          // matches AUTH_ENDPOINT_PATTERN, and the wrapper follows
-          // redirect_url before handing the response back to us).
-          // Do NOT navigate here as well: window.location.assign()
-          // doesn't halt script, so a second assign races the first
-          // and re-presents the single-use authorization code to the
-          // RP — observed as duplicate callback hits in OIDF
-          // conformance (oidcc-id-token-hint INTERRUPTED).
-          // We parse the body only to decide the no-redirect branch.
-          try {
-            const body = (await res.json()) as { redirect_url?: string };
-            if (body.redirect_url) {
-              // Interceptor navigation is already scheduled; stay in
-              // 'exchanging' so no login UI flashes while we leave.
-              return;
-            }
-          } catch {
-            // ignore
-          }
-          // Successful but no redirect — unusual. Fall through.
-          setExchangeState('fallback_to_login');
-          return;
-        }
-        if (res.status === 403) {
-          // upgrade_required. The server's MaxAge enforcement (Subtask D
-          // partial) triggers this on max_age-exceeded sessions; the SDK
-          // should render the login form to let the user re-auth. Factor
-          // elevation on a live session is handled by `UpgradeProvider`
-          // (architecture §13), which replaced the old placeholder.
-          setExchangeState('fallback_to_login');
+          if (!(await carriesAnswer(res))) showForm();
           return;
         }
         if (res.status === 401 || res.status === 400) {
-          // No valid session. For prompt=none, OIDC requires us to
-          // route the user back to the RP with error=login_required
-          // WITHOUT rendering an interactive login form. For other
-          // cases, fall through to the login form. We intentionally
-          // do NOT call passflow.logOut() here — clearing cookies
-          // here would also clear any session that exists but wasn't
-          // visible to the SDK due to the cookie-mode HttpOnly
-          // constraint; the user would lose their session for a
-          // failed exchange that's the SDK's fault, not theirs.
-          if (meta?.oidc_prompt_none && meta.redirect_uri) {
-            const dest = new URL(meta.redirect_uri);
-            dest.searchParams.set('error', 'login_required');
-            dest.searchParams.set('error_description', 'user is not authenticated');
-            if (meta.state) dest.searchParams.set('state', meta.state);
-            window.location.assign(dest.toString());
-            return;
-          }
-          setExchangeState('fallback_to_login');
+          if (meta?.oidc_prompt_none) answerOrShowForm('login_required');
+          else showForm();
           return;
         }
-        setExchangeState('fallback_to_login');
+        if (res.status !== 403) {
+          showForm();
+          return;
+        }
+        if (meta?.oidc_prompt_none) {
+          answerOrShowForm('interaction_required');
+          return;
+        }
+
+        const refusal = await readRefusal(res);
+        const acrValues = typeof refusal.acr_values === 'string' && refusal.acr_values ? refusal.acr_values : undefined;
+        const maxAge = typeof refusal.max_age === 'number' ? refusal.max_age : undefined;
+        if (acrValues === undefined && maxAge === undefined) {
+          showForm();
+          return;
+        }
+
+        setExchangeState('upgrade_required');
+        try {
+          await passflow.hostedUpgrade.elevate(
+            { acrValues, maxAge, requiredLevel: requiredAcrLevel(acrValues), status: 403, channels: [] },
+            { kind: 'imperative' },
+          );
+        } catch {
+          if (acrValues !== undefined) answerOrShowForm('unmet_authentication_requirements');
+          else showForm();
+          return;
+        }
+
+        setExchangeState('exchanging');
+        const retry = await exchange();
+        if (retry.ok) {
+          if (!(await carriesAnswer(retry))) showForm();
+          return;
+        }
+        if (retry.status === 401) {
+          showForm();
+          return;
+        }
+        answerOrShowForm('unmet_authentication_requirements');
       } catch {
-        setExchangeState('fallback_to_login');
+        showForm();
       }
     };
 
@@ -901,16 +934,22 @@ export const PassflowProvider: FC<PassflowProviderProps> = ({
   // `undefined` ⇒ off, so no existing consumer changes behaviour. `false`
   // forces it off even when a `backend` is declared; declaring a `backend` is
   // itself an opt-in, since naming where your API is has no other meaning.
-  const upgradeEnabled = upgrade === false ? false : upgrade !== undefined || backend !== undefined;
+  //
+  // Under a parent challenge (the hosted login) it is on, through
+  // `passflow.hostedUpgrade`: the exchange-on-mount probe steps the hosted
+  // session up through that facade. The facade is chosen once, from mount, and
+  // the global fetch is never patched there — the exchange reads its own 403.
+  const hosted = parentChallengeId !== undefined;
+  const upgradeEnabled = upgrade === false ? false : upgrade !== undefined || backend !== undefined || hosted;
   const upgradeOptions = useMemo<PassflowUpgradeOptions>(
     () => (typeof upgrade === 'object' && upgrade !== null ? upgrade : {}),
     [upgrade],
   );
 
-  // Render the placeholder while exchange is in flight. Once it
-  // resolves (either via navigation or by falling through), children
-  // mount as normal. The `upgrade_required` path renders children alone:
-  // assurance elevation is `UpgradeProvider`'s job now (§8.4).
+  // Render the continuing status while the exchange is in flight or the
+  // step-up dialog is open over it. Once it resolves (either via navigation
+  // or by falling through), children mount as normal.
+  const showContinuing = exchangeState === 'exchanging' || exchangeState === 'upgrade_required';
   return (
     <PassflowContext.Provider value={passflowValue}>
       <NavigationContext.Provider value={navigationValue}>
@@ -918,8 +957,14 @@ export const PassflowProvider: FC<PassflowProviderProps> = ({
           <AuthProvider>
             {/* Mounted outside the exchange branch so a state change does not
                 tear down and reinstall the upgrade interceptors. */}
-            <UpgradeProvider {...upgradeOptions} enabled={upgradeEnabled} backend={backend}>
-              {exchangeState === 'exchanging' ? <ContinuingStatus appName={parentMeta?.app_name} /> : children}
+            <UpgradeProvider
+              {...upgradeOptions}
+              facade={hosted ? passflow.hostedUpgrade : undefined}
+              interceptFetch={hosted ? false : upgradeOptions.interceptFetch}
+              enabled={upgradeEnabled}
+              backend={backend}
+            >
+              {showContinuing ? <ContinuingStatus appName={parentMeta?.app_name} /> : children}
             </UpgradeProvider>
           </AuthProvider>
         </OIDCExchangeContext.Provider>

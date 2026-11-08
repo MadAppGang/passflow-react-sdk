@@ -1,7 +1,8 @@
 /**
  * `UpgradeProvider` — the React side of the assurance-upgrade flow (§8.3).
  *
- * It owns the controller (through `passflow.upgrade`), bridges the
+ * It owns the controller (through `passflow.upgrade`, or the `facade` it is
+ * given), bridges the
  * promise-returning `UpgradePromptHandler` to React state, and mounts the
  * dialog from `src/components/ui/upgrade-dialog`. It selects a state and maps
  * domain data onto that component's props; it renders no UI of its own and
@@ -43,6 +44,7 @@ import {
   requiredAcrLevel,
   type UpgradeChallenge,
   type UpgradeDiagnosticSink,
+  type UpgradeFacade,
   type UpgradeFactor,
   type UpgradeFactorType,
   type UpgradeFlightSummary,
@@ -70,6 +72,12 @@ export type UpgradeProviderProps = {
   children?: ReactNode;
   /** Default `true`. `false` installs nothing and leaves the hook inert. */
   enabled?: boolean;
+  /**
+   * The upgrade facade to install and elevate through. Defaults to
+   * `passflow.upgrade`. The hosted login passes `passflow.hostedUpgrade`, which
+   * proves factors against the hosted session cookie instead of stored tokens.
+   */
+  facade?: UpgradeFacade;
   /**
    * Where the customer's own API is — domain 2 (§13.5). Nothing outside this
    * and Passflow's own API is ever observed, and there is no allow-all opt-in.
@@ -226,6 +234,7 @@ const replaySignature = (replay?: ReplayPolicy): string => {
 export const UpgradeProvider: FC<UpgradeProviderProps> = ({
   children,
   enabled = true,
+  facade,
   backend,
   interceptFetch = false,
   requireChallengeChannel,
@@ -241,6 +250,7 @@ export const UpgradeProvider: FC<UpgradeProviderProps> = ({
   renderDialog,
 }) => {
   const passflow = usePassflow();
+  const upgradeFacade = facade ?? passflow.upgrade;
 
   const [prompt, setPrompt] = useState<UpgradePromptView | null>(null);
   const [state, setState] = useState<UpgradeHookState>({ status: 'idle' });
@@ -376,7 +386,7 @@ export const UpgradeProvider: FC<UpgradeProviderProps> = ({
       return;
     }
 
-    const teardown = passflow.upgrade.enable({
+    const teardown = upgradeFacade.enable({
       prompt: promptHandler,
       backend,
       interceptFetch,
@@ -400,7 +410,7 @@ export const UpgradeProvider: FC<UpgradeProviderProps> = ({
     };
     // `backend` is compared by value so a fresh array literal does not reinstall.
   }, [
-    passflow,
+    upgradeFacade,
     enabled,
     Array.isArray(backend) ? backend.join('\u0000') : backend,
     interceptFetch,
@@ -525,7 +535,7 @@ export const UpgradeProvider: FC<UpgradeProviderProps> = ({
       const requested = statedBar(options);
       const waiter: Waiter = requested === undefined ? { kind: 'imperative' } : { kind: 'imperative', requested };
       try {
-        await passflow.upgrade.elevate(imperativeChallenge(options), waiter);
+        await upgradeFacade.elevate(imperativeChallenge(options), waiter);
         return { status: 'success' };
       } catch (error) {
         // The one surface where cancellation resolves `null`: there the
@@ -534,7 +544,7 @@ export const UpgradeProvider: FC<UpgradeProviderProps> = ({
         return errorStateOf(asError(error));
       }
     },
-    [passflow],
+    [upgradeFacade],
   );
 
   const value = useMemo<UpgradeContextValue>(
