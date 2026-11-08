@@ -21,6 +21,7 @@ import {
   type NavigateFunction,
   NavigationContext,
   PassflowContext,
+  type PassflowState,
   passflowReducer,
   type RouterType,
   routes,
@@ -42,6 +43,16 @@ export { readParentChallengeIdFromURL };
 export type PassflowUpgradeOptions = Omit<UpgradeProviderProps, 'children' | 'enabled' | 'backend'>;
 
 type PassflowProviderProps = PassflowConfig & {
+  /** See `PassflowConfig`. Read once, when the provider mounts. */
+  keyStoragePrefix?: PassflowConfig['keyStoragePrefix'];
+  /** See `PassflowConfig`. Read once, when the provider mounts. */
+  tokenExchange?: PassflowConfig['tokenExchange'];
+  /** See `PassflowConfig`. Read once, when the provider mounts. */
+  platform?: PassflowConfig['platform'];
+  /** See `PassflowConfig`. Read once, when the provider mounts. */
+  refreshCoordination?: PassflowConfig['refreshCoordination'];
+  /** See `PassflowConfig`. Read once, when the provider mounts. */
+  refreshStrikes?: PassflowConfig['refreshStrikes'];
   children: ReactNode;
   navigate?: NavigateFunction;
   router?: RouterType;
@@ -725,14 +736,38 @@ export const PassflowProvider: FC<PassflowProviderProps> = ({
   const [landedWithAccessToken] = useState(urlCarriesAccessToken);
   const takeTokensFromUrl = landedWithAccessToken && config.parseQueryParams !== false;
 
+  // Read once, at mount, like every other prop that seeds the reducer.
+  const [fixedConfig] = useState<PassflowConfig>(() => ({
+    keyStoragePrefix: config.keyStoragePrefix,
+    tokenExchange: config.tokenExchange,
+    platform: config.platform,
+    refreshCoordination: config.refreshCoordination,
+    refreshStrikes: config.refreshStrikes,
+  }));
+
+  // Rebuilt only when a field core reads changes. Settings arriving, discovery ending or an equal scopes array keep
+  // the instance, and with it core's cached settings read.
+  const scopesKey = state.scopes?.join(' ');
   const passflow = useMemo(
     () =>
       new Passflow({
-        ...state,
+        ...fixedConfig,
+        url: state.url,
+        appId: state.appId,
+        scopes: state.scopes,
+        createTenantForNewUser: state.createTenantForNewUser,
+        parseQueryParams: landedWithAccessToken ? false : state.parseQueryParams,
         deferFederatedLanding: true,
-        ...(landedWithAccessToken ? { parseQueryParams: false } : {}),
       }),
-    [state, landedWithAccessToken],
+    [
+      fixedConfig,
+      state.url,
+      state.appId,
+      scopesKey,
+      state.createTenantForNewUser,
+      state.parseQueryParams,
+      landedWithAccessToken,
+    ],
   );
   useDisposeOnReplace(passflow);
 
@@ -767,19 +802,13 @@ export const PassflowProvider: FC<PassflowProviderProps> = ({
 
               if (discoveredAppId) {
                 passflow.setAppId(discoveredAppId);
-                dispatch({
-                  type: 'SET_PASSFLOW_STATE',
-                  payload: {
-                    ...state,
-                    appId: discoveredAppId,
-                    scopes: settings.login_app?.scopes || settings.scopes || state.scopes,
-                    createTenantForNewUser:
-                      settings.login_app?.create_tenant_for_new_user ??
-                      settings.createTenantForNewUser ??
-                      state.createTenantForNewUser,
-                    isDiscoveringAppId: false,
-                  },
-                });
+                // Only what discovery found: a field it did not find keeps whatever is in the state now.
+                const discovered: Partial<PassflowState> = { appId: discoveredAppId, isDiscoveringAppId: false };
+                const scopes = settings.login_app?.scopes || settings.scopes;
+                if (scopes) discovered.scopes = scopes;
+                const createTenant = settings.login_app?.create_tenant_for_new_user ?? settings.createTenantForNewUser;
+                if (createTenant !== undefined) discovered.createTenantForNewUser = createTenant;
+                dispatch({ type: 'SET_PASSFLOW_STATE', payload: discovered });
                 return;
               }
             }
@@ -788,18 +817,12 @@ export const PassflowProvider: FC<PassflowProviderProps> = ({
 
         // All URLs failed
         console.warn('Failed to discover appId from /settings');
-        dispatch({
-          type: 'SET_PASSFLOW_STATE',
-          payload: {
-            ...state,
-            isDiscoveringAppId: false,
-          },
-        });
+        dispatch({ type: 'SET_PASSFLOW_STATE', payload: { isDiscoveringAppId: false } });
       };
 
       void discoverAppId();
     }
-  }, [needsDiscovery, state.isDiscoveringAppId, config.url, passflow, state]);
+  }, [needsDiscovery, state.isDiscoveringAppId, config.url, passflow]);
 
   const passflowValue = useMemo(() => ({ state, dispatch, passflow }), [state, passflow]);
 

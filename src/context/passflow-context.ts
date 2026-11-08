@@ -13,7 +13,8 @@ export type PassflowState = {
   hasSettingsError?: boolean;
 };
 
-export type PassflowAction = { type: 'SET_PASSFLOW_STATE'; payload: PassflowState };
+/** Merged into the state: a dispatch carries only the fields it changes. */
+export type PassflowAction = { type: 'SET_PASSFLOW_STATE'; payload: Partial<PassflowState> };
 
 export type PassflowContextType = {
   state: PassflowState;
