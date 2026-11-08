@@ -2,6 +2,12 @@
 
 All notable changes to `@passflow/react` are documented in this file.
 
+## [0.22.0] - 2026-11-08
+
+### Changed
+
+- The consent page reads `consent_challenge_id` from its URL, where it used to read `parent_challenge_id`. It needs a Passflow server that sends `consent_challenge_id` in the consent link. Against an older server it shows "Invalid consent link".
+
 ## [0.21.0] - 2026-11-07
 
 ### Changed

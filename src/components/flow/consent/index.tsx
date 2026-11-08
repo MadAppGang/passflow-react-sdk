@@ -7,7 +7,7 @@ import { getConsentLoginScreenProps } from './screen';
  * OIDC consent controller, mounted by the host app on `/web/consent`.
  *
  * Standalone by design: it needs no PassflowProvider. The staged request is
- * addressed by `parent_challenge_id` on the URL and read with a same-origin
+ * addressed by `consent_challenge_id` on the URL and read with a same-origin
  * cookie, so there is no SDK client, no app settings lookup, and no token to
  * hold — which is also why mounting it inside the provider would be actively
  * wrong, since the provider's session-exchange probe would fire against a

@@ -3,13 +3,14 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 /**
  * The OIDC consent decision, as a hook.
  *
- * The URL is the bearer. `parent_challenge_id` identifies a staged
- * authorization request the server is holding, and possessing that id is what
- * authorizes reading it — there is no Authorization header on the GET. The
- * server hands back a `csrf_token` with the request metadata, and every
- * state-changing POST must carry it back in `X-Passflow-CSRF`. That token is
- * the only thing separating a real decision from one a third-party page forged
- * on the user's behalf, so it is never optional and never cached across
+ * The URL is the bearer. `consent_challenge_id` identifies the consent step the
+ * server staged for the user who just signed in, and that id is handed only to
+ * this browser, in the redirect that ends sign-in. Possessing it is what
+ * authorizes reading the staged request — there is no Authorization header on
+ * the GET. The server hands back a `csrf_token` with the request metadata, and
+ * every state-changing POST must carry it back in `X-Passflow-CSRF`. That token
+ * is the only thing separating a real decision from one a third-party page
+ * forged on the user's behalf, so it is never optional and never cached across
  * challenges.
  *
  * The decision endpoints answer with a discriminated response rather than a
@@ -25,7 +26,7 @@ export type ConsentScopeMetadata = {
   description: string;
 };
 
-/** What GET /oidc/requests/{parent_challenge_id} hands the page to render itself. */
+/** What GET /oidc/requests/{consent_challenge_id} hands the page to render itself. */
 export type ConsentInfo = {
   client_id: string;
   app_name: string;
@@ -81,9 +82,9 @@ export type UseConsentProps = {
   deny: () => Promise<void>;
 };
 
-const readParentChallengeId = (): string => new URLSearchParams(window.location.search).get('parent_challenge_id') ?? '';
+const readConsentChallengeId = (): string => new URLSearchParams(window.location.search).get('consent_challenge_id') ?? '';
 
-const requestPath = (parentChallengeId: string): string => `/oidc/requests/${encodeURIComponent(parentChallengeId)}`;
+const requestPath = (consentChallengeId: string): string => `/oidc/requests/${encodeURIComponent(consentChallengeId)}`;
 
 /**
  * Execute a `form_post` decision: OIDC response_mode=form_post requires the
@@ -109,7 +110,7 @@ const submitFormPost = (action: string, fields: Record<string, string>): void =>
 };
 
 export const useConsent = (): UseConsentProps => {
-  const parentChallengeId = useMemo(readParentChallengeId, []);
+  const consentChallengeId = useMemo(readConsentChallengeId, []);
 
   const [status, setStatus] = useState<ConsentStatus>('loading');
   const [info, setInfo] = useState<ConsentInfo | null>(null);
@@ -117,7 +118,7 @@ export const useConsent = (): UseConsentProps => {
   const [error, setError] = useState<ConsentError | null>(null);
 
   useEffect(() => {
-    if (!parentChallengeId) {
+    if (!consentChallengeId) {
       setStatus('invalid');
       setError({
         message: 'Invalid consent link',
@@ -130,7 +131,7 @@ export const useConsent = (): UseConsentProps => {
 
     const fetchInfo = async (): Promise<void> => {
       try {
-        const res = await fetch(requestPath(parentChallengeId), {
+        const res = await fetch(requestPath(consentChallengeId), {
           method: 'GET',
           credentials: 'same-origin',
           headers: { Accept: 'application/json' },
@@ -173,7 +174,7 @@ export const useConsent = (): UseConsentProps => {
     return () => {
       cancelled = true;
     };
-  }, [parentChallengeId]);
+  }, [consentChallengeId]);
 
   const toggleScope = useCallback((scope: string): void => {
     setGranted((prev) => {
@@ -193,7 +194,7 @@ export const useConsent = (): UseConsentProps => {
       setStatus('working');
       setError(null);
 
-      const base = requestPath(parentChallengeId);
+      const base = requestPath(consentChallengeId);
       const endpoint = decision === 'allow' ? `${base}/consent` : `${base}/reject`;
       const body =
         decision === 'allow'
@@ -244,7 +245,7 @@ export const useConsent = (): UseConsentProps => {
         });
       }
     },
-    [granted, info, parentChallengeId],
+    [granted, info, consentChallengeId],
   );
 
   const allow = useCallback(() => decide('allow'), [decide]);
