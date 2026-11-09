@@ -2,6 +2,12 @@
 
 All notable changes to `@passflow/react` are documented in this file.
 
+## [0.25.1] - 2026-11-09
+
+### Fixed
+
+- On the hosted login the step-up dialog never opened. The provider rebuilds its `Passflow` instance when app settings change the scopes, and the session exchange kept the first instance, whose `hostedUpgrade` was never enabled. The app received `unmet_authentication_requirements` instead of the user being asked for a second factor. The exchange now steps up on the current instance.
+
 ## [0.25.0] - 2026-11-09
 
 ### Changed
