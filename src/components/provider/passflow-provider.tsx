@@ -491,6 +491,9 @@ const useSessionExchangeOnMount = (
   const [exchangeState, setExchangeState] = useState<ExchangeState>('idle');
   const [parentMeta, setParentMeta] = useState<ParentChallengeMeta | undefined>(undefined);
   const attemptedRef = useRef(false);
+  // Read at call time: the provider replaces its instance while the exchange runs, and only the current one steps up.
+  const passflowRef = useRef(passflow);
+  passflowRef.current = passflow;
 
   useEffect(() => {
     // A landing that owes its second factor finishes that sign-in: the 2FA screen, not an exchange of another session.
@@ -577,7 +580,7 @@ const useSessionExchangeOnMount = (
 
         setExchangeState('upgrade_required');
         try {
-          await passflow.hostedUpgrade.elevate(
+          await passflowRef.current.hostedUpgrade.elevate(
             { acrValues, maxAge, requiredLevel: requiredAcrLevel(acrValues), status: 403, channels: [] },
             { kind: 'imperative' },
           );
@@ -604,7 +607,7 @@ const useSessionExchangeOnMount = (
     };
 
     void run();
-  }, [parentChallengeId, passflow, baseUrl, appId]);
+  }, [parentChallengeId, baseUrl, appId]);
 
   return { exchangeState, parentMeta };
 };
