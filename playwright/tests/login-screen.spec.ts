@@ -217,6 +217,16 @@ test.describe('LoginScreen Storybook catalog', () => {
     expect(bounds.height).toBeGreaterThanOrEqual(28);
   });
 
+  test('offers an enabled Cancel while a passkey prompt is open', async ({ page }) => {
+    await openStory(page, 'components-loginscreen--submitting-passkey');
+
+    await expect(page.locator('form.passflow-form')).toHaveAttribute('aria-busy', 'true');
+    await expect(page.getByRole('status').filter({ hasText: 'Signing in…' })).toBeVisible();
+    const cancel = page.getByRole('button', { name: 'Cancel' });
+    await expect(cancel).toBeVisible();
+    await expect(cancel).toBeEnabled();
+  });
+
   test('passwordless action does not require a password', async ({ page }) => {
     await openStory(page, 'components-loginscreen--password-and-passwordless');
 

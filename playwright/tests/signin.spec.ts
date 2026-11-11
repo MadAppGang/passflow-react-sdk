@@ -136,6 +136,81 @@ test.describe('passkey sign-in', () => {
   });
 });
 
+type StuckPasskeyWindow = Window & {
+  __settlePasskey?: (settle: (resolve: (value: Credential | null) => void, reject: (reason: unknown) => void) => void) => void;
+  __passkeySettled?: boolean;
+};
+
+test.describe('passkey sign-in with a prompt that never settles', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.route('**/settings', async (route) => {
+      await route.fulfill({ path: path.join(__dirname, './responses/passflow-settings.json') });
+    });
+    await page.route('**/app/settings', async (route) => {
+      await route.fulfill({ path: path.join(__dirname, './responses/app-settings.json') });
+    });
+    await page.route('**/auth/passkey/authenticate/start', async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          challenge_id: 'passkey-challenge-1',
+          publicKey: {
+            challenge: 'dGVzdC1wYXNza2V5LWNoYWxsZW5nZQ',
+            rpId: 'localhost',
+            allowCredentials: [],
+            userVerification: 'preferred',
+            timeout: 60000,
+          },
+        }),
+      });
+    });
+    await page.addInitScript(() => {
+      const stuckWindow = window as StuckPasskeyWindow;
+      navigator.credentials.get = () =>
+        new Promise((resolve, reject) => {
+          stuckWindow.__settlePasskey = (settle) => {
+            settle(resolve, reject);
+            stuckWindow.__passkeySettled = true;
+          };
+        });
+    });
+
+    await page.goto('http://localhost:5173/web/signin');
+  });
+
+  test('cancel returns to the form, and the hook ignores the late passkey result', async ({ page }) => {
+    const passkey = page.getByRole('button', { name: 'Sign In with a Passkey' });
+    const progress = page.getByRole('status').filter({ hasText: 'Signing in…' });
+    const start = page.waitForResponse('**/auth/passkey/authenticate/start');
+    await passkey.click();
+    await start;
+
+    await expect(progress).toBeVisible();
+    await expect(passkey).toBeDisabled();
+
+    const cancel = page.getByRole('button', { name: 'Cancel' });
+    await expect(cancel).toBeVisible();
+    await cancel.click();
+
+    await expect(page.getByRole('alert')).toHaveText('Passkey sign-in was cancelled.');
+    await expect(page.getByText('Signing in…')).toHaveCount(0);
+    await expect(passkey).toBeEnabled();
+
+    await page.evaluate(() => {
+      (window as StuckPasskeyWindow).__settlePasskey?.((_resolve, reject) =>
+        reject(new DOMException('The operation either timed out or was not allowed.', 'NotAllowedError')),
+      );
+    });
+    await page.waitForFunction(() => (window as StuckPasskeyWindow).__passkeySettled === true);
+    await page.evaluate(() => new Promise((done) => requestAnimationFrame(() => requestAnimationFrame(() => done(undefined)))));
+
+    await expect(page.getByRole('alert')).toHaveText('Passkey sign-in was cancelled.');
+    await expect(page.getByText('Signing in…')).toHaveCount(0);
+    await expect(passkey).toBeEnabled();
+  });
+});
+
 test.describe('default signin flow with providers', () => {
   test.beforeEach(async ({ page }) => {
     await page.route('**/settings', async (route) => {

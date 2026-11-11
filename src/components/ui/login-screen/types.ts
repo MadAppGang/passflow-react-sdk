@@ -63,6 +63,8 @@ export type LoginCredentialsState = {
   allowPasskeyToggle?: boolean;
   disabled?: boolean;
   busy?: boolean;
+  /** While busy, the progress offers a Cancel button that abandons the wait. */
+  onCancel?: () => void;
   error?: AuthUiError | null;
   primaryLabel?: string;
   passwordlessLabelPrefix?: string;
