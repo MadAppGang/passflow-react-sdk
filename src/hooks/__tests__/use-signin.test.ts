@@ -227,4 +227,59 @@ describe('useSignIn', () => {
       expect(result.current.isLoading).toBe(false);
     });
   });
+
+  describe('cancelPasskey', () => {
+    const cancelledError = { message: 'Passkey sign-in was cancelled.', scope: authErrorFor('sign-in', 'passkey').scope };
+
+    const startStuckPasskey = () => {
+      let settle: { resolve: (value?: unknown) => void; reject: (reason: unknown) => void } | undefined;
+      mockPassflow.passkeyAuthenticate.mockReturnValue(
+        new Promise((resolve, reject) => {
+          settle = { resolve, reject };
+        }),
+      );
+      const { result } = renderHook(() => useSignIn());
+      let pending: Promise<boolean | string | PassflowPasswordlessResponse> | undefined;
+      act(() => {
+        pending = result.current.fetch({ email: 'test@example.com' } as any, 'passkey');
+      });
+      return { result, pending: pending!, settle: () => settle! };
+    };
+
+    it('clears loading, and the hook ignores a late rejection', async () => {
+      const { result, pending, settle } = startStuckPasskey();
+      expect(result.current.isLoading).toBe(true);
+      expect(result.current.pendingOperation).toBe('passkey');
+
+      act(() => result.current.cancelPasskey());
+      expect(result.current.isLoading).toBe(false);
+      expect(result.current.pendingOperation).toBeNull();
+      expect(result.current.isError).toBe(true);
+      expect(result.current.error).toEqual(cancelledError);
+
+      let outcome: boolean | string | PassflowPasswordlessResponse = true;
+      await act(async () => {
+        settle().reject(new Error('NotAllowedError'));
+        outcome = await pending;
+      });
+      expect(outcome).toBe(false);
+      expect(result.current.isLoading).toBe(false);
+      expect(result.current.isError).toBe(true);
+      expect(result.current.error).toEqual(cancelledError);
+    });
+
+    it('the hook ignores a late success', async () => {
+      const { result, pending, settle } = startStuckPasskey();
+      act(() => result.current.cancelPasskey());
+
+      let outcome: boolean | string | PassflowPasswordlessResponse = true;
+      await act(async () => {
+        settle().resolve(undefined);
+        outcome = await pending;
+      });
+      expect(outcome).toBe(false);
+      expect(result.current.isLoading).toBe(false);
+      expect(result.current.error).toEqual(cancelledError);
+    });
+  });
 });

@@ -81,7 +81,7 @@ const MagicLinkSent: FC = () => {
         <p className='passflow-verify-challenge-magic-link-text'>
           We sent a link to {challengeTypeFullString[identity as keyof typeof challengeTypeFullString]}{' '}
           {identityValue && <strong className='passflow-verify-challenge-magic-link-text--strong'>{identityValue}</strong>}.
-          Click on the link to confirm your registration.
+          Open the link to continue.
         </p>
         {type === 'passwordless' && (
           <Button

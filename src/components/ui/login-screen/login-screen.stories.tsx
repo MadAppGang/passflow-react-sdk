@@ -78,6 +78,7 @@ const handlers = {
   onCreateAccount: fn(),
   onCode: fn(),
   onRetry: fn(),
+  onCancel: fn(),
   onToggleScope: fn(),
   onAllow: fn(),
   onDeny: fn(),
@@ -303,6 +304,18 @@ export const Submitting: Story = {
       allowPasskeyToggle: true,
       busy: true,
       primaryLabel: 'Signing in…',
+    }),
+  ),
+};
+
+export const SubmittingPasskey: Story = {
+  args: story(
+    credentials(methods({ emailPassword: true, emailMagicLink: true, passkey: true }), {
+      allowPasskeyToggle: true,
+      forcePasskey: true,
+      busy: true,
+      primaryLabel: 'Signing in…',
+      onCancel: handlers.onCancel,
     }),
   ),
 };

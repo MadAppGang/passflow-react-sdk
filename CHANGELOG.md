@@ -2,6 +2,13 @@
 
 All notable changes to `@passflow/react` are documented in this file.
 
+## [0.25.2] - 2026-11-11
+
+### Fixed
+
+- A passkey prompt that never answers no longer locks the sign-in form. Some passkey providers (the 1Password extension) leave the browser's passkey request pending for good after the user dismisses their prompt. They ignore the WebAuthn timeout and an `AbortSignal`, and the form stayed on "Signing in…" with every control disabled. While a passkey request is in flight, the progress now offers Cancel. It returns to the form with "Passkey sign-in was cancelled.", and `useSignIn` ignores that request's late result. A late success is still the user's own sign-in, and `@passflow/core` may complete it. `useSignIn` adds `cancelPasskey()` and `pendingOperation`, and `LoginProgress` takes an optional `onCancel`.
+- The "check your email" screen after a magic link is sent said "confirm your registration" during sign-in too. It now says "Open the link to continue."
+
 ## [0.25.1] - 2026-11-09
 
 ### Fixed

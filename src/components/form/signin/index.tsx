@@ -123,7 +123,7 @@ export const SignInForm: FC<TSignIn> = ({
   const { get } = useUrlParams({ invite_token: '' });
   const inviteToken = get('invite_token');
   const invitationChrome = getInvitationAuthChrome(inviteToken, 'sign-in');
-  const { fetch, isError, error, reset, isLoading, emailCode } = useSignIn();
+  const { fetch, isError, error, reset, cancelPasskey, isLoading, pendingOperation, emailCode } = useSignIn();
 
   const oidcLayerOwnsRedirect = (): boolean => {
     if (hasFollowedOIDCRedirect()) return true;
@@ -299,6 +299,7 @@ export const SignInForm: FC<TSignIn> = ({
         forcePasskey: Boolean(appSettings?.force_passwordless_login && authMethods.passkey),
         allowPasskeyToggle: true,
         busy: isLoading,
+        onCancel: isLoading && pendingOperation === 'passkey' ? cancelPasskey : undefined,
         primaryLabel: isLoading ? 'Signing in…' : 'Sign In',
         error: isError ? error : null,
         forgotPassword: {

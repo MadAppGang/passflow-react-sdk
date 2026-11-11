@@ -163,7 +163,7 @@ export const LoginCredentials: FC<LoginCredentialsState> = (state) => {
         aria-busy={controlsDisabled && Boolean(state.busy)}
         onSubmit={submitCurrentMethod}
       >
-        {state.busy ? <LoginProgress message={state.primaryLabel ?? 'Signing in…'} /> : null}
+        {state.busy ? <LoginProgress message={state.primaryLabel ?? 'Signing in…'} onCancel={state.onCancel} /> : null}
         {showCredentialFields ? (
           <>
             <div className='passflow-form-container'>
