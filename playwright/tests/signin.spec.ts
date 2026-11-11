@@ -90,6 +90,52 @@ test.describe('default signin flow', () => {
   });
 });
 
+test.describe('passkey sign-in', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.route('**/settings', async (route) => {
+      await route.fulfill({ path: path.join(__dirname, './responses/passflow-settings.json') });
+    });
+    await page.route('**/app/settings', async (route) => {
+      await route.fulfill({ path: path.join(__dirname, './responses/app-settings.json') });
+    });
+    await page.route('**/auth/passkey/authenticate/start', async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          challenge_id: 'passkey-challenge-1',
+          publicKey: {
+            challenge: 'dGVzdC1wYXNza2V5LWNoYWxsZW5nZQ',
+            rpId: 'localhost',
+            allowCredentials: [],
+            userVerification: 'preferred',
+            timeout: 60000,
+          },
+        }),
+      });
+    });
+    await page.addInitScript(() => {
+      navigator.credentials.get = () =>
+        Promise.reject(new DOMException('The operation either timed out or was not allowed.', 'NotAllowedError'));
+    });
+
+    await page.goto('http://localhost:5173/web/signin');
+  });
+
+  test('shows the passkey error and lets the user try again when the browser cancels', async ({ page }) => {
+    const passkey = page.getByRole('button', { name: 'Sign In with a Passkey' });
+    const start = page.waitForResponse('**/auth/passkey/authenticate/start');
+    await passkey.click();
+    await start;
+
+    await expect(page.getByRole('alert')).toHaveText(
+      "We couldn't complete passkey sign-in. Try again or use another sign-in method.",
+    );
+    await expect(page.getByText('Signing in…')).toHaveCount(0);
+    await expect(passkey).toBeEnabled();
+  });
+});
+
 test.describe('default signin flow with providers', () => {
   test.beforeEach(async ({ page }) => {
     await page.route('**/settings', async (route) => {
