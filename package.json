@@ -111,11 +111,11 @@
   ],
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/MadAppGang/passflow-react-sdk/issues"
+    "url": "https://github.com/usepassflow/passflow-react-sdk/issues"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/MadAppGang/passflow-react-sdk.git"
+    "url": "git+https://github.com/usepassflow/passflow-react-sdk.git"
   },
   "publishConfig": {
     "access": "public"

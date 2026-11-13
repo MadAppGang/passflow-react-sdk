@@ -407,5 +407,5 @@ Version 0.8.1 is the first registry release after 0.7.1 and includes the previou
 - Sign-in and sign-up user-facing errors no longer expose raw backend or redirect details.
 - Password, phone, icon, switch, provider, focus, loading, and validation states received accessibility and interaction fixes.
 
-[0.8.2]: https://github.com/MadAppGang/passflow-react-sdk/compare/v0.8.1...v0.8.2
-[0.8.1]: https://github.com/MadAppGang/passflow-react-sdk/compare/v0.7.1...v0.8.1
+[0.8.2]: https://github.com/usepassflow/passflow-react-sdk/compare/v0.8.1...v0.8.2
+[0.8.1]: https://github.com/usepassflow/passflow-react-sdk/compare/v0.7.1...v0.8.1
